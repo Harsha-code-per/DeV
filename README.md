@@ -14,12 +14,13 @@ DeV's engine is a fork of [OpenCode](https://github.com/anomalyco/opencode) (MIT
 Requires [Bun](https://bun.sh) ≥ 1.3 and git. REA also needs Node ≥ 26.12.1 (or ^24.22.1 / ^22.23.4).
 
 ```sh
-git clone --recursive https://github.com/Harsha-code-per/DeV.git && cd DeV/engine
+git clone https://github.com/Harsha-code-per/DeV.git && cd DeV
 bun install
 cd packages/devcode
-OPENCODE_VERSION=1.19.4 OPENCODE_CHANNEL=dev-engine \
-  ../../../scripts/capped -- bun run script/build.ts --single --skip-install --skip-embed-web-ui
-ln -sf "$PWD/dist/opencode-linux-x64/bin/opencode" ~/.local/bin/dev
+DEV_VERSION=1.19.4 DEV_CHANNEL=dev-engine \
+  ../../scripts/capped -- bun run script/build.ts --single --skip-install --skip-embed-web-ui
+ln -sf "$PWD/dist/devcode-linux-x64/bin/devcode" ~/.local/bin/devcode
+ln -sf "$PWD/dist/devcode-linux-x64/bin/devcode" ~/.local/bin/dev
 ```
 
 `--single` builds only for your machine. Drop it to build every target: Linux x64/arm64 (glibc and musl), baseline builds for older CPUs, macOS and Windows.
@@ -39,10 +40,9 @@ Inside the TUI:
 
 ## Develop
 
-- Run builds, typechecks and tests through `scripts/capped [MAX] -- <cmd>`. It puts a cgroup memory cap on the command, so a runaway process gets killed instead of freezing the desktop. The engine typecheck needs about 6G: `scripts/capped 6G -- bun typecheck`.
-- Run engine tests from `engine/packages/devcode` with `bun test`. Engine commits follow `engine/AGENTS.md`.
-- `app/os_presence/` is the Python hotkey and popup layer, which will be connected to `dev serve` in Phase 2. Run its tests with `uv run pytest`.
-- The old custom Python engines are kept at git tag `pre-opencode`.
+- Run tests only through `scripts/test [MAX] -- <bun test args>` from a package folder (e.g. `cd packages/devcode && ../../scripts/test -- test/cli`). It caps memory, keeps test temp files on disk instead of the RAM-backed `/tmp`, and removes them afterwards.
+- Run builds and typechecks through `scripts/capped [MAX] -- <cmd>` (e.g. `scripts/capped 6G -- bun typecheck` from the root). Never run two heavy jobs at once.
+- Commits follow `AGENTS.md`. The plan lives in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Roadmap
 

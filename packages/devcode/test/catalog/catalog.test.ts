@@ -1,11 +1,17 @@
-import { describe, expect, test } from "bun:test"
+import { afterAll, describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import os from "os"
 import path from "path"
 import { $ } from "bun"
 import { Catalog } from "@/catalog"
 
-const tmp = () => fs.mkdtemp(path.join(os.tmpdir(), "dev-catalog-"))
+const dirs: string[] = []
+const tmp = async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "dev-catalog-"))
+  dirs.push(dir)
+  return dir
+}
+afterAll(() => Promise.all(dirs.map((dir) => fs.rm(dir, { recursive: true, force: true }))))
 
 describe("Catalog", () => {
   test("every entry is well formed with a unique id and a pinned source", () => {

@@ -1,0 +1,15 @@
+#!/bin/sh
+# Run a package's bun tests safely: memory-capped, with temp files on disk instead of the
+# RAM-backed /tmp, and every temp file removed afterwards (also when a run is killed).
+# Leaked test temp dirs once filled /tmp with 5.6 GB and pushed the machine out of memory.
+# Usage, from a package dir: ../../scripts/test [MAX] -- [bun test args...]   (default MAX=4G)
+max=4G
+[ "$1" != "--" ] && [ -n "$1" ] && { max=$1; shift; }
+[ "$1" = "--" ] && shift
+# /var/tmp is on disk; it is also outside $HOME, so tests that walk up looking for config
+# (.npmrc, .git) don't find the developer's own files.
+base="/var/tmp/dev-test-$(id -u)"
+mkdir -p "$base"
+dir=$(mktemp -d "$base/run.XXXXXX")
+trap 'rm -rf "$dir"' EXIT INT TERM HUP
+TMPDIR="$dir" "$(dirname "$0")/capped" "$max" -- bun test --timeout 30000 "$@"
