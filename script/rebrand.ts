@@ -17,7 +17,7 @@ const display = (text: string) =>
   text
     .replace(/\bOpenCode\b(?! (Zen|Go|Console)\b)/g, "DeV")
     .replace(/\bOpencode\b/g, "DeV")
-    // Every OPENCODE_X setting can be given as DEV_X (see packages/opencode/src/index.ts).
+    // Every OPENCODE_X setting can be given as DEV_X (see packages/devcode/src/index.ts).
     .replace(/\bOPENCODE_([A-Z0-9_]+)\b/g, "DEV_$1")
 
 // Prose (prompts, docs, translations): file names, folders and the CLI name too.

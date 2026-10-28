@@ -21,7 +21,7 @@ Open-source projects DeV builds in, adopts or learns from. Star counts and licen
 | [upstash/context7](https://github.com/upstash/context7) | 64k | MIT | Up-to-date library docs | Remote MCP, on (no local memory cost) |
 | [morluto/rea](https://github.com/morluto/rea) | 397k | MIT | Reverse engineering of apps, binaries and web | Local MCP, off until enabled (~450 MB) |
 | [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) | 54k | Apache-2.0 | Real browser: debugging, performance, screenshots | Local MCP, off until enabled (~600 MB) |
-| [tashfeenahmed/freellmapi](https://github.com/tashfeenahmed/freellmapi) | 43k | MIT | Free-tier routing ideas: failover, cooldown, quota tracking | Reimplemented as the `auto/free` model (`engine/packages/opencode/src/provider/auto.ts`) |
+| [tashfeenahmed/freellmapi](https://github.com/tashfeenahmed/freellmapi) | 43k | MIT | Free-tier routing ideas: failover, cooldown, quota tracking | Reimplemented as the `auto/free` model (`engine/packages/devcode/src/provider/auto.ts`) |
 
 ## Next: marketplace (P1.5)
 

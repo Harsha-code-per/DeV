@@ -16,7 +16,7 @@ Requires [Bun](https://bun.sh) ≥ 1.3 and git. REA also needs Node ≥ 26.12.1 
 ```sh
 git clone --recursive https://github.com/Harsha-code-per/DeV.git && cd DeV/engine
 bun install
-cd packages/opencode
+cd packages/devcode
 OPENCODE_VERSION=1.19.4 OPENCODE_CHANNEL=dev-engine \
   ../../../scripts/capped -- bun run script/build.ts --single --skip-install --skip-embed-web-ui
 ln -sf "$PWD/dist/opencode-linux-x64/bin/opencode" ~/.local/bin/dev
@@ -40,7 +40,7 @@ Inside the TUI:
 ## Develop
 
 - Run builds, typechecks and tests through `scripts/capped [MAX] -- <cmd>`. It puts a cgroup memory cap on the command, so a runaway process gets killed instead of freezing the desktop. The engine typecheck needs about 6G: `scripts/capped 6G -- bun typecheck`.
-- Run engine tests from `engine/packages/opencode` with `bun test`. Engine commits follow `engine/AGENTS.md`.
+- Run engine tests from `engine/packages/devcode` with `bun test`. Engine commits follow `engine/AGENTS.md`.
 - `app/os_presence/` is the Python hotkey and popup layer, which will be connected to `dev serve` in Phase 2. Run its tests with `uv run pytest`.
 - The old custom Python engines are kept at git tag `pre-opencode`.
 

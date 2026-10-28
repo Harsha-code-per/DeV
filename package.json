@@ -6,7 +6,7 @@
   "type": "module",
   "packageManager": "bun@1.4.4",
   "scripts": {
-    "dev": "bun run --cwd packages/opencode src/index.ts",
+    "dev": "bun run --cwd packages/devcode src/index.ts",
     "dev:desktop": "bun --cwd packages/desktop dev",
     "dev:web": "bun --cwd packages/app dev",
     "lint": "oxlint",

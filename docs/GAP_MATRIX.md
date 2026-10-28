@@ -3,7 +3,7 @@
 Columns: ✅ has it · 🟡 partial · ❌ missing.
 
 Sources:
-- **DeV**: what the engine source contains today (`engine/packages/opencode/src`).
+- **DeV**: what the engine source contains today (`engine/packages/devcode/src`).
 - **Codex**: its open-source tree (`openai/codex`, Apache-2.0).
 - **Claude Code**: public docs and observed behaviour only. It is proprietary and we don't reverse-engineer it.
 

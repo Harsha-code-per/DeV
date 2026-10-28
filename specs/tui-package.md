@@ -3,7 +3,7 @@
 ## Goal
 
 Move the canonical OpenCode terminal application from
-`packages/opencode/src/cli/cmd/tui` into a self-contained workspace package while
+`packages/devcode/src/cli/cmd/tui` into a self-contained workspace package while
 the legacy CLI and the new CLI continue to use the same implementation.
 
 Target package:
@@ -16,14 +16,14 @@ name: @dev-ai/tui
 Target dependency graph:
 
 ```text
-packages/opencode ---\
+packages/devcode ---\
                       > @dev-ai/tui -> @dev-ai/sdk
 packages/cli --------/
 ```
 
 The TUI may directly depend on terminal and UI infrastructure such as
 `@opentui/core`, `@opentui/solid`, `@opentui/keymap`, `solid-js`, Effect, and
-generic presentation libraries. It must not depend on `packages/opencode`,
+generic presentation libraries. It must not depend on `packages/devcode`,
 `packages/cli`, or `@dev-ai/core`.
 
 The SDK is the TUI's OpenCode boundary. Missing backend data or operations must
@@ -42,8 +42,8 @@ implementation modules.
 - Use temporary compatibility re-exports only when they materially reduce the
   size or conflict risk of a section. Mark them for removal in a later section.
 - Do not preserve private imports by creating aliases from `packages/tui` back
-  into `packages/opencode`.
-- Do not replace private `packages/opencode` imports with `@dev-ai/core`
+  into `packages/devcode`.
+- Do not replace private `packages/devcode` imports with `@dev-ai/core`
   imports merely to make the package compile.
 - Keep tool rendering tolerant of unknown tools and wire-format changes. Local
   checks over `unknown` input and metadata are acceptable; importing backend
@@ -94,11 +94,11 @@ implementation modules.
 The canonical implementation currently lives under:
 
 ```text
-packages/opencode/src/cli/cmd/tui
+packages/devcode/src/cli/cmd/tui
 ```
 
-Its private dependency on `packages/opencode` is primarily expressed through
-the `@/*` TypeScript alias, which resolves to `packages/opencode/src/*`.
+Its private dependency on `packages/devcode` is primarily expressed through
+the `@/*` TypeScript alias, which resolves to `packages/devcode/src/*`.
 `@tui/*` imports are internal to the TUI and are not themselves a package
 boundary problem.
 
@@ -277,7 +277,7 @@ Tasks:
   contexts.
 - Pass build/version information explicitly.
 - Keep environment reads needed by legacy command or worker startup in
-  `packages/opencode` adapters.
+  `packages/devcode` adapters.
 - Give `packages/tui` sensible host-neutral defaults only when behavior is truly
   local to a terminal client.
 - Move contexts and components after their global dependencies are removed.
@@ -313,14 +313,14 @@ Tasks:
   `packages/tui`.
 - Define the resolved config accepted by the public TUI entrypoint.
 - Keep config path discovery, project/global precedence, migration, variable
-  expansion, and plugin package installation in `packages/opencode` initially.
+  expansion, and plugin package installation in `packages/devcode` initially.
 - Make the legacy host produce the same resolved config shape.
 - Add a new CLI adapter that can initially provide defaults or its own resolved
   configuration.
 - Update schema-generation imports to use the package's explicit config export
   if schema generation still needs TUI schemas.
 - Move pure config tests; retain discovery and migration integration tests in
-  `packages/opencode`.
+  `packages/devcode`.
 
 Exit criteria:
 
@@ -413,7 +413,7 @@ Tasks:
   remote server.
 - Make plugin absence or incompatibility degrade gracefully.
 - Move plugin rendering tests to `packages/tui`; retain installation/loading
-  integration tests in `packages/opencode`.
+  integration tests in `packages/devcode`.
 
 Exit criteria:
 
@@ -471,7 +471,7 @@ export function createRenderer(config: TuiConfig.Resolved): Promise<CliRenderer>
 Exit criteria:
 
 - `packages/tui` contains the canonical application root.
-- The package has no imports from `packages/opencode`, `packages/cli`, or
+- The package has no imports from `packages/devcode`, `packages/cli`, or
   `@dev-ai/core`.
 - The package public API is sufficient for both old and new CLI adapters.
 
@@ -496,8 +496,8 @@ Make both executable packages consume the same TUI package.
 Tasks:
 
 - Keep the legacy yargs commands corresponding to current `thread.ts` and
-  `attach.ts` in `packages/opencode`.
-- Keep the legacy embedded worker and server startup in `packages/opencode`.
+  `attach.ts` in `packages/devcode`.
+- Keep the legacy embedded worker and server startup in `packages/devcode`.
 - Change those adapters to load config, create transport inputs, and call the
   public `@dev-ai/tui` API.
 - Change `packages/cli`'s default command handler to call the same public API.
@@ -534,10 +534,10 @@ Delete migration scaffolding only after both hosts consume the package.
 Tasks:
 
 - Remove old TUI compatibility re-exports and the obsolete directory tree under
-  `packages/opencode/src/cli/cmd/tui`.
+  `packages/devcode/src/cli/cmd/tui`.
 - Retain and relocate only true host adapters such as legacy commands, worker,
   transport setup, and config loading.
-- Remove obsolete `@tui/*` path mappings from `packages/opencode`.
+- Remove obsolete `@tui/*` path mappings from `packages/devcode`.
 - Remove stale test fixtures and update all imports to package exports.
 - Narrow `@dev-ai/tui` exports to intentional public entrypoints.
 - Verify package manifests list every direct dependency and no accidental
@@ -587,7 +587,7 @@ Package checks:
 ```text
 cd packages/tui && bun typecheck
 cd packages/tui && bun test
-cd packages/opencode && bun typecheck
+cd packages/devcode && bun typecheck
 cd packages/cli && bun typecheck
 ```
 
@@ -595,8 +595,8 @@ Dependency checks:
 
 ```text
 rg "from ['\"]@/" packages/tui/src
-rg '@dev-ai/core|packages/opencode|packages/cli' packages/tui
-rg 'src/cli/cmd/tui|@tui/' packages/opencode/src packages/opencode/test
+rg '@dev-ai/core|packages/devcode|packages/cli' packages/tui
+rg 'src/cli/cmd/tui|@tui/' packages/devcode/src packages/devcode/test
 ```
 
 SDK checks when server APIs change:
@@ -618,7 +618,7 @@ and cleaned up reliably:
 
 Compiled checks:
 
-- Build the current-platform `packages/opencode` binary.
+- Build the current-platform `packages/devcode` binary.
 - Build the current-platform `packages/cli` binary.
 - Run TUI and non-TUI smoke checks against both compiled binaries.
 - Verify theme JSON, audio assets, OpenTUI parser worker, and retained backend
