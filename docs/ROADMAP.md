@@ -1,74 +1,191 @@
 # DeV roadmap
 
-DeV is our own product: a personal, always-on assistant that works at every level of the machine (terminal, projects, desktop, browser, system), coding-first. It aims to beat Claude Code and Codex on every task, it's **free out of the box**, and it runs on any model the user chooses. It's built for its author first, then for everyone. The engine started as a fork of OpenCode (MIT) so we didn't have to rebuild from scratch; everything on top of it is DeV.
+This is the single source of truth for what we build and in what order. Every item has a checkbox. Tick it in the commit that finishes it, and add anything new here before working on it.
 
-Status today: the engine fork, `auto/free` model routing, MCP servers that start on demand, the catalog (`/plugins`), ponytail and superpowers built in, and code mode (~20K tokens per request). See [GAP_MATRIX.md](GAP_MATRIX.md) for feature parity and [ECOSYSTEM.md](ECOSYSTEM.md) for the open-source projects we build on.
+## What DeV is
 
-Tracks run in this order: parity first, because everything else depends on a strong core agent. Every track has a goal that can be measured.
+DeV is a **product family**, built as one open-source project (MIT), free to use, and working with any model.
 
-**Design principle: one DeV, every surface, near-zero cost when idle.**
-- **One engine, one set of sessions.** A single background `dev serve` (systemd user service) owns sessions, memory, providers and the catalog. Every surface is a *client* of it:
-  - `dev` in a terminal or project (the TUI, like Claude Code; it attaches to the running engine, upstream already has `dev attach`);
-  - the wake-word or hotkey popup;
-  - the Chrome extension;
-  - voice.
+| Product | What it is | Install name |
+|---|---|---|
+| **DeV Code** | The coding agent. It aims to match, then beat, Claude Code at autonomous and reliable development, including on free and open models. | npm `devcode`; commands `devcode` and `dev` |
+| **DeV** (app) | Desktop app for Windows, macOS and Linux. Chat and coding in one, growing into an always-on assistant that wakes on its name and can operate the machine. | `dev-ai` |
+| **DeV for Chrome** | Browser extension that works with the app and DeV Code. | `dev-ai` |
 
-  Start a task in the popup, continue it with `dev` in the terminal, and the same session, history and memory are there. Sessions already live in one SQLite store (`~/.local/share/dev`); the daemon makes them live and shared rather than per-process.
-- **Idle budget**, measured in CI on this laptop: daemon idle ≤ 150 MB RAM and ~0% CPU. Wake-word listening ≤ 2% of one core and ≤ 100 MB.
-- **Pay only while in use.** Heavy pieces load on demand and unload when idle: MCP servers (already done), the speech-to-text and text-to-speech models (R4), the browser bridge (R2) and local LLMs (Ollama keeps a model loaded for minutes, then frees it).
-- **Never lag the machine.** The daemon runs under a cgroup (`MemoryMax`, low `CPUWeight`, `nice`/`ionice`), the same idea as `scripts/capped`. Any heavy job is killed before it can freeze the desktop.
+DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine. It is now an independent project: we ship our own fixes and releases and don't track upstream. The only exception is that we watch OpenCode's security advisories and port relevant security fixes by hand.
 
-- **R0 DeV everywhere** (in progress): rename everything users see; remove OpenCode's services (accounts, share, Zen and Go upsells); DeV always identifies as DeV; free out of the box through auto-detected local models and guided free-tier keys.
-- **R1 Parity with Claude Code and Codex (first).**
-  1. **Benchmark first:** a `bench/` harness with ~30 real tasks (bug fixes, features, refactors, terminal tasks, each with hidden tests). It runs `dev run`, `claude -p` and `codex exec` on identical copies and records pass rate, time, tokens and cost. It runs against free models and against a strong model with a key, so the agent's own quality can be separated from model quality.
-  2. **Close the measured gaps:**
-     - routing ranked by quality, using per-model success stats from the benchmark and live sessions;
-     - a plan → do → verify loop (run the tests before saying "done");
-     - user shell hooks (Claude Code-style `settings` hooks);
-     - built-in memory;
-     - a bubblewrap sandbox for the shell tool;
-     - parallel subagents and background tasks;
-     - catalog auto-update.
-  - *Goal:* **match, then beat** Claude Code and Codex on the suite with the same model, and keep raising the free-tier pass rate. First milestone: parity, within 5% with the same model. Every release after that must improve the score; the benchmark in CI blocks regressions.
-  - *Honest note:* on free models DeV can match the features, but not frontier-model intelligence. That gap is shown in the numbers, not hidden.
-- **R2 Chrome extension "DeV for Chrome"** (like Claude in Chrome).
-  - An MV3 extension with a side-panel chat.
-  - It controls your real, logged-in Chrome through `chrome.debugger` (CDP) and content scripts: tabs, navigate, read the page or accessibility tree, click, type, screenshots, console and network.
-  - It connects to the local `dev serve` through **native messaging** (no open port). Browser tools are exposed through code mode, following upstream's `plugin-browser` split (the server owns tools and permissions; the extension is only the endpoint).
-  - Safety:
-    - per-site permissions;
-    - explicit confirmation for purchases, payments, sending messages and entering credentials;
-    - page content treated as untrusted data (prompt-injection defence).
-  - *Done when:* it completes a scripted set of real web tasks end to end.
-- **R3 Always-on Jarvis.**
-  - The engine runs as a daemon: a systemd user service around `dev serve`, resource-capped as above.
-  - `dev` in any terminal attaches to it, falling back to an in-process engine if the daemon isn't running.
-  - Popup on the hotkey or on "Hey DeV". Evaluate OpenClaw or Hermes against our own `app/os_presence` for this.
-  - *Done when:* a session started in the popup can be continued with `dev` in a terminal and vice versa, and the idle budget holds.
-  - Desktop notifications.
-  - **A scheduler** for repetitive tasks and briefs (morning brief, release radar, watching folders and mail).
-  - **Live web data** through search and fetch tools.
-  - **Machine-level control** (files, packages, services, processes) with tiered permissions.
-  - **"System or kernel level"** means OS administration (systemd, packages, drivers, kernel parameters, eBPF-based read-only observability) through a privileged helper that asks for approval on every privileged action. Never silent root.
-- **R4 Voice: local, free, and quiet when idle.** Yes, local speech models run on our own CPU and GPU, so voice is built in tiers that wake each other up:
-  1. **Always on, tiny:**
-     - a voice-activity detector (Silero VAD, ~2 MB) passes audio on only while someone is speaking;
-     - the wake-word model (openWakeWord, built to run on a Raspberry Pi) runs only on those snippets.
-     
-     Silence costs almost nothing. Voice can be switched off entirely, and then the microphone is never opened.
-  2. **On "Hey DeV" (or the hotkey):** the popup opens, and whisper.cpp loads to transcribe (on the GPU when there is one, `base` or `small` model by RAM). Text goes to the engine like any typed prompt.
-  3. **Reply:** Piper speaks it if voice replies are on.
-  4. **Unload:** whisper and Piper are freed after 60s without speech. The next wake reloads them in about a second.
+### Principles
 
-  Dictation mode (speech into any text box) uses the same pipeline. *Done when:* the idle budget holds with voice on, and wake-to-text latency is under 1.5s on this laptop.
-- **R5 Computer use:** desktop control by screenshot and input on Wayland/Hyprland (wlr protocols, ydotool) and the other operating systems, using cua or UI-TARS models.
-- **R6 Personal and for everyone:**
-  - an onboarding interview that builds the profile and connects providers;
-  - a low-RAM profile;
-  - installers and release CI for every target (upstream's build matrix);
-  - DeV's own update channel.
-- **Cross-cutting in every track:**
-  - local-first privacy;
-  - one permission model;
-  - memory and token budgets (the `scripts/capped`, lazy MCPs and code mode work continues);
-  - the benchmark runs in CI so every change is measured.
+- **Claude Code is the bar.** Where Claude Code has a behaviour, mode or command that works, DeV Code matches it, then improves on it.
+- **Free first.** DeV works out of the box with free and local models. Paid models are optional.
+- **Secure by default.** OS-level sandbox and safe permission defaults. Never "run it in Docker to be safe".
+- **Light on the machine.** It must never make the computer lag. Heavy pieces load on demand and unload when idle, and builds and tests run memory-capped.
+- **Measured, not claimed.** Benchmarks decide parity; CI blocks regressions.
+
+### Release policy
+
+- The repo stays **private until v1.0** (milestone M3) and goes public with a polished first version.
+- Only free channels are used until DeV earns money: GitHub Releases, npm, GitHub Pages, our own Homebrew tap and Scoop bucket, and the free Firefox and Edge add-on stores.
+- Paid items are listed under M7.
+
+---
+
+## Done so far
+
+- [x] Engine fork with `auto/free` model routing across free providers: cooldowns, a 30s first-response window, context-overflow handling.
+- [x] MCP servers start on demand and stop when idle. Code mode cuts input from ~107K to ~20K tokens per request.
+- [x] Catalog of skills, plugins and MCP servers, with user and project scope, `/plugins`, and the agent installing what it needs (with permission).
+- [x] ponytail and superpowers built in.
+- [x] DeV naming for config (`dev.json`, `.dev/`, `DEV_*`), the banner and wordmark, help text, prompts and 60 translations.
+- [x] Removed dependence on OpenCode's services: no keyless Zen, no upsells, no share or account features, DeV's own User-Agent.
+- [x] Free out of the box: Ollama and LM Studio detected automatically, and clear guidance when nothing is connected.
+- [x] Machine stability: serial, memory-capped typecheck (~2.3 GB peak); a capped pre-push hook; `scripts/capped`; earlyoom.
+- [x] One standalone monorepo (engine at the root, full history, Python prototype retired); history scanned for secrets (clean); the old GitHub fork archived.
+
+---
+
+## M0 — Foundation: independent, secure, installable
+
+### M0.2 Hard-fork rename
+
+- [ ] `@opencode-ai/*` → `@dev-ai/*` in every `package.json`, import and tsconfig path.
+- [ ] `packages/opencode` → `packages/devcode`. The binary installs as `devcode` with `dev` as an alias.
+- [ ] Internal `OPENCODE_*` → `DEV_*`. Remove the alias loop and stock mode (`OPENCODE_DISABLE_DEV_DEFAULTS`); tests and snapshots become DeV-native.
+- [ ] Rename identifiers: `OpenCode` → `DevCode` (SDK client and namespaces), the TUI theme name, app IDs.
+- [ ] `script/brand-check.ts` in CI. "opencode" may appear only in an allowlist: LICENSE/NOTICE, credits, and the OpenCode Zen provider id and its labels.
+- [ ] OpenCode Zen is listed honestly in `/connect` as "OpenCode Zen (free models with your Zen key)", with its data-use notes.
+
+### M0.3 Security baseline (Claude Code-grade)
+
+- [ ] Run every shell command and local MCP server inside `@anthropic-ai/sandbox-runtime` (Apache-2.0; bubblewrap on Linux, Seatbelt on macOS, restricted user plus network fence on Windows).
+  - Writes only to the project and temp folders.
+  - `~/.ssh`, `~/.aws`, `.env*` and the key store are unreadable.
+  - Network goes through an allowlist proxy.
+- [ ] Safe permission defaults: read in the project; edits ask (or "accept edits" mode); sandboxed shell runs without asking and anything outside the sandbox asks; secrets denied.
+- [ ] Server listens on localhost only and generates a random password by default.
+- [ ] Web, MCP and file content is marked untrusted; risky actions (deleting outside the project, `git push`, installs) need confirmation.
+- [ ] Supply chain: pinned deps, gitleaks and Renovate in CI, npm provenance, SHA-256 checksums on releases.
+- [ ] New `SECURITY.md`: threat model, the sandbox, private reporting through GitHub Security Advisories.
+
+### M0.4 Install and update (free channels)
+
+- [ ] Release CI matrix: Linux x64/arm64 (glibc and musl), macOS x64/arm64, Windows x64. GitHub Releases with checksums.
+- [ ] `curl -fsSL https://harsha-code-per.github.io/DeV/install | sh` and `install.ps1`, both verifying checksums.
+- [ ] `npm i -g devcode`, a Homebrew tap and a Scoop bucket.
+- [ ] `devcode upgrade`: download the latest release, verify it, replace the binary.
+
+### M0.5 Project hygiene
+
+- [ ] LICENSE (MIT with OpenCode's and DeV's copyright lines), NOTICE (OpenCode MIT, sandbox-runtime Apache-2.0).
+- [ ] CONTRIBUTING (DCO sign-off, `scripts/capped`), CODE_OF_CONDUCT, issue and PR templates.
+- [ ] CI on every PR: typecheck, tests, brand check, gitleaks.
+- [ ] Rewrite README for the product family.
+
+---
+
+## M1 — DeV Code: match, then beat, Claude Code
+
+### Measure first
+
+- [ ] Benchmark harness (`bench/`): ~30 real tasks (bug fixes, features, refactors, terminal work), each with hidden tests.
+  - It runs `devcode`, `claude -p` and `codex exec` on identical copies.
+  - It records pass rate, time, tokens and cost, against free models and against one strong model.
+- [ ] Benchmark in CI; regressions block merges.
+
+### Claude Code parity: modes and behaviour
+
+- [ ] **Permission modes**, cycled with Shift+Tab:
+  - default (ask);
+  - accept edits;
+  - plan mode (read-only research, then a plan to approve);
+  - auto/bypass (opt-in, with a clear warning).
+- [ ] **Project memory:** `DEV.md` (like `CLAUDE.md`), loaded hierarchically (user, project, folder). `#` adds a note to memory; `/memory` edits it.
+- [ ] **Slash commands with Claude Code's behaviour:** `/init`, `/review`, `/compact`, `/clear`, `/cost`, `/model`, `/permissions`, `/mcp`, `/plugins`, `/resume`, `/rewind`, `/status`, `/config`, `/doctor`, `/bug`.
+- [ ] **Hooks** configured by the user (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SessionStart) as shell commands in settings.
+- [ ] **Subagents:** custom agents in `.dev/agents/`, parallel subagents, and background tasks you can check on.
+- [ ] **Checkpoints and rewind** of both code and conversation.
+- [ ] **Headless mode** (`devcode -p`), JSON and streaming output, an SDK for scripting, and a GitHub Action.
+- [ ] **Status line**, output styles, and `@` file mentions with fuzzy search.
+- [ ] **Reliability:**
+  - a plan → do → verify loop (run tests and builds before saying "done");
+  - automatic retries;
+  - long sessions that survive compaction;
+  - never hangs (watchdogs on every external call).
+
+### Beyond Claude Code
+
+- [ ] Free-model quality routing: rank `auto/free` candidates by measured success per task type.
+- [ ] Persistent memory across sessions and projects, with privacy controls.
+- [ ] Catalog auto-update: new skills, plugins and MCP servers, health-checked before switching, with rollback.
+- [ ] One shared MCP hub per machine, used by every DeV surface.
+
+---
+
+## M2 — Identity and UX: DeV looks like DeV
+
+Not urgent, but it must be done before v1.0.
+
+- [ ] **Signature colour.** Choose one unique brand colour (as Claude has its coral), check it for contrast in light and dark themes and on common terminals, and define a small palette around it.
+- [ ] **Logo and mark** in that colour: SVG mark and wordmark; favicon; app icons for Windows, macOS and Linux (`packages/identity`); TUI wordmark colours.
+- [ ] **TUI redesign** so it no longer looks like OpenCode: layout, header and status line, prompt box, message styling, permission dialogs, the splash and home screen. The default theme uses the signature colour.
+- [ ] **Web and desktop UI theme** from the same palette; replace OpenCode's SVG wordmark in `packages/ui` and the desktop app.
+- [ ] Website and docs styled to match.
+
+---
+
+## M3 — v1.0 public launch (DeV Code)
+
+- [ ] M0 complete, the M1 parity checklist complete, the M2 identity done.
+- [ ] Benchmark results published honestly (free and strong models).
+- [ ] Website and docs on GitHub Pages: install, quick start, configuration, security, free-model guide, FAQ.
+- [ ] Demo video or GIFs; launch post.
+- [ ] Make the repo public. Announce, invite contributors, and label good first issues.
+
+---
+
+## M4 — DeV app (desktop: Windows, macOS, Linux)
+
+All surfaces share **one engine and one set of sessions**: start in the app, continue with `dev` in a terminal.
+
+- [ ] Rebrand `packages/desktop` (Electron): name, app ID, icons, our own update feed (GitHub Releases), unsigned builds with first-run steps documented.
+- [ ] Chat and coding in one window over the shared engine; the session list syncs with the CLI.
+- [ ] Runs in the tray and starts with the system. Idle budget: ≤150 MB RAM and ~0% CPU.
+- [ ] Wake on name or hotkey; a popup.
+- [ ] **Voice**, local and free:
+  - VAD and wake word always on and tiny;
+  - whisper.cpp and Piper load only on wake and unload after 60s idle;
+  - dictation mode.
+- [ ] Computer use: screenshot and input on Wayland/X11, macOS and Windows.
+- [ ] Scheduler for repetitive tasks; live web data; notifications.
+- [ ] Machine and system control (files, packages, services) through a privileged helper that asks for approval on every privileged action.
+
+## M5 — DeV for Chrome
+
+- [ ] MV3 extension with a side-panel chat; controls your real Chrome through CDP (tabs, read, click, type, screenshots, console, network).
+- [ ] Connects to the local engine through native messaging (no open port).
+- [ ] Per-site permissions; confirmation for purchases, sending and credentials; page content treated as untrusted.
+- [ ] Distributed through GitHub Releases plus the Firefox and Edge add-on stores (free). The Chrome Web Store comes in M7.
+
+## M6 — Personal and for everyone
+
+- [ ] Onboarding interview builds a profile and connects free providers or a local model.
+- [ ] Low-RAM profile chosen automatically.
+- [ ] Multi-language docs; accessibility.
+
+## M7 — Paid polish (once DeV earns money)
+
+- [ ] Own domain.
+- [ ] Apple notarization ($99/yr).
+- [ ] Windows code signing.
+- [ ] Chrome Web Store ($5).
+- [ ] Hosted services if wanted (sync, team features).
+
+---
+
+## Cross-cutting, always
+
+- **Performance budgets:** idle daemon ≤150 MB; ~20K tokens per request; typecheck ≤2.5 GB.
+- **Security reviews** for every feature that touches the shell, network or credentials.
+- **Privacy:** local-first, nothing leaves the machine without the user knowing.
+- **Docs and a changelog** updated in the same PR as each feature.
+- See [GAP_MATRIX.md](GAP_MATRIX.md) for feature parity with Claude Code and Codex, and [ECOSYSTEM.md](ECOSYSTEM.md) for the open-source projects we build on.
