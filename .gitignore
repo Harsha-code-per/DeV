@@ -1,5 +1,6 @@
 # Python-generated files
 __pycache__/
+.pytest_cache/
 *.py[oc]
 build/
 dist/
@@ -8,7 +9,10 @@ wheels/
 
 # Virtual environments
 .venv
-.env
 venv/
+
+# env files
+.env
 !.env.example
-.pytest_cache/
+# DeV runtime state
+.dev/

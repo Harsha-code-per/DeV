@@ -1,15 +1,15 @@
 class ApprovalSystem:
     def request_approval(self, plan: str) -> bool:
-        print("\n==============================")
-        print("IMPLEMENTATION PLAN REVIEW")
-        print("==============================\n")
+        print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("DeV Approval")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
         print(plan)
 
-        print("\n==============================")
+        print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
         choice = input(
-            "\nApprove this plan? (yes/no): "
+            "\nReady to proceed? (yes/no): "
         ).strip().lower()
 
         return choice == "yes"

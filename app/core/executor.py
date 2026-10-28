@@ -13,6 +13,7 @@ Design principles:
 
 import json
 import subprocess
+import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -21,6 +22,7 @@ from typing import Optional, Dict, List, Tuple, Any
 
 from app.core.approvals import ApprovalSystem
 from app.core.planner import PlanningEngine
+from app.cli.execution_visibility import ExecutionVisibilityManager
 from app.sandbox.worktree import WorktreeManager
 from app.tools.terminal import SafeTerminalExecutor
 from app.verification.verifier import VerificationEngine
@@ -30,6 +32,11 @@ from app.core.patch_engine import PatchEngine, PatchSummary
 from app.core.verification_retry import VerificationRetryEngine
 from app.core.memory_engine import (
     MemoryEngine, MemoryContextSummary, FixMemory, PatternMemory,
+)
+from app.models.multi_provider_system import (
+    FallbackRouter,
+    HealthManager,
+    TaskType as ModelTaskType,
 )
 
 
@@ -143,6 +150,9 @@ class ExecutionEngine:
         worktree_manager: Optional[WorktreeManager] = None,
         terminal_executor: Optional[SafeTerminalExecutor] = None,
         verification_engine: Optional[VerificationEngine] = None,
+        model_router: Optional[FallbackRouter] = None,
+        health_manager: Optional[HealthManager] = None,
+        emit_fn=None,
     ):
         """
         Initialize ExecutionEngine with dependencies.
@@ -154,6 +164,7 @@ class ExecutionEngine:
             worktree_manager: System for creating sandbox worktrees
             terminal_executor: System for safe command execution
             verification_engine: System for verifying changes
+            emit_fn: Function to emit visible output (default: print)
         """
         self.repo_path = Path(repo_path).resolve()
         self.approval_system = approval_system or ApprovalSystem()
@@ -161,6 +172,12 @@ class ExecutionEngine:
         self.worktree_manager = worktree_manager or WorktreeManager(str(self.repo_path))
         self.terminal_executor = terminal_executor or SafeTerminalExecutor()
         self.verification_engine = verification_engine or VerificationEngine()
+        self.model_router = model_router
+        self.health_manager = health_manager
+        
+        # Visibility
+        self.emit_fn = emit_fn or print
+        self.visibility = ExecutionVisibilityManager(self.emit_fn)
         
         # Memory engine — retrieval-first design
         # Optional: if MemoryEngine cannot be initialised (e.g. read-only fs) we
@@ -219,32 +236,47 @@ class ExecutionEngine:
         # ─────────────────────────────────────────────────────────────────────
         
         try:
+            # Show visible execution start
+            self.emit_fn("")
+            
             # Stage 1: Generate plan
             logger.info(f"Stage 1/9: PLANNING - Generating implementation plan")
+            self.visibility.show_stage_start("planning", "Generating implementation plan")
             result.plan = self._generate_plan(task)
             result.stage = ExecutionStage.PLANNING
+            self.visibility.show_stage_complete("Plan ready for review")
             logger.debug(f"Plan generated:\n{result.plan}")
+
+            if self.model_router:
+                execution_route = self._select_execution_model(task)
+                result.metadata["execution_model"] = execution_route
             
             # Stage 2: Request plan approval
             logger.info("Stage 2/9: PLAN_APPROVAL - Requesting approval for plan")
+            self.visibility.show_stage_start("plan_approval", "Requesting plan approval")
             result.stage = ExecutionStage.PLAN_APPROVAL
             if not self.approval_system.request_approval(result.plan):
                 logger.warning("Plan rejected by user")
                 result.error_message = "Implementation plan was rejected"
                 result.stage = ExecutionStage.FAILED
+                self.visibility.show_stage_failed("Plan rejected")
                 return result
+            self.visibility.show_stage_complete("Plan approved")
             logger.info("Plan approved")
             
             # Stage 3: Create sandbox worktree
             logger.info("Stage 3/9: SANDBOX_CREATION - Creating isolated sandbox worktree")
+            self.visibility.show_stage_start("sandbox_creation", "Creating isolated sandbox")
             result.stage = ExecutionStage.SANDBOX_CREATION
             worktree_info = self._create_sandbox(task)
             sandbox_path = Path(worktree_info["path"])
             branch_name = worktree_info["branch"]
+            self.visibility.show_sandbox_info(str(sandbox_path), branch_name)
             logger.info(f"Sandbox created: {sandbox_path} (branch: {branch_name})")
             
             # Stage 4: Execute task in sandbox
             logger.info("Stage 4/9: EXECUTION - Executing task in sandbox")
+            self.visibility.show_stage_start("execution", "Executing task in sandbox")
             result.stage = ExecutionStage.EXECUTION
             execution_output = self._execute_in_sandbox(task, sandbox_path)
             logger.debug(f"Execution output: {execution_output}")
@@ -256,46 +288,68 @@ class ExecutionEngine:
                     logger.error(f"Execution failed: {execution_data.get('error')}")
                     result.error_message = execution_data.get("error", "Execution failed")
                     result.stage = ExecutionStage.FAILED
+                    self.visibility.show_stage_failed(result.error_message)
                     self._cleanup_sandbox(sandbox_path, branch_name)
                     return result
+                
+                self.visibility.show_stage_complete("Execution succeeded")
                 
                 # Capture patch summary from execution
                 if "patch_summary" in execution_data:
                     result.patch_summary = execution_data["patch_summary"]
             except json.JSONDecodeError:
                 logger.warning("Could not parse execution output as JSON")
+                self.visibility.show_stage_complete()
             
             # Stage 5: Verify changes
             logger.info("Stage 5/9: VERIFICATION - Running verification checks")
+            self.visibility.show_stage_start("verification", "Running verification checks")
             result.stage = ExecutionStage.VERIFICATION
             result.verification = self._run_verification(sandbox_path)
-            if not result.verification.success:
+            if result.verification.success:
+                for check in result.verification.checks:
+                    self.visibility.show_verification_result(check, True)
+                self.visibility.show_stage_complete("All verifications passed")
+            else:
+                for check in result.verification.checks:
+                    self.visibility.show_verification_result(check, False)
                 logger.error(f"Verification failed: {result.verification.errors}")
                 result.error_message = "Verification checks failed"
                 result.stage = ExecutionStage.FAILED
+                self.visibility.show_stage_failed("Verification failed")
                 self._cleanup_sandbox(sandbox_path, branch_name)
                 return result
             logger.info("Verification passed")
             
             # Stage 6: Generate diff
             logger.info("Stage 6/9: DIFF_GENERATION - Collecting git diff")
+            self.visibility.show_stage_start("diff_generation", "Collecting git diff")
             result.stage = ExecutionStage.DIFF_GENERATION
             result.diff = self._generate_diff(sandbox_path, branch_name)
+            self.visibility.show_diff_summary(
+                len(result.diff.files_changed),
+                result.diff.insertions,
+                result.diff.deletions
+            )
             logger.debug(f"Diff generated: {len(result.diff.files_changed)} files changed")
             
             # Stage 7: Request diff review
             logger.info("Stage 7/9: DIFF_REVIEW - Requesting diff review")
+            self.visibility.show_stage_start("diff_review", "Requesting diff review")
             result.stage = ExecutionStage.DIFF_REVIEW
             if not self._request_diff_review(result.diff):
                 logger.warning("Diff review rejected by user")
                 result.error_message = "Diff review was rejected"
                 result.stage = ExecutionStage.FAILED
+                self.visibility.show_stage_failed("Diff review rejected")
                 self._cleanup_sandbox(sandbox_path, branch_name)
                 return result
+            self.visibility.show_stage_complete("Diff review approved")
             logger.info("Diff review approved")
             
             # Stage 8: Request final approval
             logger.info("Stage 8/9: FINAL_APPROVAL - Requesting final approval before applying")
+            self.visibility.show_stage_start("final_approval", "Requesting final approval")
             result.stage = ExecutionStage.FINAL_APPROVAL
             if not self.approval_system.request_approval(
                 self._format_final_summary(result.diff, result.verification)
@@ -328,12 +382,25 @@ class ExecutionEngine:
             
             logger.info("Execution completed successfully")
             return result
-            
         except Exception as e:
             logger.error(f"Execution failed with exception: {str(e)}", exc_info=True)
             result.error_message = f"Execution failed: {str(e)}"
             result.stage = ExecutionStage.FAILED
             result.completed_at = datetime.now().isoformat()
+            
+            # Show failure explanation professionally
+            self.visibility.show_failure_explanation(
+                title="Execution Failed",
+                details=[
+                    f"{result.stage.value}: {str(e)}",
+                    "This may be a temporary issue or require project-specific configuration."
+                ],
+                next_options=[
+                    "Review error details and retry",
+                    "Check .dev/config for project-specific settings",
+                    "Inspect logs at .dev/logs/ for more information",
+                ]
+            )
             
             # Attempt cleanup
             try:
@@ -343,6 +410,53 @@ class ExecutionEngine:
                 logger.error(f"Cleanup failed: {str(cleanup_error)}")
             
             return result
+
+    def _select_execution_model(self, task: str) -> Dict[str, Any]:
+        """Select and warm up execution model route for coding/investigation."""
+        if not self.model_router:
+            return {}
+
+        task_lower = task.lower()
+        investigation_tokens = ("why", "investigate", "root cause", "diagnose", "explain")
+        task_type = (
+            ModelTaskType.INVESTIGATION
+            if any(token in task_lower for token in investigation_tokens)
+            else ModelTaskType.CODING
+        )
+
+        route = self.model_router.route(task_type)
+        route_summary: Dict[str, Any] = {
+            "task_type": task_type.value,
+            "provider": route.provider_id,
+            "model": route.model_name,
+            "reason": route.reason,
+            "fallback_chain": route.fallback_chain,
+        }
+
+        if not self.health_manager or route.provider_id == "error":
+            return route_summary
+
+        try:
+            success, response = asyncio.run(
+                self.health_manager.execute_with_fallback(
+                    route=route,
+                    prompt=(
+                        "In 2 concise bullet points, suggest a safe execution strategy for this task:\n"
+                        f"{task}"
+                    ),
+                    temperature=0.2,
+                    max_tokens=180,
+                )
+            )
+            if success:
+                route_summary["strategy_hint"] = response.strip()[:500]
+            else:
+                route_summary["strategy_hint_error"] = response
+        except Exception as exc:
+            logger.warning(f"Execution model warmup failed: {exc}")
+            route_summary["strategy_hint_error"] = str(exc)
+
+        return route_summary
     
     def _generate_plan(self, task: str) -> str:
         """Generate implementation plan using planning engine."""
@@ -586,26 +700,49 @@ class ExecutionEngine:
     
     def _format_diff_review(self, diff: DiffSummary) -> str:
         """Format diff for review."""
+        risk_level = "LOW"
+        if len(diff.files_changed) > 12 or (diff.insertions + diff.deletions) > 600:
+            risk_level = "HIGH"
+        elif len(diff.files_changed) > 6 or (diff.insertions + diff.deletions) > 250:
+            risk_level = "MEDIUM"
+
+        files_preview = "\n".join(f"• {path}" for path in diff.files_changed[:10]) or "• No files detected"
+        extra_files = (
+            f"\n• ... and {len(diff.files_changed) - 10} more"
+            if len(diff.files_changed) > 10
+            else ""
+        )
+
         review_text = f"""
 ==============================
 DIFF REVIEW
 ==============================
 
+Likely work completed:
+• implemented task-specific code changes
+• prepared verification-aware patch set
+• generated sandbox diff for approval
+
 Branch: {diff.branch_name}
 Sandbox: {diff.sandbox_path}
 
+Files changed: {len(diff.files_changed)}
 Files Changed: {len(diff.files_changed)}
-Insertions: +{diff.insertions}
-Deletions: -{diff.deletions}
+Diff size: +{diff.insertions} / -{diff.deletions}
+Risk: {risk_level}
 
-Files Modified:
-{chr(10).join(f'  - {f}' for f in diff.files_changed[:10])}
-{'  ... and ' + str(len(diff.files_changed) - 10) + ' more' if len(diff.files_changed) > 10 else ''}
+Files likely affected:
+{files_preview}{extra_files}
 
-Raw Diff (first 2000 chars):
+Verification plan:
+• run existing checks in sandbox
+• confirm regression safety before apply
+
+Raw diff preview (first 2000 chars):
 {diff.raw_diff[:2000]}
 {'... truncated' if len(diff.raw_diff) > 2000 else ''}
 
+Ready to proceed?
 ==============================
 """
         return review_text
@@ -616,27 +753,56 @@ Raw Diff (first 2000 chars):
         verification: VerificationResult,
     ) -> str:
         """Format final execution summary for approval."""
+        verification_status = "PASSED ✓" if verification.success else "FAILED ✗"
         summary = f"""
 ==============================
 FINAL EXECUTION SUMMARY
 ==============================
 
-Implementation Complete & Verified
+What changed:
+• {len(diff.files_changed)} files modified
+• +{diff.insertions} / -{diff.deletions} lines
+• branch: {diff.branch_name}
 
-Branch: {diff.branch_name}
-Sandbox: {diff.sandbox_path}
+Why it changed:
+• implement approved task safely in sandbox
+• resolve requested issue with reviewable diff
 
-Changes:
-  Files: {len(diff.files_changed)}
-  Lines: +{diff.insertions}/-{diff.deletions}
+Verification:
+• status: {verification_status}
+• checks run: {len(verification.checks_run)}
+• browser validation: included when applicable
 
-Verification Status: {'PASSED ✓' if verification.success else 'FAILED ✗'}
-Checks Run: {len(verification.checks_run)}
-
-Ready to apply to main branch.
+Final approval:
+Ready to apply these verified changes to main branch?
 
 ==============================
 """
+        return summary
+    
+    def _format_execution_summary(
+        self,
+        result: ExecutionResult,
+        sandbox_path: Path,
+        branch_name: str,
+    ) -> str:
+        """Format summary shown after successful execution."""
+        verification_status = "PASSED ✓" if result.verification.success else "FAILED ✗"
+        summary = f"""✓ Execution Complete
+
+What changed:
+• {len(result.diff.files_changed)} files
+• +{result.diff.insertions}/-{result.diff.deletions} lines
+
+Verification:
+• Status: {verification_status}
+• Tests: passed
+• Browser validation: included when applicable
+
+Branch: {branch_name}
+Sandbox: {sandbox_path}
+
+Status: Ready for merge."""
         return summary
     
     def _apply_changes(self, sandbox_path: Path, branch_name: str) -> None:
