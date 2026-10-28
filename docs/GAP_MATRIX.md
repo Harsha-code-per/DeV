@@ -13,7 +13,7 @@ Sources:
 | Plan mode | ✅ | ✅ | ✅ plan tool | (none) | (done) |
 | Subagents | ✅ | ✅ agent-roles | ✅ task tool | Ship wshobson/agents in the catalog | P1.5 |
 | Skills | ✅ | ✅ | ✅ | superpowers built in; more via catalog | P1.5 |
-| Plugins and marketplace | ✅ | ✅ core-plugins | 🟡 plugins, no marketplace | DeV catalog, `/plugins`, project and user scope | P1.5 |
+| Plugins and marketplace | ✅ | ✅ core-plugins | ✅ catalog, `/plugins`, user and project scope, agent installs on demand | Catalog auto-update; more entries | P1.5 |
 | MCP | ✅ | ✅ | ✅ starts on first call, stops when idle | One shared server hub per machine for all agents | P1.5 |
 | Undo/rewind (checkpoints) | ✅ | 🟡 | ✅ snapshots, undo/redo | (none) | (done) |
 | Auto-compaction | ✅ | ✅ | ✅ | (none) | (done) |
@@ -34,5 +34,6 @@ Sources:
 
 ## Measured baseline (2026-10-28, Linux x64, 15 GB RAM)
 
+- Input tokens per request: **~20K** (code mode plus ponytail), down from ~107K with every MCP tool sent individually.
 - `dev run "…"` peak memory: **~760 MB** with all bundled MCPs configured, since they start on demand. It was 1.8 GB when they started eagerly. A prompt that actually uses REA peaks around 1.6 GB while REA runs.
 - The engine's own typecheck needs about 6 GB; run it through `scripts/capped 6G`.
