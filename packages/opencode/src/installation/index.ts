@@ -1,19 +1,19 @@
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { httpClient } from "@opencode-ai/core/effect/app-node-platform"
+import { LayerNode } from "@dev-ai/core/effect/layer-node"
+import { AppNodeBuilder } from "@dev-ai/core/effect/app-node-builder"
+import { httpClient } from "@dev-ai/core/effect/app-node-platform"
 import { Effect, Layer, Schema, Context, Stream } from "effect"
-import { serviceUse } from "@opencode-ai/core/effect/service-use"
+import { serviceUse } from "@dev-ai/core/effect/service-use"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
 import { withTransientReadRetry } from "@/util/effect-http-client"
 import { errorMessage } from "@/util/error"
 import { ChildProcess } from "effect/unstable/process"
-import { AppProcess } from "@opencode-ai/core/process"
+import { AppProcess } from "@dev-ai/core/process"
 import path from "path"
-import { makeRuntime } from "@opencode-ai/core/effect/runtime"
+import { makeRuntime } from "@dev-ai/core/effect/runtime"
 import semver from "semver"
-import { InstallationChannel, InstallationVersion } from "@opencode-ai/core/installation/version"
-import { NpmConfig } from "@opencode-ai/core/npm-config"
-import { InstallationEvent } from "@opencode-ai/schema/installation-event"
+import { InstallationChannel, InstallationVersion } from "@dev-ai/core/installation/version"
+import { NpmConfig } from "@dev-ai/core/npm-config"
+import { InstallationEvent } from "@dev-ai/schema/installation-event"
 
 export type Method = "curl" | "npm" | "yarn" | "pnpm" | "bun" | "brew" | "scoop" | "choco" | "unknown"
 
@@ -95,29 +95,29 @@ export interface Interface {
 const MAJOR_INSTALL: Partial<Record<Method, { remove: string[]; install: string[]; restore: string[] }>> = {
   npm: {
     remove: ["npm", "uninstall", "-g", "opencode-ai"],
-    install: ["npm", "install", "-g", "@opencode/cli"],
+    install: ["npm", "install", "-g", "@dev-ai/cli"],
     restore: ["npm", "install", "-g", `opencode-ai@${InstallationVersion}`],
   },
   pnpm: {
     remove: ["pnpm", "remove", "-g", "opencode-ai"],
-    install: ["pnpm", "add", "-g", "--allow-build=@opencode/cli", "@opencode/cli"],
+    install: ["pnpm", "add", "-g", "--allow-build=@opencode/cli", "@dev-ai/cli"],
     restore: ["pnpm", "add", "-g", `opencode-ai@${InstallationVersion}`],
   },
   bun: {
     remove: ["bun", "remove", "-g", "opencode-ai"],
-    install: ["bun", "install", "-g", "--trust", "@opencode/cli"],
+    install: ["bun", "install", "-g", "--trust", "@dev-ai/cli"],
     restore: ["bun", "install", "-g", `opencode-ai@${InstallationVersion}`],
   },
   yarn: {
     remove: ["yarn", "global", "remove", "opencode-ai"],
-    install: ["yarn", "global", "add", "@opencode/cli"],
+    install: ["yarn", "global", "add", "@dev-ai/cli"],
     restore: ["yarn", "global", "add", `opencode-ai@${InstallationVersion}`],
   },
 }
 
 export const MAJOR_INSTRUCTIONS = "https://opencode.ai/v2/docs"
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/Installation") {}
+export class Service extends Context.Service<Service, Interface>()("@dev-ai/Installation") {}
 
 export const use = serviceUse(Service)
 

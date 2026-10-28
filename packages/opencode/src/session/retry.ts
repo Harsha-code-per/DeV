@@ -1,10 +1,10 @@
-import type { NamedError } from "@opencode-ai/core/util/error"
-import { SessionV1 } from "@opencode-ai/core/v1/session"
+import type { NamedError } from "@dev-ai/core/util/error"
+import { SessionV1 } from "@dev-ai/core/v1/session"
 import { Cause, Clock, Duration, Effect, Schedule } from "effect"
 import { MessageV2 } from "./message-v2"
 import { iife } from "@/util/iife"
 import { isRecord } from "@/util/record"
-import { Flag } from "@opencode-ai/core/flag/flag"
+import { Flag } from "@dev-ai/core/flag/flag"
 
 export type Err = ReturnType<NamedError["toObject"]>
 

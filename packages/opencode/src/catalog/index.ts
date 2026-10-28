@@ -2,8 +2,8 @@ import path from "path"
 import fs from "fs/promises"
 import { $ } from "bun"
 import { applyEdits, modify, parse } from "jsonc-parser"
-import { Global } from "@opencode-ai/core/global"
-import { Brand } from "@opencode-ai/core/brand"
+import { Global } from "@dev-ai/core/global"
+import { Brand } from "@dev-ai/core/brand"
 import Data from "./catalog.json"
 
 // DeV catalog: curated skills, plugins and MCP servers that can be installed per user or per

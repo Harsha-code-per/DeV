@@ -1,5 +1,5 @@
 import { Bonjour } from "bonjour-service"
-import { Brand } from "@opencode-ai/core/brand"
+import { Brand } from "@dev-ai/core/brand"
 
 let bonjour: Bonjour | undefined
 let currentPort: number | undefined

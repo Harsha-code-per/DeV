@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test"
-import { makeGlobalNode } from "@opencode-ai/core/effect/app-node"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { httpClient } from "@opencode-ai/core/effect/app-node-platform"
+import { makeGlobalNode } from "@dev-ai/core/effect/app-node"
+import { LayerNode } from "@dev-ai/core/effect/layer-node"
+import { httpClient } from "@dev-ai/core/effect/app-node-platform"
 import { Effect, Exit, Fiber, Layer, Stream } from "effect"
 import * as TestClock from "effect/testing/TestClock"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { Installation } from "../../src/installation"
-import { InstallationVersion } from "@opencode-ai/core/installation/version"
-import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
+import { InstallationVersion } from "@dev-ai/core/installation/version"
+import { CrossSpawnSpawner } from "@dev-ai/core/cross-spawn-spawner"
 import { testEffect } from "../lib/effect"
 
 const encoder = new TextEncoder()
@@ -371,7 +371,7 @@ describe("installation", () => {
         () => jsonResponse({}),
         (cmd, args) => {
           restoreCalls.push([cmd, ...args].join(" "))
-          if (args.includes("@opencode/cli")) return { code: 1, stderr: "install failed" }
+          if (args.includes("@dev-ai/cli")) return { code: 1, stderr: "install failed" }
           return ""
         },
       ),

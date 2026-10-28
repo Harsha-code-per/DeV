@@ -1,8 +1,8 @@
 import type { Argv, InferredOptionTypes } from "yargs"
-import { ConfigV1 } from "@opencode-ai/core/v1/config/config"
+import { ConfigV1 } from "@dev-ai/core/v1/config/config"
 import type { Config } from "@/config/config"
 import { Effect } from "effect"
-import { Brand } from "@opencode-ai/core/brand"
+import { Brand } from "@dev-ai/core/brand"
 
 const options = {
   port: {

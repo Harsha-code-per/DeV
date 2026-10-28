@@ -1,9 +1,9 @@
 import { EOL } from "os"
 import { Effect } from "effect"
-import { FileSystem } from "@opencode-ai/core/filesystem"
-import { LocationServiceMap, locationServiceMapLayer } from "@opencode-ai/core/location-services"
-import { Location } from "@opencode-ai/core/location"
-import { AbsolutePath, RelativePath } from "@opencode-ai/core/schema"
+import { FileSystem } from "@dev-ai/core/filesystem"
+import { LocationServiceMap, locationServiceMapLayer } from "@dev-ai/core/location-services"
+import { Location } from "@dev-ai/core/location"
+import { AbsolutePath, RelativePath } from "@dev-ai/core/schema"
 import { effectCmd } from "../../effect-cmd"
 import { cmd } from "../cmd"
 

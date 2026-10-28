@@ -1,5 +1,5 @@
 import { Effect, Schema } from "effect"
-import type { ConfigMCPV1 } from "@opencode-ai/core/v1/config/mcp"
+import type { ConfigMCPV1 } from "@dev-ai/core/v1/config/mcp"
 import * as Tool from "./tool"
 import DESCRIPTION from "./catalog.txt"
 import { Catalog } from "@/catalog"

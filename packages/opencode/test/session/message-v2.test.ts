@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { SessionV1 } from "@opencode-ai/core/v1/session"
+import { SessionV1 } from "@dev-ai/core/v1/session"
 import { createXai } from "@ai-sdk/xai"
 import { APICallError, generateText } from "ai"
 import { MessageV2 } from "../../src/session/message-v2"
@@ -8,8 +8,8 @@ import type { Provider } from "@/provider/provider"
 
 import { SessionID, MessageID, PartID } from "../../src/session/schema"
 import { Question } from "../../src/question"
-import { ProviderV2 } from "@opencode-ai/core/provider"
-import { ModelV2 } from "@opencode-ai/core/model"
+import { ProviderV2 } from "@dev-ai/core/provider"
+import { ModelV2 } from "@dev-ai/core/model"
 
 const sessionID = SessionID.make("session")
 const providerID = ProviderV2.ID.make("test")

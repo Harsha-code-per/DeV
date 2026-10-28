@@ -1,4 +1,4 @@
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { LayerNode } from "@dev-ai/core/effect/layer-node"
 import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { Effect, Layer, Context } from "effect"
@@ -9,7 +9,7 @@ export interface Interface {
   readonly unshare: (sessionID: SessionID) => Effect.Effect<void, unknown>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/SessionShare") {}
+export class Service extends Context.Service<Service, Interface>()("@dev-ai/SessionShare") {}
 
 const layer = Layer.effect(
   Service,

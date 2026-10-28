@@ -3,7 +3,7 @@
 // upstream merge and review the diff. `--check` lists what would change and exits 1 if anything
 // would, so CI can keep the branding from drifting.
 //
-// Internal identifiers stay: import specifiers (@opencode-ai/*), OPENCODE_* env reads, provider and
+// Internal identifiers stay: import specifiers (@dev-ai/*), OPENCODE_* env reads, provider and
 // integration ids ("opencode"), and file-name literals in code (stock names are still read, see
 // packages/core/src/brand.ts). Only text a person reads is rewritten.
 
@@ -12,10 +12,10 @@ import path from "path"
 const root = path.resolve(import.meta.dir, "..")
 const check = process.argv.includes("--check")
 
-// "OpenCode Zen"/"OpenCode Go" are third-party product names and stay as they are.
+// "OpenCode Zen"/"OpenCode Go"/"OpenCode Console" are third-party product names and stay as they are.
 const display = (text: string) =>
   text
-    .replace(/\bOpenCode\b(?! (Zen|Go)\b)/g, "DeV")
+    .replace(/\bOpenCode\b(?! (Zen|Go|Console)\b)/g, "DeV")
     .replace(/\bOpencode\b/g, "DeV")
     // Every OPENCODE_X setting can be given as DEV_X (see packages/opencode/src/index.ts).
     .replace(/\bOPENCODE_([A-Z0-9_]+)\b/g, "DEV_$1")

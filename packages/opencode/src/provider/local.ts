@@ -1,4 +1,4 @@
-import type { ConfigV1 } from "@opencode-ai/core/v1/config/config"
+import type { ConfigV1 } from "@dev-ai/core/v1/config/config"
 
 // DeV: local model servers are picked up automatically, so a machine with Ollama or LM Studio
 // running works with no keys at all. Both speak the OpenAI-compatible /v1 API. When nothing is

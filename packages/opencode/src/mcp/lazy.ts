@@ -1,9 +1,9 @@
 import path from "node:path"
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import type { Tool } from "@modelcontextprotocol/sdk/types.js"
-import { Global } from "@opencode-ai/core/global"
-import { Hash } from "@opencode-ai/core/util/hash"
-import type { ConfigMCPV1 } from "@opencode-ai/core/v1/config/mcp"
+import { Global } from "@dev-ai/core/global"
+import { Hash } from "@dev-ai/core/util/hash"
+import type { ConfigMCPV1 } from "@dev-ai/core/v1/config/mcp"
 
 // DeV: local MCP servers start on first tool call instead of at startup, and stop when idle.
 // Their tool list comes from a cache written the last time the server actually ran.

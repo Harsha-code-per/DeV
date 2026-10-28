@@ -1,8 +1,8 @@
 import { Config } from "@/config/config"
 import { AppRuntime } from "@/effect/app-runtime"
-import { Flag } from "@opencode-ai/core/flag/flag"
+import { Flag } from "@dev-ai/core/flag/flag"
 import { Installation } from "@/installation"
-import { InstallationVersion } from "@opencode-ai/core/installation/version"
+import { InstallationVersion } from "@dev-ai/core/installation/version"
 
 // Checking never installs anything. Updates only happen when the user runs `/update` or `opencode upgrade`.
 export function shouldNotify(input: {

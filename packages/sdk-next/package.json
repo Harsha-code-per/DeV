@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode-ai/sdk-next",
+  "name": "@dev-ai/sdk-next",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -12,9 +12,9 @@
     "typecheck": "tsgo --noEmit --checkers 1"
   },
   "dependencies": {
-    "@opencode-ai/client": "workspace:*",
-    "@opencode-ai/core": "workspace:*",
-    "@opencode-ai/server": "workspace:*",
+    "@dev-ai/client": "workspace:*",
+    "@dev-ai/core": "workspace:*",
+    "@dev-ai/server": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

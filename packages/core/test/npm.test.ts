@@ -3,10 +3,10 @@ import path from "path"
 import { pathToFileURL } from "url"
 import { describe, expect, test } from "bun:test"
 import { Effect, Option } from "effect"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { Global } from "@opencode-ai/core/global"
-import { Npm } from "@opencode-ai/core/npm"
-import { which } from "@opencode-ai/core/util/which"
+import { AppNodeBuilder } from "@dev-ai/core/effect/app-node-builder"
+import { Global } from "@dev-ai/core/global"
+import { Npm } from "@dev-ai/core/npm"
+import { which } from "@dev-ai/core/util/which"
 import { tmpdir } from "./fixture/tmpdir"
 
 const win = process.platform === "win32"
@@ -25,8 +25,8 @@ const npmLayer = (cache: string) =>
 
 describe("Npm.sanitize", () => {
   test("keeps normal scoped package specs unchanged", () => {
-    expect(Npm.sanitize("@opencode/acme")).toBe("@opencode/acme")
-    expect(Npm.sanitize("@opencode/acme@1.0.0")).toBe("@opencode/acme@1.0.0")
+    expect(Npm.sanitize("@dev-ai/acme")).toBe("@dev-ai/acme")
+    expect(Npm.sanitize("@dev-ai/acme@1.0.0")).toBe("@dev-ai/acme@1.0.0")
     expect(Npm.sanitize("prettier")).toBe("prettier")
   })
 

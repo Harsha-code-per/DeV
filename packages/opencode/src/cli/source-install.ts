@@ -1,6 +1,6 @@
 import fs from "fs"
 import path from "path"
-import { Global } from "@opencode-ai/core/global"
+import { Global } from "@dev-ai/core/global"
 import { UI } from "./ui"
 
 // DeV is installed from source until it has its own release channel (roadmap R6). The stock

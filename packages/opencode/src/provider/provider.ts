@@ -1,39 +1,39 @@
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { LayerNode } from "@dev-ai/core/effect/layer-node"
 import os from "os"
-import { ConfigV1 } from "@opencode-ai/core/v1/config/config"
+import { ConfigV1 } from "@dev-ai/core/v1/config/config"
 import fuzzysort from "fuzzysort"
 import { Config } from "@/config/config"
 import { mapValues, mergeDeep, omit, pickBy, sortBy } from "remeda"
 import { NoSuchModelError, type Provider as SDK } from "ai"
-import { Npm } from "@opencode-ai/core/npm"
-import { Hash } from "@opencode-ai/core/util/hash"
+import { Npm } from "@dev-ai/core/npm"
+import { Hash } from "@dev-ai/core/util/hash"
 import { Plugin } from "../plugin"
-import { serviceUse } from "@opencode-ai/core/effect/service-use"
+import { serviceUse } from "@dev-ai/core/effect/service-use"
 import { type LanguageModelV3 } from "@ai-sdk/provider"
-import { ModelsDev } from "@opencode-ai/core/models-dev"
+import { ModelsDev } from "@dev-ai/core/models-dev"
 import { Auth } from "../auth"
 import { Env } from "../env"
-import { InstallationVersion } from "@opencode-ai/core/installation/version"
+import { InstallationVersion } from "@dev-ai/core/installation/version"
 import { iife } from "@/util/iife"
-import { Global } from "@opencode-ai/core/global"
+import { Global } from "@dev-ai/core/global"
 import path from "path"
 import { pathToFileURL } from "url"
 import { Effect, Layer, Context, Schema, Types } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { InstanceState } from "@/effect/instance-state"
 import { EffectPromise } from "@/effect/promise"
-import { FSUtil } from "@opencode-ai/core/fs-util"
+import { FSUtil } from "@dev-ai/core/fs-util"
 import { isRecord } from "@/util/record"
-import { optional } from "@opencode-ai/core/schema"
+import { optional } from "@dev-ai/core/schema"
 import { ProviderTransform } from "./transform"
-import { ProviderV2 } from "@opencode-ai/core/provider"
-import { ModelV2 } from "@opencode-ai/core/model"
+import { ProviderV2 } from "@dev-ai/core/provider"
+import { ModelV2 } from "@dev-ai/core/model"
 import { ModelStatus } from "./model-status"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderError } from "./error"
 import { AutoProvider } from "./auto"
 import { LocalProviders } from "./local"
-import { Flag } from "@opencode-ai/core/flag/flag"
+import { Flag } from "@dev-ai/core/flag/flag"
 
 const OPENAI_HEADER_TIMEOUT_DEFAULT = 300_000
 
@@ -173,7 +173,7 @@ const BUNDLED_PROVIDERS: Record<string, () => Promise<(opts: any) => BundledSDK>
   "@ai-sdk/alibaba": () => import("@ai-sdk/alibaba").then((m) => m.createAlibaba),
   "gitlab-ai-provider": () => import("gitlab-ai-provider").then((m) => m.createGitLab),
   "@ai-sdk/github-copilot": () =>
-    import("@opencode-ai/core/github-copilot/copilot-provider").then((m) => m.createOpenaiCompatible),
+    import("@dev-ai/core/github-copilot/copilot-provider").then((m) => m.createOpenaiCompatible),
   "venice-ai-sdk-provider": () => import("venice-ai-sdk-provider").then((m) => m.createVenice),
 }
 
@@ -1277,7 +1277,7 @@ interface State {
   varsLoaders: Record<string, CustomVarsLoader>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/Provider") {}
+export class Service extends Context.Service<Service, Interface>()("@dev-ai/Provider") {}
 
 export const use = serviceUse(Service)
 

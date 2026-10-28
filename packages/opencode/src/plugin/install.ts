@@ -8,10 +8,10 @@ import {
 } from "jsonc-parser"
 
 import * as ConfigPaths from "@/config/paths"
-import { Global } from "@opencode-ai/core/global"
-import { Brand } from "@opencode-ai/core/brand"
+import { Global } from "@dev-ai/core/global"
+import { Brand } from "@dev-ai/core/brand"
 import { Filesystem } from "@/util/filesystem"
-import { Flock } from "@opencode-ai/core/util/flock"
+import { Flock } from "@dev-ai/core/util/flock"
 import { isRecord } from "@/util/record"
 
 import { parsePluginSpecifier, readPackageThemes, readPluginPackage, resolvePluginTarget } from "./shared"

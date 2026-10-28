@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode-ai/server",
+  "name": "@dev-ai/server",
   "version": "1.19.4",
   "private": true,
   "type": "module",
@@ -12,8 +12,8 @@
     "typecheck": "tsgo --noEmit --checkers 1"
   },
   "dependencies": {
-    "@opencode-ai/core": "workspace:*",
-    "@opencode-ai/protocol": "workspace:*",
+    "@dev-ai/core": "workspace:*",
+    "@dev-ai/protocol": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },

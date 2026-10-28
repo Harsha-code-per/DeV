@@ -1,12 +1,12 @@
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { openUrl } from "@opencode-ai/core/open"
+import { LayerNode } from "@dev-ai/core/effect/layer-node"
+import { openUrl } from "@dev-ai/core/open"
 import { Context, Effect, Layer } from "effect"
 
 export interface Interface {
   readonly open: (url: string) => Effect.Effect<void, Error>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/McpBrowser") {}
+export class Service extends Context.Service<Service, Interface>()("@dev-ai/McpBrowser") {}
 
 const layer = Layer.succeed(
   Service,

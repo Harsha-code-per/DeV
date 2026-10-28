@@ -6,7 +6,7 @@ import { useDialog } from "../ui/dialog"
 import { useBindings } from "../keymap"
 import { errorMessage } from "../util/error"
 import { Spinner } from "./spinner"
-import { openUrl } from "@opencode-ai/core/open"
+import { openUrl } from "@dev-ai/core/open"
 
 export const V2_ANNOUNCEMENT_URL = "https://anoma.ly/notes/opencode-2-0"
 

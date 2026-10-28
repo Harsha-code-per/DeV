@@ -1,19 +1,19 @@
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { LayerNode } from "@dev-ai/core/effect/layer-node"
 import path from "path"
 import { Effect, Layer, Context, Schema } from "effect"
-import { NamedError } from "@opencode-ai/core/util/error"
+import { NamedError } from "@dev-ai/core/util/error"
 import type { Agent } from "@/agent/agent"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { InstanceState } from "@/effect/instance-state"
-import { Global } from "@opencode-ai/core/global"
-import { SkillPlugin } from "@opencode-ai/core/plugin/skill"
+import { Global } from "@dev-ai/core/global"
+import { SkillPlugin } from "@dev-ai/core/plugin/skill"
 import { Permission } from "@/permission"
-import { FSUtil } from "@opencode-ai/core/fs-util"
+import { FSUtil } from "@dev-ai/core/fs-util"
 import { Config } from "@/config/config"
-import { FrontmatterError } from "@opencode-ai/core/v1/config/error"
+import { FrontmatterError } from "@dev-ai/core/v1/config/error"
 import { ConfigMarkdown } from "@/config/markdown"
 import { RuntimeFlags } from "@/effect/runtime-flags"
-import { Glob } from "@opencode-ai/core/util/glob"
+import { Glob } from "@dev-ai/core/util/glob"
 import { Discovery } from "./discovery"
 import { isRecord } from "@/util/record"
 import { escapeHtml } from "@/util/html"
@@ -245,7 +245,7 @@ const loadSkills = Effect.fnUntraced(function* (
   yield* Effect.logInfo("init", { count: Object.keys(state.skills).length })
 })
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/Skill") {}
+export class Service extends Context.Service<Service, Interface>()("@dev-ai/Skill") {}
 
 const layer = Layer.effect(
   Service,

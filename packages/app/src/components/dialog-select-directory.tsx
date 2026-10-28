@@ -1,15 +1,15 @@
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { Dialog } from "@opencode-ai/ui/dialog"
-import { FileIcon } from "@opencode-ai/ui/file-icon"
-import { List } from "@opencode-ai/ui/list"
-import type { ListRef } from "@opencode-ai/ui/list"
-import { getDirectory, getFilename } from "@opencode-ai/core/util/path"
+import { useDialog } from "@dev-ai/ui/context/dialog"
+import { Dialog } from "@dev-ai/ui/dialog"
+import { FileIcon } from "@dev-ai/ui/file-icon"
+import { List } from "@dev-ai/ui/list"
+import type { ListRef } from "@dev-ai/ui/list"
+import { getDirectory, getFilename } from "@dev-ai/core/util/path"
 import { createMemo, createResource, createSignal } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { useGlobal } from "@/context/global"
 import { cleanPickerInput, createDirectorySearch, displayPickerPath } from "./directory-picker-domain"
-import type { Path } from "@opencode-ai/sdk/v2/client"
+import type { Path } from "@dev-ai/sdk/v2/client"
 
 interface DialogSelectDirectoryProps {
   title?: string

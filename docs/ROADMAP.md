@@ -48,7 +48,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 
 ### M0.2 Hard-fork rename
 
-- [ ] `@opencode-ai/*` → `@dev-ai/*` in every `package.json`, import and tsconfig path.
+- [x] `@opencode-ai/*` → `@dev-ai/*` in every `package.json`, import and tsconfig path. One exception: `Brand.PLUGIN_SDK_PACKAGE` still installs OpenCode's published plugin SDK until `@dev-ai/plugin` is on npm (M0.4).
 - [ ] `packages/opencode` → `packages/devcode`. The binary installs as `devcode` with `dev` as an alias.
 - [ ] Internal `OPENCODE_*` → `DEV_*`. Remove the alias loop and stock mode (`OPENCODE_DISABLE_DEV_DEFAULTS`); tests and snapshots become DeV-native.
 - [ ] Rename identifiers: `OpenCode` → `DevCode` (SDK client and namespaces), the TUI theme name, app IDs.
@@ -78,6 +78,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 
 - [ ] LICENSE (MIT with OpenCode's and DeV's copyright lines), NOTICE (OpenCode MIT, sandbox-runtime Apache-2.0).
 - [ ] CONTRIBUTING (DCO sign-off, `scripts/capped`), CODE_OF_CONDUCT, issue and PR templates.
+- [ ] Fix the 3 `packages/sdk-next` embedded tests that already fail in upstream v1.19.4 (SQLite "unable to open database file"), so CI starts fully green.
 - [ ] CI on every PR: typecheck, tests, brand check, gitleaks.
 - [ ] Rewrite README for the product family.
 

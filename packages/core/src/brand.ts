@@ -22,6 +22,12 @@ export const CONFIG_NAME = CONFIG_NAMES[0]
 /** Name advertised over mDNS. Not plain "dev.local", which collides with hosts named "dev". */
 export const MDNS_DOMAIN = stock ? "opencode.local" : "dev-ai.local"
 
+/**
+ * npm package installed into config folders so local plugins get typings. Our own plugin SDK isn't
+ * on npm yet (roadmap M0.4); until then this is OpenCode's published SDK, which has the same API.
+ */
+export const PLUGIN_SDK_PACKAGE = "@opencode-ai/plugin"
+
 /** `name.json` and `name.jsonc` for every config name, preferred first. */
 export function configFiles(dir: string) {
   return CONFIG_NAMES.flatMap((name) => [path.join(dir, `${name}.json`), path.join(dir, `${name}.jsonc`)])
