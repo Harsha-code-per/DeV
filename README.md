@@ -5,7 +5,8 @@ A personal, always-on AI assistant for your machine, coding-first. It runs on **
 DeV's engine is a fork of [OpenCode](https://github.com/anomalyco/opencode) (MIT) in [`engine/`](https://github.com/Harsha-code-per/opencode/tree/dev-engine). It adds:
 
 - **`auto/free` model** (the default): every request is routed across all free models from your connected providers. When one fails or hits its rate limit, DeV moves to the next and puts the failed one on cooldown. It works with no keys at all, using OpenCode Zen's free models.
-- **Built-in add-ons**: [superpowers](https://github.com/obra/superpowers) skills and [context7](https://github.com/upstash/context7) docs are on by default. [REA](https://github.com/morluto/rea) (reverse engineering) and [chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) (browser) ship turned off to save memory; enable them with `/mcp` when you need them.
+- **Built-in add-ons**, all on by default: [superpowers](https://github.com/obra/superpowers) skills, [context7](https://github.com/upstash/context7) docs, [REA](https://github.com/morluto/rea) (reverse engineering) and [chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) (browser).
+- **MCP servers that start on demand**: a local server only starts when one of its tools is called, and stops after 10 idle minutes. A plain prompt peaks around 760 MB (it was about 1.8 GB with every server running).
 - **One credential store**: connect providers with `/connect` inside DeV. No `.env` files.
 
 ## Install (Linux x64)
@@ -33,7 +34,7 @@ dev run "explain this repo"
 Inside the TUI:
 - `/connect` adds a provider (Groq, OpenRouter, Gemini, Cerebras, NVIDIA, any OpenAI-compatible endpoint, …). Each one you add widens the free pool.
 - `/models` pins a specific model instead of `auto/free`.
-- `/mcp` turns REA, chrome-devtools and the others on or off.
+- `/mcp` turns servers on or off. Set `OPENCODE_DISABLE_MCP_LAZY=1` to start every server eagerly.
 
 ## Develop
 
