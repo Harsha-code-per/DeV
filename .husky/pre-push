@@ -1,0 +1,26 @@
+#!/bin/sh
+set -e
+# Check if bun version matches package.json
+# keep in sync with packages/script/src/index.ts semver qualifier
+bun -e '
+import { semver } from "bun";
+const pkg = await Bun.file("package.json").json();
+const expectedBunVersion = pkg.packageManager?.split("@")[1];
+if (!expectedBunVersion) {
+  throw new Error("packageManager field not found in root package.json");
+}
+const expectedBunVersionRange = `^${expectedBunVersion}`;
+if (!semver.satisfies(process.versions.bun, expectedBunVersionRange)) {
+  throw new Error(`This script requires bun@${expectedBunVersionRange}, but you are using bun@${process.versions.bun}`);
+}
+if (process.versions.bun !== expectedBunVersion) {
+  console.warn(`Warning: Bun version ${process.versions.bun} differs from expected ${expectedBunVersion}`);
+}
+'
+# DeV: typecheck one package at a time, and under a memory cap when systemd is available, so a
+# push can never take the machine down (12 parallel tsgo processes once used ~20 GB).
+if command -v systemd-run >/dev/null 2>&1 && systemd-run --user --scope --quiet true 2>/dev/null; then
+  systemd-run --user --scope --quiet -p MemoryMax=6G -p MemorySwapMax=1G -p CPUWeight=50 -- bun typecheck
+else
+  bun typecheck
+fi

@@ -1,18 +1,39 @@
-# Python-generated files
-__pycache__/
-.pytest_cache/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
-
-# Virtual environments
-.venv
-venv/
-
-# env files
+.DS_Store
+node_modules
+.worktrees
+.sst
 .env
-!.env.example
-# DeV runtime state
-.dev/
+.env.local
+.idea
+.vscode
+.codex
+*~
+playground
+tmp
+dist
+ts-dist
+.turbo
+**/.serena
+.serena/
+**/.omo
+.omo/
+/result
+refs
+Session.vim
+/opencode.json
+a.out
+target
+.scripts
+.direnv/
+
+# Local dev files
+opencode-dev
+UPCOMING_CHANGELOG.md
+logs/
+*.bun-build
+tsconfig.tsbuildinfo
+/artifacts/
+
+# Python caches (scripts, benchmarks)
+__pycache__/
+*.py[oc]
