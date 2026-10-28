@@ -17,7 +17,7 @@ import { mergeDeep } from "remeda"
 import { Flag } from "@dev-ai/core/flag/flag"
 
 // DeV identifies as itself to every provider; stock opencode keeps its own headers for Zen.
-const USER_AGENT = `${Flag.OPENCODE_DISABLE_DEV_DEFAULTS ? "opencode" : "dev"}/${InstallationVersion}`
+const USER_AGENT = `${Flag.DEV_DISABLE_DEV_DEFAULTS ? "opencode" : "dev"}/${InstallationVersion}`
 
 type PrepareInput = {
   readonly user: SessionV1.User
@@ -187,13 +187,13 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (input: Pre
     params,
     messageTransformOptions: options,
     headers: {
-      ...(Flag.OPENCODE_DISABLE_DEV_DEFAULTS
+      ...(Flag.DEV_DISABLE_DEV_DEFAULTS
         ? {
             "x-opencode-session-id": input.sessionID,
             ...(input.parentSessionID ? { "x-opencode-parent-session-id": input.parentSessionID } : {}),
           }
         : {}),
-      ...(Flag.OPENCODE_DISABLE_DEV_DEFAULTS && input.model.providerID.startsWith("opencode")
+      ...(Flag.DEV_DISABLE_DEV_DEFAULTS && input.model.providerID.startsWith("opencode")
         ? {
             ...(opencodeProjectID ? { "x-opencode-project": opencodeProjectID } : {}),
             "x-opencode-session": input.sessionID,

@@ -176,7 +176,7 @@ export const OpencodePlugin = define<HttpClient.HttpClient | EventV2.Service | S
       if (!item) return
       const hasKey = Boolean(process.env.OPENCODE_API_KEY || connected || item.provider.request.body.apiKey)
       // DeV: no keyless access to OpenCode's Zen; it works only with the user's own key.
-      if (!hasKey && !Flag.OPENCODE_DISABLE_DEV_DEFAULTS) {
+      if (!hasKey && !Flag.DEV_DISABLE_DEV_DEFAULTS) {
         for (const model of item.models.values())
           catalog.model.update(item.provider.id, model.id, (draft) => {
             draft.enabled = false

@@ -98,7 +98,7 @@ export function retryable(error: Err, provider: string) {
     )
       return undefined
     // OpenCode Zen/Go subscription upsells belong to stock opencode, not DeV.
-    if (Flag.OPENCODE_DISABLE_DEV_DEFAULTS && error.data.responseBody?.includes("FreeUsageLimitError")) {
+    if (Flag.DEV_DISABLE_DEV_DEFAULTS && error.data.responseBody?.includes("FreeUsageLimitError")) {
       return {
         message: GO_UPSELL_MESSAGE,
         action: {
@@ -111,7 +111,7 @@ export function retryable(error: Err, provider: string) {
         },
       }
     }
-    if (Flag.OPENCODE_DISABLE_DEV_DEFAULTS && error.data.responseBody?.includes("GoUsageLimitError")) {
+    if (Flag.DEV_DISABLE_DEV_DEFAULTS && error.data.responseBody?.includes("GoUsageLimitError")) {
       const body = parseJSON(error.data.responseBody)
       const workspace = str(body?.metadata?.workspace)
       const limitName = str(body?.metadata?.limitName)

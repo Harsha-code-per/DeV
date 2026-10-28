@@ -26,7 +26,7 @@ export const directories = Effect.fn("ConfigPaths.directories")(function* (direc
   const afs = yield* FSUtil.Service
   return unique([
     Global.Path.config,
-    ...(!Flag.OPENCODE_DISABLE_PROJECT_CONFIG
+    ...(!Flag.DEV_DISABLE_PROJECT_CONFIG
       ? yield* afs.up({
           // Later directories win, so at each level the preferred (.dev) folder is listed last.
           targets: Brand.CONFIG_DIRS.toReversed(),
@@ -40,7 +40,7 @@ export const directories = Effect.fn("ConfigPaths.directories")(function* (direc
       start: Global.Path.home,
       stop: Global.Path.home,
     })),
-    ...(Flag.OPENCODE_CONFIG_DIR ? [Flag.OPENCODE_CONFIG_DIR] : []),
+    ...(Flag.DEV_CONFIG_DIR ? [Flag.DEV_CONFIG_DIR] : []),
   ])
 })
 

@@ -532,7 +532,7 @@ const layer = Layer.effect(
                 return
               }
 
-              const lazy = mcp.type === "local" && !Flag.OPENCODE_DISABLE_MCP_LAZY
+              const lazy = mcp.type === "local" && !Flag.DEV_DISABLE_MCP_LAZY
               const cached = lazy ? yield* Effect.promise(() => McpLazy.read(key, mcp)) : undefined
               if (cached) {
                 s.status[key] = { status: "connected" }

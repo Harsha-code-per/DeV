@@ -232,7 +232,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         Boolean((yield* dep.config()).provider?.["opencode"]?.options?.apiKey)
 
       // DeV: Zen is OpenCode's service; without the user's own key it isn't loaded at all.
-      if (!ok && !Flag.OPENCODE_DISABLE_DEV_DEFAULTS) return { autoload: false }
+      if (!ok && !Flag.DEV_DISABLE_DEV_DEFAULTS) return { autoload: false }
       if (!ok) {
         for (const [key, value] of Object.entries(input.models)) {
           if (value.cost.input === 0) continue
@@ -1225,7 +1225,7 @@ export class InitError extends Schema.TaggedErrorClass<InitError>()("ProviderIni
 
 export class NoProvidersError extends Schema.TaggedErrorClass<NoProvidersError>()("ProviderNoProvidersError", {}) {
   override get message() {
-    if (Flag.OPENCODE_DISABLE_DEV_DEFAULTS) return "No providers are available"
+    if (Flag.DEV_DISABLE_DEV_DEFAULTS) return "No providers are available"
     return [
       "No AI model is connected yet. Two free ways to start:",
       "  1. Connect a free-tier provider: run `dev providers login` (or /connect in the TUI) and pick",
@@ -1505,7 +1505,7 @@ const layer = Layer.effect(
 
         // now read config providers - includes any modifications from plugin config() hook
         // DeV: running local model servers (Ollama, LM Studio) join as providers unless configured.
-        const local = Flag.OPENCODE_DISABLE_DEV_DEFAULTS ? {} : yield* Effect.promise(() => LocalProviders.detect())
+        const local = Flag.DEV_DISABLE_DEV_DEFAULTS ? {} : yield* Effect.promise(() => LocalProviders.detect())
         const configProviders = [
           ...Object.entries(cfg.provider ?? {}),
           ...Object.entries(local).filter(([id]) => !cfg.provider?.[id]),
@@ -2089,7 +2089,7 @@ const layer = Layer.effect(
 
       // DeV: with no explicit or recent choice, route through the free auto model.
       const auto = ProviderV2.ID.make(AutoProvider.ID)
-      if (s.providers[auto] && !Flag.OPENCODE_DISABLE_DEV_DEFAULTS)
+      if (s.providers[auto] && !Flag.DEV_DISABLE_DEV_DEFAULTS)
         return { providerID: auto, modelID: ModelV2.ID.make(AutoProvider.MODEL) }
 
       const configured = Object.keys(cfg.provider ?? {})

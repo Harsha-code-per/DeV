@@ -23,18 +23,18 @@ import { testEffect } from "../lib/effect"
 const testStateLayer = Layer.effectDiscard(
   Effect.gen(function* () {
     const original = {
-      OPENCODE_SERVER_PASSWORD: Flag.OPENCODE_SERVER_PASSWORD,
-      OPENCODE_SERVER_USERNAME: Flag.OPENCODE_SERVER_USERNAME,
-      envPassword: process.env.OPENCODE_SERVER_PASSWORD,
-      envUsername: process.env.OPENCODE_SERVER_USERNAME,
+      DEV_SERVER_PASSWORD: Flag.DEV_SERVER_PASSWORD,
+      DEV_SERVER_USERNAME: Flag.DEV_SERVER_USERNAME,
+      envPassword: process.env.DEV_SERVER_PASSWORD,
+      envUsername: process.env.DEV_SERVER_USERNAME,
     }
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        Flag.OPENCODE_SERVER_PASSWORD = original.OPENCODE_SERVER_PASSWORD
-        Flag.OPENCODE_SERVER_USERNAME = original.OPENCODE_SERVER_USERNAME
-        restoreEnv("OPENCODE_SERVER_PASSWORD", original.envPassword)
-        restoreEnv("OPENCODE_SERVER_USERNAME", original.envUsername)
+        Flag.DEV_SERVER_PASSWORD = original.DEV_SERVER_PASSWORD
+        Flag.DEV_SERVER_USERNAME = original.DEV_SERVER_USERNAME
+        restoreEnv("DEV_SERVER_PASSWORD", original.envPassword)
+        restoreEnv("DEV_SERVER_USERNAME", original.envUsername)
       }),
     )
   }),
@@ -64,8 +64,8 @@ function app(input?: { password?: string; username?: string }) {
       Layer.provide(
         ConfigProvider.layer(
           ConfigProvider.fromUnknown({
-            OPENCODE_SERVER_PASSWORD: input?.password,
-            OPENCODE_SERVER_USERNAME: input?.username,
+            DEV_SERVER_PASSWORD: input?.password,
+            DEV_SERVER_USERNAME: input?.username,
           }),
         ),
       ),

@@ -5,80 +5,80 @@ export function truthy(key: string) {
   return value === "true" || value === "1"
 }
 
-const copy = process.env["OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT"]
-const fff = process.env["OPENCODE_DISABLE_FFF"]
+const copy = process.env["DEV_EXPERIMENTAL_DISABLE_COPY_ON_SELECT"]
+const fff = process.env["DEV_DISABLE_FFF"]
 
 function enabledByExperimental(key: string) {
-  return process.env[key] === undefined ? truthy("OPENCODE_EXPERIMENTAL") : truthy(key)
+  return process.env[key] === undefined ? truthy("DEV_EXPERIMENTAL") : truthy(key)
 }
 
 export const Flag = {
   OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
   OTEL_EXPORTER_OTLP_HEADERS: process.env["OTEL_EXPORTER_OTLP_HEADERS"],
 
-  OPENCODE_AUTO_HEAP_SNAPSHOT: truthy("OPENCODE_AUTO_HEAP_SNAPSHOT"),
-  OPENCODE_GIT_BASH_PATH: process.env["OPENCODE_GIT_BASH_PATH"],
-  OPENCODE_CONFIG: process.env["OPENCODE_CONFIG"],
-  OPENCODE_CONFIG_CONTENT: process.env["OPENCODE_CONFIG_CONTENT"],
-  OPENCODE_DISABLE_AUTOUPDATE: truthy("OPENCODE_DISABLE_AUTOUPDATE"),
-  OPENCODE_ALWAYS_NOTIFY_UPDATE: truthy("OPENCODE_ALWAYS_NOTIFY_UPDATE"),
-  OPENCODE_DISABLE_PRUNE: truthy("OPENCODE_DISABLE_PRUNE"),
-  OPENCODE_DISABLE_TERMINAL_TITLE: truthy("OPENCODE_DISABLE_TERMINAL_TITLE"),
-  OPENCODE_SHOW_TTFD: truthy("OPENCODE_SHOW_TTFD"),
-  OPENCODE_DISABLE_AUTOCOMPACT: truthy("OPENCODE_DISABLE_AUTOCOMPACT"),
-  OPENCODE_DISABLE_MODELS_FETCH: truthy("OPENCODE_DISABLE_MODELS_FETCH"),
-  OPENCODE_DISABLE_MOUSE: truthy("OPENCODE_DISABLE_MOUSE"),
-  OPENCODE_FAKE_VCS: process.env["OPENCODE_FAKE_VCS"],
-  OPENCODE_SERVER_PASSWORD: process.env["OPENCODE_SERVER_PASSWORD"],
-  OPENCODE_SERVER_USERNAME: process.env["OPENCODE_SERVER_USERNAME"],
-  OPENCODE_DISABLE_FFF: fff === undefined ? process.platform === "win32" : truthy("OPENCODE_DISABLE_FFF"),
+  DEV_AUTO_HEAP_SNAPSHOT: truthy("DEV_AUTO_HEAP_SNAPSHOT"),
+  DEV_GIT_BASH_PATH: process.env["DEV_GIT_BASH_PATH"],
+  DEV_CONFIG: process.env["DEV_CONFIG"],
+  DEV_CONFIG_CONTENT: process.env["DEV_CONFIG_CONTENT"],
+  DEV_DISABLE_AUTOUPDATE: truthy("DEV_DISABLE_AUTOUPDATE"),
+  DEV_ALWAYS_NOTIFY_UPDATE: truthy("DEV_ALWAYS_NOTIFY_UPDATE"),
+  DEV_DISABLE_PRUNE: truthy("DEV_DISABLE_PRUNE"),
+  DEV_DISABLE_TERMINAL_TITLE: truthy("DEV_DISABLE_TERMINAL_TITLE"),
+  DEV_SHOW_TTFD: truthy("DEV_SHOW_TTFD"),
+  DEV_DISABLE_AUTOCOMPACT: truthy("DEV_DISABLE_AUTOCOMPACT"),
+  DEV_DISABLE_MODELS_FETCH: truthy("DEV_DISABLE_MODELS_FETCH"),
+  DEV_DISABLE_MOUSE: truthy("DEV_DISABLE_MOUSE"),
+  DEV_FAKE_VCS: process.env["DEV_FAKE_VCS"],
+  DEV_SERVER_PASSWORD: process.env["DEV_SERVER_PASSWORD"],
+  DEV_SERVER_USERNAME: process.env["DEV_SERVER_USERNAME"],
+  DEV_DISABLE_FFF: fff === undefined ? process.platform === "win32" : truthy("DEV_DISABLE_FFF"),
 
   // Experimental
-  OPENCODE_EXPERIMENTAL_FILEWATCHER: Config.boolean("OPENCODE_EXPERIMENTAL_FILEWATCHER").pipe(
+  DEV_EXPERIMENTAL_FILEWATCHER: Config.boolean("DEV_EXPERIMENTAL_FILEWATCHER").pipe(
     Config.withDefault(false),
   ),
-  OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: Config.boolean("OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER").pipe(
+  DEV_EXPERIMENTAL_DISABLE_FILEWATCHER: Config.boolean("DEV_EXPERIMENTAL_DISABLE_FILEWATCHER").pipe(
     Config.withDefault(false),
   ),
-  OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT:
-    copy === undefined ? process.platform === "win32" : truthy("OPENCODE_EXPERIMENTAL_DISABLE_COPY_ON_SELECT"),
-  OPENCODE_MODELS_URL: process.env["OPENCODE_MODELS_URL"],
-  OPENCODE_MODELS_PATH: process.env["OPENCODE_MODELS_PATH"],
-  OPENCODE_DB: process.env["OPENCODE_DB"],
+  DEV_EXPERIMENTAL_DISABLE_COPY_ON_SELECT:
+    copy === undefined ? process.platform === "win32" : truthy("DEV_EXPERIMENTAL_DISABLE_COPY_ON_SELECT"),
+  DEV_MODELS_URL: process.env["DEV_MODELS_URL"],
+  DEV_MODELS_PATH: process.env["DEV_MODELS_PATH"],
+  DEV_DB: process.env["DEV_DB"],
 
-  OPENCODE_WORKSPACE_ID: process.env["OPENCODE_WORKSPACE_ID"],
-  OPENCODE_EXPERIMENTAL_WORKSPACES: enabledByExperimental("OPENCODE_EXPERIMENTAL_WORKSPACES"),
+  DEV_WORKSPACE_ID: process.env["DEV_WORKSPACE_ID"],
+  DEV_EXPERIMENTAL_WORKSPACES: enabledByExperimental("DEV_EXPERIMENTAL_WORKSPACES"),
 
   // Evaluated at access time (not module load) because tests, the CLI, and
   // external tooling set these env vars at runtime.
-  get OPENCODE_DISABLE_MCP_LAZY() {
-    return truthy("OPENCODE_DISABLE_MCP_LAZY")
+  get DEV_DISABLE_MCP_LAZY() {
+    return truthy("DEV_DISABLE_MCP_LAZY")
   },
-  get OPENCODE_DISABLE_DEV_DEFAULTS() {
-    return truthy("OPENCODE_DISABLE_DEV_DEFAULTS")
+  get DEV_DISABLE_DEV_DEFAULTS() {
+    return truthy("DEV_DISABLE_DEV_DEFAULTS")
   },
-  get OPENCODE_DISABLE_PROJECT_CONFIG() {
-    return truthy("OPENCODE_DISABLE_PROJECT_CONFIG")
+  get DEV_DISABLE_PROJECT_CONFIG() {
+    return truthy("DEV_DISABLE_PROJECT_CONFIG")
   },
-  get OPENCODE_EXPERIMENTAL_REFERENCES() {
-    return enabledByExperimental("OPENCODE_EXPERIMENTAL_REFERENCES")
+  get DEV_EXPERIMENTAL_REFERENCES() {
+    return enabledByExperimental("DEV_EXPERIMENTAL_REFERENCES")
   },
-  get OPENCODE_TUI_CONFIG() {
-    return process.env["OPENCODE_TUI_CONFIG"]
+  get DEV_TUI_CONFIG() {
+    return process.env["DEV_TUI_CONFIG"]
   },
-  get OPENCODE_CONFIG_DIR() {
-    return process.env["OPENCODE_CONFIG_DIR"]
+  get DEV_CONFIG_DIR() {
+    return process.env["DEV_CONFIG_DIR"]
   },
-  get OPENCODE_PURE() {
-    return truthy("OPENCODE_PURE")
+  get DEV_PURE() {
+    return truthy("DEV_PURE")
   },
-  get OPENCODE_PERMISSION() {
-    return process.env["OPENCODE_PERMISSION"]
+  get DEV_PERMISSION() {
+    return process.env["DEV_PERMISSION"]
   },
-  get OPENCODE_PLUGIN_META_FILE() {
-    return process.env["OPENCODE_PLUGIN_META_FILE"]
+  get DEV_PLUGIN_META_FILE() {
+    return process.env["DEV_PLUGIN_META_FILE"]
   },
-  get OPENCODE_CLIENT() {
-    return process.env["OPENCODE_CLIENT"] ?? "cli"
+  get DEV_CLIENT() {
+    return process.env["DEV_CLIENT"] ?? "cli"
   },
 }

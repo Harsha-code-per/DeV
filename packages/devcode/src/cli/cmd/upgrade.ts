@@ -27,7 +27,7 @@ export const UpgradeCommand = {
       })
   },
   handler: async (args: { target?: string; method?: string; major?: boolean }) => {
-    if (!Flag.OPENCODE_DISABLE_DEV_DEFAULTS) return SourceInstall.upgrade()
+    if (!Flag.DEV_DISABLE_DEV_DEFAULTS) return SourceInstall.upgrade()
     UI.empty()
     UI.println(UI.logo("  "))
     UI.empty()

@@ -2,10 +2,10 @@ import path from "path"
 import { Flag } from "./flag/flag"
 
 // DeV naming for config files and project folders. DeV names come first; the stock opencode
-// names stay readable so existing setups keep working. OPENCODE_DISABLE_DEV_DEFAULTS restores
+// names stay readable so existing setups keep working. DEV_DISABLE_DEV_DEFAULTS restores
 // stock-only behaviour (used by upstream tests).
 
-const stock = Flag.OPENCODE_DISABLE_DEV_DEFAULTS
+const stock = Flag.DEV_DISABLE_DEV_DEFAULTS
 
 /** Config file base names, preferred first. */
 export const CONFIG_NAMES = stock ? ["opencode"] : ["dev", "opencode"]

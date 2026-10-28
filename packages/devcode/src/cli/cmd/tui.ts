@@ -18,7 +18,7 @@ import { validateSession } from "../tui/validate-session"
 import { win32InstallCtrlCGuard } from "@dev-ai/tui/terminal-win32"
 
 declare global {
-  const OPENCODE_WORKER_PATH: string
+  const DEV_WORKER_PATH: string
 }
 
 type RpcClient = ReturnType<typeof Rpc.client<typeof rpc>>
@@ -89,7 +89,7 @@ function createUpdater(latest: () => Promise<UpdateNotice | undefined>): UpdateS
 }
 
 async function target() {
-  if (typeof OPENCODE_WORKER_PATH !== "undefined") return OPENCODE_WORKER_PATH
+  if (typeof DEV_WORKER_PATH !== "undefined") return DEV_WORKER_PATH
   const dist = new URL("./cli/tui/worker.js", import.meta.url)
   if (await Filesystem.exists(fileURLToPath(dist))) return dist
   return new URL("../tui/worker.ts", import.meta.url)

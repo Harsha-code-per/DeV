@@ -50,7 +50,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 
 - [x] `@opencode-ai/*` → `@dev-ai/*` in every `package.json`, import and tsconfig path. One exception: `Brand.PLUGIN_SDK_PACKAGE` still installs OpenCode's published plugin SDK until `@dev-ai/plugin` is on npm (M0.4).
 - [x] `packages/opencode` → `packages/devcode`. The binary installs as `devcode` with `dev` as an alias.
-- [ ] Internal `OPENCODE_*` → `DEV_*`. Remove the alias loop and stock mode (`OPENCODE_DISABLE_DEV_DEFAULTS`); tests and snapshots become DeV-native.
+- [ ] Internal `DEV_*` → `DEV_*`. Remove the alias loop and stock mode (`DEV_DISABLE_DEV_DEFAULTS`); tests and snapshots become DeV-native.
 - [ ] Rename identifiers: `OpenCode` → `DevCode` (SDK client and namespaces), the TUI theme name, app IDs.
 - [ ] `script/brand-check.ts` in CI. "opencode" may appear only in an allowlist: LICENSE/NOTICE, credits, and the OpenCode Zen provider id and its labels.
 - [ ] OpenCode Zen is listed honestly in `/connect` as "OpenCode Zen (free models with your Zen key)", with its data-use notes.

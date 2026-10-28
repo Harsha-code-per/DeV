@@ -54,7 +54,7 @@ export const UninstallCommand = {
       }),
 
   handler: async (args: UninstallArgs) => {
-    if (!Flag.OPENCODE_DISABLE_DEV_DEFAULTS) return SourceInstall.uninstall()
+    if (!Flag.DEV_DISABLE_DEV_DEFAULTS) return SourceInstall.uninstall()
     UI.empty()
     UI.println(UI.logo("  "))
     UI.empty()

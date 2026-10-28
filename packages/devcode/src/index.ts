@@ -44,19 +44,14 @@ function show(out: string) {
   process.stderr.write(out)
 }
 
-// DeV: every setting can be given as DEV_X; the engine reads it internally as OPENCODE_X.
-for (const [key, value] of Object.entries(process.env)) {
-  if (key.startsWith("DEV_") && value !== undefined) process.env[`OPENCODE_${key.slice(4)}`] ??= value
-}
-
 // DeV: MCP tools go through one code-mode `execute` tool by default instead of being sent
 // individually (~107K → ~19K input tokens per request with the bundled servers), which keeps
-// free models within their context windows. Set OPENCODE_EXPERIMENTAL_CODE_MODE=false to opt out.
-process.env.OPENCODE_EXPERIMENTAL_CODE_MODE ??= "true"
+// free models within their context windows. Set DEV_EXPERIMENTAL_CODE_MODE=false to opt out.
+process.env.DEV_EXPERIMENTAL_CODE_MODE ??= "true"
 
 const cli = yargs(args)
   .parserConfiguration({ "populate--": true })
-  .scriptName(Flag.OPENCODE_DISABLE_DEV_DEFAULTS ? "opencode" : "dev")
+  .scriptName(Flag.DEV_DISABLE_DEV_DEFAULTS ? "opencode" : "dev")
   .wrap(100)
   .help("help", "show help")
   .alias("help", "h")
@@ -76,17 +71,17 @@ const cli = yargs(args)
     type: "boolean",
   })
   .middleware(async (opts) => {
-    if (opts.printLogs) process.env.OPENCODE_PRINT_LOGS = "1"
-    if (opts.logLevel) process.env.OPENCODE_LOG_LEVEL = opts.logLevel
+    if (opts.printLogs) process.env.DEV_PRINT_LOGS = "1"
+    if (opts.logLevel) process.env.DEV_LOG_LEVEL = opts.logLevel
     if (opts.pure) {
-      process.env.OPENCODE_PURE = "1"
+      process.env.DEV_PURE = "1"
     }
 
     Heap.start()
 
     process.env.AGENT = "1"
     process.env.OPENCODE = "1"
-    process.env.OPENCODE_PID = String(process.pid)
+    process.env.DEV_PID = String(process.pid)
   })
   .usage("")
   .completion("completion", "generate shell completion script")
@@ -109,7 +104,7 @@ const cli = yargs(args)
   .command(ExportCommand)
   .command(ImportCommand)
   // OpenCode account and GitHub-app commands belong to OpenCode's hosted services.
-  .command(Flag.OPENCODE_DISABLE_DEV_DEFAULTS ? [ConsoleCommand, GithubCommand] : [])
+  .command(Flag.DEV_DISABLE_DEV_DEFAULTS ? [ConsoleCommand, GithubCommand] : [])
   .command(PrCommand)
   .command(SessionCommand)
   .command(PluginCommand)
