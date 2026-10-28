@@ -2,11 +2,8 @@
   "files.watcherExclude": {
     "**/node_modules/**": true,
     "**/dist/**": true,
-    "**/.turbo/**": true,
-    "engine/**": true
+    "**/.turbo/**": true
   },
-  "search.exclude": { "**/node_modules": true, "**/dist": true, "engine/**/.turbo": true },
-  "python.analysis.exclude": ["engine/**", "**/node_modules/**", ".venv/**"],
-  "typescript.tsserver.maxTsServerMemory": 2048,
-  "git.detectSubmodules": false
+  "search.exclude": { "**/node_modules": true, "**/dist": true, "**/.turbo": true },
+  "typescript.tsserver.maxTsServerMemory": 2048
 }
