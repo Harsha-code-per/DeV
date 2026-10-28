@@ -15,6 +15,7 @@ import { Flock } from "@dev-ai/core/util/flock"
 import { isRecord } from "@/util/record"
 
 import { parsePluginSpecifier, readPackageThemes, readPluginPackage, resolvePluginTarget } from "./shared"
+import { existsSync } from "fs"
 
 type Mode = "noop" | "add" | "replace"
 type Kind = "server" | "tui"
@@ -335,7 +336,9 @@ function patchDir(input: PatchInput) {
   if (input.global) return input.config ?? Global.Path.config
   const git = input.vcs === "git" && input.worktree !== "/"
   const root = git ? input.worktree : input.directory
-  return path.join(root, Brand.CONFIG_DIR)
+  // Use the project's existing config folder (.dev, or .opencode when migrated) before creating .dev.
+  const existing = Brand.CONFIG_DIRS.map((dir) => path.join(root, dir)).find((dir) => existsSync(dir))
+  return existing ?? path.join(root, Brand.CONFIG_DIR)
 }
 
 function patchName(kind: Kind): "opencode" | "tui" {

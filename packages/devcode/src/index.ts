@@ -1,9 +1,7 @@
 import yargs from "yargs"
-import { Flag } from "@dev-ai/core/flag/flag"
 import { hideBin } from "yargs/helpers"
 import { RunCommand } from "./cli/cmd/run"
 import { GenerateCommand } from "./cli/cmd/generate"
-import { ConsoleCommand } from "./cli/cmd/account"
 import { ProvidersCommand } from "./cli/cmd/providers"
 import { AgentCommand } from "./cli/cmd/agent"
 import { UpgradeCommand } from "./cli/cmd/upgrade"
@@ -17,7 +15,6 @@ import { DebugCommand } from "./cli/cmd/debug"
 import { StatsCommand } from "./cli/cmd/stats"
 import { McpCommand } from "./cli/cmd/mcp"
 import { CatalogCommand } from "./cli/cmd/catalog"
-import { GithubCommand } from "./cli/cmd/github"
 import { ExportCommand } from "./cli/cmd/export"
 import { ImportCommand } from "./cli/cmd/import"
 import { AttachCommand } from "./cli/cmd/attach"
@@ -51,7 +48,7 @@ process.env.DEV_EXPERIMENTAL_CODE_MODE ??= "true"
 
 const cli = yargs(args)
   .parserConfiguration({ "populate--": true })
-  .scriptName(Flag.DEV_DISABLE_DEV_DEFAULTS ? "opencode" : "dev")
+  .scriptName("dev")
   .wrap(100)
   .help("help", "show help")
   .alias("help", "h")
@@ -103,8 +100,6 @@ const cli = yargs(args)
   .command(StatsCommand)
   .command(ExportCommand)
   .command(ImportCommand)
-  // OpenCode account and GitHub-app commands belong to OpenCode's hosted services.
-  .command(Flag.DEV_DISABLE_DEV_DEFAULTS ? [ConsoleCommand, GithubCommand] : [])
   .command(PrCommand)
   .command(SessionCommand)
   .command(PluginCommand)

@@ -1,17 +1,13 @@
 import path from "path"
-import { Flag } from "./flag/flag"
 
-// DeV naming for config files and project folders. DeV names come first; the stock opencode
-// names stay readable so existing setups keep working. DEV_DISABLE_DEV_DEFAULTS restores
-// stock-only behaviour (used by upstream tests).
-
-const stock = Flag.DEV_DISABLE_DEV_DEFAULTS
+// DeV naming for config files and project folders. DeV names come first; opencode's names stay
+// readable so setups migrated from OpenCode keep working.
 
 /** Config file base names, preferred first. */
-export const CONFIG_NAMES = stock ? ["opencode"] : ["dev", "opencode"]
+export const CONFIG_NAMES = ["dev", "opencode"]
 
 /** Project config folders, preferred first. */
-export const CONFIG_DIRS = stock ? [".opencode"] : [".dev", ".opencode"]
+export const CONFIG_DIRS = [".dev", ".opencode"]
 
 /** Where DeV writes new project config. */
 export const CONFIG_DIR = CONFIG_DIRS[0]
@@ -20,7 +16,7 @@ export const CONFIG_DIR = CONFIG_DIRS[0]
 export const CONFIG_NAME = CONFIG_NAMES[0]
 
 /** Name advertised over mDNS. Not plain "dev.local", which collides with hosts named "dev". */
-export const MDNS_DOMAIN = stock ? "opencode.local" : "dev-ai.local"
+export const MDNS_DOMAIN = "dev-ai.local"
 
 /**
  * npm package installed into config folders so local plugins get typings. Our own plugin SDK isn't

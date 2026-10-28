@@ -2,6 +2,7 @@ import path from "path"
 
 import { createPlugTask, type PlugCtx, type PlugDeps } from "../../src/cli/cmd/plug"
 import { Filesystem } from "@/util/filesystem"
+import { ConfigPaths } from "../../src/config/paths"
 
 type Msg = {
   dir: string
@@ -56,7 +57,7 @@ function deps(msg: Msg): PlugDeps {
       await Filesystem.write(file, text)
     },
     exists: (file) => Filesystem.exists(file),
-    files: (dir, name) => [path.join(dir, `${name}.jsonc`), path.join(dir, `${name}.json`)],
+    files: (dir, name) => ConfigPaths.fileInDirectory(dir, name),
     global: msg.globalDir ?? path.join(msg.dir, ".global"),
   }
 }

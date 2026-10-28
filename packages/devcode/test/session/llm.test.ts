@@ -811,15 +811,12 @@ describe("session.llm.stream", () => {
           })
 
           const headers = (yield* Effect.promise(() => request)).headers
-          expect(headers.get("x-opencode-session-id")).toBe(sessionID)
-          expect(headers.get("x-opencode-parent-session-id")).toBe(parentSessionID ?? null)
-          expect(headers.get("x-parent-session-id")).toBe(parentSessionID ?? null)
-          if (input.providerID.startsWith("opencode")) {
-            expect(headers.get("x-opencode-session")).toBe(sessionID)
-            return
-          }
+          // DeV identifies as itself to every provider, OpenCode Zen included.
           expect(headers.get("x-session-affinity")).toBe(sessionID)
           expect(headers.get("X-Session-Id")).toBe(sessionID)
+          expect(headers.get("x-parent-session-id")).toBe(parentSessionID ?? null)
+          expect(headers.get("User-Agent")).toStartWith("dev/")
+          expect([...headers.keys()].filter((key) => key.startsWith("x-opencode"))).toEqual([])
         }),
       {
         config: () => {

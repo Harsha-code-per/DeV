@@ -20,7 +20,7 @@ const InterleavedField = Schema.Union([
   Schema.String,
 ])
 
-const USER_AGENT = `${Flag.DEV_DISABLE_DEV_DEFAULTS ? "opencode" : "dev"}/${InstallationChannel}/${InstallationVersion}/${Flag.DEV_CLIENT}`
+const USER_AGENT = `dev/${InstallationChannel}/${InstallationVersion}/${Flag.DEV_CLIENT}`
 
 const CostTier = Schema.Struct({
   input: Schema.Finite,

@@ -5,6 +5,7 @@ import { parse as parseJsonc } from "jsonc-parser"
 import { Filesystem } from "@/util/filesystem"
 import { createPlugTask, type PlugCtx, type PlugDeps } from "../../src/cli/cmd/plug"
 import { tmpdir } from "../fixture/fixture"
+import { ConfigPaths } from "../../src/config/paths"
 
 function deps(global: string, target: string | Error): PlugDeps {
   return {
@@ -26,7 +27,7 @@ function deps(global: string, target: string | Error): PlugDeps {
       await Filesystem.write(file, text)
     },
     exists: (file) => Filesystem.exists(file),
-    files: (dir, name) => [path.join(dir, `${name}.jsonc`), path.join(dir, `${name}.json`)],
+    files: (dir, name) => ConfigPaths.fileInDirectory(dir, name),
     global,
   }
 }
@@ -122,8 +123,8 @@ describe("plugin.install.task", () => {
     const ok = await run(ctx(tmp.path))
     expect(ok).toBe(true)
 
-    const server = await read(path.join(tmp.path, ".opencode", "opencode.jsonc"))
-    const tui = await read(path.join(tmp.path, ".opencode", "tui.jsonc"))
+    const server = await read(path.join(tmp.path, ".dev", "dev.json"))
+    const tui = await read(path.join(tmp.path, ".dev", "tui.json"))
     expect(server.plugin).toEqual(["acme@1.2.3"])
     expect(tui.plugin).toEqual(["acme@1.2.3"])
   })
@@ -144,8 +145,8 @@ describe("plugin.install.task", () => {
     const ok = await run(ctx(tmp.path))
     expect(ok).toBe(true)
 
-    const server = await read(path.join(tmp.path, ".opencode", "opencode.jsonc"))
-    const tui = await read(path.join(tmp.path, ".opencode", "tui.jsonc"))
+    const server = await read(path.join(tmp.path, ".dev", "dev.json"))
+    const tui = await read(path.join(tmp.path, ".dev", "tui.json"))
     expect(server.plugin).toEqual([["acme@1.2.3", { custom: true, other: false }]])
     expect(tui.plugin).toEqual([["acme@1.2.3", { compact: true }]])
   })
@@ -257,7 +258,7 @@ describe("plugin.install.task", () => {
 
     const ok = await run(ctx(tmp.path))
     expect(ok).toBe(true)
-    const server = await read(path.join(tmp.path, ".opencode", "opencode.jsonc"))
+    const server = await read(path.join(tmp.path, ".dev", "dev.json"))
     expect(server.plugin).toEqual(["acme@1.2.3"])
   })
 
@@ -366,8 +367,8 @@ describe("plugin.install.task", () => {
     const ok = await run(ctx(tmp.path))
     expect(ok).toBe(true)
 
-    expect(await Filesystem.exists(path.join(global, "opencode.jsonc"))).toBe(true)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "opencode.jsonc"))).toBe(false)
+    expect(await Filesystem.exists(path.join(global, "dev.json"))).toBe(true)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "dev.json"))).toBe(false)
   })
 
   test("writes local scope under directory when vcs is not git", async () => {
@@ -386,8 +387,8 @@ describe("plugin.install.task", () => {
 
     const ok = await run(ctxDir(directory, worktree))
     expect(ok).toBe(true)
-    expect(await Filesystem.exists(path.join(directory, ".opencode", "opencode.jsonc"))).toBe(true)
-    expect(await Filesystem.exists(path.join(worktree, ".opencode", "opencode.jsonc"))).toBe(false)
+    expect(await Filesystem.exists(path.join(directory, ".dev", "dev.json"))).toBe(true)
+    expect(await Filesystem.exists(path.join(worktree, ".dev", "dev.json"))).toBe(false)
   })
 
   test("writes local scope under directory when worktree is root slash", async () => {
@@ -404,7 +405,7 @@ describe("plugin.install.task", () => {
 
     const ok = await run(ctxRoot(directory))
     expect(ok).toBe(true)
-    expect(await Filesystem.exists(path.join(directory, ".opencode", "opencode.jsonc"))).toBe(true)
+    expect(await Filesystem.exists(path.join(directory, ".dev", "dev.json"))).toBe(true)
   })
 
   test("writes tui local scope under directory when worktree is root slash", async () => {
@@ -421,7 +422,7 @@ describe("plugin.install.task", () => {
 
     const ok = await run(ctxRoot(directory))
     expect(ok).toBe(true)
-    expect(await Filesystem.exists(path.join(directory, ".opencode", "tui.jsonc"))).toBe(true)
+    expect(await Filesystem.exists(path.join(directory, ".dev", "tui.json"))).toBe(true)
   })
 
   test("writes only tui config for tui-only plugins", async () => {
@@ -436,8 +437,8 @@ describe("plugin.install.task", () => {
 
     const ok = await run(ctx(tmp.path))
     expect(ok).toBe(true)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "tui.jsonc"))).toBe(true)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "opencode.jsonc"))).toBe(false)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "tui.json"))).toBe(true)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "dev.json"))).toBe(false)
   })
 
   test("writes tui config for oc-themes-only packages", async () => {
@@ -454,10 +455,10 @@ describe("plugin.install.task", () => {
 
     const ok = await run(ctx(tmp.path))
     expect(ok).toBe(true)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "tui.jsonc"))).toBe(true)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "opencode.jsonc"))).toBe(false)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "tui.json"))).toBe(true)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "dev.json"))).toBe(false)
 
-    const tui = await read(path.join(tmp.path, ".opencode", "tui.jsonc"))
+    const tui = await read(path.join(tmp.path, ".dev", "tui.json"))
     expect(tui.plugin).toEqual(["acme@1.2.3"])
   })
 

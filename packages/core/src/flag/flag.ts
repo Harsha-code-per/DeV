@@ -54,8 +54,9 @@ export const Flag = {
   get DEV_DISABLE_MCP_LAZY() {
     return truthy("DEV_DISABLE_MCP_LAZY")
   },
-  get DEV_DISABLE_DEV_DEFAULTS() {
-    return truthy("DEV_DISABLE_DEV_DEFAULTS")
+  /** Skip DeV's bundled plugins, MCP servers, local-model detection and auto/free default (tests). */
+  get DEV_DISABLE_BUNDLED_DEFAULTS() {
+    return truthy("DEV_DISABLE_BUNDLED_DEFAULTS")
   },
   get DEV_DISABLE_PROJECT_CONFIG() {
     return truthy("DEV_DISABLE_PROJECT_CONFIG")

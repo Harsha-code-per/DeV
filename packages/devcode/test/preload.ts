@@ -85,7 +85,7 @@ delete process.env["OTEL_RESOURCE_ATTRIBUTES"]
 
 // Use in-memory sqlite
 process.env["DEV_DB"] = ":memory:"
-process.env["DEV_DISABLE_DEV_DEFAULTS"] = "true"
+process.env["DEV_DISABLE_BUNDLED_DEFAULTS"] = "true"
 process.env["DEV_DISABLE_MCP_LAZY"] = "true"
 
 // Now safe to import from src/
