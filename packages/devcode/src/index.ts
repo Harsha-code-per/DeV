@@ -29,7 +29,20 @@ import { errorMessage } from "./util/error"
 import { PluginCommand } from "./cli/cmd/plug"
 import { Heap } from "./cli/heap"
 
-const args = hideBin(process.argv)
+// As in Claude Code, `dev -p "prompt"` (or --print) runs headless: it is `dev run`, with
+// `--output-format json|stream-json` meaning `--format json` (JSON events, one per line).
+const args = ((argv) => {
+  if (argv[0] !== "-p" && argv[0] !== "--print") return argv
+  const rest = argv.slice(1)
+  return [
+    "run",
+    ...rest.map((arg, i) => {
+      if (arg === "--output-format") return "--format"
+      if (rest[i - 1] === "--output-format") return arg === "text" ? "default" : "json"
+      return arg
+    }),
+  ]
+})(hideBin(process.argv))
 
 function show(out: string) {
   const text = out.trimStart()
