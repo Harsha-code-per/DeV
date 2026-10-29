@@ -45,6 +45,8 @@ function show(out: string) {
 // individually (~107K → ~19K input tokens per request with the bundled servers), which keeps
 // free models within their context windows. Set DEV_EXPERIMENTAL_CODE_MODE=false to opt out.
 process.env.DEV_EXPERIMENTAL_CODE_MODE ??= "true"
+// DeV: subagents can run in the background (task tool `background: true`), as in Claude Code.
+process.env.DEV_EXPERIMENTAL_BACKGROUND_SUBAGENTS ??= "true"
 
 const cli = yargs(args)
   .parserConfiguration({ "populate--": true })
