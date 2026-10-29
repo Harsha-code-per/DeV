@@ -64,7 +64,8 @@ export function logo(pad?: string) {
     bg: "\x1b[48;5;235m",
   }
   const right = {
-    fg: reset,
+    // DeV's signature saffron (#F2A516).
+    fg: "\x1b[38;2;242;165;22m",
     shadow: "\x1b[38;5;238m",
     bg: "\x1b[48;5;238m",
   }

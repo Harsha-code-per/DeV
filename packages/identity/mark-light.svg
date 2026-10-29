@@ -1,5 +1,6 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="512" height="512" fill="#FDFCFC"/>
-<path d="M320 224V352H192V224H320Z" fill="#E6E5E6"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M384 416H128V96H384V416ZM320 160H192V352H320V160Z" fill="#17181C"/>
+<svg width="512" height="512" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- DeV mark: a D with a v in its bowl, ink on DeV saffron (#F2A516). Works on light and dark. -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#F2A516"/>
+  <path d="M18 16h12c10 0 17 7 17 16s-7 16-17 16H18z" stroke="#121317" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M26 27l5 9 5-9" stroke="#121317" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
