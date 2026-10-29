@@ -68,6 +68,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [ ] Sandbox follow-ups: ship sandbox-runtime's `vendor/seccomp` next to the compiled binary (it blocks Unix sockets; the binary can't find it today); local MCP servers; Windows (restricted user plus network fence); a `sandbox` section in dev.json for extra hosts, paths and private registries; check on macOS in CI.
 - [x] Safe permission defaults (bundled config): reading in the project is allowed; file edits and web fetches ask; shell commands ask except a read-only set (ls, pwd, git status/diff/log/show/branch, rg, grep, cat, head, tail, wc, which, echo), and anything with a redirect, `--output` or `--pre` asks even then. Verified end to end per permission mode.
 - [x] Sandboxed shell commands run without asking (deny rules still apply); unsandboxed ones and outside directories still ask.
+- [x] Leaving the sandbox, as in Claude Code: when the sandbox blocks a command, DeV tells the agent, which can rerun it with `dangerouslyDisableSandbox`. That always asks the user ("Shell command outside the sandbox"); bundled allow rules don't cover it, an "always" approval does, and auto mode approves it. Verified end to end.
 - [ ] Server listens on localhost only and generates a random password by default.
 - [ ] Web, MCP and file content is marked untrusted; risky actions (deleting outside the project, `git push`, installs) need confirmation.
 - [ ] Supply chain: pinned deps, gitleaks and Renovate in CI, npm provenance, SHA-256 checksums on releases.

@@ -600,11 +600,32 @@ it.instance(
         permission: "bash",
         metadata: {},
         always: [],
-        sandboxed: true,
+        sandbox: "confined" as const,
         ruleset: Permission.fromConfig({ bash: { "*": "ask", "git push *": "deny" } }),
       }
       expect(yield* ask({ ...request, patterns: ["npm install"] })).toBeUndefined()
       expect(yield* fail(ask({ ...request, patterns: ["git push origin"] }))).toBeInstanceOf(PermissionV1.DeniedError)
+    }),
+  { git: true },
+)
+
+it.instance(
+  "ask - leaving the sandbox asks even when a config rule allows the command",
+  () =>
+    Effect.gen(function* () {
+      const request = {
+        sessionID: SessionID.make("session_test"),
+        permission: "bash",
+        metadata: {},
+        always: [],
+        sandbox: "escape" as const,
+        ruleset: Permission.fromConfig({ bash: { "cat *": "allow", "rm *": "deny" } }),
+      }
+      expect(yield* fail(ask({ ...request, patterns: ["rm -rf build"] }))).toBeInstanceOf(PermissionV1.DeniedError)
+      const fiber = yield* ask({ ...request, patterns: ["cat ~/.ssh/config"] }).pipe(Effect.forkScoped)
+      expect(yield* waitForPending(1)).toHaveLength(1)
+      yield* rejectAll()
+      yield* Fiber.await(fiber)
     }),
   { git: true },
 )

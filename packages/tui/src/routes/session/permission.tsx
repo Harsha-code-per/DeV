@@ -272,7 +272,7 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
               const command = typeof data.command === "string" ? data.command : ""
               return {
                 icon: "#",
-                title: "Shell command",
+                title: data.sandbox === "escape" ? "Shell command outside the sandbox" : "Shell command",
                 body: (
                   <Show when={command}>
                     <box paddingLeft={1}>

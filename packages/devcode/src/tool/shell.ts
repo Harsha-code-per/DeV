@@ -21,6 +21,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { ShellPrompt, type Parameters } from "./shell/prompt"
 import { BashArity } from "@/permission/arity"
+import { PermissionV1 } from "@dev-ai/core/v1/permission"
 import { Sandbox } from "@/sandbox"
 
 export { Parameters } from "./shell/prompt"
@@ -265,7 +266,7 @@ const ask = Effect.fn("ShellTool.ask")(function* (
   ctx: Tool.Context,
   scan: Scan,
   input: { command: string },
-  sandboxed: boolean,
+  sandbox: PermissionV1.AskInput["sandbox"],
 ) {
   if (scan.dirs.size > 0) {
     const directories = Array.from(scan.dirs)
@@ -292,8 +293,9 @@ const ask = Effect.fn("ShellTool.ask")(function* (
     always: Array.from(scan.always),
     metadata: {
       command: input.command,
+      ...(sandbox === "escape" ? { sandbox } : {}),
     },
-    sandboxed,
+    sandbox,
   })
 })
 
@@ -573,6 +575,10 @@ export const ShellTool = Tool.define(
         )
       }
       if (aborted) meta.push("User aborted the command")
+      if (input.sandboxed && code !== 0 && !expired && !aborted)
+        meta.push(
+          "This command ran in DeV's sandbox: it can write only to the project and temp folders, cannot read credentials, and reaches only package registries and git hosts. If it failed because of that, run it again with dangerouslyDisableSandbox: true; the user is asked to approve it.",
+        )
       const raw = list.map((item) => item.text).join("")
       const end = tail(raw, limits.maxLines, limits.maxBytes)
       if (end.cut) cut = true
@@ -634,12 +640,15 @@ export const ShellTool = Tool.define(
                   if (!containsPath(cwd, instanceCtx)) scan.dirs.add(cwd)
                   // DeV: the command runs inside the OS sandbox where the platform supports it, and then
                   // needs no approval (deny rules still apply). It may write to the project and to any
-                  // outside directory the user approves for it.
+                  // outside directory the user approves for it. Leaving the sandbox always asks the user.
                   const root = instanceCtx.worktree === "/" ? instanceCtx.directory : instanceCtx.worktree
-                  const wrapped = ps
-                    ? undefined
-                    : yield* Effect.promise(() => Sandbox.wrap(params.command, [root, ...scan.dirs], shell))
-                  yield* ask(ctx, scan, params, wrapped !== undefined)
+                  const wrapped =
+                    ps || params.dangerouslyDisableSandbox
+                      ? undefined
+                      : yield* Effect.promise(() => Sandbox.wrap(params.command, [root, ...scan.dirs], shell))
+                  const escape = params.dangerouslyDisableSandbox && Sandbox.supported() && !ps
+                  if (escape) scan.patterns.add(params.command)
+                  yield* ask(ctx, scan, params, wrapped ? "confined" : escape ? "escape" : undefined)
                   return wrapped
                 }),
               )

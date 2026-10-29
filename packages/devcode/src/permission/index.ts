@@ -77,7 +77,12 @@ const layer = Layer.effect(
             ruleset: ruleset.filter((rule) => Wildcard.match(request.permission, rule.permission)),
           })
         }
-        if (rule.action === "allow" || input.sandboxed) continue
+        if (input.sandbox === "confined") continue
+        if (input.sandbox === "escape" && evaluate(request.permission, pattern, approved).action !== "allow") {
+          needsAsk = true
+          continue
+        }
+        if (rule.action === "allow") continue
         needsAsk = true
       }
 

@@ -52,8 +52,10 @@ export const AskInput = Schema.Struct({
   ...Request.fields,
   id: Schema.optional(ID),
   ruleset: Ruleset,
-  // The action runs confined by the OS sandbox: "ask" rules pass without asking, "deny" rules still deny.
-  sandboxed: Schema.optional(Schema.Boolean),
+  // "confined": the action runs inside the OS sandbox, so "ask" rules pass without asking.
+  // "escape": the action leaves the sandbox, so it asks unless the user approved it ("always"); config
+  // "allow" rules don't cover it. "deny" rules deny either way.
+  sandbox: Schema.optional(Schema.Literals(["confined", "escape"])),
 }).annotate({
   identifier: "PermissionAskInput",
 })

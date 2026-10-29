@@ -19,6 +19,10 @@ export function parameterSchema() {
     workdir: Schema.optional(Schema.String).annotate({
       description: `The working directory to run the command in. Defaults to the current directory. Use this instead of 'cd' commands.`,
     }),
+    dangerouslyDisableSandbox: Schema.optional(Schema.Boolean).annotate({
+      description:
+        "Run the command outside the sandbox. Only after a command failed because the sandbox blocked it (a write outside the project, a blocked host, a credential it needs); the user is asked to approve.",
+    }),
   })
 }
 
