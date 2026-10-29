@@ -1,21 +1,43 @@
 # DeV
 
-A personal, always-on AI assistant for your machine, coding-first. It runs on **any** AI provider, and free ones work out of the box.
+DeV is a family of open-source AI assistants that work with any model, and with free and local models out of the box.
 
-DeV's engine is a fork of [OpenCode](https://github.com/anomalyco/opencode) (MIT) in [`engine/`](https://github.com/Harsha-code-per/opencode/tree/dev-engine). It adds:
+| Product | What it is | Status |
+|---|---|---|
+| **DeV Code** | A coding agent for the terminal. Commands `devcode` and `dev`. | Usable today, from source |
+| **DeV** (app) | A desktop app for Windows, macOS and Linux: chat and coding in one. | Coming |
+| **DeV for Chrome** | A browser extension that works with the app and DeV Code. | Coming |
 
-- **`auto/free` model** (the default): every request is routed across all free models from your connected providers. When one fails or hits its rate limit, DeV moves to the next and puts the failed one on cooldown. To start free, connect any free-tier provider with `/connect` (Groq, Google Gemini, OpenRouter, Cerebras, NVIDIA and Mistral are listed first), or run a local model with [Ollama](https://ollama.com) or LM Studio, which DeV detects automatically. With nothing connected, `dev` explains both options.
-- **Built-in add-ons**, all on by default: [ponytail](https://github.com/DietrichGebert/ponytail) (lean coding in every session; `/ponytail lite|full|ultra|off`, `/ponytail-review`), [superpowers](https://github.com/obra/superpowers) skills, [context7](https://github.com/upstash/context7) docs, [REA](https://github.com/morluto/rea) (reverse engineering) and [chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) (browser).
-- **MCP servers that start on demand**: a local server only starts when one of its tools is called, and stops after 10 idle minutes. A plain prompt peaks around 760 MB (it was about 1.8 GB with every server running).
-- **One credential store**: connect providers with `/connect` inside DeV. No `.env` files.
+DeV is MIT licensed and is not affiliated with Anthropic or OpenCode. The plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
-## Install (Linux x64)
+## What DeV Code does today
 
-Requires [Bun](https://bun.sh) ≥ 1.3 and git. REA also needs Node ≥ 26.12.1 (or ^24.22.1 / ^22.23.4).
+- **Free by default.** The default model, `auto/free`, routes each request across the free models of every provider you have connected. When one fails or hits its rate limit, DeV moves to the next and puts the failed one on cooldown. It also handles context overflow and slow first responses.
+- **Local models.** Ollama and LM Studio are detected automatically. With nothing connected, `dev` explains how to start.
+- **OS sandbox.** Shell commands run in an OS sandbox on Linux (bubblewrap) and macOS (Seatbelt): they can write only to the project, temp folders and package caches, cannot read your credentials, and reach only package registries and git hosts. Leaving the sandbox always asks you. Windows is not sandboxed yet. See [SECURITY.md](SECURITY.md).
+- **Permission modes like Claude Code.** Shift+Tab cycles default (asks before edits, web fetches and most shell commands) → accept edits → plan → auto. Or start with `--permission-mode default|accept-edits|auto`. Deny rules always win.
+- **MCP servers on demand.** A local MCP server starts only when one of its tools is called and stops after 10 idle minutes.
+- **Code mode.** Instead of sending every MCP tool to the model, DeV gives it one `execute` tool that runs a short, confined script calling those tools. Together with ponytail, this cut input from about 107K to about 20K tokens per request in our measurements.
+- **A catalog of skills, plugins and MCP servers.** Browse and manage it with `/plugins` or `dev catalog`, in user or project scope. The agent can install what a task needs, after asking you.
+- **Built in:** [superpowers](https://github.com/obra/superpowers) skills, [ponytail](https://github.com/DietrichGebert/ponytail) (lean code; `/ponytail lite|full|ultra|off`), [context7](https://github.com/upstash/context7) docs, [REA](https://github.com/morluto/rea) (reverse engineering) and [chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) (browser).
+
+## Install
+
+For now, DeV Code is installed from source. `curl`, npm (`npm i -g devcode`), Homebrew and Scoop installs are coming with the first release.
+
+You need [Bun](https://bun.sh) 1.3 or newer and git. REA also needs Node 26.12.1 or newer (or ^24.22.1 / ^22.23.4).
+
+Run DeV Code straight from the source tree:
 
 ```sh
 git clone https://github.com/Harsha-code-per/DeV.git && cd DeV
 bun install
+bun dev            # starts DeV Code in packages/devcode; `bun dev <dir>` for another folder
+```
+
+Or build a standalone binary for your machine (Linux x64 shown):
+
+```sh
 cd packages/devcode
 DEV_VERSION=1.19.4 DEV_CHANNEL=dev-engine \
   ../../scripts/capped -- bun run script/build.ts --single --skip-install --skip-embed-web-ui
@@ -23,31 +45,34 @@ ln -sf "$PWD/dist/devcode-linux-x64/bin/devcode" ~/.local/bin/devcode
 ln -sf "$PWD/dist/devcode-linux-x64/bin/devcode" ~/.local/bin/dev
 ```
 
-`--single` builds only for your machine. Drop it to build every target: Linux x64/arm64 (glibc and musl), baseline builds for older CPUs, macOS and Windows.
+`--single` builds only for your platform. Without it, the build covers every target (Linux x64/arm64 with glibc and musl, macOS, Windows).
 
-## Use
+## Quick start
 
 ```sh
-dev                 # interactive TUI
-dev run "explain this repo"
+dev                          # interactive TUI in the current folder
+dev run "explain this repo"  # one-off prompt
 ```
 
 Inside the TUI:
-- `/connect` adds a provider (Groq, OpenRouter, Gemini, Cerebras, NVIDIA, any OpenAI-compatible endpoint, …). Each one you add widens the free pool.
+
+- `/connect` adds a provider (Groq, Google Gemini, OpenRouter, Cerebras, NVIDIA, Mistral, any OpenAI-compatible endpoint, and more). Each one you add widens the free pool. Keys are kept in DeV's own credential store; no `.env` files.
 - `/models` pins a specific model instead of `auto/free`.
-- `/plugins` (or `dev catalog list|search|install|uninstall|enable|disable [--scope user|project]`) browses and manages the built-in catalog of skills, plugins and MCP servers. DeV can also install what a task needs by itself, after asking you.
-- `/mcp` turns servers on or off. Set `DEV_DISABLE_MCP_LAZY=1` to start every server eagerly.
+- `/plugins` manages skills, plugins and MCP servers; `/mcp` turns servers on or off.
+- Shift+Tab changes the permission mode.
 
-## Develop
+## OpenCode Zen
 
-- Run tests only through `scripts/test [MAX] -- <bun test args>` from a package folder (e.g. `cd packages/devcode && ../../scripts/test -- test/cli`). It caps memory, keeps test temp files on disk instead of the RAM-backed `/tmp`, and removes them afterwards.
-- Run builds and typechecks through `scripts/capped [MAX] -- <cmd>` (e.g. `scripts/capped 6G -- bun typecheck` from the root). Never run two heavy jobs at once.
-- Commits follow `AGENTS.md`. The plan lives in [docs/ROADMAP.md](docs/ROADMAP.md).
+OpenCode Zen is OpenCode's hosted model service. DeV lists it in `/connect` and uses it only with your own Zen key; DeV never uses it without one. Zen's own terms and data-use policy apply.
 
-## Roadmap
+## Contributing
 
-1. ✅ Engine fork, free-model auto-router, built-in add-ons
-2. Marketplace: catalog of skills, plugins and MCPs, `/plugins` with project and user scope, MCPs that DeV starts on demand and installs itself, auto-updates
-3. Always-on presence: daemon, hotkey popup, notifications, browser and computer use
-4. Voice: wake word, local speech-to-text and text-to-speech
-5. Onboarding interview: personalise DeV for each user
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Report security issues privately, as described in [SECURITY.md](SECURITY.md).
+
+## Credits
+
+DeV started as a fork of [OpenCode](https://github.com/anomalyco/opencode) (MIT), v1.19.4. Thanks to its authors for the engine. The OS sandbox is Anthropic's [sandbox-runtime](https://github.com/anthropics/sandbox-runtime) (Apache-2.0). Third-party notices are in [NOTICE](NOTICE).
+
+## License
+
+[MIT](LICENSE).

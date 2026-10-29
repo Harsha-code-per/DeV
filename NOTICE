@@ -1,0 +1,51 @@
+DeV
+Copyright (c) 2026 Harsha Vardhan (Harsha-code-per) and DeV contributors
+Licensed under the MIT License (see LICENSE).
+
+This product includes software developed by third parties.
+
+--------------------------------------------------------------------------------
+OpenCode
+https://github.com/anomalyco/opencode
+Copyright (c) 2025 opencode
+License: MIT
+
+DeV started as a fork of OpenCode v1.19.4. Its copyright and permission notice
+are kept in LICENSE.
+
+--------------------------------------------------------------------------------
+@anthropic-ai/sandbox-runtime
+https://github.com/anthropics/sandbox-runtime
+License: Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+The OS sandbox that DeV Code runs shell commands in (bubblewrap on Linux,
+Seatbelt on macOS). Used as an npm dependency; see its LICENSE file.
+
+--------------------------------------------------------------------------------
+Bundled by default (packages/devcode/src/config/dev-defaults.json)
+
+These are not part of DeV's source. DeV downloads them on first use.
+
+superpowers (v7.0.1)
+  https://github.com/obra/superpowers
+  Copyright (c) 2025 Jesse Vincent
+  License: MIT
+
+@dietrichgebert/ponytail (5.3.2)
+  https://github.com/DietrichGebert/ponytail
+  Copyright (c) 2026 DietrichGebert
+  License: MIT
+
+rea-agents (6.8.0), MCP server
+  https://github.com/morluto/rea
+  Copyright (c) 2026 morluto
+  License: MIT
+
+chrome-devtools-mcp (1.12.0), MCP server
+  https://github.com/ChromeDevTools/chrome-devtools-mcp
+  License: Apache License 2.0
+
+context7, remote MCP server (https://mcp.context7.com/mcp)
+  https://github.com/upstash/context7
+  No code is bundled; DeV connects to the hosted service.
+  License: see upstream
