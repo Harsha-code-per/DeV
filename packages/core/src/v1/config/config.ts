@@ -127,6 +127,10 @@ export const Info = Schema.Struct({
     description: "Additional instruction files or patterns to include",
   }),
   sandbox: Schema.optional(ConfigSandboxV1.Info),
+  output_style: Schema.optional(Schema.String).annotate({
+    description:
+      "How the agent writes and explains: default, explanatory, learning, concise, or a custom style in output-styles/<name>.md",
+  }),
   hooks: Schema.optional(ConfigHooksV1.Info).annotate({
     description:
       "Shell commands run on PreToolUse, PostToolUse, UserPromptSubmit, Stop and SessionStart. They get the event as JSON on stdin; exit code 2 blocks (PreToolUse, UserPromptSubmit) or reports stderr to the agent (PostToolUse).",
