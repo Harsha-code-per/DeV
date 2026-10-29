@@ -5,6 +5,7 @@ import { SessionV1 } from "@dev-ai/core/v1/session"
 import os from "os"
 import { SessionID, MessageID, PartID } from "./schema"
 import { SessionGoal } from "./goal"
+import { SessionNudge } from "./nudge"
 import { OutputStyle } from "./output-style"
 import { MessageV2 } from "./message-v2"
 import { SessionRevert } from "./revert"
@@ -1158,7 +1159,12 @@ const layer = Layer.effect(
             const reply = (lastAssistantMsg?.parts ?? [])
               .flatMap((part) => (part.type === "text" ? [part.text] : []))
               .join("\n")
-            const goal = yield* goalStep(sessionID, reply, lastUser)
+            // The loop only stops on a reply without tool calls; one that just announces its next step gets a nudge.
+            // Both only look at a reply produced in this run (step > 0), not a turn that had already finished.
+            const goal =
+              step > 0
+                ? ((yield* goalStep(sessionID, reply, lastUser)) ?? SessionNudge.next(lastUser.id, reply))
+                : undefined
             const stop = goal
               ? { continue: goal }
               : yield* plugin.trigger(
