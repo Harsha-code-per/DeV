@@ -112,6 +112,17 @@ function loaded(filepath: string): SessionV1.WithParts[] {
 }
 
 describe("Instruction.resolve", () => {
+  it.live("DEV.md is the project memory and wins over AGENTS.md", () =>
+    withFiles({ "DEV.md": "# DeV memory", "AGENTS.md": "# Agents", "src/file.ts": "const x = 1" }, (dir) =>
+      Effect.gen(function* () {
+        const svc = yield* Instruction.Service
+        const system = yield* svc.systemPaths()
+        expect(system.has(path.join(dir, "DEV.md"))).toBe(true)
+        expect(system.has(path.join(dir, "AGENTS.md"))).toBe(false)
+      }),
+    ),
+  )
+
   it.live("returns empty when AGENTS.md is at project root (already in systemPaths)", () =>
     withFiles({ "AGENTS.md": "# Root Instructions", "src/file.ts": "const x = 1" }, (dir) =>
       Effect.gen(function* () {
