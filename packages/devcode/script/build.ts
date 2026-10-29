@@ -221,6 +221,16 @@ for (const item of targets) {
     }
   }
 
+  // sandbox-runtime's apply-seccomp (blocks Unix sockets) can't be embedded; src/sandbox ships it beside the binary.
+  if (item.os === "linux") {
+    const seccomp = path.join(
+      path.dirname(fileURLToPath(import.meta.resolve("@anthropic-ai/sandbox-runtime/package.json"))),
+      "vendor/seccomp",
+      item.arch,
+    )
+    await $`mkdir -p dist/${name}/bin/vendor/seccomp && cp -r ${seccomp} dist/${name}/bin/vendor/seccomp/`
+  }
+
   await $`rm -rf ./dist/${name}/bin/tui`
   await Bun.file(`dist/${name}/package.json`).write(
     JSON.stringify(

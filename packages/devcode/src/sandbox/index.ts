@@ -51,6 +51,12 @@ const SECRETS = [
 // Package managers and build tools write their caches here.
 const CACHES = ["~/.npm", "~/.bun", "~/.cache", "~/.cargo", "~/go", "~/.local/share/pnpm", "~/.gradle", "~/.m2"]
 
+// A compiled binary can't reach the library's own vendor folder (it looks next to its module, inside
+// the binary), so the build ships apply-seccomp, which blocks Unix sockets, next to the executable.
+const seccomp = import.meta.path.startsWith("/$bunfs/")
+  ? { applyPath: path.join(path.dirname(process.execPath), "vendor", "seccomp", process.arch, "apply-seccomp") }
+  : undefined
+
 export function supported() {
   return !Flag.DEV_DISABLE_SANDBOX && (process.platform === "linux" || process.platform === "darwin")
 }
@@ -64,6 +70,7 @@ export function config(writable: string[]): SandboxRuntimeConfig {
       allowWrite: [...writable, os.tmpdir(), "/tmp", Global.Path.tmp, ...CACHES.map(expand)],
       denyWrite: writable.flatMap((dir) => [path.join(dir, ".env"), path.join(dir, ".git", "hooks")]),
     },
+    seccomp,
   }
 }
 

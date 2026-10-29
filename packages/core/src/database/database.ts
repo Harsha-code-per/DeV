@@ -54,4 +54,9 @@ export function path() {
   return join(Global.Path.data, `opencode-${InstallationChannel.replace(/[^a-zA-Z0-9._-]/g, "-")}.db`)
 }
 
-export const node = makeGlobalNode({ service: Service, layer: layerFromPath(path()), deps: [] })
+// Resolved when the layer is built, not at import, so a changed Flag.DEV_DB (embedded hosts, tests) takes effect.
+export const node = makeGlobalNode({
+  service: Service,
+  layer: Layer.unwrap(Effect.sync(() => layerFromPath(path()))),
+  deps: [],
+})
