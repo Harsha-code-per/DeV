@@ -21,6 +21,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { ShellPrompt, type Parameters } from "./shell/prompt"
 import { BashArity } from "@/permission/arity"
+import { Sandbox } from "@/sandbox"
 
 export { Parameters } from "./shell/prompt"
 
@@ -260,7 +261,12 @@ const parse = Effect.fn("ShellTool.parse")(function* (command: string, ps: boole
   return tree
 })
 
-const ask = Effect.fn("ShellTool.ask")(function* (ctx: Tool.Context, scan: Scan, input: { command: string }) {
+const ask = Effect.fn("ShellTool.ask")(function* (
+  ctx: Tool.Context,
+  scan: Scan,
+  input: { command: string },
+  sandboxed: boolean,
+) {
   if (scan.dirs.size > 0) {
     const directories = Array.from(scan.dirs)
     const globs = directories.map((dir) => {
@@ -287,6 +293,7 @@ const ask = Effect.fn("ShellTool.ask")(function* (ctx: Tool.Context, scan: Scan,
     metadata: {
       command: input.command,
     },
+    sandboxed,
   })
 })
 
@@ -429,6 +436,7 @@ export const ShellTool = Tool.define(
       input: {
         shell: string
         command: string
+        sandboxed?: string
         cwd: string
         env: NodeJS.ProcessEnv
         timeout: number
@@ -481,7 +489,7 @@ export const ShellTool = Tool.define(
       const code: number | null = yield* Effect.scoped(
         Effect.gen(function* () {
           yield* Effect.addFinalizer(closeSink)
-          const handle = yield* spawner.spawn(cmd(input.shell, input.command, input.cwd, input.env))
+          const handle = yield* spawner.spawn(cmd(input.shell, input.sandboxed ?? input.command, input.cwd, input.env))
 
           yield* Effect.forkScoped(
             Stream.runForEach(Stream.decodeText(handle.all), (chunk) => {
@@ -617,14 +625,22 @@ export const ShellTool = Tool.define(
               }
               const timeout = params.timeout ?? defaultTimeoutMs
               const ps = Shell.ps(shell)
-              yield* Effect.scoped(
+              const sandboxed = yield* Effect.scoped(
                 Effect.gen(function* () {
                   const tree = yield* Effect.acquireRelease(parse(params.command, ps), (tree) =>
                     Effect.sync(() => tree.delete()),
                   )
                   const scan = yield* collect(tree.rootNode, cwd, ps, shell, instanceCtx)
                   if (!containsPath(cwd, instanceCtx)) scan.dirs.add(cwd)
-                  yield* ask(ctx, scan, params)
+                  // DeV: the command runs inside the OS sandbox where the platform supports it, and then
+                  // needs no approval (deny rules still apply). It may write to the project and to any
+                  // outside directory the user approves for it.
+                  const root = instanceCtx.worktree === "/" ? instanceCtx.directory : instanceCtx.worktree
+                  const wrapped = ps
+                    ? undefined
+                    : yield* Effect.promise(() => Sandbox.wrap(params.command, [root, ...scan.dirs], shell))
+                  yield* ask(ctx, scan, params, wrapped !== undefined)
+                  return wrapped
                 }),
               )
 
@@ -632,6 +648,7 @@ export const ShellTool = Tool.define(
                 {
                   shell,
                   command: params.command,
+                  sandboxed,
                   cwd,
                   env: yield* shellEnv(ctx, cwd),
                   timeout,

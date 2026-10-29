@@ -48,7 +48,13 @@ export const Approval = Schema.Struct({ projectID: Project.ID, patterns: Schema.
 })
 export type Approval = typeof Approval.Type
 
-export const AskInput = Schema.Struct({ ...Request.fields, id: Schema.optional(ID), ruleset: Ruleset }).annotate({
+export const AskInput = Schema.Struct({
+  ...Request.fields,
+  id: Schema.optional(ID),
+  ruleset: Ruleset,
+  // The action runs confined by the OS sandbox: "ask" rules pass without asking, "deny" rules still deny.
+  sandboxed: Schema.optional(Schema.Boolean),
+}).annotate({
   identifier: "PermissionAskInput",
 })
 export type AskInput = typeof AskInput.Type

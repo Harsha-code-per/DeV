@@ -54,6 +54,10 @@ export const Flag = {
   get DEV_DISABLE_MCP_LAZY() {
     return truthy("DEV_DISABLE_MCP_LAZY")
   },
+  /** Run shell commands without the OS sandbox (tests, or platforms where it can't start). */
+  get DEV_DISABLE_SANDBOX() {
+    return truthy("DEV_DISABLE_SANDBOX")
+  },
   /** Skip DeV's bundled plugins, MCP servers, local-model detection and auto/free default (tests). */
   get DEV_DISABLE_BUNDLED_DEFAULTS() {
     return truthy("DEV_DISABLE_BUNDLED_DEFAULTS")

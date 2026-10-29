@@ -592,6 +592,24 @@ it.instance(
 )
 
 it.instance(
+  "ask - sandboxed commands pass ask rules but not deny rules",
+  () =>
+    Effect.gen(function* () {
+      const request = {
+        sessionID: SessionID.make("session_test"),
+        permission: "bash",
+        metadata: {},
+        always: [],
+        sandboxed: true,
+        ruleset: Permission.fromConfig({ bash: { "*": "ask", "git push *": "deny" } }),
+      }
+      expect(yield* ask({ ...request, patterns: ["npm install"] })).toBeUndefined()
+      expect(yield* fail(ask({ ...request, patterns: ["git push origin"] }))).toBeInstanceOf(PermissionV1.DeniedError)
+    }),
+  { git: true },
+)
+
+it.instance(
   "ask - stays pending when action is ask",
   () =>
     Effect.gen(function* () {

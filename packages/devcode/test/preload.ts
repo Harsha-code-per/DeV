@@ -7,7 +7,7 @@ import { setTimeout as sleep } from "node:timers/promises"
 import { afterAll } from "bun:test"
 
 // Set XDG env vars FIRST, before any src/ imports
-const dir = path.join(os.tmpdir(), "opencode-test-data-" + process.pid)
+const dir = path.join(os.tmpdir(), "dev-test-data-" + process.pid)
 await fs.mkdir(dir, { recursive: true })
 afterAll(async () => {
   const { AppRuntime } = await import("../src/effect/app-runtime")
@@ -86,6 +86,7 @@ delete process.env["OTEL_RESOURCE_ATTRIBUTES"]
 // Use in-memory sqlite
 process.env["DEV_DB"] = ":memory:"
 process.env["DEV_DISABLE_BUNDLED_DEFAULTS"] = "true"
+process.env["DEV_DISABLE_SANDBOX"] = "true"
 process.env["DEV_DISABLE_MCP_LAZY"] = "true"
 
 // Now safe to import from src/

@@ -60,12 +60,14 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 
 ### M0.3 Security baseline (Claude Code-grade)
 
-- [ ] Run every shell command and local MCP server inside `@anthropic-ai/sandbox-runtime` (Apache-2.0; bubblewrap on Linux, Seatbelt on macOS, restricted user plus network fence on Windows).
-  - Writes only to the project and temp folders.
-  - `~/.ssh`, `~/.aws`, `.env*` and the key store are unreadable.
-  - Network goes through an allowlist proxy.
+- [x] Shell commands run inside `@anthropic-ai/sandbox-runtime` (Apache-2.0) on Linux (bubblewrap) and macOS (Seatbelt): `packages/devcode/src/sandbox`. Verified end to end on Linux.
+  - Writes only to the project, any outside directory approved for the command, temp folders and package caches; `.env` and `.git/hooks` stay read-only.
+  - Unreadable: `~/.ssh`, `~/.aws`, `~/.gnupg`, gh/gcloud/kube/docker credentials, `~/.netrc`, `~/.git-credentials`, `~/.npmrc`, `~/.pypirc`, DeV's `auth.json`.
+  - Network only through the allowlist proxy (package registries, git hosts).
+  - `DEV_DISABLE_SANDBOX=1` turns it off; if it can't start, commands run unsandboxed and that's logged.
+- [ ] Sandbox follow-ups: ship sandbox-runtime's `vendor/seccomp` next to the compiled binary (it blocks Unix sockets; the binary can't find it today); local MCP servers; Windows (restricted user plus network fence); a `sandbox` section in dev.json for extra hosts, paths and private registries; check on macOS in CI.
 - [x] Safe permission defaults (bundled config): reading in the project is allowed; file edits and web fetches ask; shell commands ask except a read-only set (ls, pwd, git status/diff/log/show/branch, rg, grep, cat, head, tail, wc, which, echo), and anything with a redirect, `--output` or `--pre` asks even then. Verified end to end per permission mode.
-- [ ] Once the sandbox is in: sandboxed shell commands run without asking, and anything that needs to leave the sandbox asks; secrets denied.
+- [x] Sandboxed shell commands run without asking (deny rules still apply); unsandboxed ones and outside directories still ask.
 - [ ] Server listens on localhost only and generates a random password by default.
 - [ ] Web, MCP and file content is marked untrusted; risky actions (deleting outside the project, `git push`, installs) need confirmation.
 - [ ] Supply chain: pinned deps, gitleaks and Renovate in CI, npm provenance, SHA-256 checksums on releases.

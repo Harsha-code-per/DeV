@@ -77,7 +77,7 @@ const layer = Layer.effect(
             ruleset: ruleset.filter((rule) => Wildcard.match(request.permission, rule.permission)),
           })
         }
-        if (rule.action === "allow") continue
+        if (rule.action === "allow" || input.sandboxed) continue
         needsAsk = true
       }
 
