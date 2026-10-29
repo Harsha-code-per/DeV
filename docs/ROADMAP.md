@@ -54,6 +54,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] Remove stock mode; tests and snapshots are DeV-native. Only `DEV_DISABLE_BUNDLED_DEFAULTS` remains, which skips the bundled plugins, MCP servers, local-model detection and auto/free default (used by tests).
 - [x] Rename identifiers: `OpenCode` → `DevCode` namespaces, `createOpencodeClient`/`OpencodeClient` → `createDevcodeClient`/`DevcodeClient`, `OpenCodeEvent` → `DevCodeEvent`, `OpenCodeHttpApi` → `DevCodeHttpApi`; generators updated (`httpapi-codegen`, legacy SDK `instance`).
 - [ ] Move `packages/app` and `packages/session-ui` off the vendored OpenCode 1.17.13 client (`app/vendor/opencode-ai-client-*.tgz`) onto `@dev-ai/client`; the APIs have drifted (~290 type errors when switched), so this is real migration work. Until then those two packages use the vendored `OpenCode` names.
+- [ ] ChatGPT (Codex) sign-in and xAI device sign-in still send `opencode` as the OAuth `originator`/`referrer` (`packages/devcode/src/plugin/openai/codex.ts`, `core/src/plugin/provider/openai.ts`, `plugin/xai.ts`). Changing it may break sign-in if the providers allowlist those values: decide whether to switch to `devcode`, or offer only API keys for these until DeV is registered.
 - [ ] Rename remaining internal names in the web/desktop apps: i18n keys (`provider.connect.opencodeZen.*`, `wsl.onboarding.*Opencode*`), the desktop WSL "install opencode" flow, the `x-opencode-directory` client↔server header, and the TUI theme and app IDs. Do this with the M4 desktop and M2 UI work.
 - [x] `script/brand-check.ts`: finds user-visible OpenCode text (quoted sentences, JSX text, prompts, docs, translations); `--check` fails when anything would change. The help-snapshot test asserts no command's help mentions opencode. (Wired into CI with M0.5.)
 - [x] OpenCode Zen is listed honestly in `/connect` as "OpenCode Zen (free models with your Zen key)", with what it is, how to get a key, and its data-use note.
@@ -65,14 +66,15 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
   - Unreadable: `~/.ssh`, `~/.aws`, `~/.gnupg`, gh/gcloud/kube/docker credentials, `~/.netrc`, `~/.git-credentials`, `~/.npmrc`, `~/.pypirc`, DeV's `auth.json`.
   - Network only through the allowlist proxy (package registries, git hosts).
   - `DEV_DISABLE_SANDBOX=1` turns it off; if it can't start, commands run unsandboxed and that's logged.
-- [ ] Sandbox follow-ups: ship sandbox-runtime's `vendor/seccomp` next to the compiled binary (it blocks Unix sockets; the binary can't find it today); local MCP servers; Windows (restricted user plus network fence); a `sandbox` section in dev.json for extra hosts, paths and private registries; check on macOS in CI.
+- [ ] Sandbox follow-ups (the Linux build now ships `vendor/seccomp` next to the binary, so Unix sockets are blocked): local MCP servers; Windows (restricted user plus network fence); a `sandbox` section in dev.json for extra hosts, paths and private registries; check on macOS in CI.
 - [x] Safe permission defaults (bundled config): reading in the project is allowed; file edits and web fetches ask; shell commands ask except a read-only set (ls, pwd, git status/diff/log/show/branch, rg, grep, cat, head, tail, wc, which, echo), and anything with a redirect, `--output` or `--pre` asks even then. Verified end to end per permission mode.
 - [x] Sandboxed shell commands run without asking (deny rules still apply); unsandboxed ones and outside directories still ask.
 - [x] Leaving the sandbox, as in Claude Code: when the sandbox blocks a command, DeV tells the agent, which can rerun it with `dangerouslyDisableSandbox`. That always asks the user ("Shell command outside the sandbox"); bundled allow rules don't cover it, an "always" approval does, and auto mode approves it. Verified end to end.
-- [ ] Server listens on localhost only and generates a random password by default.
-- [ ] Web, MCP and file content is marked untrusted; risky actions (deleting outside the project, `git push`, installs) need confirmation.
-- [ ] Supply chain: pinned deps, gitleaks and Renovate in CI, npm provenance, SHA-256 checksums on releases.
-- [ ] New `SECURITY.md`: threat model, the sandbox, private reporting through GitHub Security Advisories.
+- [x] Server listens on localhost only and generates a random password by default.
+- [x] Web pages, web search results and MCP results (also through code mode) reach the model inside `<untrusted_content>` blocks that can't be closed from inside, and the system prompt says to treat them as data. Risky actions are covered by the sandbox: deleting outside the project or pushing with your credentials needs to leave it, which asks.
+- [ ] Mark file content from outside the project (and cloned third-party repos) as untrusted too.
+- [ ] Supply chain: pinned deps, gitleaks and Renovate in CI, npm provenance, SHA-256 checksums on releases. Workflows, `renovate.json` and `.gitleaksignore` are in; tick after the first green CI run and first release. Needs: the Renovate GitHub app installed, and `NPM_TOKEN` (provenance needs a public repo).
+- [x] New `SECURITY.md`: threat model, the sandbox, private reporting through GitHub Security Advisories.
 
 ### M0.4 Install and update (free channels)
 
@@ -83,11 +85,11 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 
 ### M0.5 Project hygiene
 
-- [ ] LICENSE (MIT with OpenCode's and DeV's copyright lines), NOTICE (OpenCode MIT, sandbox-runtime Apache-2.0).
-- [ ] CONTRIBUTING (DCO sign-off, `scripts/capped`), CODE_OF_CONDUCT, issue and PR templates.
-- [ ] Fix the 3 `packages/sdk-next` embedded tests that already fail in upstream v1.19.4 (SQLite "unable to open database file"), so CI starts fully green.
-- [ ] CI on every PR: typecheck, tests, brand check, gitleaks.
-- [ ] Rewrite README for the product family.
+- [x] LICENSE (MIT with OpenCode's and DeV's copyright lines), NOTICE (OpenCode MIT, sandbox-runtime Apache-2.0).
+- [x] CONTRIBUTING (DCO sign-off, `scripts/capped`), CODE_OF_CONDUCT, issue and PR templates.
+- [x] Fix the 3 `packages/sdk-next` embedded tests that already fail in upstream v1.19.4 (SQLite "unable to open database file"), so CI starts fully green.
+- [ ] CI on every PR: typecheck, tests, brand check, gitleaks (`.github/workflows/ci.yml` written; tick after its first green run on GitHub).
+- [x] Rewrite README for the product family.
 
 ---
 
@@ -106,15 +108,17 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
   - Auto joins the cycle only after `--auto`/`--yolo`/`--dangerously-skip-permissions`/`--permission-mode auto` or an opt-in from the command palette (with a warning), like Claude Code's bypass mode.
   - `--permission-mode default|accept-edits|auto` for `dev` and `dev run`; the prompt shows the active mode.
   - Becomes meaningful with the M0.3 safe defaults (today most actions are allowed without asking).
-- [ ] **Project memory:** `DEV.md` (like `CLAUDE.md`), loaded hierarchically (user, project, folder). `#` adds a note to memory; `/memory` edits it.
-- [ ] **Slash commands with Claude Code's behaviour:** `/init`, `/review`, `/compact`, `/clear`, `/cost`, `/model`, `/permissions`, `/mcp`, `/plugins`, `/resume`, `/rewind`, `/status`, `/config`, `/doctor`, `/bug`.
-- [ ] **Hooks** configured by the user (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SessionStart) as shell commands in settings.
-- [ ] **Subagents:** custom agents in `.dev/agents/`, parallel subagents, and background tasks you can check on.
-- [ ] **Checkpoints and rewind** of both code and conversation.
-- [ ] **Headless mode** (`devcode -p`), JSON and streaming output, an SDK for scripting, and a GitHub Action.
+- [x] **Project memory:** `DEV.md` (like `CLAUDE.md`), loaded hierarchically (user `~/.config/dev/DEV.md`, project, folders as files are read); AGENTS.md and CLAUDE.md still work. `# note` adds to the project memory, `#~ note` to yours; `/memory` opens it in `$EDITOR`; `/init` writes DEV.md.
+- [x] **Slash commands with Claude Code's names:** `/init`, `/review`, `/compact`, `/clear`, `/cost`, `/model`, `/permissions`, `/mcp`, `/plugins`, `/resume`, `/rewind`, `/status`, `/config`, `/doctor` (debug info for now), `/bug`, `/memory`.
+- [x] **Hooks** configured by the user (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SessionStart) as shell commands in dev.json `hooks`, in Claude Code's documented shape: JSON on stdin, exit 2 blocks with stderr as the reason. Verified end to end.
+  - [ ] Follow-ups: exit 2 on Stop (keep working) and SessionStart output as context.
+- [x] **Subagents:** custom agents in `.dev/agents/`, parallel subagents, and background subagents (on by default).
+- [x] **Checkpoints and rewind** of both code and conversation: `/rewind` picks any earlier message to revert (files and conversation) or fork; `/undo` and `/redo` step.
+- [x] **Headless mode:** `dev -p "prompt"` (= `dev run`), `--output-format json|stream-json`, and the JS SDK for scripting.
+- [ ] A GitHub Action for DeV Code.
 - [ ] **Status line**, output styles, and `@` file mentions with fuzzy search.
 - [ ] **Reliability:**
-  - a plan → do → verify loop (run tests and builds before saying "done");
+  - [x] a plan → do → verify loop (run tests and builds before saying "done"), asked of every model in the system prompt;
   - automatic retries;
   - long sessions that survive compaction;
   - never hangs (watchdogs on every external call).
