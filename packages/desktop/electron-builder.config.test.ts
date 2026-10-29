@@ -1,12 +1,10 @@
 import { expect, test } from "bun:test"
 import type { Configuration } from "electron-builder"
 
-const legacyDesktopEntry = "resources/linux/opencode-desktop.desktop"
-
 const channels = [
-  { channel: "dev", appId: "ai.opencode.desktop.dev" },
-  { channel: "beta", appId: "ai.opencode.desktop.beta" },
-  { channel: "prod", appId: "ai.opencode.desktop" },
+  { channel: "dev", appId: "io.github.harsha-code-per.dev.dev" },
+  { channel: "beta", appId: "io.github.harsha-code-per.dev.beta" },
+  { channel: "prod", appId: "io.github.harsha-code-per.dev" },
 ] as const
 
 for (const channel of channels) {
@@ -29,32 +27,18 @@ for (const channel of channels) {
   })
 }
 
-test("keeps a hidden prod launcher for old Linux pins", async () => {
+test("publishes prod updates to DeV's GitHub releases only", async () => {
   const previous = process.env.DEV_CHANNEL
   process.env.DEV_CHANNEL = "prod"
 
-  const module = await import("./electron-builder.config.ts?compat=prod")
+  const module = await import("./electron-builder.config.ts?publish=prod")
   const config = module.default as Configuration
 
   if (previous === undefined) delete process.env.DEV_CHANNEL
   else process.env.DEV_CHANNEL = previous
 
-  expect(
-    config.deb?.fpm?.some((entry) =>
-      entry.endsWith("opencode-desktop.desktop=/usr/share/applications/opencode-desktop.desktop"),
-    ),
-  ).toBe(true)
-  expect(
-    config.rpm?.fpm?.some((entry) =>
-      entry.endsWith("opencode-desktop.desktop=/usr/share/applications/opencode-desktop.desktop"),
-    ),
-  ).toBe(true)
-
-  const desktop = await Bun.file(legacyDesktopEntry).text()
-  expect(desktop).toContain("Exec=/opt/OpenCode/ai.opencode.desktop %U")
-  expect(desktop).toContain("Icon=ai.opencode.desktop")
-  expect(desktop).toContain("StartupWMClass=ai.opencode.desktop")
-  expect(desktop).toContain("NoDisplay=true")
+  expect(config.publish).toEqual({ provider: "github", owner: "Harsha-code-per", repo: "DeV", channel: "latest" })
+  expect(config.protocols).toEqual({ name: "DeV", schemes: ["devai"] })
 })
 
 test("bundles the CLI outside the dev app archive", async () => {
@@ -65,11 +49,11 @@ test("bundles the CLI outside the dev app archive", async () => {
   if (previous === undefined) delete process.env.DEV_CHANNEL
   else process.env.DEV_CHANNEL = previous
 
-  expect(config.files).toContain("!resources/opencode-cli*")
+  expect(config.files).toContain("!resources/devcode*")
   expect(config.extraResources).toContainEqual({
     from: "resources/",
     to: "",
-    filter: ["opencode-cli*"],
+    filter: ["devcode*"],
   })
 })
 
@@ -85,7 +69,7 @@ for (const channel of ["beta", "prod"] as const) {
     expect(config.extraResources).not.toContainEqual({
       from: "resources/",
       to: "",
-      filter: ["opencode-cli*"],
+      filter: ["devcode*"],
     })
   })
 }

@@ -4,10 +4,9 @@
   "version": "1.19.4",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://opencode.ai",
+  "homepage": "https://github.com/Harsha-code-per/DeV",
   "author": {
-    "name": "OpenCode",
-    "email": "hello@opencode.ai"
+    "name": "Harsha Vardhan"
   },
   "scripts": {
     "typecheck": "tsgo -b --checkers 1",
