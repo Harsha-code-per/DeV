@@ -99,7 +99,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 ### Measure first
 
 - [x] Benchmark harness (`bench/`, see its README): 10 real tasks with hidden tests so far; a do-nothing agent fails all of them. First run (2026-10-29): DeV Code on `auto/free` passed 10/10 (21–253 s each, $0).
-- [ ] Grow it to ~30 harder tasks (larger multi-file features, real-world repos, terminal work): 10/10 on free models means these don't separate agents yet. Then run `claude` and `codex` on the same set (uses the owner's accounts).
+- [ ] Grow it to ~30 harder tasks (larger multi-file features, real-world repos, terminal work): 10/10 on free models means these don't separate agents yet. Now 30 tasks: 20 harder ones added (layered multi-file feature, async/cache/timezone/money/unicode bugs, refactor, parser, spec, perf budget, CLI, shell); a do-nothing agent fails all 20 and reference solutions pass all 20. DeV Code on `auto/free` (2026-10-29): 14/20 on the harder set (4 of the 6 fails were runs that stopped before finishing the work). Then run `claude` and `codex` on the same set (uses the owner's accounts).
   - It runs `devcode`, `claude -p` and `codex exec` on identical copies.
   - It records pass rate, time, tokens and cost, against free models and against one strong model.
 - [ ] Benchmark in CI; regressions block merges.
@@ -144,7 +144,7 @@ Not urgent, but it must be done before v1.0.
 
 - [x] **Signature colour: Saffron** `#F2A516` (deep `#9A5F00` for text on light backgrounds), chosen 2026-10-29 from three contrast-checked candidates. Palette: warm neutrals, teal `#4FB8C6`/`#0A6F7C` complement (in the `dev` TUI theme).
 - [x] **Logo and mark:** a D with a v in its bowl, ink on saffron (`packages/identity/mark.svg`, rendered by `build.sh` to PNGs and the web favicons); the wordmark's V is saffron in the TUI, CLI and exit screen.
-- [ ] Desktop app icons (`packages/desktop/icons`, .icns/.ico) from the same mark, with the M4 desktop rebrand.
+- [x] Desktop app icons (`packages/desktop/icons`, .icns/.ico) from the same mark, with the M4 desktop rebrand.
 - [x] Default TUI theme `dev` in the signature colour.
 - [x] **TUI redesign, first pass** (checked on screen): rounded saffron prompt and permission frames; your messages marked with a saffron chevron instead of a bar on a panel; saffron reply marker, main agent, sidebar titles and footer mark; a time-of-day greeting on the home screen; hint row teaches shift+tab modes and # memory.
 - [x] TUI redesign, second pass: tool output in a thin rounded frame with a saffron marker; light theme checked on screen (deep saffron stays readable); `/goal` status row. (`script/ansi-to-png.py` turns tmux captures into images.)
@@ -168,7 +168,7 @@ Not urgent, but it must be done before v1.0.
 
 All surfaces share **one engine and one set of sessions**: start in the app, continue with `dev` in a terminal.
 
-- [ ] Rebrand `packages/desktop` (Electron): name, app ID, icons, our own update feed (GitHub Releases), unsigned builds with first-run steps documented.
+- [x] Rebrand `packages/desktop` (Electron): name, app ID, icons, our own update feed (GitHub Releases), unsigned builds with first-run steps documented.
 - [ ] Chat and coding in one window over the shared engine; the session list syncs with the CLI.
 - [ ] Runs in the tray and starts with the system. Idle budget: ≤150 MB RAM and ~0% CPU.
 - [ ] Wake on name or hotkey; a popup.

@@ -1,6 +1,6 @@
 # DeV benchmark
 
-Small, real coding tasks with hidden tests, for measuring DeV Code against other coding agents on the same work.
+Small and medium real coding tasks with hidden tests (30 so far), for measuring DeV Code against other coding agents on the same work.
 
 ## Tasks
 
@@ -10,7 +10,7 @@ Each folder in `tasks/` has:
 - `repo/`: the starting project. It's copied to a fresh git repository under `/var/tmp/dev-bench/` for every run.
 - `hidden/`: tests the agent never sees. They're copied in after the agent finishes, overwriting any file with the same name (including tests the agent edited), then run with `bun test` or `python3 -m unittest`.
 
-The tasks cover a bug fix, a small feature across files, a refactor that must keep behaviour, fixing a failing test, an off-by-one, parsing, async retry logic, a CLI script and a shell script. All of them run offline and need nothing installed beyond Bun and Python 3.
+The first 10 tasks are small (a bug fix, a feature, a refactor, a failing test, parsing, a CLI and a shell script). The 20 harder ones need investigation or several files: a layered service with filtering and pagination, concurrency and event-emitter bugs, DST-correct date bucketing, exact money splitting, Unicode graphemes, cache invalidation, a behaviour-preserving refactor, an expression evaluator, an INI parser from a spec, log-analysis CLIs in Python and Bash, a 200,000-item performance task, SemVer ordering, a safe deep merge, Markdown anchors and a router. All of them run offline and need nothing installed beyond Bun and Python 3.
 
 A task passes only if every hidden test passes. The `none` agent, which does nothing, fails all of them, so the hidden tests can't pass by accident.
 
@@ -43,4 +43,4 @@ Each agent run is memory-capped with `scripts/capped 3G` and killed at the timeo
 ## Not yet
 
 - Running in CI and blocking regressions (roadmap M1).
-- More tasks: ~30 is the goal, including larger multi-file features and terminal work.
+- Tasks that start from a prepared git history (`run.ts` has no setup step yet).

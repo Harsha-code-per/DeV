@@ -1,0 +1,5 @@
+{
+  "name": "users-cache",
+  "private": true,
+  "type": "module"
+}

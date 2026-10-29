@@ -1,0 +1,5 @@
+{
+  "name": "config-merge",
+  "private": true,
+  "type": "module"
+}

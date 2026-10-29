@@ -1,0 +1,9 @@
+2026-10-01T12:00:00Z GET /api/users 200 120ms
+2026-10-01T12:00:01Z GET /api/users?page=2 200 80ms
+2026-10-01T12:00:02Z POST /api/users 201 300ms
+2026-10-01T12:00:03Z GET /api/orders 500 1500ms
+2026-10-01T12:00:04Z GET /health 200 2ms
+this line is garbage
+2026-10-01T12:00:05Z GET /api/orders 200 90ms
+
+2026-10-01T12:00:06Z GET /api/users 404 15ms

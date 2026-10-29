@@ -1,0 +1,6 @@
+order_id,customer_id,amount,status
+o1,c1,19.99,paid
+o2,c2,5,paid
+o3,c1,0.01,refunded
+o4,c2,10.10,paid
+o5,c9,3.00,paid
