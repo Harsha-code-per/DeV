@@ -56,6 +56,36 @@ const handlerContext = Context.empty() as Context.Context<unknown>
 const directoryHeader = (dir: string) => HttpClientRequest.setHeader("x-opencode-directory", dir)
 
 describe("instance HttpApi", () => {
+  it.live("adds memory notes to the file DeV already reads", () =>
+    Effect.gen(function* () {
+      const dir = yield* tmpdirScoped({ git: true })
+      const add = (text: string) =>
+        HttpClientRequest.post(InstancePaths.memory).pipe(
+          directoryHeader(dir),
+          HttpClientRequest.bodyJson({ text, scope: "project" }),
+          Effect.flatMap(HttpClient.execute),
+          Effect.flatMap((response) => response.json),
+        )
+
+      expect(yield* add("use bun")).toEqual({ path: `${dir}/DEV.md` })
+      yield* add("  run tests with scripts/test ")
+      expect(yield* Effect.promise(() => Bun.file(`${dir}/DEV.md`).text())).toBe(
+        "- use bun\n- run tests with scripts/test\n",
+      )
+
+      // With an AGENTS.md and no DEV.md, the note goes into AGENTS.md instead of a new file that would hide it.
+      const other = yield* tmpdirScoped({ git: true })
+      yield* Effect.promise(() => Bun.write(`${other}/AGENTS.md`, "# Agents"))
+      const response = yield* HttpClientRequest.post(InstancePaths.memory).pipe(
+        directoryHeader(other),
+        HttpClientRequest.bodyJson({ text: "note", scope: "project" }),
+        Effect.flatMap(HttpClient.execute),
+      )
+      expect(response.status).toBe(200)
+      expect(yield* Effect.promise(() => Bun.file(`${other}/AGENTS.md`).text())).toBe("# Agents\n- note\n")
+    }),
+  )
+
   it.live("serves the OpenAPI document", () =>
     Effect.gen(function* () {
       const response = yield* HttpClient.get("/doc")

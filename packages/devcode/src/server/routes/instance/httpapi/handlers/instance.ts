@@ -7,9 +7,10 @@ import { LSP } from "@/lsp/lsp"
 import { Vcs } from "@/project/vcs"
 import { Skill } from "@/skill"
 import { Effect } from "effect"
+import path from "path"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
-import { ApiVcsApplyError } from "../groups/instance"
+import { ApiVcsApplyError, type MemoryInput } from "../groups/instance"
 import { markInstanceForDisposal } from "../lifecycle"
 
 export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance", (handlers) =>
@@ -58,6 +59,25 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       return yield* vcs.diffRaw()
     })
 
+    // `#` in the TUI: the note goes to the memory file DeV already reads, so a new DEV.md never hides
+    // an existing AGENTS.md or CLAUDE.md.
+    const addMemory = Effect.fn("InstanceHttpApi.memory")(function* (ctx: { payload: typeof MemoryInput.Type }) {
+      const instance = yield* InstanceState.context
+      const dir = ctx.payload.scope === "user" ? Global.Path.config : instance.worktree
+      return yield* Effect.promise(async () => {
+        const existing = await Promise.all(
+          ["DEV.md", "AGENTS.md", "CLAUDE.md"].map(async (name) =>
+            (await Bun.file(path.join(dir, name)).exists()) ? path.join(dir, name) : undefined,
+          ),
+        )
+        const file = existing.find((item) => item !== undefined) ?? path.join(dir, "DEV.md")
+        const current = await Bun.file(file).text().catch(() => "")
+        const separator = current === "" || current.endsWith("\n") ? "" : "\n"
+        await Bun.write(file, `${current}${separator}- ${ctx.payload.text.trim()}\n`)
+        return { path: file }
+      })
+    })
+
     const applyVcs = Effect.fn("InstanceHttpApi.vcsApply")(function* (ctx: { payload: Vcs.ApplyInput }) {
       return yield* vcs.apply(ctx.payload).pipe(
         Effect.mapError(
@@ -101,6 +121,7 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       .handle("vcsDiff", getVcsDiff)
       .handle("vcsDiffRaw", getVcsDiffRaw)
       .handle("vcsApply", applyVcs)
+      .handle("memory", addMemory)
       .handle("command", getCommand)
       .handle("agent", getAgent)
       .handle("skill", getSkill)

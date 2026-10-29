@@ -2018,6 +2018,63 @@ export type Config = {
             }
       }
   instructions?: Array<string>
+  hooks?: {
+    PreToolUse?: Array<{
+      matcher?: string
+      hooks: Array<{
+        type: "command"
+        command: string
+        /**
+         * Seconds before the hook is stopped (default 60)
+         */
+        timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+      }>
+    }>
+    PostToolUse?: Array<{
+      matcher?: string
+      hooks: Array<{
+        type: "command"
+        command: string
+        /**
+         * Seconds before the hook is stopped (default 60)
+         */
+        timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+      }>
+    }>
+    UserPromptSubmit?: Array<{
+      matcher?: string
+      hooks: Array<{
+        type: "command"
+        command: string
+        /**
+         * Seconds before the hook is stopped (default 60)
+         */
+        timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+      }>
+    }>
+    Stop?: Array<{
+      matcher?: string
+      hooks: Array<{
+        type: "command"
+        command: string
+        /**
+         * Seconds before the hook is stopped (default 60)
+         */
+        timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+      }>
+    }>
+    SessionStart?: Array<{
+      matcher?: string
+      hooks: Array<{
+        type: "command"
+        command: string
+        /**
+         * Seconds before the hook is stopped (default 60)
+         */
+        timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+      }>
+    }>
+  }
   layout?: LayoutConfig
   permission?: PermissionConfig
   tools?: {
@@ -2354,6 +2411,15 @@ export type VcsApplyError = {
     message: string
     reason: "non-git" | "not-clean"
   }
+}
+
+export type MemoryInput = {
+  text: string
+  scope: "project" | "user"
+}
+
+export type MemoryResult = {
+  path: string
 }
 
 export type Command = {
@@ -8302,6 +8368,34 @@ export type VcsApplyResponses = {
 }
 
 export type VcsApplyResponse = VcsApplyResponses[keyof VcsApplyResponses]
+
+export type MemoryAddData = {
+  body?: MemoryInput
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/memory"
+}
+
+export type MemoryAddErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type MemoryAddError = MemoryAddErrors[keyof MemoryAddErrors]
+
+export type MemoryAddResponses = {
+  /**
+   * Note saved
+   */
+  200: MemoryResult
+}
+
+export type MemoryAddResponse = MemoryAddResponses[keyof MemoryAddResponses]
 
 export type CommandListData = {
   body?: never

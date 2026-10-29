@@ -33,6 +33,9 @@ import { ProjectProvider, useProject } from "./context/project"
 import { EditorContextProvider } from "./context/editor"
 import { useEvent } from "./context/event"
 import { SDKProvider, useSDK } from "./context/sdk"
+import { openEditor } from "./editor"
+import { existsSync } from "node:fs"
+import path from "node:path"
 import { StartupLoading } from "./component/startup-loading"
 import { SyncProvider, useSync } from "./context/sync"
 import { DataProvider } from "./context/data"
@@ -565,6 +568,27 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         slashAliases: ["resume", "continue"],
         run: () => {
           dialog.replace(() => <DialogSessionList />)
+        },
+      },
+      {
+        name: "memory.edit",
+        title: "Edit project memory (DEV.md)",
+        category: "Session",
+        slashName: "memory",
+        run: async () => {
+          dialog.clear()
+          if (!process.env.VISUAL && !process.env.EDITOR) {
+            toast.show({ message: "Set $EDITOR to edit memory; or add a note with `# note`", variant: "warning" })
+            return
+          }
+          const paths = await sdk.client.path.get()
+          const root = paths.data?.worktree
+          if (!root) return
+          // The file DeV already reads, so editing never hides an existing AGENTS.md or CLAUDE.md.
+          const file =
+            ["DEV.md", "AGENTS.md", "CLAUDE.md"].map((name) => path.join(root, name)).find((item) => existsSync(item)) ??
+            path.join(root, "DEV.md")
+          await openEditor({ value: "# Project memory\n\n", renderer, file, cwd: root }).catch(toast.error)
         },
       },
       {

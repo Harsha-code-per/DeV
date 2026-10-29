@@ -23,11 +23,18 @@ export function normalizePromptContent(content: string) {
   return content
 }
 
-export async function openEditor(input: { value: string; renderer: CliRenderer; cwd?: string; stdin?: EditorStdio }) {
+/** Edits `value` in $VISUAL/$EDITOR, or the real file `file` in place when given. */
+export async function openEditor(input: {
+  value: string
+  renderer: CliRenderer
+  cwd?: string
+  stdin?: EditorStdio
+  file?: string
+}) {
   const editor = process.env.VISUAL || process.env.EDITOR
   if (!editor) return
-  const file = path.join(os.tmpdir(), `${Date.now()}.md`)
-  await writeFile(file, input.value)
+  const file = input.file ?? path.join(os.tmpdir(), `${Date.now()}.md`)
+  if (!input.file || !existsSync(file)) await writeFile(file, input.value)
   input.renderer.suspend()
   input.renderer.currentRenderBuffer.clear()
   try {
@@ -46,7 +53,7 @@ export async function openEditor(input: { value: string; renderer: CliRenderer; 
     })
     return (await readFile(file, "utf8")) || undefined
   } finally {
-    await rm(file, { force: true }).catch(() => {})
+    if (!input.file) await rm(file, { force: true }).catch(() => {})
     input.renderer.currentRenderBuffer.clear()
     input.renderer.resume()
     input.renderer.requestRender()

@@ -53,7 +53,15 @@ export const InstancePaths = {
   skill: "/skill",
   lsp: "/lsp",
   formatter: "/formatter",
+  memory: "/memory",
 } as const
+
+export const MemoryInput = Schema.Struct({
+  text: Schema.String,
+  scope: Schema.Literals(["project", "user"]),
+}).annotate({ identifier: "MemoryInput" })
+
+export const MemoryResult = Schema.Struct({ path: Schema.String }).annotate({ identifier: "MemoryResult" })
 
 export const InstanceApi = HttpApi.make("instance")
   .add(
@@ -134,6 +142,18 @@ export const InstanceApi = HttpApi.make("instance")
             identifier: "vcs.apply",
             summary: "Apply VCS patch",
             description: "Apply a raw patch to the current working tree.",
+          }),
+        ),
+        HttpApiEndpoint.post("memory", InstancePaths.memory, {
+          query: WorkspaceRoutingQuery,
+          payload: MemoryInput,
+          success: described(MemoryResult, "Note saved"),
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "memory.add",
+            summary: "Add a memory note",
+            description:
+              "Append a note to the project's memory file (DEV.md, or an existing AGENTS.md or CLAUDE.md) or to the user's DEV.md.",
           }),
         ),
         HttpApiEndpoint.get("command", InstancePaths.command, {

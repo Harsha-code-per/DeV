@@ -965,6 +965,21 @@ export function Prompt(props: PromptProps) {
       void exit()
       return true
     }
+    // As in Claude Code: `# note` saves a note to the project's memory file, `#~ note` to your own DEV.md.
+    if (store.mode === "normal" && /^#~?\s*\S/.test(trimmed) && !trimmed.startsWith("##") && !trimmed.includes("\n")) {
+      const user = trimmed.startsWith("#~")
+      const res = await sdk.client.memory.add({
+        memoryInput: { text: trimmed.slice(user ? 2 : 1).trim(), scope: user ? "user" : "project" },
+      })
+      toast.show(
+        res.data
+          ? { message: `Saved to memory: ${res.data.path}`, variant: "info" }
+          : { message: "Saving the note to memory failed", variant: "error" },
+      )
+      input.clear()
+      setStore("prompt", { input: "", parts: [] })
+      return true
+    }
     const selectedModel = local.model.current()
     if (!selectedModel) {
       void promptModelWarning()
