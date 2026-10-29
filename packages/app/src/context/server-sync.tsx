@@ -1,6 +1,7 @@
 import type {
   Config,
   DevcodeClient,
+  McpStatus,
   Path,
   Project,
   ProviderAuthResponse,
@@ -29,7 +30,7 @@ import { createChildStoreManager } from "./global-sync/child-store"
 import { applyDirectoryEvent, applyGlobalEvent } from "./global-sync/event-reducer"
 import { estimateRootSessionTotal, loadRootSessions, loadRootSessionsV1 } from "./global-sync/session-load"
 import { trimSessions } from "./global-sync/session-trim"
-import type { ProjectMeta } from "./global-sync/types"
+import type { ProjectMeta, State } from "./global-sync/types"
 import { SESSION_RECENT_LIMIT } from "./global-sync/types"
 import { formatServerError } from "@/utils/server-errors"
 import { queryOptions, useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/solid-query"
@@ -47,16 +48,7 @@ import { retry } from "@dev-ai/core/util/retry"
 import type { ServerScope } from "@/utils/server-scope"
 import { createHomeSessionIndexCache } from "./global-sync/home-session-index"
 import { persisted } from "@/utils/persist"
-import type { ServerApi } from "@/utils/server"
-import type {
-  McpListInput,
-  McpListOutput,
-  McpResource,
-  McpResourceCatalogInput,
-  McpResourceCatalogOutput,
-  McpServer,
-  SessionActiveOutput,
-} from "@dev-ai/client/promise"
+import type { CompatibleApi } from "@/utils/server-compat"
 import { toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
 
@@ -71,76 +63,46 @@ type GlobalStore = {
   reload: undefined | "pending" | "complete"
 }
 
-type McpListApi = {
-  readonly list: (input?: McpListInput) => Promise<McpListOutput>
-}
-
-type McpResourceApi = {
-  readonly resource: {
-    readonly catalog: (input?: McpResourceCatalogInput) => Promise<McpResourceCatalogOutput>
-  }
-}
-
 type ApiQueryOptions<T, K extends readonly unknown[]> = SolidQueryOptions<T, Error, T, K> & {
   initialData?: undefined
   queryKey: K
 }
 
+type SessionActive = Awaited<ReturnType<CompatibleApi["session"]["active"]>>
+
 type SessionActiveApi = {
-  readonly active: () => Promise<SessionActiveOutput>
+  readonly active: () => Promise<SessionActive>
 }
 
 export const loadMcpQuery = (
   scope: ServerScope,
   directory: string,
-  api: McpListApi,
-  legacy?: DevcodeClient,
-  protocol?: Promise<"v1" | "v2">,
-): ApiQueryOptions<Record<string, McpServer["status"]>, readonly [ServerScope, string, "mcp"]> =>
-  queryOptions<
-    Record<string, McpServer["status"]>,
-    Error,
-    Record<string, McpServer["status"]>,
-    readonly [ServerScope, string, "mcp"]
-  >({
+  legacy: DevcodeClient,
+): ApiQueryOptions<Record<string, McpStatus>, readonly [ServerScope, string, "mcp"]> =>
+  queryOptions<Record<string, McpStatus>, Error, Record<string, McpStatus>, readonly [ServerScope, string, "mcp"]>({
     queryKey: [scope, directory, "mcp"] as const,
-    queryFn: async () => {
-      if ((await protocol) === "v1" && legacy) return (await legacy.mcp.status()).data ?? {}
-      return api
-        .list({ location: { directory } })
-        .then((result) => Object.fromEntries(result.data.map((server) => [server.name, server.status])))
-    },
+    queryFn: async () => (await legacy.mcp.status()).data ?? {},
   })
 
 export const loadMcpResourcesQuery = (
   scope: ServerScope,
   directory: string,
-  api: McpResourceApi,
-  legacy?: DevcodeClient,
-  protocol?: Promise<"v1" | "v2">,
-): ApiQueryOptions<Record<string, McpResource>, readonly [ServerScope, string, "mcpResources"]> =>
+  legacy: DevcodeClient,
+): ApiQueryOptions<Record<string, State["mcp_resource"][string]>, readonly [ServerScope, string, "mcpResources"]> =>
   queryOptions<
-    Record<string, McpResource>,
+    Record<string, State["mcp_resource"][string]>,
     Error,
-    Record<string, McpResource>,
+    Record<string, State["mcp_resource"][string]>,
     readonly [ServerScope, string, "mcpResources"]
   >({
     queryKey: [scope, directory, "mcpResources"] as const,
-    queryFn: async () => {
-      if ((await protocol) === "v1" && legacy) {
-        return Object.fromEntries(
-          Object.entries((await legacy.experimental.resource.list()).data ?? {}).map(([key, resource]) => [
-            key,
-            { ...resource, server: resource.client },
-          ]),
-        )
-      }
-      return api.resource
-        .catalog({ location: { directory } })
-        .then((result) =>
-          Object.fromEntries(result.data.resources.map((resource) => [`${resource.server}:${resource.uri}`, resource])),
-        )
-    },
+    queryFn: async () =>
+      Object.fromEntries(
+        Object.entries((await legacy.experimental.resource.list()).data ?? {}).map(([key, resource]) => [
+          key,
+          { ...resource, server: resource.client },
+        ]),
+      ),
     placeholderData: {},
   })
 
@@ -153,8 +115,8 @@ export const loadLspQuery = (scope: ServerScope, directory: string, sdk: Devcode
 export const loadActiveSessionsQuery = (
   scope: ServerScope,
   api: SessionActiveApi,
-): ApiQueryOptions<SessionActiveOutput, readonly [ServerScope, "activeSessions"]> =>
-  queryOptions<SessionActiveOutput, Error, SessionActiveOutput, readonly [ServerScope, "activeSessions"]>({
+): ApiQueryOptions<SessionActive, readonly [ServerScope, "activeSessions"]> =>
+  queryOptions<SessionActive, Error, SessionActive, readonly [ServerScope, "activeSessions"]>({
     queryKey: [scope, "activeSessions"] as const,
     queryFn: () => api.active(),
     enabled: true,
@@ -167,7 +129,7 @@ export const loadActiveSessionsQuery = (
 
 export function seedActiveSessionStatuses(
   session: Pick<ServerSession, "data" | "set">,
-  active: SessionActiveOutput | Record<string, SessionStatus>,
+  active: SessionActive | Record<string, SessionStatus>,
 ) {
   for (const sessionID of Object.keys(active)) {
     if (session.data.session_status[sessionID] !== undefined) continue
@@ -179,7 +141,7 @@ export function seedActiveSessionStatuses(
 function makeQueryOptionsApi(
   scope: ServerScope,
   serverSDK: () => DevcodeClient,
-  serverAPI: ServerApi,
+  serverAPI: CompatibleApi,
   sdkFor: (dir: PathKey) => DevcodeClient,
   protocol: Promise<"v1" | "v2">,
 ) {
@@ -187,15 +149,15 @@ function makeQueryOptionsApi(
     globalConfig: () => loadGlobalConfigQuery(scope, serverSDK(), protocol),
     projects: () => loadProjectsQuery(scope, serverAPI.project),
     providers: (directory: PathKey | null) =>
-      loadProvidersQuery(scope, directory, serverAPI, directory ? sdkFor(directory) : serverSDK(), protocol),
+      loadProvidersQuery(scope, directory, directory ? sdkFor(directory) : serverSDK()),
     path: (directory: PathKey | null) =>
       loadPathQuery(scope, directory, directory ? sdkFor(directory) : serverSDK(), protocol),
-    agents: (directory: PathKey) => loadAgentsQuery(scope, directory, serverAPI.agent, sdkFor(directory), protocol),
+    agents: (directory: PathKey) => loadAgentsQuery(scope, directory, sdkFor(directory)),
     references: (directory: PathKey) =>
-      loadReferencesQuery(scope, directory, serverAPI.reference, sdkFor(directory), protocol),
-    mcp: (directory: PathKey) => loadMcpQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
+      loadReferencesQuery(scope, directory, sdkFor(directory)),
+    mcp: (directory: PathKey) => loadMcpQuery(scope, directory, sdkFor(directory)),
     mcpResources: (directory: PathKey) =>
-      loadMcpResourcesQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
+      loadMcpResourcesQuery(scope, directory, sdkFor(directory)),
     lsp: (directory: PathKey) => loadLspQuery(scope, directory, sdkFor(directory)),
     sessions: (directory: PathKey) => ({ queryKey: [scope, directory, "loadSessions"] as const }),
   }
@@ -363,7 +325,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       void bootstrapInstance(directory)
     },
     onMcp: (directory, setStore) => {
-      void loadCommands(directory, serverSDK.api.command, sdkFor(directory), serverSDK.protocol)
+      void loadCommands(directory, sdkFor(directory))
         .then((commands) => setStore("command", commands))
         .catch((err) => {
           showToast({
@@ -511,23 +473,6 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     return promise
   }
 
-  const indexSession = (info: Parameters<typeof session.remember>[0]) => {
-    const key = directoryKey(info.directory)
-    const existing = children.children[key]
-    if (!existing) return
-    applyDirectoryEvent({
-      event: { type: "session.created", properties: { info } },
-      directory: key,
-      store: existing[0],
-      setStore: existing[1],
-      push: queue.push,
-      retainedLimit: sessionMeta.get(key)?.limit,
-      sessionContent: false,
-      permission: session.data.permission,
-      loadLsp() {},
-    })
-  }
-
   const unsub = serverSDK.event.listen((e) => {
     const directory = e.name
     const key = directoryKey(directory)
@@ -535,7 +480,6 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     const eventType: string = event.type
     const recent = bootingRoot || Date.now() - bootedAt < 1500
 
-    if (event.current) session.applyV2(event.current)
     session.apply(event)
     if (event.type === "session.created" || event.type === "session.updated" || event.type === "session.deleted") {
       homeSessions.apply(event)
@@ -572,23 +516,10 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       return
     }
 
-    if (event.current?.type === "session.moved") {
-      const info = session.get(event.current.data.sessionID)
-      if (info) indexSession(info)
-    }
-    if (event.current?.type === "session.forked")
-      void session
-        .resolve(event.current.data.sessionID, { force: true })
-        .then(indexSession)
-        .catch(() => {})
-
     const existing = children.children[key]
     if (!existing) return
     children.mark(key)
     if (
-      event.current?.type === "session.moved" ||
-      // event.current?.type === "session.archived" ||
-      event.current?.type === "session.forked" ||
       eventType === "command.updated" ||
       eventType === "config.updated" ||
       eventType === "agent.updated"
@@ -698,18 +629,10 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         await toggleMcp({
           status,
           connect: async () => {
-            if ((await serverSDK.protocol) === "v1") {
-              await sdk.mcp.connect({ name })
-              return
-            }
-            await serverSDK.api.mcp.connect({ server: name, location: { directory: key } })
+            await sdk.mcp.connect({ name })
           },
           disconnect: async () => {
-            if ((await serverSDK.protocol) === "v1") {
-              await sdk.mcp.disconnect({ name })
-              return
-            }
-            await serverSDK.api.mcp.disconnect({ server: name, location: { directory: key } })
+            await sdk.mcp.disconnect({ name })
           },
           authenticate: async () => {
             await sdk.mcp.auth.authenticate({ name })

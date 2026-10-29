@@ -1,4 +1,4 @@
-import type { SessionApi } from "@dev-ai/client/promise"
+import type { SessionApi } from "@/utils/server-compat"
 import { normalizeSessionInfo } from "@/utils/session"
 import type { DevcodeClient } from "@dev-ai/sdk/v2/client"
 

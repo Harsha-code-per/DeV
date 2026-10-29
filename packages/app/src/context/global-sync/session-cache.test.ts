@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { Message, Part, PermissionRequest, QuestionRequest, SessionStatus, Todo } from "@dev-ai/sdk/v2/client"
-import type { FileDiffInfo } from "@dev-ai/client/promise"
+import type { FileDiffInfo } from "@/utils/server"
 import { dropSessionCaches, pickSessionCacheEvictions } from "./session-cache"
 
 const msg = (id: string, sessionID: string) =>

@@ -13,7 +13,6 @@ import { type DraftTab, useTabs } from "./tabs"
 import { useSettings } from "./settings"
 import { requireServerKey } from "@/utils/session-route"
 import type { ServerScope } from "@/utils/server-scope"
-import { normalizePermissionRequest } from "./global-sync/utils"
 import {
   acceptKey,
   directoryAcceptKey,
@@ -257,14 +256,7 @@ function createServerPermissionState(input: { sdk: ServerSDK; sync: ServerSync }
       })
   }
 
-  const list = async (directory: string) => {
-    if ((await input.sdk.protocol) === "v1") {
-      return (await input.sdk.client.permission.list({ directory })).data ?? []
-    }
-    return input.sdk.api.permission.request
-      .list({ location: { directory } })
-      .then((result) => result.data.map(normalizePermissionRequest))
-  }
+  const list = async (directory: string) => (await input.sdk.client.permission.list({ directory })).data ?? []
 
   function respondOnce(permission: PermissionRequest, directory?: string) {
     const now = Date.now()

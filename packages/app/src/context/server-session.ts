@@ -1,6 +1,7 @@
 import { Binary } from "@dev-ai/core/util/binary"
 import { retry } from "@dev-ai/core/util/retry"
-import type { OpenCodeEvent, SessionApi, SessionMessageInfo } from "@dev-ai/client/promise"
+import type { SessionMessageInfo } from "@/utils/server"
+import type { SessionApi } from "@/utils/server-compat"
 import type {
   Message,
   DevcodeClient,
@@ -11,7 +12,7 @@ import type {
   SessionStatus,
   Todo,
 } from "@dev-ai/sdk/v2/client"
-import type { FileDiffInfo } from "@dev-ai/client/promise"
+import type { FileDiffInfo } from "@/utils/server"
 import { batch } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"
@@ -20,10 +21,9 @@ import { rootSession } from "@/utils/session-route"
 import { normalizeSessionInfo } from "@/utils/session"
 import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
-import { createV2SessionReducer, type V2SessionReduction } from "./server-session-v2-reducer"
-import type { ServerApi } from "@/utils/server"
+import type { CompatibleApi } from "@/utils/server-compat"
 
-type MessageApi = ServerApi["message"]
+type MessageApi = CompatibleApi["message"]
 
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 const SKIP_PARTS = new Set(["patch", "step-start", "step-finish"])
@@ -37,8 +37,7 @@ function needsOlderTurnRoot(source: readonly SessionMessageInfo[]) {
     (message) =>
       message.type === "user" ||
       message.type === "shell" ||
-      message.type === "assistant" ||
-      (message.type === "synthetic" && message.description?.trim()),
+      message.type === "assistant",
   )
   return boundary?.type === "assistant"
 }
@@ -212,7 +211,6 @@ export function createServerSession(
   const inflight = new Map<string, Promise<void>>()
   const inflightTodo = new Map<string, Promise<void>>()
   const optimistic = new Map<string, Map<string, OptimisticItem>>()
-  const v2 = createV2SessionReducer()
   const messageLoads = new Map<string, MessageLoadState>()
   const pendingParts = new Map<string, Map<string, Set<string>>>()
   const orphanParts = new Map<string, Set<string>>()
@@ -487,7 +485,6 @@ export function createServerSession(
       inflight.delete(sessionID)
       inflightTodo.delete(sessionID)
       messageLoads.delete(sessionID)
-      v2.clear(sessionID)
       pendingParts.delete(sessionID)
       orphanParts.delete(sessionID)
       removedMessages.delete(sessionID)
@@ -878,109 +875,6 @@ export function createServerSession(
       typeof properties.part.sessionID === "string"
     )
       return properties.part.sessionID
-  }
-
-  const projectV2 = (reduction: V2SessionReduction) => {
-    reduction.touched.forEach((messageID) => messageLoads.get(reduction.sessionID)?.touchedSource.add(messageID))
-    setData("session_message", reduction.sessionID, reconcile(reduction.messages))
-    if (reduction.touched.length === 0) return
-
-    const touched = new Set(reduction.touched)
-    let parentID: string | undefined
-    for (const message of reduction.messages) {
-      if (message.type === "user" || (message.type === "synthetic" && message.description?.trim()))
-        parentID = message.id
-      if (message.type === "shell") {
-        if (touched.has(message.id)) touched.add(`${message.id}:assistant`)
-        parentID = undefined
-      }
-      if (message.type === "assistant" && touched.has(message.id) && parentID) touched.add(parentID)
-      if (message.type === "compaction" && touched.has(message.id) && parentID) touched.add(parentID)
-    }
-
-    const normalized = normalizeSessionMessages(reduction.sessionID, reduction.messages)
-    batch(() => {
-      for (const message of normalized.messages) {
-        if (!touched.has(message.id)) continue
-        apply({ type: "message.updated", properties: { sessionID: reduction.sessionID, info: message } })
-      }
-      for (const messageID of touched) {
-        const next = normalized.parts.get(messageID) ?? []
-        const nextIDs = new Set(next.map((part) => part.id))
-        for (const part of next) {
-          apply({ type: "message.part.updated", properties: { sessionID: reduction.sessionID, part } })
-        }
-        for (const part of data.part[messageID] ?? []) {
-          if (nextIDs.has(part.id)) continue
-          apply({
-            type: "message.part.removed",
-            properties: { sessionID: reduction.sessionID, messageID, partID: part.id },
-          })
-        }
-      }
-    })
-  }
-
-  const hydrateV2Message = (sessionID: string, messageID: string) => {
-    if (!sessionApi) return
-    void sessionApi
-      .message({ sessionID, messageID })
-      .then((message) => {
-        const current = data.session_message[sessionID] ?? []
-        const messages = [...current.filter((item) => item.id !== message.id), message].sort(compareMessages)
-        projectV2({ sessionID, messages, touched: [message.id] })
-      })
-      .catch(() => {})
-  }
-
-  const applyV2 = (event: OpenCodeEvent) => {
-    if (!("data" in event) || !("sessionID" in event.data) || typeof event.data.sessionID !== "string") return
-    const sessionID = event.data.sessionID
-    const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
-    if (reduction) {
-      projectV2(reduction)
-      if (reduction.missing) hydrateV2Message(sessionID, reduction.missing)
-    }
-
-    const info = data.info[sessionID]
-    if (event.type === "session.renamed" && info)
-      remember({ ...info, title: event.data.title, time: { ...info.time, updated: event.created } })
-    if (event.type === "session.moved" && info)
-      remember({
-        ...info,
-        projectID: event.data.projectID ?? info.projectID,
-        workspaceID: event.data.location.workspaceID,
-        directory: event.data.location.directory,
-        path: event.data.subpath,
-        time: { ...info.time, updated: event.created },
-      })
-    if (event.type === "session.usage.updated" && info)
-      remember({ ...info, cost: event.data.cost, tokens: event.data.tokens })
-    // if (event.type === "session.archived") {
-    //   if (info) remember({ ...info, time: { ...info.time, archived: event.created, updated: event.created } })
-    //   evict([sessionID])
-    // }
-    if (event.type === "session.execution.started") setData("session_status", sessionID, { type: "busy" })
-    if (
-      event.type === "session.execution.succeeded" ||
-      event.type === "session.execution.failed" ||
-      event.type === "session.execution.interrupted"
-    )
-      setData("session_status", sessionID, { type: "idle" })
-    if (event.type === "session.retry.scheduled")
-      setData("session_status", sessionID, {
-        type: "retry",
-        attempt: event.data.attempt,
-        message: event.data.error.message,
-        next: event.data.at,
-      })
-    if (event.type === "session.forked") void resolve(sessionID, { force: true }).catch(() => {})
-    if (
-      event.type === "session.revert.staged" ||
-      event.type === "session.revert.cleared" ||
-      event.type === "session.revert.committed"
-    )
-      void resolve(sessionID, { force: true }).catch(() => {})
   }
 
   const apply = (event: { type: string; properties?: unknown }) => {
@@ -1420,7 +1314,6 @@ export function createServerSession(
       if (count && count > 1) pinned.set(sessionID, count - 1)
     },
     apply,
-    applyV2,
   }
 }
 

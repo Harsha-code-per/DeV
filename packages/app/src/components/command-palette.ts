@@ -1,6 +1,6 @@
 import { getFilename } from "@dev-ai/core/util/path"
 import type { Project } from "@dev-ai/sdk/v2/client"
-import type { SessionInfo } from "@dev-ai/client/promise"
+import type { SessionInfo } from "@/utils/server"
 import { useDialog } from "@dev-ai/ui/context/dialog"
 import { createMemo, onCleanup } from "solid-js"
 import { commandPaletteOptions, useCommand, type CommandOption } from "@/context/command"

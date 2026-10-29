@@ -38,7 +38,6 @@
   },
   "dependencies": {
     "@kobalte/core": "catalog:",
-    "@dev-ai/client": "file:../app/vendor/opencode-ai-client-1.17.13-v2.tgz",
     "@dev-ai/core": "workspace:*",
     "@dev-ai/sdk": "workspace:*",
     "@dev-ai/ui": "workspace:*",

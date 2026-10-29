@@ -1,4 +1,4 @@
-import type { OpenCodeEvent } from "@dev-ai/client/promise"
+import type { DevCodeEvent } from "@dev-ai/client"
 import type { Event } from "@dev-ai/sdk/v2/client"
 import { createSimpleContext } from "@dev-ai/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
@@ -18,14 +18,10 @@ const isAbortError = (error: unknown) =>
   error !== null && typeof error === "object" && "name" in error && error.name === "AbortError"
 
 const isStreamClosed = (error: unknown, signal?: AbortSignal) => isAbortError(error) || signal?.aborted === true
-export type ServerEvent = Event & { current?: OpenCodeEvent }
+export type ServerEvent = Event
 type QueuedServerEvent = { directory: string; payload: ServerEvent }
-type CurrentDelta = Extract<
-  OpenCodeEvent,
-  { type: "session.text.delta" | "session.reasoning.delta" | "session.tool.input.delta" | "session.compaction.delta" }
->
 
-export function adaptServerEvent(event: OpenCodeEvent): ServerEvent {
+export function adaptServerEvent(event: DevCodeEvent): ServerEvent {
   if (event.type === "permission.v2.asked") {
     return {
       id: event.id,
@@ -42,18 +38,17 @@ export function adaptServerEvent(event: OpenCodeEvent): ServerEvent {
             ? { messageID: event.data.source.messageID, callID: event.data.source.callID }
             : undefined,
       },
-      current: event,
     } as ServerEvent
   }
   if (event.type === "permission.v2.replied")
-    return { id: event.id, type: "permission.replied", properties: event.data, current: event } as ServerEvent
+    return { id: event.id, type: "permission.replied", properties: event.data } as ServerEvent
   if (event.type === "question.v2.asked")
-    return { id: event.id, type: "question.asked", properties: event.data, current: event } as ServerEvent
+    return { id: event.id, type: "question.asked", properties: event.data } as ServerEvent
   if (event.type === "question.v2.replied")
-    return { id: event.id, type: "question.replied", properties: event.data, current: event } as ServerEvent
+    return { id: event.id, type: "question.replied", properties: event.data } as ServerEvent
   if (event.type === "question.v2.rejected")
-    return { id: event.id, type: "question.rejected", properties: event.data, current: event } as ServerEvent
-  return { id: event.id, type: event.type, properties: event.data, current: event } as ServerEvent
+    return { id: event.id, type: "question.rejected", properties: event.data } as ServerEvent
+  return { id: event.id, type: event.type, properties: event.data } as ServerEvent
 }
 
 const coalescedKey = (event: QueuedServerEvent) => {
@@ -79,34 +74,6 @@ export function enqueueServerEvent(queue: QueuedServerEvent[], event: QueuedServ
 export function coalesceServerEvents(events: QueuedServerEvent[]) {
   const output: QueuedServerEvent[] = []
   events.forEach((event) => {
-    const current = currentDelta(event.payload.current)
-    if (current) {
-      const previous = output[output.length - 1]
-      const prior = currentDelta(previous?.payload.current)
-      if (
-        previous &&
-        prior &&
-        previous.directory === event.directory &&
-        currentDeltaKey(prior) === currentDeltaKey(current)
-      ) {
-        const fragment = currentDeltaFragment(prior) + currentDeltaFragment(current)
-        const data =
-          current.type === "session.compaction.delta"
-            ? { ...current.data, text: fragment }
-            : { ...current.data, delta: fragment }
-        output[output.length - 1] = {
-          directory: event.directory,
-          payload: {
-            ...event.payload,
-            properties: data,
-            current: { ...current, data } as CurrentDelta,
-          } as ServerEvent,
-        }
-        return
-      }
-      output.push(event)
-      return
-    }
     if (event.payload.type !== "message.part.delta") {
       output.push(event)
       return
@@ -136,27 +103,6 @@ export function coalesceServerEvents(events: QueuedServerEvent[]) {
     }
   })
   return output
-}
-
-function currentDelta(event: OpenCodeEvent | undefined): CurrentDelta | undefined {
-  if (
-    event?.type === "session.text.delta" ||
-    event?.type === "session.reasoning.delta" ||
-    event?.type === "session.tool.input.delta" ||
-    event?.type === "session.compaction.delta"
-  )
-    return event
-}
-
-function currentDeltaKey(event: CurrentDelta) {
-  if (event.type === "session.tool.input.delta")
-    return `${event.type}:${event.data.sessionID}:${event.data.assistantMessageID}:${event.data.callID}`
-  if (event.type === "session.compaction.delta") return `${event.type}:${event.data.sessionID}`
-  return `${event.type}:${event.data.sessionID}:${event.data.assistantMessageID}:${event.data.ordinal}`
-}
-
-function currentDeltaFragment(event: CurrentDelta) {
-  return event.type === "session.compaction.delta" ? event.data.text : event.data.delta
 }
 
 export function resumeStreamAfterPageShow(event: PageTransitionEvent, start: () => unknown) {
@@ -276,7 +222,7 @@ function createServerSdkContextBase(server: ServerConnection.Any, scope: ServerS
           const events =
             kind === "v1"
               ? (await eventSdk.global.event({ signal: attempt.signal })).stream
-              : eventApi.event.subscribe({ signal: attempt.signal })
+              : eventApi.events.subscribe({ signal: attempt.signal })
           let yielded = Date.now()
           for await (const event of events) {
             streamErrorLogged = false
@@ -346,7 +292,7 @@ function createServerSdkContextBase(server: ServerConnection.Any, scope: ServerS
       throwOnError: true,
       directory,
     })
-  const api = createCompatibleApi({ protocol, current: currentApi, legacy })
+  const api = createCompatibleApi({ current: currentApi, legacy })
 
   return {
     server,
@@ -428,7 +374,6 @@ function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
     directory,
     client,
     api: createCompatibleApi({
-      protocol: serverSDK.protocol,
       current: serverSDK.currentApi,
       legacy: (next) => serverSDK.createClient({ directory: next ?? directory, throwOnError: true }),
       directory,

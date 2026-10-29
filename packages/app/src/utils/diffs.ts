@@ -1,5 +1,5 @@
 import type { SnapshotFileDiff, VcsFileDiff } from "@dev-ai/sdk/v2"
-import type { FileDiffInfo } from "@dev-ai/client/promise"
+import type { FileDiffInfo } from "@/utils/server"
 import type { Message } from "@dev-ai/sdk/v2/client"
 
 type Diff = FileDiffInfo | SnapshotFileDiff | VcsFileDiff

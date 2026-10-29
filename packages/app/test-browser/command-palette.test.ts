@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { Project } from "@dev-ai/sdk/v2/client"
-import type { SessionInfo } from "@dev-ai/client/promise"
+import type { SessionInfo } from "@/utils/server"
 import { createRoot } from "solid-js"
 import { createServerSessionEntries } from "@/components/command-palette"
 import type { LocalProject } from "@/context/layout"

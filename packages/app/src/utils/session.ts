@@ -1,4 +1,5 @@
-import type { SessionApi, SessionInfo, SessionListInput } from "@dev-ai/client/promise"
+import type { SessionInfo } from "@/utils/server"
+import type { SessionApi, SessionListInput } from "@/utils/server-compat"
 import type { Session } from "@dev-ai/sdk/v2/client"
 import { withTimestampedFallback } from "./session-title"
 

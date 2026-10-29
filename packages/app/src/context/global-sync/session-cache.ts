@@ -1,6 +1,6 @@
 import type { Message, Part, PermissionRequest, QuestionRequest, SessionStatus, Todo } from "@dev-ai/sdk/v2/client"
-import type { FileDiffInfo } from "@dev-ai/client/promise"
-import type { SessionMessageInfo } from "@dev-ai/client/promise"
+import type { FileDiffInfo } from "@/utils/server"
+import type { SessionMessageInfo } from "@/utils/server"
 
 export const SESSION_CACHE_LIMIT = 40
 

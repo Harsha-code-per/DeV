@@ -1,5 +1,4 @@
 import type { Message, Session, Part, SnapshotFileDiff, SessionStatus, Provider } from "@dev-ai/sdk/v2"
-import type { FileDiffInfo } from "@dev-ai/client/promise"
 import { createSimpleContext } from "@dev-ai/ui/context"
 import { PreloadMultiFileDiffResult } from "@pierre/diffs/ssr"
 
@@ -26,7 +25,7 @@ type Data = {
     [sessionID: string]: SessionStatus
   }
   session_diff: {
-    [sessionID: string]: (SnapshotFileDiff | FileDiffInfo)[]
+    [sessionID: string]: (SnapshotFileDiff)[]
   }
   session_diff_preload?: {
     [sessionID: string]: PreloadMultiFileDiffResult<any>[]

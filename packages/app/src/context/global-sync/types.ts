@@ -2,6 +2,8 @@ import type {
   Agent,
   Config,
   LspStatus,
+  McpResource,
+  McpStatus,
   Message,
   Part,
   Path,
@@ -13,11 +15,20 @@ import type {
   Todo,
   VcsInfo,
 } from "@dev-ai/sdk/v2/client"
-import type { FileDiffInfo } from "@dev-ai/client/promise"
+import type { FileDiffInfo } from "@/utils/server"
 import { NormalizedProviderListResponse } from "@dev-ai/session-ui/context"
-import type { CommandInfo, McpResource, McpServer, SessionMessageInfo } from "@dev-ai/client/promise"
+import type { SessionMessageInfo } from "@/utils/server"
 import type { Accessor } from "solid-js"
 import type { SetStoreFunction, Store } from "solid-js/store"
+
+export type CommandInfo = {
+  name: string
+  template: string
+  description?: string
+  agent?: string
+  model?: { id: string; providerID: string; variant?: string }
+  subtask?: boolean
+}
 
 export type ProjectMeta = {
   name?: string
@@ -62,10 +73,10 @@ export type State = {
   }
   mcp_ready: boolean
   mcp: {
-    [name: string]: McpServer["status"]
+    [name: string]: McpStatus
   }
   mcp_resource: {
-    [key: string]: McpResource
+    [key: string]: McpResource & { server: string }
   }
   lsp_ready: boolean
   lsp: LspStatus[]

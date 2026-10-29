@@ -1,7 +1,7 @@
 import { usePlatform } from "@/context/platform"
 import { ServerConnection } from "@/context/server"
 import { authTokenFromCredentials, createSdkForServer } from "./server"
-import { ClientError, OpenCode } from "@dev-ai/client"
+import { ClientError, DevCode } from "@dev-ai/client"
 import { Accessor, createEffect, onCleanup } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
 
@@ -85,7 +85,7 @@ export async function checkServerHealth(
       .catch(() => ({ healthy: false }))
   }
   const attempt = async (count: number): Promise<ServerHealth> => {
-    const current = await OpenCode.make({
+    const current = await DevCode.make({
       baseUrl: server.url,
       fetch,
       headers: server.password
@@ -96,8 +96,8 @@ export async function checkServerHealth(
     })
       .health.get({ signal })
       .then((x) =>
-        typeof x.healthy === "boolean"
-          ? { data: { healthy: x.healthy, version: x.version } }
+        x.healthy === true
+          ? { data: { healthy: x.healthy } }
           : { error: new Error("Invalid health response") },
       )
       .catch((error) => ({ error }))

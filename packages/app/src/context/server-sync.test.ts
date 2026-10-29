@@ -1,67 +1,35 @@
 import { describe, expect, test } from "bun:test"
 import type { DevcodeClient } from "@dev-ai/sdk/v2/client"
-import type {
-  McpListInput,
-  McpResourceCatalogInput,
-  SessionApi,
-  SessionInfo,
-  SessionListInput,
-} from "@dev-ai/client/promise"
+import type { SessionInfo } from "@/utils/server"
+import type { SessionApi, SessionListInput } from "@/utils/server-compat"
 import { QueryClient } from "@tanstack/solid-query"
 import { canDisposeDirectory, pickDirectoriesToEvict } from "./global-sync/eviction"
 import { estimateRootSessionTotal, loadRootSessions } from "./global-sync/session-load"
 import { loadActiveSessionsQuery, loadMcpQuery, loadMcpResourcesQuery, seedActiveSessionStatuses } from "./server-sync"
 import { ServerScope } from "@/utils/server-scope"
 import { createServerSession } from "./server-session"
-import type { ServerApi } from "@/utils/server"
-
-type McpApi = ServerApi["mcp"]
 
 describe("MCP queries", () => {
-  test("loads current servers for the requested location", async () => {
-    const calls: unknown[] = []
-    const queryClient = new QueryClient()
-    const result = await queryClient.fetchQuery(
-      loadMcpQuery(ServerScope.local, "/project", {
-        list: async (input: McpListInput = {}) => {
-          calls.push(input)
-          return {
-            location: { directory: "/project", project: { id: "project", directory: "/project" } },
-            data: [
-              { name: "docs", status: { status: "connected" } },
-              { name: "search", status: { status: "pending" } },
-            ],
-          }
-        },
-      } as unknown as McpApi),
-    )
+  test("loads legacy server statuses", async () => {
+    const legacy = { mcp: { status: async () => ({ data: { docs: { status: "connected" } } }) } } as unknown as DevcodeClient
+    const result = await new QueryClient().fetchQuery(loadMcpQuery(ServerScope.local, "/project", legacy))
 
-    expect(calls).toEqual([{ location: { directory: "/project" } }])
-    expect(result).toEqual({ docs: { status: "connected" }, search: { status: "pending" } })
+    expect(result).toEqual({ docs: { status: "connected" } })
   })
 
-  test("loads and keys the current resource catalog", async () => {
-    const calls: unknown[] = []
-    const queryClient = new QueryClient()
-    const result = await queryClient.fetchQuery(
-      loadMcpResourcesQuery(ServerScope.local, "/project", {
+  test("labels legacy resources with their server", async () => {
+    const legacy = {
+      experimental: {
         resource: {
-          catalog: async (input: McpResourceCatalogInput = {}) => {
-            calls.push(input)
-            return {
-              location: { directory: "/project", project: { id: "project", directory: "/project" } },
-              data: {
-                resources: [{ server: "docs", name: "Guide", uri: "docs://guide" }],
-                templates: [],
-              },
-            }
-          },
+          list: async () => ({ data: { "docs:docs://guide": { client: "docs", name: "Guide", uri: "docs://guide" } } }),
         },
-      } as unknown as McpApi),
-    )
+      },
+    } as unknown as DevcodeClient
+    const result = await new QueryClient().fetchQuery(loadMcpResourcesQuery(ServerScope.local, "/project", legacy))
 
-    expect(calls).toEqual([{ location: { directory: "/project" } }])
-    expect(result).toEqual({ "docs:docs://guide": { server: "docs", name: "Guide", uri: "docs://guide" } })
+    expect(result).toEqual({
+      "docs:docs://guide": { client: "docs", server: "docs", name: "Guide", uri: "docs://guide" },
+    })
   })
 })
 

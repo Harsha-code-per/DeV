@@ -1,4 +1,4 @@
-import type { SessionMessageInfo } from "@dev-ai/client/promise"
+import type { SessionMessageInfo } from "@/utils/server"
 import type { AssistantMessage, Message, Part, SessionStatus, UserMessage } from "@dev-ai/sdk/v2"
 import { createMemo, type Accessor } from "solid-js"
 import { reuseTimelineRows } from "./row-reconciliation"

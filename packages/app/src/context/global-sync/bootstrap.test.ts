@@ -2,7 +2,6 @@ import { describe, expect, test } from "bun:test"
 import { createStore } from "solid-js/store"
 import { QueryClient } from "@tanstack/solid-query"
 import type { Config, DevcodeClient, Project } from "@dev-ai/sdk/v2/client"
-import type { AgentApi, CatalogApi, CommandApi, ReferenceApi } from "@dev-ai/client/promise"
 import type { NormalizedProviderListResponse } from "@dev-ai/session-ui/context"
 import {
   bootstrapDirectory,
@@ -16,9 +15,7 @@ import {
 } from "./bootstrap"
 import type { State, VcsCache } from "./types"
 import { ServerScope } from "@/utils/server-scope"
-import type { ServerApi } from "@/utils/server"
-
-type ProjectApi = ServerApi["project"]
+import type { CompatibleApi } from "@/utils/server-compat"
 
 const provider = { all: new Map(), connected: [], default: {} } satisfies NormalizedProviderListResponse
 const api = {
@@ -36,7 +33,7 @@ const api = {
   question: { request: { list: async () => ({ location: {}, data: [] }) } },
   reference: { list: async () => ({ location: {}, data: [] }) },
   vcs: { get: async () => ({ location: {}, data: {} }) },
-} as unknown as ServerApi
+} as unknown as CompatibleApi
 
 function directoryState() {
   return createStore<State>({
@@ -159,11 +156,16 @@ describe("bootstrapDirectory", () => {
         provider,
       },
       sdk: {
+        app: { agents: async () => ({ data: [] }) },
         config: {
           get: async () => {
             throw new Error("legacy directory config should not be called")
           },
         },
+        permission: { list: async () => ({ data: [] }) },
+        question: { list: async () => ({ data: [] }) },
+        v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+        provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
       } as unknown as DevcodeClient,
       api,
       store,
@@ -228,76 +230,29 @@ describe("config queries", () => {
 describe("query keys", () => {
   test("partitions identical directories by server scope", () => {
     const client = {} as Parameters<typeof loadPathQuery>[2]
-    const api = {} as CatalogApi
     const remote = "https://debian.example" as typeof ServerScope.local
 
     expect([...loadPathQuery(ServerScope.local, "/repo", client).queryKey]).toEqual(["local", "/repo", "path"])
     expect([...loadPathQuery(remote, "/repo", client).queryKey]).toEqual(["https://debian.example", "/repo", "path"])
-    expect([...loadProvidersQuery(remote, null, api).queryKey]).toEqual(["https://debian.example", null, "providers"])
+    expect([...loadProvidersQuery(remote, null, client).queryKey]).toEqual(["https://debian.example", null, "providers"])
   })
 
-  test("loads the current provider and model catalog", async () => {
-    const calls: unknown[] = []
-    const api = {
-      provider: {
-        list: async (input: unknown) => {
-          calls.push(["provider", input])
-          return { location: {}, data: [{ id: "openai", name: "OpenAI", package: "@ai-sdk/openai" }] }
-        },
-      },
-      model: {
-        list: async (input: unknown) => {
-          calls.push(["model", input])
-          return { location: {}, data: [] }
-        },
-        default: async (input: unknown) => {
-          calls.push(["default", input])
-          return { location: {}, data: null }
-        },
-      },
-    } as unknown as CatalogApi
+  test("loads agents from the legacy endpoint", async () => {
+    const legacy = { app: { agents: async () => ({ data: [] }) } } as unknown as DevcodeClient
 
-    const result = await new QueryClient().fetchQuery(loadProvidersQuery(ServerScope.local, "/repo", api))
+    expect(await new QueryClient().fetchQuery(loadAgentsQuery(ServerScope.local, "/repo", legacy))).toEqual([])
+  })
 
-    expect(calls).toEqual([
-      ["provider", { location: { directory: "/repo" } }],
-      ["model", { location: { directory: "/repo" } }],
-      ["default", { location: { directory: "/repo" } }],
+  test("adapts legacy commands to the app command shape", async () => {
+    const legacy = {
+      command: {
+        list: async () => ({ data: [{ name: "review", template: "Review files", model: "openai/gpt-5" }] }),
+      },
+    } as unknown as DevcodeClient
+
+    expect(await loadCommands("/repo", legacy)).toEqual([
+      { name: "review", template: "Review files", model: { providerID: "openai", id: "gpt-5" } },
     ])
-    expect(result.connected).toEqual(["openai"])
-  })
-
-  test("loads agents from the current location-scoped endpoint", async () => {
-    const calls: unknown[] = []
-    const api = {
-      list: async (input: unknown) => {
-        calls.push(input)
-        return { location: {}, data: [] }
-      },
-    } as unknown as AgentApi
-
-    const result = await new QueryClient().fetchQuery(loadAgentsQuery(ServerScope.local, "/repo", api))
-
-    expect(calls).toEqual([{ location: { directory: "/repo" } }])
-    expect(result).toEqual([])
-  })
-
-  test("loads commands from the current location-scoped endpoint", async () => {
-    const calls: unknown[] = []
-    const api = {
-      list: async (input: unknown) => {
-        calls.push(input)
-        return {
-          location: {},
-          data: [{ name: "review", template: "Review files" /* source: "command" as const */ }],
-        }
-      },
-    } as unknown as CommandApi
-
-    const result = await loadCommands("/repo", api)
-
-    expect(calls).toEqual([{ location: { directory: "/repo" } }])
-    expect(result).toEqual([{ name: "review", template: "Review files" /* source: "command" */ }])
   })
 
   test("loads projects from the current endpoint", async () => {
@@ -306,25 +261,18 @@ describe("query keys", () => {
         { id: "b", worktree: "/b", time: { created: 1, updated: 1 }, sandboxes: [] },
         { id: "a", worktree: "/a", time: { created: 1, updated: 1 }, sandboxes: [] },
       ],
-    } as unknown as ProjectApi
+    } as unknown as CompatibleApi["project"]
 
     const result = await new QueryClient().fetchQuery(loadProjectsQuery(ServerScope.local, api))
 
     expect(result.map((project) => project.id)).toEqual(["a", "b"])
   })
 
-  test("loads references from the current location-scoped endpoint", async () => {
-    const calls: unknown[] = []
-    const api = {
-      list: async (input: unknown) => {
-        calls.push(input)
-        return { location: {}, data: [{ name: "AGENTS.md", path: "/repo/AGENTS.md", source: "instructions" }] }
-      },
-    } as unknown as ReferenceApi
+  test("loads references from the legacy endpoint", async () => {
+    const legacy = {
+      v2: { reference: { list: async () => ({ data: { data: [{ name: "AGENTS.md", path: "/repo/AGENTS.md" }] } }) } },
+    } as unknown as DevcodeClient
 
-    const result = await new QueryClient().fetchQuery(loadReferencesQuery(ServerScope.local, "/repo", api))
-
-    expect(calls).toEqual([{ location: { directory: "/repo" } }])
-    expect(result).toHaveLength(1)
+    expect(await new QueryClient().fetchQuery(loadReferencesQuery(ServerScope.local, "/repo", legacy))).toHaveLength(1)
   })
 })

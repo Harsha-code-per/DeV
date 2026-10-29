@@ -1,16 +1,15 @@
-import type { LspStatus } from "@dev-ai/sdk/v2/client"
-import type { McpServer } from "@dev-ai/client/promise"
+import type { LspStatus, McpStatus } from "@dev-ai/sdk/v2/client"
 
-export function hasServiceNeedingAttention(input: { mcp: Array<McpServer["status"]["status"]> }) {
+export function hasServiceNeedingAttention(input: { mcp: Array<McpStatus["status"]> }) {
   return input.mcp.some((status) => status === "needs_auth" || status === "needs_client_registration")
 }
 
 export function hasNonBlockingServiceIssue(input: {
-  mcp: Array<McpServer["status"]["status"]>
+  mcp: Array<McpStatus["status"]>
   lsp: Array<LspStatus["status"]>
 }) {
   return (
-    input.mcp.some((status) => status !== "connected" && status !== "pending" && status !== "disabled") ||
+    input.mcp.some((status) => status !== "connected" && status !== "disabled") ||
     input.lsp.some((status) => status === "error")
   )
 }

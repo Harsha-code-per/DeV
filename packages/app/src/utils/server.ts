@@ -1,5 +1,5 @@
 import { createDevcodeClient } from "@dev-ai/sdk/v2/client"
-import { OpenCode, type OpenCodeClient } from "@dev-ai/client/promise"
+import { DevCode, type SessionsGetOutput, type SessionsMessageOutput } from "@dev-ai/client"
 import type { ServerConnection } from "@/context/server"
 import { decode64 } from "@/utils/base64"
 
@@ -44,8 +44,8 @@ export function createSdkForServer({
 export function createApiForServer(input: {
   server: ServerConnection.HttpBase
   fetch?: typeof globalThis.fetch
-}): OpenCodeClient {
-  return OpenCode.make({
+}) {
+  return DevCode.make({
     baseUrl: input.server.url,
     fetch: input.fetch,
     headers: input.server.password
@@ -59,4 +59,13 @@ export function createApiForServer(input: {
   })
 }
 
-export type ServerApi = OpenCodeClient
+export type ServerApi = ReturnType<typeof createApiForServer>
+export type SessionInfo = SessionsGetOutput
+export type SessionMessageInfo = SessionsMessageOutput
+export type FileDiffInfo = {
+  file: string
+  patch: string
+  additions: number
+  deletions: number
+  status: "added" | "deleted" | "modified"
+}

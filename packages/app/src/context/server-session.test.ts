@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import type { retry } from "@dev-ai/core/util/retry"
-import type { OpenCodeEvent, SessionApi } from "@dev-ai/client/promise"
+import type { SessionApi } from "@/utils/server-compat"
 import type { Message, DevcodeClient, Part, Session } from "@dev-ai/sdk/v2/client"
 import { createServerSession } from "./server-session"
-import type { ServerApi } from "@/utils/server"
+import type { CompatibleApi } from "@/utils/server-compat"
 
-type MessageApi = ServerApi["message"]
+type MessageApi = CompatibleApi["message"]
 
 const session = (id: string, parentID?: string): Session => ({
   id,
@@ -162,57 +162,6 @@ function setup(sessions: Record<string, Session>) {
 }
 
 describe("server session", () => {
-  test("projects V2 session events into current and legacy message state", () => {
-    const ctx = setup({ child: session("child") })
-    ctx.store.remember(session("child"))
-    ctx.store.set("session_message", "child", [
-      {
-        id: "msg_1_user",
-        type: "user",
-        text: "hello",
-        time: { created: 1 },
-      },
-    ])
-    const apply = (input: object) => ctx.store.applyV2(input as OpenCodeEvent)
-
-    apply({
-      id: "evt_step",
-      created: 2,
-      type: "session.step.started",
-      durable: { aggregateID: "child", seq: 1, version: 1 },
-      location: { directory: "/repo" },
-      data: {
-        sessionID: "child",
-        assistantMessageID: "msg_2_assistant",
-        agent: "build",
-        model: { id: "model", providerID: "provider" },
-      },
-    })
-    apply({
-      id: "evt_text_start",
-      created: 3,
-      type: "session.text.started",
-      durable: { aggregateID: "child", seq: 2, version: 1 },
-      location: { directory: "/repo" },
-      data: { sessionID: "child", assistantMessageID: "msg_2_assistant", ordinal: 0 },
-    })
-    apply({
-      id: "evt_text_delta",
-      created: 4,
-      type: "session.text.delta",
-      location: { directory: "/repo" },
-      data: { sessionID: "child", assistantMessageID: "msg_2_assistant", ordinal: 0, delta: "world" },
-    })
-
-    expect(ctx.store.data.session_message.child?.at(-1)).toMatchObject({
-      id: "msg_2_assistant",
-      type: "assistant",
-      content: [{ type: "text", text: "world" }],
-    })
-    expect(ctx.store.data.message.child?.map((message) => message.id)).toEqual(["msg_1_user", "msg_2_assistant"])
-    expect(ctx.store.data.part.msg_2_assistant).toMatchObject([{ type: "text", text: "world" }])
-  })
-
   test("resolves lineage by session ID without directory", async () => {
     const ctx = setup({ child: session("child", "root"), root: session("root") })
 

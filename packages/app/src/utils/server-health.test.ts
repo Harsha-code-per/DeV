@@ -13,11 +13,11 @@ function abortFromInput(input: RequestInfo | URL, init?: RequestInit) {
 }
 
 describe("checkServerHealth", () => {
-  test("returns healthy response with version", async () => {
+  test("returns a healthy current response", async () => {
     let request: URL | undefined
     const fetch = (async (input: RequestInfo | URL) => {
       request = input instanceof URL ? input : new URL(input instanceof Request ? input.url : input)
-      return new Response(JSON.stringify({ healthy: true, version: "1.2.3" }), {
+      return new Response(JSON.stringify({ healthy: true }), {
         status: 200,
         headers: { "content-type": "application/json" },
       })
@@ -25,7 +25,7 @@ describe("checkServerHealth", () => {
 
     const result = await checkServerHealth(server, fetch)
 
-    expect(result).toEqual({ healthy: true, version: "1.2.3" })
+    expect(result).toEqual({ healthy: true })
     expect(request?.pathname).toBe("/api/health")
   })
 
@@ -145,7 +145,7 @@ describe("checkServerHealth", () => {
     const fetch = (async () => {
       count += 1
       if (count < 3) throw new TypeError("network")
-      return new Response(JSON.stringify({ healthy: true, version: "1.2.3" }), {
+      return new Response(JSON.stringify({ healthy: true }), {
         status: 200,
         headers: { "content-type": "application/json" },
       })
@@ -157,7 +157,7 @@ describe("checkServerHealth", () => {
     })
 
     expect(count).toBe(3)
-    expect(result).toEqual({ healthy: true, version: "1.2.3" })
+    expect(result).toEqual({ healthy: true })
   })
 
   test("returns unhealthy when retries are exhausted", async () => {

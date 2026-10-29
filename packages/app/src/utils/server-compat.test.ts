@@ -2,10 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { createApiForServer, createSdkForServer } from "./server"
 import { createCompatibleApi } from "./server-compat"
 
-function setup(
-  protocol: "v1" | "v2" | Promise<"v1" | "v2">,
-  responses?: { vcs?: { branch: string; default_branch: string } },
-) {
+function setup(responses?: { vcs?: { branch: string; default_branch: string } }) {
   const requests: Request[] = []
   const fetcher = Object.assign(
     async (input: string | URL | Request, init?: RequestInit) => {
@@ -44,7 +41,6 @@ function setup(
   )
   const server = { url: "http://localhost:4096" }
   const api = createCompatibleApi({
-    protocol: typeof protocol === "string" ? Promise.resolve(protocol) : protocol,
     current: createApiForServer({ server, fetch: fetcher }),
     legacy: (directory) => createSdkForServer({ server, fetch: fetcher, directory, throwOnError: true }),
     directory: "/repo",
@@ -55,7 +51,7 @@ function setup(
 describe("createCompatibleApi", () => {
   /*
   test("routes V1 archive through the legacy session update", async () => {
-    const { api, requests } = setup("v1")
+    const { api, requests } = setup()
     await api.session.archive({ sessionID: "ses_1", directory: "/repo" })
 
     const url = new URL(requests[0]!.url)
@@ -67,7 +63,7 @@ describe("createCompatibleApi", () => {
   */
 
   test("converts current prompts to the V1 prompt contract", async () => {
-    const { api, requests } = setup("v1")
+    const { api, requests } = setup()
     await api.session.prompt({
       sessionID: "ses_1",
       id: "msg_1",
@@ -111,7 +107,7 @@ describe("createCompatibleApi", () => {
   })
 
   test("preserves original parts for V1 optimistic reconciliation", async () => {
-    const { api, requests } = setup("v1")
+    const { api, requests } = setup()
     await api.session.prompt({
       sessionID: "ses_1",
       id: "msg_1",
@@ -129,24 +125,6 @@ describe("createCompatibleApi", () => {
     ])
   })
 
-  test("resolves protocol detection once across implementation methods", async () => {
-    let detections = 0
-    const resolved = Promise.resolve<"v1" | "v2">("v2")
-    const protocol = new Proxy(resolved, {
-      get(target, property) {
-        if (property !== "then") return Reflect.get(target, property, target)
-        detections++
-        return target.then.bind(target)
-      },
-    })
-    const { api } = setup(protocol)
-
-    await api.session.list()
-    await api.session.list()
-
-    expect(detections).toBe(1)
-  })
-
   /*
   test("keeps V2 session actions on the current API", async () => {
     const { api, requests } = setup("v2")
@@ -158,7 +136,7 @@ describe("createCompatibleApi", () => {
   */
 
   test("uses the global V1 session search endpoint", async () => {
-    const { api, requests } = setup("v1")
+    const { api, requests } = setup()
     await api.session.list({ parentID: null, search: "session", limit: 50 })
 
     expect(new URL(requests[0]!.url).pathname).toBe("/experimental/session")
@@ -166,7 +144,7 @@ describe("createCompatibleApi", () => {
 
   /*
   test("projects the V1 default branch", async () => {
-    const { api } = setup("v1", { vcs: { branch: "feature", default_branch: "dev" } })
+    const { api } = setup({ vcs: { branch: "feature", default_branch: "dev" } })
 
     expect(await api.vcs.get({ location: { directory: "/repo" } })).toMatchObject({
       data: { branch: "feature", defaultBranch: "dev" },
@@ -175,7 +153,7 @@ describe("createCompatibleApi", () => {
   */
 
   test("translates current file searches to the V1 dirs parameter", async () => {
-    const { api, requests } = setup("v1")
+    const { api, requests } = setup()
     await api.file.find({ location: { directory: "/repo" }, query: "src", type: "file", limit: 20 })
 
     const url = new URL(requests[0]!.url)
@@ -185,7 +163,7 @@ describe("createCompatibleApi", () => {
   })
 
   test("routes V1 permission replies through the requested directory", async () => {
-    const { api, requests } = setup("v1")
+    const { api, requests } = setup()
     await api.permission.reply({
       sessionID: "ses_1",
       requestID: "permission_1",
@@ -198,7 +176,7 @@ describe("createCompatibleApi", () => {
   })
 
   test("disposes the V1 instance after connecting a provider", async () => {
-    const { api, requests } = setup("v1")
+    const { api, requests } = setup()
 
     await api.integration.connect.key({
       integrationID: "openrouter",
@@ -216,7 +194,7 @@ describe("createCompatibleApi", () => {
   })
 
   test("disposes the V1 instance after completing provider OAuth", async () => {
-    const { api, requests } = setup("v1")
+    const { api, requests } = setup()
 
     await api.integration.oauth.complete({
       integrationID: "openrouter",

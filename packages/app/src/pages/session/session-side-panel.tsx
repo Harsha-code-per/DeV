@@ -24,7 +24,7 @@ import { IconButtonV2 } from "@dev-ai/ui/v2/icon-button-v2"
 import { KeybindV2 } from "@dev-ai/ui/v2/keybind-v2"
 import { TooltipV2 } from "@dev-ai/ui/v2/tooltip-v2"
 import type { SnapshotFileDiff, VcsFileDiff } from "@dev-ai/sdk/v2"
-import type { FileDiffInfo } from "@dev-ai/client/promise"
+import type { FileDiffInfo } from "@/utils/server"
 import { ConstrainDragYAxis, getDraggableId } from "@/utils/solid-dnd"
 import { useDialog } from "@dev-ai/ui/context/dialog"
 

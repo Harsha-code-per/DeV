@@ -10,7 +10,7 @@ import type {
   SessionStatus,
   Todo,
 } from "@dev-ai/sdk/v2/client"
-import type { FileDiffInfo } from "@dev-ai/client/promise"
+import type { FileDiffInfo } from "@/utils/server"
 import type { State, VcsCache } from "./types"
 import { trimSessions } from "./session-trim"
 import { dropSessionCaches } from "./session-cache"

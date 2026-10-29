@@ -1,5 +1,5 @@
 import { parseCommentNote, readCommentMetadata } from "@/utils/comment-note"
-import type { SessionMessageInfo } from "@dev-ai/client/promise"
+import type { SessionMessageInfo } from "@/utils/server"
 import { AssistantMessage, Part, SessionStatus, UserMessage } from "@dev-ai/sdk/v2"
 import { groupParts, renderable, type PartGroup } from "@dev-ai/session-ui/message-part"
 import { TimelineRow, type SummaryDiff } from "./timeline-row"
