@@ -261,6 +261,35 @@ export function Prompt(props: PromptProps) {
     return messages.findLast((m): m is UserMessage => m.role === "user")
   })
 
+  const [statusLine, setStatusLine] = createSignal<string>()
+  onMount(() => {
+    const config = tuiConfig.status_line
+    if (!config) return
+    const refresh = async () => {
+      const session = props.sessionID ? sync.session.get(props.sessionID) : undefined
+      const model = local.model.current()
+      const shell = process.platform === "win32" ? ["cmd", "/c"] : ["sh", "-c"]
+      const proc = Bun.spawn([...shell, config.command], {
+        stdin: new Blob([
+          JSON.stringify({
+            session_id: props.sessionID,
+            cwd: process.cwd(),
+            model: model ? `${model.providerID}/${model.modelID}` : undefined,
+            cost: session?.cost ?? 0,
+          }),
+        ]),
+        stdout: "pipe",
+        stderr: "ignore",
+        timeout: 5000,
+      })
+      const out = await new Response(proc.stdout).text()
+      setStatusLine(out.split("\n")[0]?.trim() || undefined)
+    }
+    void refresh().catch(() => {})
+    const timer = setInterval(() => void refresh().catch(() => {}), (config.interval ?? 5) * 1000)
+    onCleanup(() => clearInterval(timer))
+  })
+
   const usage = createMemo(() => {
     if (!props.sessionID) return
     const session = sync.session.get(props.sessionID)
@@ -1672,6 +1701,13 @@ export function Prompt(props: PromptProps) {
           </Switch>
           <Show when={status().type !== "retry"}>
             <box gap={2} flexDirection="row">
+              <Show when={statusLine()}>
+                {(line) => (
+                  <text fg={theme.textMuted} wrapMode="none">
+                    {line()}
+                  </text>
+                )}
+              </Show>
               <Show when={editorContextLabelState() !== "none" ? editorFileLabelDisplay() : undefined}>
                 {(file) => (
                   <text fg={editorContextLabelState() === "pending" ? theme.secondary : theme.textMuted}>{file()}</text>

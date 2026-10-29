@@ -1,0 +1,49 @@
+name: DeV Code
+description: Run DeV Code headless on the checked-out repository (dev -p), with any model.
+branding:
+  icon: terminal
+  color: purple
+
+inputs:
+  prompt:
+    description: What DeV Code should do.
+    required: true
+  model:
+    description: Model as provider/model. Default auto/free routes across the free providers you give keys for.
+    default: auto/free
+  permission-mode:
+    description: default, accept-edits or auto. CI has nobody to answer prompts, so auto is the usual choice.
+    default: auto
+  version:
+    description: DeV Code version to install (default latest).
+    default: ""
+
+outputs:
+  result:
+    description: DeV Code's final answer.
+    value: ${{ steps.run.outputs.result }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install DeV Code
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/Harsha-code-per/DeV/main/install | sh -s -- $VERSION
+        echo "$HOME/.devcode/bin" >> "$GITHUB_PATH"
+    - name: Run DeV Code
+      id: run
+      shell: bash
+      env:
+        PROMPT: ${{ inputs.prompt }}
+        MODEL: ${{ inputs.model }}
+        MODE: ${{ inputs.permission-mode }}
+      run: |
+        dev -p "$PROMPT" --model "$MODEL" --permission-mode "$MODE" < /dev/null | tee "$RUNNER_TEMP/devcode.txt"
+        {
+          echo "result<<DEVCODE_EOF"
+          cat "$RUNNER_TEMP/devcode.txt"
+          echo "DEVCODE_EOF"
+        } >> "$GITHUB_OUTPUT"

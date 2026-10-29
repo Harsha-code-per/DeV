@@ -50,6 +50,16 @@ export const Attention = Schema.Struct({
   sounds: Schema.optional(AttentionSounds),
 }).annotate({ description: "Attention notification and sound settings" })
 
+// As in Claude Code: a command whose first line of output is shown under the prompt.
+export const StatusLine = Schema.Struct({
+  command: Schema.String.annotate({
+    description: "Shell command; gets {session_id, cwd, model, cost} as JSON on stdin and prints one line",
+  }),
+  interval: Schema.optional(Schema.Number.check(Schema.isGreaterThanOrEqualTo(1))).annotate({
+    description: "Seconds between refreshes (default 5)",
+  }),
+}).annotate({ description: "Custom status line under the prompt" })
+
 const PromptSize = Schema.Int.check(Schema.isGreaterThan(0))
 export const Prompt = Schema.Struct({
   max_height: Schema.optional(PromptSize).annotate({ description: "Prompt textarea max height" }),
@@ -72,6 +82,7 @@ export const Info = Schema.Struct({
   diff_style: Schema.optional(DiffStyle),
   cursor: Schema.optional(Cursor),
   mouse: Schema.optional(Schema.Boolean).annotate({ description: "Enable or disable mouse capture (default: true)" }),
+  status_line: Schema.optional(StatusLine),
 })
 export type Info = Schema.Schema.Type<typeof Info>
 

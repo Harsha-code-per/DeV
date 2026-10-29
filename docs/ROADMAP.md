@@ -97,7 +97,8 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 
 ### Measure first
 
-- [ ] Benchmark harness (`bench/`): ~30 real tasks (bug fixes, features, refactors, terminal work), each with hidden tests.
+- [x] Benchmark harness (`bench/`, see its README): 10 real tasks with hidden tests so far; a do-nothing agent fails all of them. First run (2026-10-29): DeV Code on `auto/free` passed 10/10 (21–253 s each, $0).
+- [ ] Grow it to ~30 harder tasks (larger multi-file features, real-world repos, terminal work): 10/10 on free models means these don't separate agents yet. Then run `claude` and `codex` on the same set (uses the owner's accounts).
   - It runs `devcode`, `claude -p` and `codex exec` on identical copies.
   - It records pass rate, time, tokens and cost, against free models and against one strong model.
 - [ ] Benchmark in CI; regressions block merges.
@@ -115,8 +116,9 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] **Subagents:** custom agents in `.dev/agents/`, parallel subagents, and background subagents (on by default).
 - [x] **Checkpoints and rewind** of both code and conversation: `/rewind` picks any earlier message to revert (files and conversation) or fork; `/undo` and `/redo` step.
 - [x] **Headless mode:** `dev -p "prompt"` (= `dev run`), `--output-format json|stream-json`, and the JS SDK for scripting.
-- [ ] A GitHub Action for DeV Code.
-- [ ] **Status line**, output styles, and `@` file mentions with fuzzy search.
+- [x] A GitHub Action for DeV Code (`github/action.yml`: `uses: Harsha-code-per/DeV/github@main`). Usable once the repo is public and has a release.
+- [x] **Status line:** `status_line: { command, interval }` in tui.json, as in Claude Code (JSON on stdin, first line shown under the prompt). `@` file mentions with fuzzy search already exist.
+- [ ] Output styles.
 - [ ] **Reliability:**
   - [x] a plan → do → verify loop (run tests and builds before saying "done"), asked of every model in the system prompt;
   - automatic retries;
