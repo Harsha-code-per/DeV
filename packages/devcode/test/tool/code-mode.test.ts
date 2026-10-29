@@ -12,6 +12,10 @@ import * as Truncate from "@/tool/truncate"
 import { MessageID, SessionID } from "@/session/schema"
 import { Cause, Effect, Exit, Layer, Schema } from "effect"
 
+// Results that went through MCP calls come back wrapped as untrusted content.
+const body = (result: { output: string }) =>
+  result.output.replace(/^<untrusted_content source="[^"]*">\n/, "").replace(/\n<\/untrusted_content>$/, "")
+
 const ctx: Tool.Context = {
   sessionID: SessionID.make("ses_code-mode"),
   messageID: MessageID.make("msg_code-mode"),
@@ -236,7 +240,7 @@ describe("code mode execute", () => {
     const out = await Effect.runPromise(
       tool.execute({ code: "return await tools.$codemode.search({ query: 'only tool', limit: 3, offset: 0 })" }, ctx),
     )
-    const result = JSON.parse(out.output)
+    const result = JSON.parse(body(out))
     expect(result.items.map((i: any) => i.path)).toContain("tools.zeta.only_tool")
     expect(result).toMatchObject({ remaining: 0, next: null })
     expect(result.items[0].signature).toContain("tools.")
@@ -252,7 +256,7 @@ describe("code mode execute", () => {
   test("runs plain JavaScript and returns the value as text", async () => {
     const tool = await build({})
     const output = await Effect.runPromise(tool.execute({ code: "return 1 + 2" }, ctx))
-    expect(output.output).toBe("3")
+    expect(body(output)).toBe("3")
     expect(output.metadata.toolCalls).toEqual([])
   })
 
@@ -267,7 +271,7 @@ describe("code mode execute", () => {
         ctx,
       ),
     )
-    expect(JSON.parse(output.output)).toEqual({ namespaces: ["github", "linear", "$codemode"], count: 3 })
+    expect(JSON.parse(body(output))).toEqual({ namespaces: ["github", "linear", "$codemode"], count: 3 })
   })
 
   test("calls a namespaced MCP tool and flows its text result back into the program", async () => {
@@ -284,7 +288,8 @@ describe("code mode execute", () => {
     )
 
     expect(seen).toEqual([{ name: "world" }])
-    expect(output.output).toBe("HELLO WORLD")
+    expect(output.output).toStartWith('<untrusted_content source="mcp via code mode">')
+    expect(body(output)).toBe("HELLO WORLD")
     expect(output.metadata.toolCalls).toEqual([
       { tool: "greeter.hello", status: "completed", input: { name: "world" } },
     ])
@@ -311,7 +316,7 @@ describe("code mode execute", () => {
       ),
     )
 
-    expect(JSON.parse(output.output)).toEqual({ total: 13 })
+    expect(JSON.parse(body(output))).toEqual({ total: 13 })
     expect(output.metadata.toolCalls).toEqual([
       { tool: "math.add", status: "completed", input: { a: 1, b: 2 } },
       { tool: "math.add", status: "completed", input: { a: 3, b: 10 } },
@@ -331,7 +336,7 @@ describe("code mode execute", () => {
       ),
     )
 
-    expect(output.output).toBe("12")
+    expect(body(output)).toBe("12")
     expect(output.metadata.toolCalls.map((c) => c.tool).sort()).toEqual(["echo.one", "echo.two"])
     expect(output.metadata.toolCalls.every((c) => c.status === "completed")).toBe(true)
   })
@@ -355,7 +360,7 @@ describe("code mode execute", () => {
     const output = await Effect.runPromise(
       tool.execute({ code: "try { await tools.bad.tool({}) } catch (e) { return 'caught: ' + e.message }" }, ctx),
     )
-    expect(output.output).toBe("caught: server exploded")
+    expect(body(output)).toBe("caught: server exploded")
   })
 
   test("asks permission before each child tool call", async () => {
@@ -385,7 +390,7 @@ describe("code mode execute", () => {
       tool.execute({ code: "try { await tools.a.tool({}) } catch (e) { return 'denied: ' + e.message }" }, denyCtx),
     )
 
-    expect(output.output).toBe("denied: permission denied by user")
+    expect(body(output)).toBe("denied: permission denied by user")
     expect(output.metadata.error).toBeUndefined()
     expect(called).toEqual([])
     expect(output.metadata.toolCalls).toEqual([{ tool: "a.tool", status: "error" }])
@@ -412,7 +417,7 @@ describe("code mode execute", () => {
       tool.execute({ code: "await tools.a.tool({ x: 1 }); await tools.b.tool({}); return 'done'" }, ctx),
     )
 
-    expect(out.output).toBe("done")
+    expect(body(out)).toBe("done")
     expect(events.map((e) => [e.name, e.input.tool, e.input.callID])).toEqual([
       ["tool.execute.before", "a_tool", "call_code_mode/1"],
       ["tool.execute.after", "a_tool", "call_code_mode/1"],
@@ -458,7 +463,7 @@ describe("code mode execute", () => {
     )
 
     expect(out.metadata.error).toBeUndefined()
-    expect(out.output).toBe("hook exploded / ok")
+    expect(body(out)).toBe("hook exploded / ok")
     expect(called).toEqual(["b"])
   })
 
@@ -511,9 +516,9 @@ describe("code mode execute", () => {
     })
 
     const out = await Effect.runPromise(tool.execute({ code: "return await tools.shot.take({})" }, ctx))
-    expect(JSON.parse(out.output)).toEqual({ name: "shot.png" })
+    expect(JSON.parse(body(out))).toEqual({ name: "shot.png" })
     expect(out.attachments).toEqual([{ type: "file", mime: "image/png", url: "data:image/png;base64,PNGDATA" }])
-    expect(out.output).not.toContain("PNGDATA")
+    expect(body(out)).not.toContain("PNGDATA")
   })
 
   test("a media-only result returns a text marker so the program knows it succeeded", async () => {
@@ -521,7 +526,7 @@ describe("code mode execute", () => {
       shot_take: mcpTool("take", () => ({ content: [{ type: "image", data: "PNGDATA", mimeType: "image/png" }] })),
     })
     const out = await Effect.runPromise(tool.execute({ code: "return await tools.shot.take({})" }, ctx))
-    expect(out.output).toBe("[1 image attached to the result]")
+    expect(body(out)).toBe("[1 image attached to the result]")
     expect(out.attachments).toEqual([{ type: "file", mime: "image/png", url: "data:image/png;base64,PNGDATA" }])
   })
 
@@ -553,11 +558,11 @@ describe("code mode execute", () => {
       ),
     )
 
-    expect(JSON.parse(out.output)).toEqual({
+    expect(JSON.parse(body(out))).toEqual({
       images: "[2 images attached to the result]",
       mixed: "[2 files attached to the result]",
     })
-    expect(out.output).not.toContain("PNG")
+    expect(body(out)).not.toContain("PNG")
     expect(out.attachments).toEqual([
       { type: "file", mime: "image/png", url: "data:image/png;base64,PNG1" },
       { type: "file", mime: "image/png", url: "data:image/png;base64,PNG2" },
@@ -582,7 +587,7 @@ describe("code mode execute", () => {
     })
     const out = await Effect.runPromise(tool.execute({ code: "return await tools.docs.find({})" }, ctx))
 
-    expect(out.output).toBe("guide.pdf: https://example.com/guide.pdf\nnotes.md: file:///tmp/notes.md")
+    expect(body(out)).toBe("guide.pdf: https://example.com/guide.pdf\nnotes.md: file:///tmp/notes.md")
     expect(out.attachments).toBeUndefined()
   })
 
@@ -591,7 +596,7 @@ describe("code mode execute", () => {
       shot_take: mcpTool("take", () => ({ content: [{ type: "image", data: "PNGDATA", mimeType: "image/png" }] })),
     })
     const out = await Effect.runPromise(tool.execute({ code: "await tools.shot.take({}); return 'captured'" }, ctx))
-    expect(out.output).toBe("captured")
+    expect(body(out)).toBe("captured")
     expect(out.attachments).toHaveLength(1)
   })
 
@@ -615,7 +620,7 @@ describe("code mode execute", () => {
         { ...ctx, abort: controller.signal },
       ),
     )
-    expect(output.output).toBe("Execution cancelled.")
+    expect(body(output)).toBe("Execution cancelled.")
     expect(output.metadata.error).toBe(true)
     expect(output.metadata.toolCalls).toEqual([{ tool: "host.trigger", status: "running" }])
   })
@@ -628,7 +633,7 @@ describe("code mode execute", () => {
     const output = await Effect.runPromise(
       tool.execute({ code: "return await tools.host.touch({})" }, { ...ctx, abort: controller.signal }),
     )
-    expect(output.output).toBe("Execution cancelled.")
+    expect(body(output)).toBe("Execution cancelled.")
     expect(ran).toEqual([])
   })
 
@@ -636,8 +641,8 @@ describe("code mode execute", () => {
     const tool = await build({})
     const output = await Effect.runPromise(tool.execute({ code: "return 'x'.repeat(40000)" }, ctx))
     expect(output.metadata.error).toBeUndefined()
-    expect(output.output).not.toContain("[result truncated:")
-    expect(output.output.length).toBeGreaterThanOrEqual(40_000)
+    expect(body(output)).not.toContain("[result truncated:")
+    expect(body(output).length).toBeGreaterThanOrEqual(40_000)
   })
 
   test("appends logs after the result on success and after the message on error", async () => {
@@ -646,7 +651,7 @@ describe("code mode execute", () => {
     const ok = await Effect.runPromise(
       tool.execute({ code: "console.log('step one'); console.warn('careful'); return 'done'" }, ctx),
     )
-    expect(ok.output).toBe("done\n\nLogs:\nstep one\n[warn] careful")
+    expect(body(ok)).toBe("done\n\nLogs:\nstep one\n[warn] careful")
 
     const error = await failure(tool.execute({ code: "console.log('before the throw'); throw new Error('boom')" }, ctx))
     expect(error.message).toContain("Uncaught: boom")
@@ -702,7 +707,7 @@ describe("code mode permission visibility", () => {
 
     const allowed = await Effect.runPromise(tool.execute({ code: "return await tools.github.list_issues({})" }, ctx))
     expect(allowed.metadata.error).toBeUndefined()
-    expect(allowed.output).toBe("ok")
+    expect(body(allowed)).toBe("ok")
   })
 
   test("an ask-level tool remains callable and still prompts via ctx.ask", async () => {
@@ -714,7 +719,7 @@ describe("code mode permission visibility", () => {
       [askRule("github_list_issues")],
     )
     const out = await Effect.runPromise(tool.execute({ code: "return await tools.github.list_issues({})" }, askCtx))
-    expect(out.output).toBe("ok")
+    expect(body(out)).toBe("ok")
     expect(asked).toEqual(["github_list_issues"])
   })
 

@@ -5,6 +5,7 @@ import * as Tool from "./tool"
 import TurndownService from "turndown"
 import DESCRIPTION from "./webfetch.txt"
 import { isImageAttachment } from "@/util/media"
+import { Untrusted } from "@/util/untrusted"
 
 const MAX_RESPONSE_SIZE = 5 * 1024 * 1024 // 5MB
 const DEFAULT_TIMEOUT = 30 * 1000 // 30 seconds
@@ -125,31 +126,14 @@ export const WebFetchTool = Tool.define(
 
           const content = new TextDecoder().decode(arrayBuffer)
 
-          // Handle content based on requested format and actual content type
-          switch (params.format) {
-            case "markdown":
-              if (contentType.includes("text/html")) {
-                const markdown = convertHTMLToMarkdown(content)
-                return {
-                  output: markdown,
-                  title,
-                  metadata: {},
-                }
-              }
-              return { output: content, title, metadata: {} }
-
-            case "text":
-              if (contentType.includes("text/html")) {
-                return { output: extractTextFromHTML(content), title, metadata: {} }
-              }
-              return { output: content, title, metadata: {} }
-
-            case "html":
-              return { output: content, title, metadata: {} }
-
-            default:
-              return { output: content, title, metadata: {} }
-          }
+          const output = !contentType.includes("text/html")
+            ? content
+            : params.format === "markdown"
+              ? convertHTMLToMarkdown(content)
+              : params.format === "text"
+                ? extractTextFromHTML(content)
+                : content
+          return { output: Untrusted.wrap(params.url, output), title, metadata: {} }
         }).pipe(Effect.orDie),
     }
   }),

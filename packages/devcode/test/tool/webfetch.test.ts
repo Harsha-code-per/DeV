@@ -92,7 +92,7 @@ describe("tool.webfetch", () => {
       (url) =>
         Effect.gen(function* () {
           const result = yield* exec({ url: new URL("/file.txt", url).toString(), format: "text" })
-          expect(result.output).toBe("hello from webfetch")
+          expect(result.output).toBe(`<untrusted_content source="${new URL("/file.txt", url)}">\nhello from webfetch\n</untrusted_content>`)
           expect(result.attachments).toBeUndefined()
         }),
     ),
@@ -111,7 +111,7 @@ describe("tool.webfetch", () => {
       (url) =>
         Effect.gen(function* () {
           const result = yield* exec({ url: new URL("/page.html", url).toString(), format: "text" })
-          expect(result.output).toBe("Hello world")
+          expect(result.output).toContain("\nHello world\n</untrusted_content>")
           expect(result.attachments).toBeUndefined()
         }),
     ),

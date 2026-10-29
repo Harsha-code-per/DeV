@@ -24,6 +24,7 @@ import { LocationServiceMap, locationServiceMapLayer } from "@dev-ai/core/locati
 import { Reference } from "@dev-ai/core/reference"
 import { MCP } from "@/mcp"
 import { PermissionV1 } from "@dev-ai/core/v1/permission"
+import { Untrusted } from "@/util/untrusted"
 
 export function provider(model: Provider.Model) {
   if (model.api.id.includes("muse")) {
@@ -82,6 +83,7 @@ const layer = Layer.effect(
             `  Platform: ${process.platform}`,
             `  Today's date: ${new Date().toDateString()}`,
             `</env>`,
+            Untrusted.NOTICE,
           ].join("\n"),
           references.length === 0
             ? undefined

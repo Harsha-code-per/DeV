@@ -6,6 +6,7 @@ import DESCRIPTION from "./websearch.txt"
 import { checksum } from "@dev-ai/core/util/encode"
 import { InstallationVersion } from "@dev-ai/core/installation/version"
 import { RuntimeFlags } from "@/effect/runtime-flags"
+import { Untrusted } from "@/util/untrusted"
 
 export const Parameters = Schema.Struct({
   query: Schema.String.annotate({ description: "Websearch query" }),
@@ -133,7 +134,9 @@ export const WebSearchTool = Tool.define(
           const result = yield* callProvider(http, provider, params, ctx)
 
           return {
-            output: result ?? "No search results found. Please try a different query.",
+            output: result
+              ? Untrusted.wrap(`web search: ${params.query}`, result)
+              : "No search results found. Please try a different query.",
             title: `${title}: ${params.query}`,
             metadata: { provider },
           }

@@ -8,6 +8,7 @@ import { Agent } from "@/agent/agent"
 import { Session } from "@/session/session"
 import { Permission } from "@/permission"
 import { Plugin } from "@/plugin"
+import { Untrusted } from "@/util/untrusted"
 
 export const CODE_MODE_TOOL = "execute"
 
@@ -300,7 +301,8 @@ export const CodeModeTool = Tool.define(
         return {
           title: CODE_MODE_TOOL,
           metadata: { toolCalls: calls },
-          output: withLogs(output),
+          // MCP results flow into the program's value, so the whole result counts as untrusted.
+          output: withLogs(calls.length > 0 ? Untrusted.wrap("mcp via code mode", output) : output),
           ...(attachments.length > 0 ? { attachments } : {}),
         } satisfies Tool.ExecuteResult<Metadata>
       }, Effect.orDie),

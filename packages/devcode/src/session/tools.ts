@@ -23,6 +23,7 @@ import { ProviderV2 } from "@dev-ai/core/provider"
 import { ModelV2 } from "@dev-ai/core/model"
 import { isRecord } from "@/util/record"
 import { RuntimeFlags } from "@/effect/runtime-flags"
+import { Untrusted } from "@/util/untrusted"
 
 const MCP_RESOURCE_TOOLS = {
   list: "list_mcp_resources",
@@ -461,7 +462,11 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
             }
           }
 
-          const truncated = yield* truncate.output(textParts.join("\n\n"), {}, input.agent)
+          const truncated = yield* truncate.output(
+            Untrusted.wrap(`mcp: ${key}`, textParts.join("\n\n")),
+            {},
+            input.agent,
+          )
           const metadata = {
             ...result.metadata,
             truncated: truncated.truncated,
