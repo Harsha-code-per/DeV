@@ -37,3 +37,6 @@ tsconfig.tsbuildinfo
 # Python caches (scripts, benchmarks)
 __pycache__/
 *.py[oc]
+
+# Benchmark results (bench/README.md)
+bench/results/*.json

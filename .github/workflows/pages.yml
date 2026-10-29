@@ -16,6 +16,8 @@ concurrency:
 
 jobs:
   deploy:
+    # GitHub Pages needs a public repo on the free plan; DeV stays private until v1.0.
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     permissions:
       pages: write
