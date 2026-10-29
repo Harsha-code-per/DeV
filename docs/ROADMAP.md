@@ -141,9 +141,11 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 
 Not urgent, but it must be done before v1.0.
 
-- [ ] **Signature colour.** Choose one unique brand colour (as Claude has its coral), check it for contrast in light and dark themes and on common terminals, and define a small palette around it.
-- [ ] **Logo and mark** in that colour: SVG mark and wordmark; favicon; app icons for Windows, macOS and Linux (`packages/identity`); TUI wordmark colours.
-- [ ] **TUI redesign** so it no longer looks like OpenCode: layout, header and status line, prompt box, message styling, permission dialogs, the splash and home screen. The default theme uses the signature colour.
+- [x] **Signature colour: Saffron** `#F2A516` (deep `#9A5F00` for text on light backgrounds), chosen 2026-10-29 from three contrast-checked candidates. Palette: warm neutrals, teal `#4FB8C6`/`#0A6F7C` complement (in the `dev` TUI theme).
+- [x] **Logo and mark:** a D with a v in its bowl, ink on saffron (`packages/identity/mark.svg`, rendered by `build.sh` to PNGs and the web favicons); the wordmark's V is saffron in the TUI, CLI and exit screen.
+- [ ] Desktop app icons (`packages/desktop/icons`, .icns/.ico) from the same mark, with the M4 desktop rebrand.
+- [x] Default TUI theme `dev` in the signature colour.
+- [ ] **TUI redesign** so it no longer looks like OpenCode: layout, header and status line, prompt box, message styling, permission dialogs, the splash and home screen. Needs tmux to check screens (`sudo pacman -S tmux`).
 - [ ] **Web and desktop UI theme** from the same palette; replace OpenCode's SVG wordmark in `packages/ui` and the desktop app.
 - [ ] Website and docs styled to match.
 
