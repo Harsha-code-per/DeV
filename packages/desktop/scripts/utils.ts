@@ -1,5 +1,5 @@
 import { $ } from "bun"
-import { chmod, copyFile } from "node:fs/promises"
+import { access, chmod, copyFile, cp } from "node:fs/promises"
 
 export type Channel = "dev" | "beta" | "prod"
 
@@ -46,6 +46,13 @@ export async function copyCliToResources() {
   }
   await copyFile(source, dest)
   if (process.platform !== "win32") await chmod(dest, 0o755)
+  // On Linux the sandbox's seccomp helper ships beside the binary (packages/devcode/script/build.ts).
+  const vendor = `../devcode/dist/${cli.dist}/bin/vendor`
+  const hasVendor = await access(`${vendor}/seccomp`).then(
+    () => true,
+    () => false,
+  )
+  if (hasVendor) await cp(vendor, "resources/vendor", { recursive: true })
   if (process.platform === "win32" && process.env.GITHUB_ACTIONS === "true") {
     await $`pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ../../script/sign-windows.ps1 ${dest}`
   }

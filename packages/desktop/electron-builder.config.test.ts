@@ -50,10 +50,12 @@ test("bundles the CLI outside the dev app archive", async () => {
   else process.env.DEV_CHANNEL = previous
 
   expect(config.files).toContain("!resources/devcode*")
+  // The sandbox's seccomp helper (vendor/) ships beside the CLI.
+  expect(config.files).toContain("!resources/vendor/**")
   expect(config.extraResources).toContainEqual({
     from: "resources/",
     to: "",
-    filter: ["devcode*"],
+    filter: ["devcode*", "vendor/**"],
   })
 })
 

@@ -49,14 +49,14 @@ const getBase = (appId: string): Configuration => ({
   extraMetadata: {
     desktopName: `${appId}.desktop`,
   },
-  files: ["out/**/*", "resources/**/*", "!resources/devcode*"],
+  files: ["out/**/*", "resources/**/*", "!resources/devcode*", "!resources/vendor/**"],
   extraResources: [
     ...(channel === "dev"
       ? [
           {
             from: "resources/",
             to: "",
-            filter: ["devcode*"],
+            filter: ["devcode*", "vendor/**"],
           },
         ]
       : []),
