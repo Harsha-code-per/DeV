@@ -5,6 +5,7 @@ import type { Provider } from "./provider"
 import { ProviderError } from "./error"
 import path from "path"
 import { Global } from "@dev-ai/core/global"
+import fs from "fs/promises"
 
 // DeV: virtual "auto" provider. Its single model routes each request across every free
 // model from the connected providers and falls through to the next one on any failure.
@@ -38,8 +39,9 @@ const cooldown = new Map<string, number>()
 // router learns which free models actually work for this user. Unknown models start neutral.
 // ponytail: one score per model; per task type (edit vs chat vs long context) would rank finer.
 const STATS_FILE = path.join(Global.Path.state, "auto-free-stats.json")
-const stats: Record<string, { ok: number; fail: number }> = await Bun.file(STATS_FILE)
-  .json()
+const stats: Record<string, { ok: number; fail: number }> = await fs
+  .readFile(STATS_FILE, "utf8")
+  .then((text) => JSON.parse(text))
   .catch(() => ({}))
 let saving: ReturnType<typeof setTimeout> | undefined
 
@@ -60,7 +62,10 @@ export function record(model: Provider.Model, ok: boolean) {
   }
   saving ??= setTimeout(() => {
     saving = undefined
-    void Bun.write(STATS_FILE, JSON.stringify(stats)).catch(() => {})
+    void fs
+      .mkdir(path.dirname(STATS_FILE), { recursive: true })
+      .then(() => fs.writeFile(STATS_FILE, JSON.stringify(stats)))
+      .catch(() => {})
   }, 2000)
   saving.unref?.()
 }

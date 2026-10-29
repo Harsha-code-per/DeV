@@ -1,5 +1,6 @@
 import path from "path"
 import { Global } from "@dev-ai/core/global"
+import fs from "fs/promises"
 
 // Output styles, as in Claude Code: `output_style` in dev.json changes how the agent writes and explains,
 // on top of its normal instructions. Built-ins below; a custom style is `output-styles/<name>.md` in the
@@ -31,13 +32,7 @@ export async function text(name: string | undefined, projectDir: string) {
     path.join(projectDir, ".dev", "output-styles", `${name}.md`),
     path.join(Global.Path.config, "output-styles", `${name}.md`),
   ]
-  const found = await Promise.all(
-    files.map((file) =>
-      Bun.file(file)
-        .text()
-        .catch(() => undefined),
-    ),
-  )
+  const found = await Promise.all(files.map((file) => fs.readFile(file, "utf8").catch(() => undefined)))
   const custom = found.find((content) => content !== undefined)
   return custom ? `Output style: ${name}.\n${custom.trim()}` : undefined
 }

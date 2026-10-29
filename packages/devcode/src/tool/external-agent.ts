@@ -1,6 +1,8 @@
 import { Effect, Option, Schema } from "effect"
 import * as Tool from "./tool"
 import { InstanceState } from "@/effect/instance-state"
+import { Process } from "@/util/process"
+import { which } from "@dev-ai/core/util/which"
 
 // Hands a task to a coding agent the user has installed and signed in to themselves (Claude Code,
 // Codex, Gemini CLI), so a Claude, ChatGPT or Google subscription is used through its own official
@@ -11,7 +13,15 @@ const AGENTS = {
   claude: {
     name: "Claude Code",
     // Edits are allowed; shell commands outside Claude Code's own allowlist are refused in print mode.
-    command: (prompt: string) => ["claude", "-p", "--output-format", "json", "--permission-mode", "acceptEdits", prompt],
+    command: (prompt: string) => [
+      "claude",
+      "-p",
+      "--output-format",
+      "json",
+      "--permission-mode",
+      "acceptEdits",
+      prompt,
+    ],
     result: (stdout: string) => parse<{ result?: string }>(stdout.trim())?.result,
   },
   codex: {
@@ -41,7 +51,7 @@ export function answer(id: AgentID, stdout: string) {
 
 /** The external agents installed on this machine. */
 export function installed() {
-  return (Object.keys(AGENTS) as AgentID[]).filter((id) => Bun.which(AGENTS[id].command("")[0]))
+  return (Object.keys(AGENTS) as AgentID[]).filter((id) => which(AGENTS[id].command("")[0]))
 }
 
 export const Parameters = Schema.Struct({
@@ -81,25 +91,18 @@ export const ExternalAgentTool = Tool.define(
           yield* ctx.metadata({ title: `${agent.name}: ${params.prompt.slice(0, 60)}` })
           const instance = yield* InstanceState.context
           const run = yield* Effect.promise(async () => {
-            const proc = Bun.spawn(agent.command(params.prompt), {
+            const result = await Process.run(agent.command(params.prompt), {
               cwd: instance.directory,
-              stdin: "ignore",
-              stdout: "pipe",
-              stderr: "pipe",
-              timeout: TIMEOUT_MS,
+              abort: AbortSignal.any([ctx.abort, AbortSignal.timeout(TIMEOUT_MS)]),
+              nothrow: true,
             })
-            const abort = () => proc.kill()
-            ctx.abort.addEventListener("abort", abort)
-            const [stdout, stderr, code] = await Promise.all([
-              new Response(proc.stdout).text(),
-              new Response(proc.stderr).text(),
-              proc.exited,
-            ]).finally(() => ctx.abort.removeEventListener("abort", abort))
-            return { stdout, stderr, code }
+            return { stdout: result.stdout.toString(), stderr: result.stderr.toString(), code: result.code }
           })
           const result = answer(params.agent, run.stdout)
           if (run.code !== 0 && !result)
-            throw new Error(`${agent.name} exited with code ${run.code}: ${(run.stderr || run.stdout).trim().slice(-2000)}`)
+            throw new Error(
+              `${agent.name} exited with code ${run.code}: ${(run.stderr || run.stdout).trim().slice(-2000)}`,
+            )
           return {
             title: `${agent.name} finished`,
             output: result ?? run.stdout.trim().slice(-20_000),

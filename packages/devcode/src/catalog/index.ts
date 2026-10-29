@@ -1,10 +1,11 @@
 import path from "path"
 import fs from "fs/promises"
-import { $ } from "bun"
+import { Process } from "@/util/process"
 import { applyEdits, modify, parse } from "jsonc-parser"
 import { Global } from "@dev-ai/core/global"
 import { Brand } from "@dev-ai/core/brand"
 import Data from "./catalog.json"
+import { Hash } from "@dev-ai/core/util/hash"
 
 // DeV catalog: curated skills, plugins and MCP servers that can be installed per user or per
 // project. Every operation is an edit to that scope's config file (or skills folder), so the
@@ -147,13 +148,14 @@ export async function paths(scope: Scope, root: string) {
 }
 
 async function fetchSkill(skill: NonNullable<Entry["skill"]>) {
-  const target = path.join(Global.Path.cache, "catalog", `${Bun.hash(skill.repo + "#" + skill.ref).toString(16)}`)
+  const target = path.join(Global.Path.cache, "catalog", Hash.fast(skill.repo + "#" + skill.ref))
   if (await exists(target)) return target
   const staging = `${target}.tmp-${process.pid}`
   await fs.rm(staging, { recursive: true, force: true })
-  await $`git init -q ${staging}`.quiet()
-  await $`git -C ${staging} fetch -q --depth 1 ${skill.repo} ${skill.ref}`.quiet()
-  await $`git -C ${staging} -c advice.detachedHead=false checkout -q FETCH_HEAD`.quiet()
+  // Process (not Bun's $) so the catalog also runs in the Node build the desktop app embeds.
+  await Process.run(["git", "init", "-q", staging])
+  await Process.run(["git", "-C", staging, "fetch", "-q", "--depth", "1", skill.repo, skill.ref])
+  await Process.run(["git", "-C", staging, "-c", "advice.detachedHead=false", "checkout", "-q", "FETCH_HEAD"])
   await fs.rm(path.join(staging, ".git"), { recursive: true, force: true })
   await fs.rename(staging, target)
   return target
@@ -162,19 +164,15 @@ async function fetchSkill(skill: NonNullable<Entry["skill"]>) {
 async function readConfig(
   file: string,
 ): Promise<{ mcp?: Record<string, { type?: string; enabled?: boolean }>; plugin?: unknown[] }> {
-  const text = await Bun.file(file)
-    .text()
-    .catch(() => "{}")
+  const text = await fs.readFile(file, "utf8").catch(() => "{}")
   return parse(text) ?? {}
 }
 
 async function edit(file: string, at: string[], value: unknown) {
-  const text = await Bun.file(file)
-    .text()
-    .catch(() => "{}\n")
+  const text = await fs.readFile(file, "utf8").catch(() => "{}\n")
   const next = applyEdits(text, modify(text, at, value, { formattingOptions: { insertSpaces: true, tabSize: 2 } }))
   await fs.mkdir(path.dirname(file), { recursive: true })
-  await Bun.write(file, next)
+  await fs.writeFile(file, next)
 }
 
 function plugins(cfg: { plugin?: unknown[] }) {

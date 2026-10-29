@@ -1,6 +1,7 @@
 import type { Hooks, PluginInput } from "@dev-ai/plugin"
 import type { ConfigHooksV1 } from "@dev-ai/core/v1/config/hooks"
 import { PartID } from "@/session/schema"
+import { Process } from "@/util/process"
 
 // User hooks from the `hooks` setting, with the semantics of Claude Code's documented hooks: each command
 // gets the event as JSON on stdin; exit code 2 blocks PreToolUse and UserPromptSubmit (stderr is the
@@ -112,19 +113,13 @@ async function runHooks(
   return Promise.all(
     commands.map(async (hook) => {
       const shell = process.platform === "win32" ? ["cmd", "/c"] : ["sh", "-c"]
-      const proc = Bun.spawn([...shell, hook.command], {
+      const result = await Process.run([...shell, hook.command], {
         cwd,
-        stdin: new Blob([JSON.stringify(payload)]),
-        stdout: "pipe",
-        stderr: "pipe",
-        timeout: (hook.timeout ?? 60) * 1000,
+        input: JSON.stringify(payload),
+        abort: AbortSignal.timeout((hook.timeout ?? 60) * 1000),
+        nothrow: true,
       })
-      const [stdout, stderr, code] = await Promise.all([
-        new Response(proc.stdout).text(),
-        new Response(proc.stderr).text(),
-        proc.exited,
-      ])
-      return { code, stdout, stderr }
+      return { code: result.code, stdout: result.stdout.toString(), stderr: result.stderr.toString() }
     }),
   )
 }

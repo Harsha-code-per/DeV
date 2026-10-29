@@ -4,6 +4,7 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 import { Global } from "@dev-ai/core/global"
 import { Hash } from "@dev-ai/core/util/hash"
 import type { ConfigMCPV1 } from "@dev-ai/core/v1/config/mcp"
+import fs from "node:fs/promises"
 
 // DeV: local MCP servers start on first tool call instead of at startup, and stop when idle.
 // Their tool list comes from a cache written the last time the server actually ran.
@@ -20,15 +21,19 @@ function file(key: string, mcp: ConfigMCPV1.Info) {
 }
 
 export async function read(key: string, mcp: ConfigMCPV1.Info): Promise<Cached | undefined> {
-  const cached = await Bun.file(file(key, mcp))
-    .json()
+  const cached = await fs
+    .readFile(file(key, mcp), "utf8")
+    .then((text) => JSON.parse(text))
     .catch(() => undefined)
   if (!cached || !Array.isArray(cached.defs) || cached.defs.length === 0) return undefined
   return cached
 }
 
 export async function write(key: string, mcp: ConfigMCPV1.Info, cached: Cached) {
-  await Bun.write(file(key, mcp), JSON.stringify(cached)).catch(() => {})
+  await fs
+    .mkdir(path.dirname(file(key, mcp)), { recursive: true })
+    .then(() => fs.writeFile(file(key, mcp), JSON.stringify(cached)))
+    .catch(() => {})
 }
 
 /**

@@ -21,6 +21,8 @@ export interface Options {
 
 export interface RunOptions extends Omit<Options, "stdout" | "stderr"> {
   nothrow?: boolean
+  /** Text written to the command's stdin. */
+  input?: string
 }
 
 export interface Result {
@@ -115,7 +117,7 @@ export async function run(cmd: string[], opts: RunOptions = {}): Promise<Result>
   const proc = spawn(cmd, {
     cwd: opts.cwd,
     env: opts.env,
-    stdin: opts.stdin,
+    stdin: opts.input === undefined ? opts.stdin : "pipe",
     shell: opts.shell,
     abort: opts.abort,
     kill: opts.kill,
@@ -123,6 +125,7 @@ export async function run(cmd: string[], opts: RunOptions = {}): Promise<Result>
     stdout: "pipe",
     stderr: "pipe",
   })
+  if (opts.input !== undefined) proc.stdin?.end(opts.input)
 
   if (!proc.stdout || !proc.stderr) throw new Error("Process output not available")
 

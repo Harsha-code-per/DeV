@@ -12,6 +12,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
 import { ApiVcsApplyError, type MemoryInput } from "../groups/instance"
 import { markInstanceForDisposal } from "../lifecycle"
+import fs from "fs/promises"
 
 export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance", (handlers) =>
   Effect.gen(function* () {
@@ -67,15 +68,19 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       return yield* Effect.promise(async () => {
         const existing = await Promise.all(
           ["DEV.md", "AGENTS.md", "CLAUDE.md"].map(async (name) =>
-            (await Bun.file(path.join(dir, name)).exists()) ? path.join(dir, name) : undefined,
+            (await fs.access(path.join(dir, name)).then(
+              () => true,
+              () => false,
+            ))
+              ? path.join(dir, name)
+              : undefined,
           ),
         )
         const file = existing.find((item) => item !== undefined) ?? path.join(dir, "DEV.md")
-        const current = await Bun.file(file)
-          .text()
-          .catch(() => "")
+        const current = await fs.readFile(file, "utf8").catch(() => "")
         const separator = current === "" || current.endsWith("\n") ? "" : "\n"
-        await Bun.write(file, `${current}${separator}- ${ctx.payload.text.trim()}\n`)
+        await fs.mkdir(dir, { recursive: true })
+        await fs.writeFile(file, `${current}${separator}- ${ctx.payload.text.trim()}\n`)
         return { path: file }
       })
     })

@@ -9,6 +9,7 @@ import semver from "semver"
 import { InstallationLocal, InstallationVersion } from "@dev-ai/core/installation/version"
 import { InstallationEvent } from "@dev-ai/schema/installation-event"
 import { SourceInstall } from "@/cli/source-install"
+import { Process } from "@/util/process"
 
 // DeV Code updates come only from DeV's own GitHub releases, through `devcode upgrade` or the package
 // manager it was installed with. Nothing here ever installs another product.
@@ -64,15 +65,11 @@ const layer = Layer.succeed(
     }),
     upgrade: Effect.fn("Installation.upgrade")(function* (method: Method, target: string) {
       const command = upgradeCommand(method, target)
-      if (!command) return yield* new UpgradeFailedError({ stderr: "DeV Code is running from source; update it with git pull." })
+      if (!command)
+        return yield* new UpgradeFailedError({ stderr: "DeV Code is running from source; update it with git pull." })
       const result = yield* Effect.promise(async () => {
-        const proc = Bun.spawn(command, { stdout: "pipe", stderr: "pipe" })
-        const [stdout, stderr, code] = await Promise.all([
-          new Response(proc.stdout).text(),
-          new Response(proc.stderr).text(),
-          proc.exited,
-        ])
-        return { code, stdout, stderr }
+        const run = await Process.run(command, { nothrow: true })
+        return { code: run.code, stdout: run.stdout.toString(), stderr: run.stderr.toString() }
       })
       if (result.code !== 0)
         return yield* new UpgradeFailedError({
