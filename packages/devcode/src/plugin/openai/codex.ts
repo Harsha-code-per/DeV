@@ -1,5 +1,6 @@
 import type { Hooks, PluginInput } from "@dev-ai/plugin"
 import { InstallationVersion } from "@dev-ai/core/installation/version"
+import { Brand } from "@dev-ai/core/brand"
 import { OAUTH_DUMMY_KEY } from "../../auth"
 import os from "os"
 import { setTimeout as sleep } from "node:timers/promises"
@@ -96,7 +97,7 @@ function buildAuthorizeUrl(redirectUri: string, pkce: PkceCodes, state: string):
     id_token_add_organizations: "true",
     codex_cli_simplified_flow: "true",
     state,
-    originator: "opencode",
+    originator: Brand.OAUTH_CLIENT,
   })
   return `${ISSUER}/oauth/authorize?${params.toString()}`
 }
@@ -558,7 +559,7 @@ export async function CodexAuthPlugin(input: PluginInput, options: CodexAuthPlug
     },
     "chat.headers": async (input, output) => {
       if (input.model.providerID !== "openai") return
-      output.headers.originator = "opencode"
+      output.headers.originator = Brand.OAUTH_CLIENT
       output.headers["User-Agent"] = `opencode/${InstallationVersion} (${os.platform()} ${os.release()}; ${os.arch()})`
       output.headers["session-id"] = input.sessionID
       // Temporary fetch-layer hack: title generation currently shares the conversation

@@ -3,6 +3,7 @@ import type { IntegrationOAuthMethodRegistration } from "@dev-ai/plugin/v2/effec
 import { define } from "@dev-ai/plugin/v2/effect/plugin"
 import { Deferred, Effect } from "effect"
 import type { Scope } from "effect"
+import { Brand } from "../../brand"
 import { Credential } from "../../credential"
 import { InstallationVersion } from "../../installation/version"
 import { Integration } from "../../integration"
@@ -268,7 +269,7 @@ function authorizeURL(redirect: string, pkce: Pkce, state: string) {
     id_token_add_organizations: "true",
     codex_cli_simplified_flow: "true",
     state,
-    originator: "opencode",
+    originator: Brand.OAUTH_CLIENT,
   })}`
 }
 

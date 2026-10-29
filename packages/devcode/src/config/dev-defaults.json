@@ -30,7 +30,8 @@
       "*--output*": "ask",
       "*--pre*": "ask"
     },
-    "webfetch": "ask"
+    "webfetch": "ask",
+    "external_agent": "ask"
   },
   "plugin": [
     "superpowers@git+https://github.com/obra/superpowers.git#v7.0.1",

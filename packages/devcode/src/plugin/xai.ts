@@ -1,6 +1,7 @@
 import type { Hooks, PluginInput } from "@dev-ai/plugin"
 import { OAUTH_DUMMY_KEY } from "../auth"
 import { InstallationVersion } from "@dev-ai/core/installation/version"
+import { Brand } from "@dev-ai/core/brand"
 
 // Public Grok-CLI OAuth client.
 const CLIENT_ID = "b1a00492-073a-47ea-816f-4c329264a828"
@@ -112,7 +113,7 @@ export async function requestDeviceCode(options: XaiAuthPluginOptions = {}): Pro
     body: new URLSearchParams({
       client_id: CLIENT_ID,
       scope: SCOPE,
-      referrer: "opencode",
+      referrer: Brand.OAUTH_CLIENT,
     }).toString(),
   })
   if (!response.ok) {

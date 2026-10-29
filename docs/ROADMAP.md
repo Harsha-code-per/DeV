@@ -54,7 +54,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] Remove stock mode; tests and snapshots are DeV-native. Only `DEV_DISABLE_BUNDLED_DEFAULTS` remains, which skips the bundled plugins, MCP servers, local-model detection and auto/free default (used by tests).
 - [x] Rename identifiers: `OpenCode` → `DevCode` namespaces, `createOpencodeClient`/`OpencodeClient` → `createDevcodeClient`/`DevcodeClient`, `OpenCodeEvent` → `DevCodeEvent`, `OpenCodeHttpApi` → `DevCodeHttpApi`; generators updated (`httpapi-codegen`, legacy SDK `instance`).
 - [ ] Move `packages/app` and `packages/session-ui` off the vendored OpenCode 1.17.13 client (`app/vendor/opencode-ai-client-*.tgz`) onto `@dev-ai/client`; the APIs have drifted (~290 type errors when switched), so this is real migration work. Until then those two packages use the vendored `OpenCode` names.
-- [ ] ChatGPT (Codex) sign-in and xAI device sign-in still send `opencode` as the OAuth `originator`/`referrer` (`packages/devcode/src/plugin/openai/codex.ts`, `core/src/plugin/provider/openai.ts`, `plugin/xai.ts`). Changing it may break sign-in if the providers allowlist those values: decide whether to switch to `devcode`, or offer only API keys for these until DeV is registered.
+- [ ] ChatGPT (Codex) and xAI sign-in send `Brand.OAUTH_CLIENT` (still "opencode", the partner name those providers accept, so sign-in keeps working). Register DeV with OpenAI and xAI, then set it to "devcode" in `packages/core/src/brand.ts`.
 - [ ] Rename remaining internal names in the web/desktop apps: i18n keys (`provider.connect.opencodeZen.*`, `wsl.onboarding.*Opencode*`), the desktop WSL "install opencode" flow, the `x-opencode-directory` client↔server header, and the TUI theme and app IDs. Do this with the M4 desktop and M2 UI work.
 - [x] `script/brand-check.ts`: finds user-visible OpenCode text (quoted sentences, JSX text, prompts, docs, translations); `--check` fails when anything would change. The help-snapshot test asserts no command's help mentions opencode. (Wired into CI with M0.5.)
 - [x] OpenCode Zen is listed honestly in `/connect` as "OpenCode Zen (free models with your Zen key)", with what it is, how to get a key, and its data-use note.
@@ -126,6 +126,9 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
   - never hangs (watchdogs on every external call).
 
 ### Beyond Claude Code
+
+- [x] **Use your subscriptions safely:** the `external_agent` tool hands a task to the user's own installed Claude Code, Codex or Gemini CLI (offered only when one is installed; asks first; TUI shows "Hand off to …"). Their own login and terms apply; DeV never touches those credentials. Verified end to end with Claude Code.
+  - Not built on purpose: signing in to Claude Pro/Max or Google Antigravity inside DeV. Anthropic's terms forbid third-party use of subscription sign-in, and Google suspends accounts that connect Antigravity or Gemini CLI sign-in to third-party tools. Gemini is available through a free Google AI Studio key (part of `auto/free`).
 
 - [ ] Free-model quality routing: rank `auto/free` candidates by measured success per task type.
 - [ ] Persistent memory across sessions and projects, with privacy controls.

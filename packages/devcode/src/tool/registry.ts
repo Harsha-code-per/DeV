@@ -27,6 +27,7 @@ import { Plugin } from "../plugin"
 import { Provider } from "@/provider/provider"
 
 import { WebSearchTool } from "./websearch"
+import { ExternalAgent, ExternalAgentTool } from "./external-agent"
 import { LspTool } from "./lsp"
 import * as Truncate from "./truncate"
 import { ApplyPatchTool } from "./apply_patch"
@@ -108,6 +109,7 @@ const layer = Layer.effect(
     const plan = yield* PlanExitTool
     const webfetch = yield* WebFetchTool
     const websearch = yield* WebSearchTool
+    const externalAgent = yield* ExternalAgentTool
     const shell = yield* ShellTool
     const globtool = yield* GlobTool
     const writetool = yield* WriteTool
@@ -226,6 +228,7 @@ const layer = Layer.effect(
           question: Tool.init(question),
           lsp: Tool.init(lsptool),
           plan: Tool.init(plan),
+          externalAgent: Tool.init(externalAgent),
           ...(codeModeTool ? { execute: Tool.init(codeModeTool) } : {}),
         })
 
@@ -248,6 +251,8 @@ const layer = Layer.effect(
             tool.catalog,
             tool.patch,
             ...(tool.execute ? [tool.execute] : []),
+            // Only offered when Claude Code, Codex or Gemini CLI is installed.
+            ...(ExternalAgent.installed().length > 0 ? [tool.externalAgent] : []),
             ...(flags.experimentalLspTool ? [tool.lsp] : []),
             ...(flags.experimentalPlanMode && flags.client === "cli" ? [tool.plan] : []),
           ],

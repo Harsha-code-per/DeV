@@ -283,6 +283,22 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
               }
             }
 
+            if (permission === "external_agent") {
+              const name = typeof data.name === "string" ? data.name : "another agent"
+              const prompt = typeof data.prompt === "string" ? data.prompt : ""
+              return {
+                icon: "#",
+                title: `Hand off to ${name} (runs with your own ${name} account)`,
+                body: (
+                  <Show when={prompt}>
+                    <box paddingLeft={1}>
+                      <text fg={theme.text}>{prompt}</text>
+                    </box>
+                  </Show>
+                ),
+              }
+            }
+
             if (permission === "task") {
               const type = typeof data.subagent_type === "string" ? data.subagent_type : "Unknown"
               const desc = typeof data.description === "string" ? data.description : ""
