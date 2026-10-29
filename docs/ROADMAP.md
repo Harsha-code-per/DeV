@@ -208,3 +208,16 @@ All surfaces share **one engine and one set of sessions**: start in the app, con
 - **Privacy:** local-first, nothing leaves the machine without the user knowing.
 - **Docs and a changelog** updated in the same PR as each feature.
 - See [GAP_MATRIX.md](GAP_MATRIX.md) for feature parity with Claude Code and Codex, and [ECOSYSTEM.md](ECOSYSTEM.md) for the open-source projects we build on.
+
+## Watching OpenCode (hard fork: we port fixes by hand and build features ourselves)
+
+Review OpenCode's releases regularly (`gh release list -R anomalyco/opencode`). Last review: 2026-10-29 (v1.19.5, v2.2.0, v2.2.1).
+
+- [x] Ported #54936 (v1.19.5): a failed TUI worker request answers with an error instead of hanging.
+- [x] Ported #59649 (v2.2.1): a 429 that sounds like an overflow (Cerebras) is a rate limit, not a context overflow.
+- [x] Built our own `/goal <objective>` (their 2.2.1 idea): keeps working until the goal is verified, with pause/resume/clear and a status row.
+- Not applicable: #59934 and #59441 change OpenCode 2's rewritten session runner, which DeV doesn't use.
+- [ ] Consider: scheduled prompts (`/schedule`), for the M4 scheduler.
+- [ ] Consider: plugin-managed session instructions that don't bust the prompt cache (2.2.0), and per-model prompt-cache TTLs.
+- [ ] Consider: an opt-in `image_generate` tool.
+- [ ] Upgrade the `/goal` reviewer from self-review to an independent reviewer subagent.
