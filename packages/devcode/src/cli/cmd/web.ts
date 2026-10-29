@@ -3,6 +3,7 @@ import { UI } from "../ui"
 import { effectCmd } from "../effect-cmd"
 import { withNetworkOptions, resolveNetworkOptions } from "../network"
 import { Flag } from "@dev-ai/core/flag/flag"
+import { ServerAuth } from "@/server/auth"
 import { openUrl } from "@dev-ai/core/open"
 import { networkInterfaces } from "os"
 
@@ -37,14 +38,29 @@ export const WebCommand = effectCmd({
   instance: false,
   handler: Effect.fn("Cli.web")(function* (args) {
     const { Server } = yield* Effect.promise(() => import("../../server/server"))
-    if (!Flag.DEV_SERVER_PASSWORD) {
-      UI.println(UI.Style.TEXT_WARNING_BOLD + "!  DEV_SERVER_PASSWORD is not set; server is unsecured.")
-    }
     const opts = yield* resolveNetworkOptions(args)
+    const password = ServerAuth.ensurePassword()
     const server = yield* Effect.promise(() => Server.listen(opts))
     UI.empty()
     UI.println(UI.logo("  "))
     UI.empty()
+    // The web app reads its startup credentials from auth_token and then drops it from the address bar.
+    const withAuth = (url: string) => {
+      const result = new URL(url)
+      result.searchParams.set(
+        "auth_token",
+        Buffer.from(`${ServerAuth.displayUsername()}:${Flag.DEV_SERVER_PASSWORD}`).toString("base64"),
+      )
+      return result.toString()
+    }
+    if (password) {
+      UI.println(UI.Style.TEXT_INFO_BOLD + "  Username:          ", UI.Style.TEXT_NORMAL, ServerAuth.displayUsername())
+      UI.println(
+        UI.Style.TEXT_INFO_BOLD + "  Password:          ",
+        UI.Style.TEXT_NORMAL,
+        `${password}  (generated; set DEV_SERVER_PASSWORD to choose your own)`,
+      )
+    }
 
     if (opts.hostname === "0.0.0.0") {
       // Show localhost for local access
@@ -72,11 +88,11 @@ export const WebCommand = effectCmd({
       }
 
       // Open localhost in browser
-      openUrl(localhostUrl).catch(() => {})
+      openUrl(withAuth(localhostUrl)).catch(() => {})
     } else {
       const displayUrl = server.url.toString()
       UI.println(UI.Style.TEXT_INFO_BOLD + "  Web interface:    ", UI.Style.TEXT_NORMAL, displayUrl)
-      openUrl(displayUrl).catch(() => {})
+      openUrl(withAuth(displayUrl)).catch(() => {})
     }
 
     yield* Effect.never

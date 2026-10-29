@@ -22,7 +22,14 @@ export const AcpCommand = effectCmd({
     ACPProfile.mark("cli.acp.handler")
     process.env.DEV_CLIENT = "acp"
     const opts = yield* resolveNetworkOptions(args)
+    const password = ServerAuth.ensurePassword()
     const server = yield* Effect.promise(() => ACPProfile.measure("cli.acp.server.listen", () => Server.listen(opts)))
+    // stdout carries the ACP protocol. On loopback only this process talks to the server, so the
+    // generated password stays private; a network listener shows it on stderr for other clients.
+    if (password && !Server.isLoopback(opts.hostname))
+      console.error(
+        `DevCode server on http://${server.hostname}:${server.port} username ${ServerAuth.displayUsername()} password ${password}`,
+      )
 
     const sdk = createDevcodeClient({
       baseUrl: `http://${server.hostname}:${server.port}`,

@@ -284,6 +284,26 @@ describe("HttpApi Server.listen", () => {
     ).rejects.toThrow()
   })
 
+  test("a network listener without a configured password generates one", async () => {
+    Flag.DEV_SERVER_PASSWORD = undefined
+    Flag.DEV_SERVER_USERNAME = undefined
+    delete process.env.DEV_SERVER_PASSWORD
+    delete process.env.DEV_SERVER_USERNAME
+    const listener = await Server.listen({ hostname: "0.0.0.0", port: 0 })
+    try {
+      const password = process.env.DEV_SERVER_PASSWORD
+      expect(password).toMatch(/^[\w-]{43}$/)
+      expect(Flag.DEV_SERVER_PASSWORD).toBe(password)
+      const health = new URL(`http://127.0.0.1:${listener.port}/global/health`)
+      expect((await fetch(health)).status).toBe(401)
+      expect((await fetch(health, { headers: { authorization: `Basic ${btoa(`dev:${password}`)}` } })).status).toBe(
+        200,
+      )
+    } finally {
+      await withTimeout(listener.stop(true), 10_000, "timed out stopping network listener")
+    }
+  })
+
   test("default in-process handler does not emit Effect HTTP response logs", async () => {
     let output = ""
     // oxlint-disable-next-line typescript-eslint/unbound-method -- restored in finally after temporarily capturing stderr.

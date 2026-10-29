@@ -251,6 +251,12 @@ export const TuiThreadCommand = cmd({
       }
       const cwd = Filesystem.resolve(process.cwd())
 
+      const network = resolveNetworkOptionsNoConfig(args)
+      const external = hasArg("--port") || hasArg("--hostname") || network.mdns === true
+      // Before spawning the worker so its listener inherits the password this process sends.
+      const password = external ? ServerAuth.ensurePassword() : undefined
+      if (password) UI.println(`Server username ${ServerAuth.displayUsername()} password ${password}`)
+
       const worker = new Worker(file, {
         env: Object.fromEntries(
           Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined),
@@ -273,9 +279,6 @@ export const TuiThreadCommand = cmd({
 
       const prompt = await input(args.prompt)
       const config = await TuiConfig.get()
-
-      const network = resolveNetworkOptionsNoConfig(args)
-      const external = hasArg("--port") || hasArg("--hostname") || network.mdns === true
 
       const headers = external ? ServerAuth.headers() : undefined
 

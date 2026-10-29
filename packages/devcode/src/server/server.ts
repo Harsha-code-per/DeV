@@ -13,6 +13,7 @@ import { WebSocketTracker } from "./routes/instance/httpapi/websocket-tracker"
 import { PublicApi } from "./routes/instance/httpapi/public"
 import type { CorsOptions } from "@dev-ai/server/cors"
 import { lazy } from "@/util/lazy"
+import { ServerAuth } from "./auth"
 
 // @ts-ignore This global is needed to prevent ai-sdk from logging warnings to stdout https://github.com/vercel/ai/blob/2dc67e0ef538307f21368db32d5a12345d98831b/packages/ai/src/logger/log-warnings.ts#L85
 globalThis.AI_SDK_LOG_WARNINGS = false
@@ -70,6 +71,10 @@ export async function openapi() {
 
 export let url: URL | undefined
 
+export function isLoopback(hostname: string) {
+  return hostname === "localhost" || hostname === "::1" || hostname.startsWith("127.")
+}
+
 export async function listen(opts: ListenOptions): Promise<Listener> {
   const listener = await Effect.runPromise(listenEffect(opts))
   return {
@@ -82,6 +87,8 @@ export async function listen(opts: ListenOptions): Promise<Listener> {
 
 const listenEffect: (opts: ListenOptions) => Effect.Effect<EffectListener, unknown> = Effect.fn("Server.listen")(
   function* (opts: ListenOptions) {
+    // Backstop for embedders: the CLI commands already ensure a password before listening.
+    if (!isLoopback(opts.hostname)) ServerAuth.ensurePassword()
     const state = yield* startWithPortFallback(opts)
     const address = yield* tcpAddress(state)
     const listenerUrl = makeURL(opts.hostname, address.port)
@@ -154,8 +161,7 @@ function makeURL(hostname: string, port: number) {
 
 function setupMdns(opts: ListenOptions, port: number, scope: Scope.Scope) {
   return Effect.gen(function* () {
-    const publish =
-      opts.mdns && port && opts.hostname !== "127.0.0.1" && opts.hostname !== "localhost" && opts.hostname !== "::1"
+    const publish = opts.mdns && port && !isLoopback(opts.hostname)
     if (publish) {
       const unpublish = yield* Effect.cached(Effect.sync(() => MDNS.unpublish()))
       yield* Effect.sync(() => MDNS.publish(port, opts.mdnsDomain))

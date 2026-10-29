@@ -22,13 +22,57 @@ describe("opencode serve (subprocess)", () => {
         expect(server.url).toMatch(/^http:\/\//)
 
         const client = yield* HttpClient.HttpClient
-        const res = yield* client.get(`${server.url}/global/health`)
+        const res = yield* client.get(`${server.url}/global/health`, {
+          headers: { authorization: `Basic ${btoa(`dev:${server.password}`)}` },
+        })
         expect(res.status).toBe(200)
         // GlobalHealth schema is { success: true, ... } | { success: false, error }.
         // We don't lock in further shape here — any 200 with parseable JSON is
         // enough proof the routing + auth-bypass + instance loading is alive.
         const body = yield* res.json
         expect(body).toBeDefined()
+      }),
+    60_000,
+  )
+
+  // With no DEV_SERVER_PASSWORD, serve must still never run unauthenticated: it binds to
+  // loopback by default and generates a password, which it prints with the URL.
+  cliIt.live(
+    "defaults to loopback and requires a generated password",
+    ({ opencode }) =>
+      Effect.gen(function* () {
+        const server = yield* opencode.serve()
+        expect(server.hostname).toBe("127.0.0.1")
+        expect(server.password).toMatch(/^[\w-]{43}$/)
+
+        const client = yield* HttpClient.HttpClient
+        const anonymous = yield* client.get(`${server.url}/global/health`)
+        expect(anonymous.status).toBe(401)
+        const wrong = yield* client.get(`${server.url}/global/health`, {
+          headers: { authorization: `Basic ${btoa("dev:wrong")}` },
+        })
+        expect(wrong.status).toBe(401)
+        const authorized = yield* client.get(`${server.url}/global/health`, {
+          headers: { authorization: `Basic ${btoa(`dev:${server.password}`)}` },
+        })
+        expect(authorized.status).toBe(200)
+      }),
+    60_000,
+  )
+
+  // A configured password is used as is: nothing is generated or printed.
+  cliIt.live(
+    "keeps a configured password",
+    ({ opencode }) =>
+      Effect.gen(function* () {
+        const server = yield* opencode.serve({ env: { DEV_SERVER_PASSWORD: "configured-secret" } })
+        expect(server.password).toBeUndefined()
+
+        const client = yield* HttpClient.HttpClient
+        const res = yield* client.get(`${server.url}/global/health`, {
+          headers: { authorization: `Basic ${btoa("dev:configured-secret")}` },
+        })
+        expect(res.status).toBe(200)
       }),
     60_000,
   )

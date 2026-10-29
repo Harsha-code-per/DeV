@@ -296,7 +296,7 @@ describe("opencode run (non-interactive subprocess)", () => {
         const server = yield* opencode.serve()
 
         const result = yield* opencode.run("read the attachment", {
-          extraArgs: ["--attach", server.url, `--file=${source}`, "--"],
+          extraArgs: ["--attach", server.url, "--password", server.password ?? "", `--file=${source}`, "--"],
         })
 
         opencode.expectExit(result, 0)

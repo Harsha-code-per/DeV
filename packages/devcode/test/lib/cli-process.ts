@@ -123,6 +123,8 @@ export type ServeHandle = {
   readonly url: string
   readonly hostname: string
   readonly port: number
+  // The password serve generated and printed, when none was configured.
+  readonly password?: string
   // Sends SIGTERM. The scope finalizer also calls this, so tests rarely need
   // to invoke it directly — useful for tests that assert exit behavior.
   readonly kill: () => void
@@ -345,14 +347,18 @@ export function withCliFixture<A, E>(
 
       // Watch stdout line-by-line for the listening sentinel. Format
       // (see src/cli/cmd/serve.ts):
-      //   "opencode server listening on http://<host>:<port>"
+      //   "DeV Code server listening on http://<host>:<port>"
+      // A generated password is printed on a "Password: <password>" line before it.
       const readyRe = /listening on (http:\/\/([^\s:]+):(\d+))/
+      const passwordRe = /^Password: (\S+)/
+      const printed = { password: undefined as string | undefined }
       const readyDeferred = yield* Deferred.make<{ url: string; hostname: string; port: number }>()
       yield* Effect.forkScoped(
         fromBunStream("stdout", () => proc.stdout).pipe(
           Stream.decodeText(),
           Stream.splitLines,
           Stream.runForEach((line) => {
+            printed.password = line.match(passwordRe)?.[1] ?? printed.password
             const m = line.match(readyRe)
             return m ? Deferred.succeed(readyDeferred, { url: m[1], hostname: m[2], port: Number(m[3]) }) : Effect.void
           }),
@@ -378,6 +384,7 @@ export function withCliFixture<A, E>(
         url: match.url,
         hostname: match.hostname,
         port: match.port,
+        password: printed.password,
         kill: () => {
           proc.kill()
         },
