@@ -268,6 +268,12 @@ export const DESKTOP_NATIVE_ENGLISH = {
   "desktop.menu.reportBug": "Report a Bug",
   "desktop.menu.ariaLabel": "DeV menu",
 
+  "desktop.tray.open": "Open DeV",
+  "desktop.tray.quickPrompt": "Quick Prompt...",
+  "desktop.tray.startAtLogin": "Start at Login",
+  "desktop.tray.quit": "Quit DeV",
+  "desktop.quickPrompt.placeholder": "Ask DeV anything",
+
   "desktop.updater.dialog.checkFailed.message": "Update check failed.",
   "desktop.updater.dialog.checkFailed.title": "Update Error",
   "desktop.updater.dialog.upToDate.message": "You're up to date.",

@@ -48,6 +48,7 @@ import { spawnWslSidecar } from "./wsl/sidecar"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
+import { createTray, trayAvailable } from "./tray"
 
 const APP_NAMES: Record<string, string> = {
   dev: "DeV Dev",
@@ -191,7 +192,9 @@ const main = Effect.gen(function* () {
   useEnvProxy()
   app.commandLine.appendSwitch("proxy-bypass-list", "<-loopback>")
   const features = app.commandLine.getSwitchValue("enable-features")
-  app.commandLine.appendSwitch("enable-features", features ? `${jsCallStackFeature},${features}` : jsCallStackFeature)
+  // Wayland has no global hotkeys without the desktop portal.
+  const ownFeatures = process.platform === "linux" ? `${jsCallStackFeature},GlobalShortcutsPortal` : jsCallStackFeature
+  app.commandLine.appendSwitch("enable-features", features ? `${ownFeatures},${features}` : ownFeatures)
   if (!app.isPackaged) app.commandLine.appendSwitch("remote-debugging-port", "9222")
 
   if (!app.requestSingleInstanceLock()) {
@@ -207,6 +210,8 @@ const main = Effect.gen(function* () {
       logger.log("deep link received via second-instance", { urls })
       emitDeepLinks(urls)
     }
+    // An autostart launch while DeV already runs must not pop a window up.
+    if (argv.includes("--hidden")) return
     const win = getLastFocusedWindow()
     if (win) {
       win.show()
@@ -252,6 +257,7 @@ const main = Effect.gen(function* () {
   const serverReady = Deferred.makeUnsafe<ServerReadyData, unknown>()
 
   yield* Effect.promise(() => app.whenReady())
+  const trayCheck = trayAvailable()
 
   yield* Effect.promise(() => cleanupStoreFiles(app.getPath("userData"))).pipe(
     Effect.tap((result) =>
@@ -277,6 +283,21 @@ const main = Effect.gen(function* () {
     },
     checkForUpdates: () => void showUpdaterDialog(updater, true),
     relaunch,
+  }
+  const showMainWindow = (urls: string[]) => {
+    const win = getLastFocusedWindow()
+    if (!win) {
+      pendingDeepLinks.push(...urls)
+      restoreMainWindows()
+      createMenu(menuDeps)
+      return
+    }
+    // A loaded renderer gets the links directly so they are not replayed into later windows.
+    if (win.webContents.isLoading()) pendingDeepLinks.push(...urls)
+    if (!win.webContents.isLoading() && urls.length) sendDeepLinks(win, urls)
+    if (win.isMinimized()) win.restore()
+    win.show()
+    win.focus()
   }
   registerIpcHandlers({
     killSidecar: () => killSidecar(),
@@ -306,8 +327,11 @@ const main = Effect.gen(function* () {
     exportDebugLogs: () => exportDebugLogs(),
     recordFatalRendererError: (error) => writeLog("renderer", "fatal renderer error", { ...error }, "error"),
     setNativeTranslations: (bundle) => {
-      if (setNativeTranslations(bundle)) createMenu(menuDeps)
+      if (!setNativeTranslations(bundle)) return
+      createMenu(menuDeps)
+      tray.refresh()
     },
+    submitQuickPrompt: (sender, text) => tray.submit(sender, text),
   })
   registerWslIpcHandlers(wslServers)
   void updater.start()
@@ -406,16 +430,28 @@ const main = Effect.gen(function* () {
 
   yield* Fiber.await(loadingTask)
 
+  // Created once startup is done, so opening a window from the tray or hotkey cannot race the restore below.
+  const tray = createTray({ available: yield* Effect.promise(() => trayCheck), appId, open: showMainWindow })
+
+  // With a tray, closing the last window leaves DeV running there; the window is destroyed, not
+  // hidden, so an idle app holds no renderer.
   app.on("window-all-closed", () => {
-    if (process.platform === "darwin") return
+    if (process.platform === "darwin" || tray.available) return
     app.quit()
   })
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length > 0) return
-    restoreMainWindows()
+    showMainWindow([])
+  })
+  // Registered once startup is done: launching DeV again while it sits in the tray reopens it.
+  app.on("second-instance", (_event: Event, argv: string[]) => {
+    if (argv.includes("--hidden") || getLastFocusedWindow()) return
+    showMainWindow([])
   })
 
-  const windows = restoreMainWindows()
+  const hidden =
+    process.argv.includes("--hidden") || (process.platform === "darwin" && app.getLoginItemSettings().wasOpenedAtLogin)
+  const windows = hidden && tray.available ? [] : restoreMainWindows()
   if (windows.length) createMenu(menuDeps)
 })
 

@@ -85,8 +85,11 @@ export function getBackgroundColor(): string | undefined {
   return backgroundColor
 }
 
-function iconsDir() {
-  return app.isPackaged ? join(process.resourcesPath, "icons") : join(root, "../../resources/icons")
+export const preloadPath = join(root, "../preload/index.js")
+
+// electron-builder packs `resources/**` into the app archive, not next to it in process.resourcesPath.
+export function iconsDir() {
+  return join(app.getAppPath(), "resources", "icons")
 }
 
 function iconPath() {
@@ -197,7 +200,7 @@ export function createMainWindow(id: string = randomUUID()) {
         }
       : {}),
     webPreferences: {
-      preload: join(root, "../preload/index.js"),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,

@@ -2,7 +2,7 @@ import { execFile } from "node:child_process"
 import { stat } from "node:fs/promises"
 import { basename, join } from "node:path"
 import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from "electron"
-import type { IpcMainEvent, IpcMainInvokeEvent } from "electron"
+import type { IpcMainEvent, IpcMainInvokeEvent, WebContents } from "electron"
 import type { DesktopMenuAction } from "@dev-ai/app/desktop-menu"
 import { parseDesktopNativeBundle, type DesktopNativeBundle } from "@dev-ai/app/i18n/desktop-native"
 
@@ -52,6 +52,7 @@ type Deps = {
   exportDebugLogs: () => Promise<string>
   recordFatalRendererError: (error: FatalRendererError) => Promise<void> | void
   setNativeTranslations: (bundle: DesktopNativeBundle) => void
+  submitQuickPrompt: (sender: WebContents, text: string) => void
 }
 
 export function registerIpcHandlers(deps: Deps) {
@@ -208,6 +209,9 @@ export function registerIpcHandlers(deps: Deps) {
     },
   )
 
+  ipcMain.on("submit-quick-prompt", (event: IpcMainEvent, text: unknown) =>
+    deps.submitQuickPrompt(event.sender, typeof text === "string" ? text : ""),
+  )
   ipcMain.on("open-external", (_event: IpcMainEvent, url: string) => {
     openExternalURL(url)
   })
