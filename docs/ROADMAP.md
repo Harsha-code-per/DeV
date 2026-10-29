@@ -64,7 +64,8 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
   - Writes only to the project and temp folders.
   - `~/.ssh`, `~/.aws`, `.env*` and the key store are unreadable.
   - Network goes through an allowlist proxy.
-- [ ] Safe permission defaults: read in the project; edits ask (or "accept edits" mode); sandboxed shell runs without asking and anything outside the sandbox asks; secrets denied.
+- [x] Safe permission defaults (bundled config): reading in the project is allowed; file edits and web fetches ask; shell commands ask except a read-only set (ls, pwd, git status/diff/log/show/branch, rg, grep, cat, head, tail, wc, which, echo), and anything with a redirect, `--output` or `--pre` asks even then. Verified end to end per permission mode.
+- [ ] Once the sandbox is in: sandboxed shell commands run without asking, and anything that needs to leave the sandbox asks; secrets denied.
 - [ ] Server listens on localhost only and generates a random password by default.
 - [ ] Web, MCP and file content is marked untrusted; risky actions (deleting outside the project, `git push`, installs) need confirmation.
 - [ ] Supply chain: pinned deps, gitleaks and Renovate in CI, npm provenance, SHA-256 checksums on releases.
