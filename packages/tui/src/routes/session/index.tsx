@@ -1945,17 +1945,16 @@ function BlockTool(props: {
   const [hover, setHover] = createSignal(false)
   const error = createMemo(() => (props.part?.state.status === "error" ? props.part.state.error : undefined))
   return (
+    // DeV: tool output sits in a thin rounded frame (OpenCode used a filled panel with a bar).
     <box
       ref={(el: BoxRenderable) => alwaysSeparate.add(el)}
-      border={["left"]}
-      paddingTop={1}
-      paddingBottom={1}
-      paddingLeft={2}
+      border
+      borderStyle="rounded"
+      borderColor={hover() ? theme.border : theme.borderSubtle}
+      paddingLeft={1}
+      paddingRight={1}
       marginTop={1}
       gap={1}
-      backgroundColor={hover() ? theme.backgroundMenu : theme.backgroundPanel}
-      customBorderChars={SplitBorder.customBorderChars}
-      borderColor={theme.background}
       onMouseOver={() => props.onClick && setHover(true)}
       onMouseOut={() => setHover(false)}
       onMouseUp={() => {
@@ -1968,8 +1967,8 @@ function BlockTool(props: {
           <Show
             when={props.spinner}
             fallback={
-              <text paddingLeft={3} fg={theme.textMuted}>
-                {title()}
+              <text fg={theme.textMuted}>
+                <span style={{ fg: theme.primary }}>▸</span> {title().replace(/^# /, "")}
               </text>
             }
           >

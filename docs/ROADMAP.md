@@ -146,7 +146,8 @@ Not urgent, but it must be done before v1.0.
 - [ ] Desktop app icons (`packages/desktop/icons`, .icns/.ico) from the same mark, with the M4 desktop rebrand.
 - [x] Default TUI theme `dev` in the signature colour.
 - [x] **TUI redesign, first pass** (checked on screen): rounded saffron prompt and permission frames; your messages marked with a saffron chevron instead of a bar on a panel; saffron reply marker, main agent, sidebar titles and footer mark; a time-of-day greeting on the home screen; hint row teaches shift+tab modes and # memory.
-- [ ] TUI redesign, second pass: tool output blocks, sidebar layout, the light theme on screen, the `dev run` splash. (`script/ansi-to-png.py` turns tmux captures into images.)
+- [x] TUI redesign, second pass: tool output in a thin rounded frame with a saffron marker; light theme checked on screen (deep saffron stays readable); `/goal` status row. (`script/ansi-to-png.py` turns tmux captures into images.)
+- [ ] TUI polish later: sidebar layout, the diff view's empty left column for new files.
 - [ ] **Web and desktop UI theme** from the same palette; replace OpenCode's SVG wordmark in `packages/ui` and the desktop app.
 - [ ] Website and docs styled to match.
 
