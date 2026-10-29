@@ -1,0 +1,99 @@
+#!/bin/sh
+# DeV Code installer for Linux and macOS.
+#   curl -fsSL https://harsha-code-per.github.io/DeV/install | sh
+#   curl -fsSL https://harsha-code-per.github.io/DeV/install | sh -s -- 1.2.3   (a given version)
+# Installs to ~/.devcode/bin, or $DEVCODE_INSTALL_DIR. Every download is checked against the
+# release's SHA256SUMS before anything is installed.
+set -eu
+
+repo="Harsha-code-per/DeV"
+dir="${DEVCODE_INSTALL_DIR:-$HOME/.devcode/bin}"
+version="${1:-${DEVCODE_VERSION:-latest}}"
+
+fail() {
+  echo "error: $*" >&2
+  exit 1
+}
+
+fetch() {
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL -o "$2" "$1"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q -O "$2" "$1"
+  else
+    fail "curl or wget is required"
+  fi
+}
+
+case "$(uname -s)" in
+  Linux) os=linux ;;
+  Darwin) os=darwin ;;
+  *) fail "unsupported OS $(uname -s). On Windows, use install.ps1." ;;
+esac
+case "$(uname -m)" in
+  x86_64 | amd64) arch=x64 ;;
+  arm64 | aarch64) arch=arm64 ;;
+  *) fail "unsupported CPU $(uname -m)" ;;
+esac
+
+# A shell running under Rosetta reports x86_64 on Apple Silicon; the native build is faster.
+if [ "$os" = darwin ] && [ "$arch" = x64 ] && [ "$(sysctl -n sysctl.proc_translated 2>/dev/null)" = 1 ]; then
+  arch=arm64
+fi
+
+# x64 CPUs without AVX2 need the baseline build.
+variant=""
+if [ "$arch" = x64 ]; then
+  if [ "$os" = linux ] && ! grep -qw avx2 /proc/cpuinfo 2>/dev/null; then variant="-baseline"; fi
+  if [ "$os" = darwin ] && [ "$(sysctl -n hw.optional.avx2_0 2>/dev/null)" != 1 ]; then variant="-baseline"; fi
+fi
+
+libc=""
+if [ "$os" = linux ] && { [ -f /etc/alpine-release ] || ldd --version 2>&1 | grep -qi musl; }; then
+  libc="-musl"
+fi
+
+asset="devcode-$os-$arch$variant$libc.tar.gz"
+if [ "$version" = latest ]; then
+  base="https://github.com/$repo/releases/latest/download"
+else
+  base="https://github.com/$repo/releases/download/v${version#v}"
+fi
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+echo "Downloading $asset ($version)"
+fetch "$base/SHA256SUMS" "$tmp/SHA256SUMS" && fetch "$base/$asset" "$tmp/$asset" ||
+  fail "download from $base failed. The release may not exist, or the repository is still private (until v1.0)."
+
+expected=$(awk -v file="$asset" '$2 == file || $2 == "*" file { print $1 }' "$tmp/SHA256SUMS")
+[ -n "$expected" ] || fail "SHA256SUMS has no entry for $asset"
+if command -v sha256sum >/dev/null 2>&1; then
+  actual=$(sha256sum "$tmp/$asset" | cut -d' ' -f1)
+else
+  actual=$(shasum -a 256 "$tmp/$asset" | cut -d' ' -f1)
+fi
+[ "$actual" = "$expected" ] || fail "checksum mismatch for $asset (expected $expected, got $actual)"
+
+mkdir -p "$tmp/extract" "$dir"
+tar -xzf "$tmp/$asset" -C "$tmp/extract"
+mv "$tmp/extract/devcode" "$tmp/devcode"
+# Files that ship beside the binary (such as vendor/) first, then the binary itself: written next
+# to the target and renamed, so a running devcode is never left half-written.
+cp -R "$tmp/extract/." "$dir/"
+cp "$tmp/devcode" "$dir/.devcode.new"
+chmod 755 "$dir/.devcode.new"
+mv -f "$dir/.devcode.new" "$dir/devcode"
+ln -sf devcode "$dir/dev"
+
+echo "Installed DeV Code $("$dir/devcode" --version 2>/dev/null || echo "$version") to $dir"
+case ":$PATH:" in
+  *":$dir:"*) echo "Run: devcode (or dev)" ;;
+  *)
+    echo
+    echo "Add DeV Code to your PATH, for example in ~/.bashrc, ~/.zshrc or ~/.profile:"
+    echo "  export PATH=\"$dir:\$PATH\""
+    echo "For fish: fish_add_path $dir"
+    ;;
+esac

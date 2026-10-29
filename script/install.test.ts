@@ -1,3 +1,4 @@
+// Run from script/: the root bunfig refuses tests from the repo root.
 import { afterAll, describe, expect, test } from "bun:test"
 import { $ } from "bun"
 import { mkdtemp, rm } from "fs/promises"
@@ -5,56 +6,51 @@ import os from "os"
 import path from "path"
 
 const script = path.resolve(import.meta.dir, "../install")
-const root = await mkdtemp(path.join(os.tmpdir(), "opencode-install-test-"))
+const root = await mkdtemp(path.join(os.tmpdir(), "devcode-install-test-"))
 afterAll(() => rm(root, { recursive: true, force: true }))
 
-// Stands in for curl: answers the npm registry, the GitHub release list, and release downloads.
-// HEAD requests for a release asset report ASSET_STATUS (200 by default).
-const curl = `#!/usr/bin/env bash
-echo "$*" >> "$CURL_LOG"
+// Stands in for curl: serves files from $SERVE by name and logs each URL; anything missing is a 404.
+const curl = `#!/bin/sh
 out=""
 url=""
-head=false
 while [ $# -gt 0 ]; do
   case "$1" in
     -o) out="$2"; shift 2 ;;
-    -w|--max-time) shift 2 ;;
-    -I|-sI|-sIL) head=true; shift ;;
     -*) shift ;;
     *) url="$1"; shift ;;
   esac
 done
-case "$url" in
-  https://registry.npmjs.org/opencode-ai/latest) [ -n "$NPM_BODY" ] || exit 22; printf '%s' "$NPM_BODY" ;;
-  https://api.github.com/repos/anomalyco/opencode/releases*) printf '%s' "$GITHUB_BODY" ;;
-  https://github.com/anomalyco/opencode/releases/download/*)
-    if [ "$head" = true ]; then printf '%s' "\${ASSET_STATUS:-200}"; else cp "$ARCHIVE" "$out"; fi ;;
-  *) exit 22 ;;
-esac
+echo "$url" >> "$CURL_LOG"
+[ -f "$SERVE/\${url##*/}" ] || exit 22
+cp "$SERVE/\${url##*/}" "$out"
 `
-
 const bin = path.join(root, "bin")
 await Bun.write(path.join(bin, "curl"), curl)
 await $`chmod +x ${path.join(bin, "curl")}`
-const archive = path.join(root, "opencode.tar.gz")
-await Bun.write(path.join(root, "payload", "opencode"), "#!/bin/sh\necho installed\n")
-await $`tar -czf ${archive} -C ${path.join(root, "payload")} opencode`
 
-let run = 0
-async function install(input: { env?: Record<string, string>; args?: string[] }) {
-  const home = path.join(root, `home-${run++}`)
+// A release with every Linux and macOS archive name, each holding a devcode that prints its version.
+async function release(name: string, sums?: (text: string) => string) {
+  const serve = path.join(root, name)
+  await Bun.write(path.join(serve, "payload", "devcode"), "#!/bin/sh\necho 9.9.9\n")
+  await $`chmod +x ${path.join(serve, "payload", "devcode")}`
+  const assets = ["linux", "darwin"].flatMap((os) =>
+    ["x64", "arm64"].flatMap((arch) =>
+      ["", "-baseline"].flatMap((variant) =>
+        ["", "-musl"].map((libc) => `devcode-${os}-${arch}${variant}${libc}.tar.gz`),
+      ),
+    ),
+  )
+  for (const asset of assets) await $`tar -czf ${path.join(serve, asset)} -C ${path.join(serve, "payload")} .`
+  const text = await $`sha256sum ${assets}`.cwd(serve).text()
+  await Bun.write(path.join(serve, "SHA256SUMS"), sums ? sums(text) : text)
+  return serve
+}
+
+async function install(serve: string, args: string[] = []) {
+  const home = await mkdtemp(path.join(root, "home-"))
   const log = path.join(home, "curl.log")
-  await Bun.write(log, "")
-  const proc = Bun.spawn(["bash", script, "--no-modify-path", ...(input.args ?? [])], {
-    env: {
-      PATH: `${bin}:/usr/bin:/bin`,
-      HOME: home,
-      SHELL: "/bin/bash",
-      TMPDIR: home,
-      CURL_LOG: log,
-      ARCHIVE: archive,
-      ...input.env,
-    },
+  const proc = Bun.spawn(["sh", script, ...args], {
+    env: { PATH: `${bin}:/usr/bin:/bin`, HOME: home, TMPDIR: home, CURL_LOG: log, SERVE: serve },
     stdout: "pipe",
     stderr: "pipe",
   })
@@ -63,80 +59,45 @@ async function install(input: { env?: Record<string, string>; args?: string[] })
     new Response(proc.stderr).text(),
     proc.exited,
   ])
+  const dir = path.join(home, ".devcode", "bin")
   return {
     code,
     output: stdout + stderr,
-    curl: (await Bun.file(log).text()).trim().split("\n").filter(Boolean),
-    installed: await Bun.file(path.join(home, ".opencode", "bin", "opencode")).exists(),
+    urls: (await Bun.file(log).text()).trim().split("\n"),
+    dir,
+    installed: await Bun.file(path.join(dir, "devcode")).exists(),
   }
 }
 
-describe("install script", () => {
-  test("refuses an OpenCode 2 VERSION before downloading anything", async () => {
-    for (const version of ["2.0.0", "v2.0.27", "10.1.0"]) {
-      const result = await install({ env: { VERSION: version } })
-      expect(result.code).toBe(1)
-      expect(result.output).toContain("https://opencode.ai/v2/install")
-      expect(result.curl).toEqual([])
-      expect(result.installed).toBe(false)
-    }
+describe.skipIf(process.platform === "win32")("install script", () => {
+  test("installs the latest release as devcode and dev", async () => {
+    const result = await install(await release("latest"))
+    expect(result.code).toBe(0)
+    expect(
+      result.urls.every((url) => url.startsWith("https://github.com/Harsha-code-per/DeV/releases/latest/download/")),
+    ).toBe(true)
+    expect(await $`${path.join(result.dir, "dev")}`.text()).toBe("9.9.9\n")
+    expect(result.output).toContain("Installed DeV Code 9.9.9")
+    expect(result.output).toContain(`export PATH="${result.dir}:$PATH"`)
   })
 
-  test("refuses an OpenCode 2 --version", async () => {
-    const result = await install({ args: ["--version", "2.0.0"] })
+  test("installs a given version", async () => {
+    const result = await install(await release("pinned"), ["v1.2.3"])
+    expect(result.code).toBe(0)
+    expect(result.urls.at(-1)).toContain("/releases/download/v1.2.3/devcode-")
+  })
+
+  test("refuses an archive whose checksum doesn't match", async () => {
+    const result = await install(await release("tampered", (text) => text.replace(/^[0-9a-f]{64}/gm, "0".repeat(64))))
     expect(result.code).toBe(1)
-    expect(result.output).toContain("opencode upgrade --major")
+    expect(result.output).toContain("checksum mismatch")
+    expect(result.installed).toBe(false)
   })
 
-  test.skipIf(process.platform !== "linux")("installs an explicit OpenCode 1 version", async () => {
-    const result = await install({ env: { VERSION: "1.18.35" } })
-    expect(result.code).toBe(0)
-    expect(result.installed).toBe(true)
-    expect(result.curl.at(-1)).toContain("releases/download/v1.18.35/")
-  })
-
-  test.skipIf(process.platform !== "linux")("reads the version from npm", async () => {
-    const result = await install({
-      env: { NPM_BODY: '{"name":"opencode-ai","_npmVersion":"11.0.0","version":"1.19.2"}' },
-    })
-    expect(result.code).toBe(0)
-    expect(result.output).toContain("version: \x1b[0m1.19.2")
-    expect(result.curl.some((line) => line.includes("api.github.com"))).toBe(false)
-    expect(result.curl.at(-1)).toContain("releases/download/v1.19.2/")
-  })
-
-  test.skipIf(process.platform !== "linux")("falls back to the newest v1 GitHub release when npm fails", async () => {
-    const result = await install({
-      env: { GITHUB_BODY: '[{"tag_name": "v2.0.28"},{"tag_name": "v1.19.0"},{"tag_name": "v1.18.35"}]' },
-    })
-    expect(result.code).toBe(0)
-    expect(result.curl.some((line) => line.includes("releases/latest"))).toBe(false)
-    expect(result.curl.at(-1)).toContain("releases/download/v1.19.0/")
-  })
-
-  test.skipIf(process.platform !== "linux")(
-    "falls back to GitHub while the npm version's release is still publishing",
-    async () => {
-      const result = await install({
-        env: { NPM_BODY: '{"version":"1.19.2"}', ASSET_STATUS: "404", GITHUB_BODY: '[{"tag_name": "v1.19.1"}]' },
-      })
-      expect(result.code).toBe(0)
-      expect(result.curl.at(-1)).toContain("releases/download/v1.19.1/")
-    },
-  )
-
-  test.skipIf(process.platform !== "linux")("ignores an OpenCode 2 version from npm", async () => {
-    const result = await install({
-      env: { NPM_BODY: '{"version":"2.0.27"}', GITHUB_BODY: '[{"tag_name": "v1.19.0"}]' },
-    })
-    expect(result.code).toBe(0)
-    expect(result.curl.at(-1)).toContain("releases/download/v1.19.0/")
-  })
-
-  test("reports a missing explicit release", async () => {
-    const result = await install({ env: { VERSION: "1.19.9", ASSET_STATUS: "404" } })
+  test("explains a missing release", async () => {
+    const result = await install(path.join(root, "nothing"))
     expect(result.code).toBe(1)
-    expect(result.output).toContain("Release v1.19.9 not found")
+    expect(result.output).toContain("still private")
     expect(result.installed).toBe(false)
   })
 })

@@ -1,0 +1,31 @@
+{
+  "version": "@VERSION@",
+  "description": "Free-first, any-model AI coding assistant for the terminal",
+  "homepage": "https://github.com/Harsha-code-per/DeV",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/Harsha-code-per/DeV/releases/download/v@VERSION@/devcode-windows-x64.zip",
+      "hash": "@SHA256:devcode-windows-x64.zip@"
+    },
+    "arm64": {
+      "url": "https://github.com/Harsha-code-per/DeV/releases/download/v@VERSION@/devcode-windows-arm64.zip",
+      "hash": "@SHA256:devcode-windows-arm64.zip@"
+    }
+  },
+  "bin": ["devcode.exe", ["devcode.exe", "dev"]],
+  "checkver": "github",
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/Harsha-code-per/DeV/releases/download/v$version/devcode-windows-x64.zip"
+      },
+      "arm64": {
+        "url": "https://github.com/Harsha-code-per/DeV/releases/download/v$version/devcode-windows-arm64.zip"
+      }
+    },
+    "hash": {
+      "url": "$baseurl/SHA256SUMS"
+    }
+  }
+}

@@ -1,13 +1,14 @@
 import fs from "fs"
 import path from "path"
 import { Global } from "@dev-ai/core/global"
+import { InstallationLocal } from "@dev-ai/core/installation/version"
 import { UI } from "./ui"
 
-// DeV Code is installed from source until it has its own release channel (roadmap M0.4), so
-// upgrade and uninstall print the exact steps for this install and change nothing.
+// A DeV Code built from a git checkout updates from git, so upgrade prints those steps and changes
+// nothing; release installs are replaced by `devcode upgrade` (cli/cmd/upgrade.ts).
 
 /** The DeV checkout this binary was built from, if it can be found. */
-function checkout() {
+export function checkout() {
   // <DeV>/packages/devcode/dist/<target>/bin/<binary>
   const root = path.resolve(fs.realpathSync(process.execPath), "../../../../../..")
   if (!fs.existsSync(path.join(root, "packages", "devcode", "package.json"))) return undefined
@@ -24,7 +25,10 @@ export function upgrade() {
 }
 
 export function uninstall() {
-  const bin = path.join(process.env.HOME ?? "~", ".local/bin")
+  const bin =
+    InstallationLocal || checkout()
+      ? path.join(process.env.HOME ?? "~", ".local/bin")
+      : path.dirname(fs.realpathSync(process.execPath))
   UI.println(UI.Style.TEXT_NORMAL_BOLD + "To remove DeV Code:" + UI.Style.TEXT_NORMAL)
   UI.println(`  rm ${path.join(bin, "dev")} ${path.join(bin, "devcode")}`)
   UI.println(`  rm -r ${Global.Path.data} ${Global.Path.config} ${Global.Path.cache} ${Global.Path.state}`)

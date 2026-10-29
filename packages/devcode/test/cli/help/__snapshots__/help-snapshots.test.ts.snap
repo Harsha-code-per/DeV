@@ -218,9 +218,12 @@ exports[`dev CLI help-text snapshots every documented command emits stable help 
 █  █ █▀▀▀ ▀▄ ▄▀
 ▀▀▀  ▀▀▀▀   ▀
 
-dev upgrade
+dev upgrade [target]
 
-show how to update DeV Code
+update DeV Code to the latest release
+
+Positionals:
+  target  version to install instead of the latest, e.g. 1.2.3                              [string]
 
 Options:
   -h, --help        show help                                                              [boolean]
@@ -412,7 +415,7 @@ Commands:
   dev debug                        debugging and troubleshooting tools
   dev providers                    manage AI providers and credentials               [aliases: auth]
   dev agent                        manage agents
-  dev upgrade                      show how to update DeV Code
+  dev upgrade [target]             update DeV Code to the latest release
   dev uninstall                    show how to remove DeV Code and its data
   dev serve                        starts a headless dev server
   dev web                          start dev server and open web interface
@@ -815,7 +818,7 @@ Commands:
   dev debug                        debugging and troubleshooting tools
   dev providers                    manage AI providers and credentials               [aliases: auth]
   dev agent                        manage agents
-  dev upgrade                      show how to update DeV Code
+  dev upgrade [target]             update DeV Code to the latest release
   dev uninstall                    show how to remove DeV Code and its data
   dev serve                        starts a headless dev server
   dev web                          start dev server and open web interface
@@ -878,7 +881,7 @@ Commands:
   dev debug                        debugging and troubleshooting tools
   dev providers                    manage AI providers and credentials               [aliases: auth]
   dev agent                        manage agents
-  dev upgrade                      show how to update DeV Code
+  dev upgrade [target]             update DeV Code to the latest release
   dev uninstall                    show how to remove DeV Code and its data
   dev serve                        starts a headless dev server
   dev web                          start dev server and open web interface

@@ -1,0 +1,55 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  release:
+    # One macOS runner cross-compiles every target (script/build.ts), and it is the only place
+    # the darwin binaries can be re-signed after embedding, which macOS requires.
+    runs-on: macos-latest
+    permissions:
+      contents: write
+      id-token: write # npm provenance
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Version from tag
+        run: echo "DEV_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      # linux x64/arm64 (glibc, musl, x64 baseline), darwin x64/arm64, windows x64/arm64.
+      - name: Build
+        run: bun run script/build.ts
+        working-directory: packages/devcode
+
+      - name: Archives, SHA256SUMS, Homebrew formula, Scoop manifest
+        run: bun script/packaging.ts "$DEV_VERSION"
+
+      - name: GitHub Release
+        run: |
+          prerelease=""
+          case "$DEV_VERSION" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/release/* --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" --generate-notes --verify-tag $prerelease
+
+      # npm: one package per target ("devcode-linux-x64", ...) plus the "devcode" wrapper whose
+      # postinstall links the right binary. Skipped until the NPM_TOKEN secret exists. npm only
+      # signs provenance for public repositories, so this waits for the v1.0 public launch.
+      - name: npm publish
+        if: env.NPM_TOKEN != ''
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          bun script/publish.ts
+        working-directory: packages/devcode
