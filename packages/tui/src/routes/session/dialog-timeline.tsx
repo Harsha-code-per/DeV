@@ -43,5 +43,5 @@ export function DialogTimeline(props: {
     return result
   })
 
-  return <DialogSelect onMove={(option) => props.onMove(option.value)} title="Timeline" options={options()} />
+  return <DialogSelect onMove={(option) => props.onMove(option.value)} title="Timeline (select a message to rewind code and conversation, or fork)" options={options()} />
 }

@@ -473,11 +473,12 @@ export function Session() {
       },
     },
     {
-      title: "Jump to message",
+      title: "Rewind or jump to a message",
       value: "session.timeline",
       category: "Session",
       slash: {
         name: "timeline",
+        aliases: ["rewind", "checkpoint"],
       },
       run: () => {
         dialog.replace(() => (
@@ -548,7 +549,6 @@ export function Session() {
       category: "Session",
       slash: {
         name: "undo",
-        aliases: ["rewind"],
       },
       run: async () => {
         const status = sync.data.session_status?.[route.sessionID]
