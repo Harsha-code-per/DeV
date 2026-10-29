@@ -178,7 +178,8 @@ All surfaces share **one engine and one set of sessions**: start in the app, con
   - whisper.cpp and Piper load only on wake and unload after 60s idle;
   - dictation mode.
 - [ ] Computer use: screenshot and input on Wayland/X11, macOS and Windows.
-- [ ] Scheduler for repetitive tasks; live web data; notifications.
+- [x] Scheduler: `schedules` in the global dev.json (5-field cron, prompt, project folder, optional model/agent) runs prompts in new sessions while `dev serve` or the TUI is running; a lock per run prevents duplicates. Verified with `dev serve`.
+- [ ] Scheduler follow-ups: run it in the desktop app (call `Scheduler.start` from the embedded server, exported in `node.ts`), notifications when a scheduled run finishes, a `/schedule` command to add one, live web data.
 - [ ] Machine and system control (files, packages, services) through a privileged helper that asks for approval on every privileged action.
 
 ## M5 — DeV for Chrome
@@ -220,7 +221,7 @@ Review OpenCode's releases regularly (`gh release list -R anomalyco/opencode`). 
 - [x] Ported #59649 (v2.2.1): a 429 that sounds like an overflow (Cerebras) is a rate limit, not a context overflow.
 - [x] Built our own `/goal <objective>` (their 2.2.1 idea): keeps working until the goal is verified, with pause/resume/clear and a status row.
 - Not applicable: #59934 and #59441 change OpenCode 2's rewritten session runner, which DeV doesn't use.
-- [ ] Consider: scheduled prompts (`/schedule`), for the M4 scheduler.
+- [x] Scheduled prompts: built as DeV's own scheduler (see M4).
 - [ ] Consider: plugin-managed session instructions that don't bust the prompt cache (2.2.0), and per-model prompt-cache TTLs.
 - [ ] Consider: an opt-in `image_generate` tool.
 - [x] `/goal` reviews with an independent reviewer: when the agent claims GOAL MET, a child session (general agent, edits denied) checks the project with real evidence and its VERDICT decides; NOT MET findings become the next instruction. Verified end to end.

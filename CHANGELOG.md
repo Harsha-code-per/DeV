@@ -23,6 +23,7 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 - Slash commands with Claude Code's names, including `/permissions`, `/cost`, `/config`, `/bug` and `/rewind`.
 - `dev -p` for headless runs with JSON output, and a GitHub Action.
 - Background subagents, output styles, a custom status line, and a plan, do, verify loop for every model.
+- Scheduled prompts: `schedules` in dev.json runs prompts on a cron schedule while DeV is running.
 - Fewer silent stops: a reply that only announces its next step, or is empty, gets a "go ahead".
 - Code mode and on-demand MCP servers keep requests near 20K tokens; a catalog of skills, plugins and MCP servers (`/plugins`), with superpowers and ponytail built in.
 

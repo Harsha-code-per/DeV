@@ -127,6 +127,23 @@ export const Info = Schema.Struct({
     description: "Additional instruction files or patterns to include",
   }),
   sandbox: Schema.optional(ConfigSandboxV1.Info),
+  schedules: Schema.optional(
+    Schema.mutable(
+      Schema.Array(
+        Schema.Struct({
+          name: Schema.String,
+          cron: Schema.String.annotate({ description: "5-field cron: minute hour day-of-month month day-of-week" }),
+          prompt: Schema.String,
+          directory: Schema.String.annotate({ description: "Project folder the prompt runs in" }),
+          model: Schema.optional(Schema.String).annotate({ description: "provider/model, default the usual model" }),
+          agent: Schema.optional(Schema.String),
+          enabled: Schema.optional(Schema.Boolean),
+        }),
+      ),
+    ),
+  ).annotate({
+    description: "Prompts DeV runs on a schedule in a new session while it is running (set in the global dev.json)",
+  }),
   output_style: Schema.optional(Schema.String).annotate({
     description:
       "How the agent writes and explains: default, explanatory, learning, concise, or a custom style in output-styles/<name>.md",

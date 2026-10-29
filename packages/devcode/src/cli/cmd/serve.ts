@@ -21,6 +21,8 @@ export const ServeCommand = effectCmd({
       console.log(`Password: ${password}  (generated; set DEV_SERVER_PASSWORD to choose your own)`)
     }
     console.log(`DeV Code server listening on http://${server.hostname}:${server.port}`)
+    const { Scheduler } = yield* Effect.promise(() => import("../../scheduler"))
+    Scheduler.start(Server.Default().app.fetch)
 
     yield* Effect.never
   }),

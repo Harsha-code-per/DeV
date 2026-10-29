@@ -27,6 +27,11 @@ GlobalBus.on("event", (event) => {
 
 let server: Awaited<ReturnType<typeof Server.listen>> | undefined
 
+// Scheduled prompts run while the TUI is open (a lock keeps another running DeV from doubling them).
+void import("@/scheduler").then(({ Scheduler }) =>
+  Scheduler.start((request) => Server.Default().app.fetch(request)),
+)
+
 export const rpc = {
   async fetch(input: { url: string; method: string; headers: Record<string, string>; body?: string }) {
     const headers = { ...input.headers }
