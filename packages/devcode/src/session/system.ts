@@ -84,6 +84,8 @@ const layer = Layer.effect(
             `  Today's date: ${new Date().toDateString()}`,
             `</env>`,
             Untrusted.NOTICE,
+            // DeV: weak and free models often stop early or claim success; this holds every model to the same loop.
+            "Work in a plan, do, verify loop: before saying a task is done, run the project's existing tests, typecheck or build for what you changed, and report the real results. If something failed or you could not verify it, say so.",
           ].join("\n"),
           references.length === 0
             ? undefined
