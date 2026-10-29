@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
-// DeV rebrand: rewrites user-visible "OpenCode"/"opencode" text to DeV. Re-run after every
-// upstream merge and review the diff. `--check` lists what would change and exits 1 if anything
-// would, so CI can keep the branding from drifting.
+// DeV brand check: finds user-visible "OpenCode"/"opencode" text (help, messages, prompts, docs,
+// translations) and rewrites it to DeV. `--check` lists what would change and exits 1 if anything
+// would, so CI keeps the branding from drifting; without it, the files are fixed in place.
 //
-// Internal identifiers stay: import specifiers (@dev-ai/*), OPENCODE_* env reads, provider and
-// integration ids ("opencode"), and file-name literals in code (stock names are still read, see
-// packages/core/src/brand.ts). Only text a person reads is rewritten.
+// Internal identifiers stay: provider and integration ids ("opencode" is OpenCode Zen), the
+// opencode.json/.opencode compatibility names (packages/core/src/brand.ts) and OpenCode's own
+// product names. Only text a person reads is rewritten.
 
 import path from "path"
 
@@ -47,6 +47,8 @@ const code = (text: string) =>
           )
         : line,
     )
+    // JSX text between tags, e.g. <text>Tell OpenCode what to do</text>.
+    .map((line) => line.replace(/>([^<>{}()=;&|]*\bOpenCode\b(?!\.)[^<>{}()=;&|]*)</g, (_, inner) => `>${display(inner)}<`))
     .join("\n")
 
 const SCOPES = [

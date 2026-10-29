@@ -3,7 +3,7 @@ import { retry } from "@dev-ai/core/util/retry"
 import type { OpenCodeEvent, SessionApi, SessionMessageInfo } from "@dev-ai/client/promise"
 import type {
   Message,
-  OpencodeClient,
+  DevcodeClient,
   Part,
   PermissionRequest,
   QuestionRequest,
@@ -186,7 +186,7 @@ function reconcileFetched<T extends { id: string }>(
 type ServerSessionOptions = { retry?: typeof retry; protocol?: Promise<"v1" | "v2"> }
 
 export function createServerSession(
-  client: OpencodeClient,
+  client: DevcodeClient,
   sessionApiOrOptions?: SessionApi | ServerSessionOptions,
   messageApi?: MessageApi,
   currentOptions?: ServerSessionOptions,

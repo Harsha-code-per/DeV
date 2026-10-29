@@ -1,4 +1,4 @@
-export * as OpenCode from "./opencode"
+export * as DevCode from "./devcode"
 export * as Tool from "./tool"
 
 export { ClientError } from "@dev-ai/client/effect"
@@ -14,4 +14,4 @@ export {
   SessionInput,
   SessionMessage,
 } from "@dev-ai/client/effect"
-export type { OpenCodeEvent } from "@dev-ai/client/effect"
+export type { DevCodeEvent } from "@dev-ai/client/effect"

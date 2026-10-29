@@ -126,7 +126,7 @@ beforeAll(async () => {
   }))
 
   mock.module("@dev-ai/sdk/v2/client", () => ({
-    createOpencodeClient: (input: { directory: string }) => {
+    createDevcodeClient: (input: { directory: string }) => {
       createdClients.push(input.directory)
       return clientFor(input.directory)
     },

@@ -1,6 +1,6 @@
 import { base64Encode } from "@dev-ai/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockDevCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
 const directory = "C:/OpenCode/TodoDockNavigation"
@@ -29,7 +29,7 @@ test("animates todo lifecycle without replaying it across session tabs", async (
   const todos: Record<string, typeof activeTodos> = { [sourceID]: [], [otherID]: [] }
   const sessionStatus: Record<string, { type: "busy" | "idle" }> = {}
 
-  await mockOpenCodeServer(page, {
+  await mockDevCodeServer(page, {
     directory,
     project: {
       id: projectID,

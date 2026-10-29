@@ -1,6 +1,6 @@
 import type { ServerApi } from "./server"
 import type { ServerProtocol } from "./server-protocol"
-import type { AgentPartInput, FilePartInput, OpencodeClient, Session, TextPartInput } from "@dev-ai/sdk/v2/client"
+import type { AgentPartInput, FilePartInput, DevcodeClient, Session, TextPartInput } from "@dev-ai/sdk/v2/client"
 import type {
   Project,
   ProjectCurrent,
@@ -16,7 +16,7 @@ import type {
   SessionShellOutput,
 } from "@dev-ai/client/promise"
 
-type LegacyClient = OpencodeClient
+type LegacyClient = DevcodeClient
 type LegacyFor = (directory?: string) => LegacyClient
 type CompatibleSessionApi = Omit<
   SessionApi,

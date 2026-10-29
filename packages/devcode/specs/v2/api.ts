@@ -1,9 +1,9 @@
 // @ts-nocheck
 
-import { OpenCode } from "@dev-ai/core"
+import { DevCode } from "@dev-ai/core"
 import { ReadTool } from "@dev-ai/core/tools"
 
-const opencode = OpenCode.make({})
+const opencode = DevCode.make({})
 
 opencode.tool.add(ReadTool)
 

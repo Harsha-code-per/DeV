@@ -52,9 +52,11 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] `packages/opencode` → `packages/devcode`. The binary installs as `devcode` with `dev` as an alias.
 - [x] Internal `OPENCODE_*` → `DEV_*` (Zen keeps its own `OPENCODE_API_KEY`); alias loop removed.
 - [x] Remove stock mode; tests and snapshots are DeV-native. Only `DEV_DISABLE_BUNDLED_DEFAULTS` remains, which skips the bundled plugins, MCP servers, local-model detection and auto/free default (used by tests).
-- [ ] Rename identifiers: `OpenCode` → `DevCode` (SDK client and namespaces), the TUI theme name, app IDs.
-- [ ] `script/brand-check.ts` in CI. "opencode" may appear only in an allowlist: LICENSE/NOTICE, credits, and the OpenCode Zen provider id and its labels.
-- [ ] OpenCode Zen is listed honestly in `/connect` as "OpenCode Zen (free models with your Zen key)", with its data-use notes.
+- [x] Rename identifiers: `OpenCode` → `DevCode` namespaces, `createOpencodeClient`/`OpencodeClient` → `createDevcodeClient`/`DevcodeClient`, `OpenCodeEvent` → `DevCodeEvent`, `OpenCodeHttpApi` → `DevCodeHttpApi`; generators updated (`httpapi-codegen`, legacy SDK `instance`).
+- [ ] Move `packages/app` and `packages/session-ui` off the vendored OpenCode 1.17.13 client (`app/vendor/opencode-ai-client-*.tgz`) onto `@dev-ai/client`; the APIs have drifted (~290 type errors when switched), so this is real migration work. Until then those two packages use the vendored `OpenCode` names.
+- [ ] Rename remaining internal names in the web/desktop apps: i18n keys (`provider.connect.opencodeZen.*`, `wsl.onboarding.*Opencode*`), the desktop WSL "install opencode" flow, the `x-opencode-directory` client↔server header, and the TUI theme and app IDs. Do this with the M4 desktop and M2 UI work.
+- [x] `script/brand-check.ts`: finds user-visible OpenCode text (quoted sentences, JSX text, prompts, docs, translations); `--check` fails when anything would change. The help-snapshot test asserts no command's help mentions opencode. (Wired into CI with M0.5.)
+- [x] OpenCode Zen is listed honestly in `/connect` as "OpenCode Zen (free models with your Zen key)", with what it is, how to get a key, and its data-use note.
 
 ### M0.3 Security baseline (Claude Code-grade)
 

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockDevCodeServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
 const draftID = "draft_new_session_panel_corner"
@@ -12,7 +12,7 @@ test.use({
 })
 
 test("matches the rounded panel corners to the dark new-session background", async ({ page }, testInfo) => {
-  await mockOpenCodeServer(page, {
+  await mockDevCodeServer(page, {
     directory,
     project: {
       id: "proj_new_session_panel_corner",

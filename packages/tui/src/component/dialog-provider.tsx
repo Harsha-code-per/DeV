@@ -58,6 +58,7 @@ export function providerOptions(list: { id: string; name: string }[]): ProviderO
         description: FREE_TIER.includes(provider.id)
           ? "(free tier)"
           : {
+              opencode: "(free models with your Zen key)",
               anthropic: "(API key)",
               openai: "(ChatGPT Plus/Pro or API key)",
             }[provider.id],
@@ -368,11 +369,12 @@ function ApiMethod(props: ApiMethodProps) {
           opencode: (
             <box gap={1}>
               <text fg={theme.textMuted}>
-                OpenCode Zen gives you access to all the best coding models at the cheapest prices with a single API
-                key.
+                OpenCode Zen is OpenCode's model service. With your own Zen key, its free models cost nothing. They are
+                offered for a limited time, and some collect usage data to improve the model.
               </text>
               <text fg={theme.text}>
-                Go to <span style={{ fg: theme.primary }}>https://opencode.ai/zen</span> to get a key
+                Get a key at <span style={{ fg: theme.primary }}>https://opencode.ai/zen</span> (sign in and add billing
+                details)
               </text>
             </box>
           ),

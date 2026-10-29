@@ -1,6 +1,6 @@
 import { base64Encode } from "@dev-ai/core/util/encode"
 import type { Page } from "@playwright/test"
-import { mockOpenCodeServer } from "../../utils/mock-server"
+import { mockDevCodeServer } from "../../utils/mock-server"
 import { expectAppVisible, expectSessionTitle } from "../../utils/waits"
 import { expect } from "../benchmark"
 
@@ -108,7 +108,7 @@ export async function setupTimelineBenchmark(
   const currentUserMessage = options.turnDiffs
     ? { ...userMessage, info: { ...userMessage.info, summary: { diffs: options.turnDiffs } } }
     : userMessage
-  await mockOpenCodeServer(page, {
+  await mockDevCodeServer(page, {
     directory,
     project: project(),
     provider: provider(),

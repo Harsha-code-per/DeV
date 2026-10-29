@@ -18,9 +18,9 @@ export const GenerateCommand = {
           {
             lang: "js",
             source: [
-              `import { createOpencodeClient } from "@dev-ai/sdk`,
+              `import { createDevcodeClient } from "@dev-ai/sdk`,
               ``,
-              `const client = createOpencodeClient()`,
+              `const client = createDevcodeClient()`,
               `await client.${operation.operationId}({`,
               `  ...`,
               `})`,
