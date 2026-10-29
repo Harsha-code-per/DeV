@@ -98,11 +98,10 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 
 ### Claude Code parity: modes and behaviour
 
-- [ ] **Permission modes**, cycled with Shift+Tab:
-  - default (ask);
-  - accept edits;
-  - plan mode (read-only research, then a plan to approve);
-  - auto/bypass (opt-in, with a clear warning).
+- [x] **Permission modes**, cycled with Shift+Tab: default (ask) → accept edits → plan → auto (approve everything not denied).
+  - Auto joins the cycle only after `--auto`/`--yolo`/`--dangerously-skip-permissions`/`--permission-mode auto` or an opt-in from the command palette (with a warning), like Claude Code's bypass mode.
+  - `--permission-mode default|accept-edits|auto` for `dev` and `dev run`; the prompt shows the active mode.
+  - Becomes meaningful with the M0.3 safe defaults (today most actions are allowed without asking).
 - [ ] **Project memory:** `DEV.md` (like `CLAUDE.md`), loaded hierarchically (user, project, folder). `#` adds a note to memory; `/memory` edits it.
 - [ ] **Slash commands with Claude Code's behaviour:** `/init`, `/review`, `/compact`, `/clear`, `/cost`, `/model`, `/permissions`, `/mcp`, `/plugins`, `/resume`, `/rewind`, `/status`, `/config`, `/doctor`, `/bug`.
 - [ ] **Hooks** configured by the user (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SessionStart) as shell commands in settings.

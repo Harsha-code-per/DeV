@@ -144,6 +144,11 @@ export const TuiThreadCommand = cmd({
         type: "string",
         describe: "agent to use",
       })
+      .option("permission-mode", {
+        type: "string",
+        choices: ["default", "accept-edits", "auto"],
+        describe: "default asks, accept-edits approves file edits, auto approves everything not denied",
+      })
       .option("auto", {
         type: "boolean",
         describe: "auto-approve permissions that are not explicitly denied (dangerous!)",
@@ -329,7 +334,8 @@ export const TuiThreadCommand = cmd({
               model: args.model,
               prompt,
               fork: args.fork,
-              auto: args.auto || args.yolo || args["dangerously-skip-permissions"],
+              auto: args.auto || args.yolo || args["dangerously-skip-permissions"] || args["permission-mode"] === "auto",
+              acceptEdits: args["permission-mode"] === "accept-edits",
             },
           }),
         )

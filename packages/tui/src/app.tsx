@@ -113,6 +113,7 @@ const appBindingCommands = [
   "mcp.list",
   "agent.cycle",
   "agent.cycle.reverse",
+  "permission.mode.cycle",
   "variant.cycle",
   "variant.list",
   "provider.connect",
@@ -950,6 +951,48 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         run: () => {
           local.permission.toggle()
           dialog.clear()
+          if (local.permission.mode === "auto")
+            toast.show({
+              variant: "warning",
+              message: "Auto mode: DeV approves every action that isn't explicitly denied. Shift+Tab to leave it.",
+              duration: 5000,
+            })
+        },
+      },
+      {
+        name: "permission.mode.cycle",
+        title: "Cycle mode (default, accept edits, plan, auto)",
+        category: "Agent",
+        hidden: true,
+        run: () => {
+          const hasPlan = local.agent.list().some((agent) => agent.name === "plan")
+          const order: Array<"normal" | "edits" | "plan" | "auto"> = [
+            "normal",
+            "edits",
+            ...(hasPlan ? (["plan"] as const) : []),
+            ...(local.permission.autoUnlocked ? (["auto"] as const) : []),
+          ]
+          const current = local.agent.current()?.name === "plan" ? "plan" : local.permission.mode
+          const next = order[(order.indexOf(current) + 1) % order.length]
+          if (next === "plan") {
+            local.permission.setPlanFrom(local.agent.current()?.name)
+            local.permission.set("normal")
+            local.agent.set("plan")
+          }
+          if (next !== "plan") {
+            if (current === "plan") local.agent.set(local.permission.planFrom ?? "build")
+            local.permission.set(next)
+          }
+          toast.show({
+            variant: next === "auto" ? "warning" : "info",
+            message: {
+              normal: "Default mode: DeV asks before acting.",
+              edits: "Accept edits: file edits are approved automatically; other actions still ask.",
+              plan: "Plan mode: DeV researches read-only and proposes a plan before changing anything.",
+              auto: "Auto mode: DeV approves every action that isn't explicitly denied.",
+            }[next],
+            duration: 3000,
+          })
         },
       },
     ].map((command) => ({

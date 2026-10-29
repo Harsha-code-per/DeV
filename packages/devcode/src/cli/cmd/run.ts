@@ -240,6 +240,11 @@ export const RunCommand = effectCmd({
         describe: "run in direct interactive split-footer mode",
         default: false,
       })
+      .option("permission-mode", {
+        type: "string",
+        choices: ["default", "accept-edits", "auto"],
+        describe: "default asks, accept-edits approves file edits, auto approves everything not denied",
+      })
       .option("auto", {
         type: "boolean",
         describe: "auto-approve permissions that are not explicitly denied (dangerous!)",
@@ -272,7 +277,8 @@ export const RunCommand = effectCmd({
     yield* Effect.promise(async () => {
       const rawMessage = [...args.message, ...(args["--"] || [])].join(" ")
       const interactive = args.mini
-      const auto = args.auto || args.yolo || args["dangerously-skip-permissions"]
+      const auto = args.auto || args.yolo || args["dangerously-skip-permissions"] || args["permission-mode"] === "auto"
+      const acceptEdits = args["permission-mode"] === "accept-edits"
       const thinking = interactive ? (args.thinking ?? true) : (args.thinking ?? false)
       const die = (message: string): never => {
         UI.error(message)
@@ -797,7 +803,7 @@ export const RunCommand = effectCmd({
               const permission = event.properties
               if (!sessions.has(permission.sessionID)) continue
 
-              if (auto) {
+              if (auto || (acceptEdits && permission.permission === "edit")) {
                 await client.permission.reply({
                   requestID: permission.id,
                   reply: "once",
@@ -1002,6 +1008,8 @@ export async function runMini(input: MiniCommandInput) {
     replay: input.replay ?? true,
     "replay-limit": input.replayLimit,
     replayLimit: input.replayLimit,
+    "permission-mode": undefined,
+    permissionMode: undefined,
     auto: false,
     yolo: false,
     "dangerously-skip-permissions": false,
