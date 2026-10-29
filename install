@@ -64,8 +64,9 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 echo "Downloading $asset ($version)"
-fetch "$base/SHA256SUMS" "$tmp/SHA256SUMS" && fetch "$base/$asset" "$tmp/$asset" ||
+if ! { fetch "$base/SHA256SUMS" "$tmp/SHA256SUMS" && fetch "$base/$asset" "$tmp/$asset"; }; then
   fail "download from $base failed. The release may not exist, or the repository is still private (until v1.0)."
+fi
 
 expected=$(awk -v file="$asset" '$2 == file || $2 == "*" file { print $1 }' "$tmp/SHA256SUMS")
 [ -n "$expected" ] || fail "SHA256SUMS has no entry for $asset"

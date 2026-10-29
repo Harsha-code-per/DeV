@@ -48,3 +48,35 @@ test("PostToolUse exit 2 reports stderr to the agent; UserPromptSubmit stdout ad
   await plugin["chat.message"]!({ sessionID: "s1" }, { message: { id: "m1", sessionID: "s1" }, parts } as never)
   expect(parts.at(-1)).toMatchObject({ type: "text", synthetic: true, text: "branch: main" })
 })
+
+test("Stop exit 2 keeps the main session working, a limited number of times", async () => {
+  await using dir = await tmpdir()
+  const plugin = await load(dir.path, {
+    Stop: [{ hooks: [{ type: "command", command: "echo 'run the tests first' >&2; exit 2" }] }],
+  })
+  const stop = async (parentID?: string) => {
+    const output: { continue?: string } = {}
+    await plugin["experimental.session.stop"]!({ sessionID: "s1", parentID }, output)
+    return output.continue
+  }
+  expect(await stop("parent")).toBeUndefined()
+  expect(await stop()).toBe("Stop hook: run the tests first")
+  expect(await stop()).toBe("Stop hook: run the tests first")
+  expect(await stop()).toBe("Stop hook: run the tests first")
+  // After three continuations in a row DeV stops anyway, so a hook can't loop forever.
+  expect(await stop()).toBeUndefined()
+})
+
+test("SessionStart stdout is added to the session's first prompt", async () => {
+  await using dir = await tmpdir()
+  const plugin = await load(dir.path, {
+    SessionStart: [{ hooks: [{ type: "command", command: "echo 'on branch main'" }] }],
+  })
+  void plugin.event!({ event: { type: "session.created", properties: { info: { id: "s1" } } } } as never)
+  const first: { type: string; text?: string }[] = [{ type: "text", text: "hi" }]
+  await plugin["chat.message"]!({ sessionID: "s1" }, { message: { id: "m1", sessionID: "s1" }, parts: first } as never)
+  expect(first.at(-1)).toMatchObject({ synthetic: true, text: "on branch main" })
+  const second: { type: string; text?: string }[] = [{ type: "text", text: "again" }]
+  await plugin["chat.message"]!({ sessionID: "s1" }, { message: { id: "m2", sessionID: "s1" }, parts: second } as never)
+  expect(second).toHaveLength(1)
+})

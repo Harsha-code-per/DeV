@@ -324,6 +324,14 @@ export interface Hooks {
     },
     output: { enabled: boolean },
   ) => Promise<void>
+  /**
+   * Called when the agent is about to stop because it has no more tool calls. Setting
+   * `output.continue` keeps it working, with that text as its next (synthetic) user message.
+   */
+  "experimental.session.stop"?: (
+    input: { sessionID: string; parentID?: string },
+    output: { continue?: string },
+  ) => Promise<void>
   "experimental.text.complete"?: (
     input: { sessionID: string; messageID: string; partID: string },
     output: { text: string },

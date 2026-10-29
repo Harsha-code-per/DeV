@@ -14,7 +14,7 @@ import { Cause, Effect, Exit, Layer, Schema } from "effect"
 
 // Results that went through MCP calls come back wrapped as untrusted content.
 const body = (result: { output: string }) =>
-  result.output.replace(/^<untrusted_content source="[^"]*">\n/, "").replace(/\n<\/untrusted_content>$/, "")
+  result.output.replace(/^<untrusted_content source="[^"]*">\n/, "").replace("\n</untrusted_content>", "")
 
 const ctx: Tool.Context = {
   sessionID: SessionID.make("ses_code-mode"),

@@ -1125,8 +1125,34 @@ const layer = Layer.effect(
                 callID: orphan.callID,
               })
             }
-            yield* Effect.logInfo("exiting loop", { "session.id": sessionID })
-            break
+            // A plugin (such as a Stop hook) can keep the agent working with a follow-up instruction.
+            const stop = yield* plugin.trigger(
+              "experimental.session.stop",
+              { sessionID, parentID: session.parentID },
+              { continue: undefined as string | undefined },
+            )
+            if (!stop.continue) {
+              yield* Effect.logInfo("exiting loop", { "session.id": sessionID })
+              break
+            }
+            const followUp = yield* sessions.updateMessage({
+              id: MessageID.ascending(),
+              role: "user",
+              sessionID,
+              time: { created: Date.now() },
+              agent: lastUser.agent,
+              model: lastUser.model,
+            })
+            yield* sessions.updatePart({
+              id: PartID.ascending(),
+              messageID: followUp.id,
+              sessionID,
+              type: "text",
+              synthetic: true,
+              text: stop.continue,
+              time: { start: Date.now(), end: Date.now() },
+            })
+            continue
           }
 
           step++

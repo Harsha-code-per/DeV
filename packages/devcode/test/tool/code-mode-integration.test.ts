@@ -19,6 +19,10 @@ import {
 } from "@modelcontextprotocol/sdk/types.js"
 import { Cause, Effect, Exit, Layer } from "effect"
 
+// Results that went through MCP calls come back wrapped as untrusted content.
+const body = (result: { output: string }) =>
+  result.output.replace(/^<untrusted_content source="[^"]*">\n/, "").replace("\n</untrusted_content>", "")
+
 const PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
 
 const SERVER = "fixtures"
@@ -191,7 +195,7 @@ describe("code mode integration (real MCP server)", () => {
 
   test("calls a text tool and receives its text as the native result", async () => {
     const out = await run("const r = await tools.fixtures.get_text({ name: 'world' }); return r")
-    expect(out.output).toBe("hello world")
+    expect(body(out)).toBe("hello world")
     expect(out.metadata.toolCalls).toEqual([
       { tool: "fixtures.get_text", status: "completed", input: { name: "world" } },
     ])
@@ -200,7 +204,7 @@ describe("code mode integration (real MCP server)", () => {
 
   test("exposes structured data natively from a tool with an outputSchema", async () => {
     const out = await run("const r = await tools.fixtures.add({ a: 2, b: 3 }); return r.sum")
-    expect(out.output).toBe("5")
+    expect(body(out)).toBe("5")
   })
 
   test("composes multiple structured calls and returns a plain object", async () => {
@@ -209,7 +213,7 @@ describe("code mode integration (real MCP server)", () => {
       const second = await tools.fixtures.add({ a: first.sum, b: 10 })
       return { total: second.sum }
     `)
-    expect(JSON.parse(out.output)).toEqual({ total: 13 })
+    expect(JSON.parse(body(out))).toEqual({ total: 13 })
     expect(out.metadata.toolCalls).toEqual([
       { tool: "fixtures.add", status: "completed", input: { a: 1, b: 2 } },
       { tool: "fixtures.add", status: "completed", input: { a: 3, b: 10 } },
@@ -218,7 +222,7 @@ describe("code mode integration (real MCP server)", () => {
 
   test("an image result becomes an execute attachment and a marker in the sandbox", async () => {
     const out = await run("return await tools.fixtures.screenshot({})")
-    expect(out.output).toBe("[1 image attached to the result]")
+    expect(body(out)).toBe("[1 image attached to the result]")
     expect(out.attachments).toEqual([{ type: "file", mime: "image/png", url: `data:image/png;base64,${PNG}` }])
   })
 
@@ -227,17 +231,17 @@ describe("code mode integration (real MCP server)", () => {
       const shot = await tools.fixtures.screenshot({})
       return { sawMarker: typeof shot === 'string' && shot.includes('attached'), value: shot }
     `)
-    expect(JSON.parse(out.output)).toEqual({
+    expect(JSON.parse(body(out))).toEqual({
       sawMarker: true,
       value: "[1 image attached to the result]",
     })
-    expect(out.output).not.toContain(PNG)
+    expect(body(out)).not.toContain(PNG)
     expect(out.attachments).toHaveLength(1)
   })
 
   test("attachments accumulate even when the program returns something else", async () => {
     const out = await run("await tools.fixtures.screenshot({}); return 'captured'")
-    expect(out.output).toBe("captured")
+    expect(body(out)).toBe("captured")
     expect(out.attachments).toHaveLength(1)
   })
 
@@ -246,14 +250,14 @@ describe("code mode integration (real MCP server)", () => {
       const both = await Promise.all([tools.fixtures.screenshot({}), tools.fixtures.screenshot({})])
       return 'two shots: ' + both.length
     `)
-    expect(out.output).toBe("two shots: 2")
+    expect(body(out)).toBe("two shots: 2")
     expect(out.attachments).toHaveLength(2)
     expect(out.metadata.toolCalls.map((c) => c.tool)).toEqual(["fixtures.screenshot", "fixtures.screenshot"])
   })
 
   test("propagates an MCP isError into the program as a catchable error", async () => {
     const out = await run("try { await tools.fixtures.boom({}) } catch (e) { return 'caught: ' + e.message }")
-    expect(out.output).toBe("caught: kaboom")
+    expect(body(out)).toBe("caught: kaboom")
   })
 
   test("an uncaught MCP error surfaces as a failed execution", async () => {
@@ -268,7 +272,7 @@ describe("code mode integration (real MCP server)", () => {
       console.warn("got", r)
       return r
     `)
-    expect(out.output).toBe('hello world\n\nLogs:\nlooking up {"name":"world"}\n[warn] got hello world')
+    expect(body(out)).toBe('hello world\n\nLogs:\nlooking up {"name":"world"}\n[warn] got hello world')
     expect(out.metadata.error).toBeUndefined()
   })
 
@@ -284,13 +288,13 @@ describe("code mode integration (real MCP server)", () => {
 
   test("a program that logs nothing gets no Logs section", async () => {
     const out = await run("return 'quiet'")
-    expect(out.output).toBe("quiet")
-    expect(out.output).not.toContain("Logs:")
+    expect(body(out)).toBe("quiet")
+    expect(body(out)).not.toContain("Logs:")
   })
 
   test("console does not consume the tool-call metadata (logging is not a tool call)", async () => {
     const out = await run("console.log('hi'); console.error('bye'); return 'ok'")
-    expect(out.output).toBe("ok\n\nLogs:\nhi\n[error] bye")
+    expect(body(out)).toBe("ok\n\nLogs:\nhi\n[error] bye")
     expect(out.metadata.toolCalls).toEqual([])
   })
 
