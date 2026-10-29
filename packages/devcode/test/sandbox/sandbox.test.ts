@@ -40,3 +40,18 @@ describe.skipIf(!available)("shell sandbox", () => {
     expect(result.out).not.toContain("secret")
   })
 })
+
+test("dev.json sandbox settings add hosts and paths and unhide chosen credentials", () => {
+  const settings = {
+    network: { allow: ["npm.mycompany.com"] },
+    filesystem: { allowWrite: ["~/shared"], allowRead: ["~/.npmrc"] },
+  }
+  const defaults = Sandbox.config(["/work/app"])
+  const custom = Sandbox.config(["/work/app"], settings)
+  expect(defaults.filesystem.denyRead).toContain(path.join(os.homedir(), ".npmrc"))
+  expect(custom.filesystem.denyRead).not.toContain(path.join(os.homedir(), ".npmrc"))
+  expect(custom.filesystem.denyRead).toContain(path.join(os.homedir(), ".ssh"))
+  expect(custom.network.allowedDomains).toContain("npm.mycompany.com")
+  expect(custom.network.allowedDomains).toContain("registry.npmjs.org")
+  expect(custom.filesystem.allowWrite).toContain(path.join(os.homedir(), "shared"))
+})

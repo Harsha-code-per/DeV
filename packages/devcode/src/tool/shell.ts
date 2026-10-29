@@ -645,7 +645,7 @@ export const ShellTool = Tool.define(
                   const wrapped =
                     ps || params.dangerouslyDisableSandbox
                       ? undefined
-                      : yield* Effect.promise(() => Sandbox.wrap(params.command, [root, ...scan.dirs], shell))
+                      : yield* Effect.promise(() => Sandbox.wrap(params.command, [root, ...scan.dirs], shell, cfg.sandbox))
                   const escape = params.dangerouslyDisableSandbox && Sandbox.supported() && !ps
                   if (escape) scan.patterns.add(params.command)
                   yield* ask(ctx, scan, params, wrapped ? "confined" : escape ? "escape" : undefined)

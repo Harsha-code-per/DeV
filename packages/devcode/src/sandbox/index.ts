@@ -3,6 +3,7 @@ import path from "path"
 import { Flag } from "@dev-ai/core/flag/flag"
 import { Global } from "@dev-ai/core/global"
 import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime"
+import type { ConfigSandboxV1 } from "@dev-ai/core/v1/config/sandbox"
 
 // DeV runs every shell command inside Anthropic's sandbox-runtime (Apache-2.0), the OS-level sandbox
 // Claude Code uses: bubblewrap on Linux, Seatbelt on macOS. A command can write only to the project,
@@ -61,13 +62,24 @@ export function supported() {
   return !Flag.DEV_DISABLE_SANDBOX && (process.platform === "linux" || process.platform === "darwin")
 }
 
-/** Settings for one command; `writable` is the project plus any outside directory approved for it. */
-export function config(writable: string[]): SandboxRuntimeConfig {
+/**
+ * Settings for one command; `writable` is the project plus any outside directory approved for it, and
+ * `settings` is the user's `sandbox` section in dev.json (extra hosts and paths, credentials to unhide).
+ */
+export function config(writable: string[], settings?: ConfigSandboxV1.Info): SandboxRuntimeConfig {
+  const readable = new Set((settings?.filesystem?.allowRead ?? []).map(expand))
   return {
-    network: { allowedDomains: NETWORK, deniedDomains: [] },
+    network: { allowedDomains: [...NETWORK, ...(settings?.network?.allow ?? [])], deniedDomains: [] },
     filesystem: {
-      denyRead: SECRETS.map(expand),
-      allowWrite: [...writable, os.tmpdir(), "/tmp", Global.Path.tmp, ...CACHES.map(expand)],
+      denyRead: SECRETS.map(expand).filter((entry) => !readable.has(entry)),
+      allowWrite: [
+        ...writable,
+        os.tmpdir(),
+        "/tmp",
+        Global.Path.tmp,
+        ...CACHES.map(expand),
+        ...(settings?.filesystem?.allowWrite ?? []).map(expand),
+      ],
       denyWrite: writable.flatMap((dir) => [path.join(dir, ".env"), path.join(dir, ".git", "hooks")]),
     },
     seccomp,
@@ -80,10 +92,10 @@ let ready: Promise<boolean> | undefined
  * The command wrapped to run inside the sandbox, or undefined when it should run as is
  * (unsupported platform, disabled, or the sandbox failed to start).
  */
-export async function wrap(command: string, writable: string[], shell?: string) {
-  if (!supported()) return undefined
+export async function wrap(command: string, writable: string[], shell?: string, settings?: ConfigSandboxV1.Info) {
+  if (!supported() || settings?.enabled === false) return undefined
   const { SandboxManager } = await import("@anthropic-ai/sandbox-runtime")
-  ready ??= SandboxManager.initialize(config(writable)).then(
+  ready ??= SandboxManager.initialize(config(writable, settings)).then(
     () => true,
     (error: unknown) => {
       console.error(`DeV sandbox unavailable, shell commands run unsandboxed: ${String(error)}`)
@@ -91,7 +103,9 @@ export async function wrap(command: string, writable: string[], shell?: string) 
     },
   )
   if (!(await ready)) return undefined
-  return SandboxManager.wrapWithSandbox(command, shell, config(writable))
+  // The network proxy reads the allowlist from the manager's config, so keep it in step with dev.json.
+  SandboxManager.updateConfig(config(writable, settings))
+  return SandboxManager.wrapWithSandbox(command, shell, config(writable, settings))
 }
 
 function expand(entry: string) {

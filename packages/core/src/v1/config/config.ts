@@ -9,6 +9,7 @@ import { ConfigAttachmentV1 } from "./attachment"
 import { ConfigCommandV1 } from "./command"
 import { ConfigFormatterV1 } from "./formatter"
 import { ConfigHooksV1 } from "./hooks"
+import { ConfigSandboxV1 } from "./sandbox"
 import { ConfigLayoutV1 } from "./layout"
 import { ConfigLSPV1 } from "./lsp"
 import { ConfigMCPV1 } from "./mcp"
@@ -125,6 +126,7 @@ export const Info = Schema.Struct({
   instructions: Schema.optional(Schema.mutable(Schema.Array(Schema.String))).annotate({
     description: "Additional instruction files or patterns to include",
   }),
+  sandbox: Schema.optional(ConfigSandboxV1.Info),
   hooks: Schema.optional(ConfigHooksV1.Info).annotate({
     description:
       "Shell commands run on PreToolUse, PostToolUse, UserPromptSubmit, Stop and SessionStart. They get the event as JSON on stdin; exit code 2 blocks (PreToolUse, UserPromptSubmit) or reports stderr to the agent (PostToolUse).",
