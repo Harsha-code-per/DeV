@@ -172,7 +172,10 @@ export type ParsedAPICallError =
 export function parseAPICallError(input: { providerID: ProviderV2.ID; error: APICallError }): ParsedAPICallError {
   const m = message(input.providerID, input.error)
   const body = json(input.error.responseBody)
-  if (isContextOverflow(m) || input.error.statusCode === 413 || body?.error?.code === "context_length_exceeded") {
+  // A 429 is a throttle even when its wording sounds like an overflow, e.g. Cerebras's per-minute
+  // "too many tokens processed" (ported from OpenCode #59649).
+  const overflowText = input.error.statusCode !== 429 && isContextOverflow(m)
+  if (overflowText || input.error.statusCode === 413 || body?.error?.code === "context_length_exceeded") {
     return {
       type: "context_overflow",
       message: m,

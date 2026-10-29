@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { ProviderError } from "@/provider/error"
+import { APICallError } from "ai"
+import { ProviderV2 } from "@dev-ai/core/provider"
 
 describe("provider stream errors", () => {
   test("retries provider stream errors without a code", () => {
@@ -20,5 +22,27 @@ describe("provider stream errors", () => {
         isRetryable: true,
         responseBody: JSON.stringify({ type: "error", error: { message } }),
       })
+  })
+})
+
+describe("provider API errors", () => {
+  test("a 429 token throttle is a retryable rate limit, not a context overflow", () => {
+    const body =
+      '{"message":"Tokens per minute limit exceeded - too many tokens processed.","type":"too_many_tokens_error","code":"token_quota_exceeded"}'
+    const parse = (statusCode: number) =>
+      ProviderError.parseAPICallError({
+        providerID: ProviderV2.ID.make("cerebras"),
+        error: new APICallError({
+          message: "Tokens per minute limit exceeded - too many tokens processed.",
+          url: "https://api.cerebras.ai/v1/chat/completions",
+          requestBodyValues: {},
+          statusCode,
+          responseBody: body,
+          isRetryable: statusCode === 429,
+        }),
+      }).type
+    expect(parse(429)).toBe("api_error")
+    // The same wording on a 400 still means the request didn't fit.
+    expect(parse(400)).toBe("context_overflow")
   })
 })
