@@ -122,6 +122,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [ ] Output styles.
 - [ ] **Reliability:**
   - [x] a plan → do → verify loop (run tests and builds before saying "done"), asked of every model in the system prompt;
+  - [x] no silent stops: a fresh reply that only announces its next step, or is empty, gets a "go ahead" (at most twice per message). Took 3 of the 6 failed benchmark tasks to passing;
   - automatic retries;
   - long sessions that survive compaction;
   - never hangs (watchdogs on every external call).
