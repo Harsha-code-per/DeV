@@ -54,8 +54,7 @@ function View(props: { api: TuiPluginApi; sessionID: string }) {
               </text>
             </box>
             <text fg={theme().textMuted}>
-              DeV runs free: connect a free-tier provider (Groq, Gemini, OpenRouter…) or run a local model with
-              Ollama.
+              DeV runs free: connect a free-tier provider (Groq, Gemini, OpenRouter…) or run a local model with Ollama.
             </text>
             <text fg={theme().textMuted}>
               Connect from 75+ providers to use other models, including Claude, GPT, Gemini etc
@@ -72,7 +71,10 @@ function View(props: { api: TuiPluginApi; sessionID: string }) {
         <span style={{ fg: theme().text }}>{path().name}</span>
       </text>
       <text fg={theme().textMuted}>
-        <span style={{ fg: theme().success }}>•</span> <b>DeV</b>{" "}
+        <span style={{ fg: theme().primary }}>◆</span>{" "}
+        <span style={{ fg: theme().primary }}>
+          <b>DeV</b>
+        </span>{" "}
         <span style={{ fg: theme().text }}>
           <b>Code</b>
         </span>{" "}

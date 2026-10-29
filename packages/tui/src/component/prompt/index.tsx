@@ -1351,6 +1351,11 @@ export function Prompt(props: PromptProps) {
     animationsEnabled,
   )
   const borderHighlight = createMemo(() => tint(theme.border, highlight(), agentMetaAlpha()))
+  const frameColor = createMemo(() => {
+    if (leader()) return theme.border
+    if (store.mode === "shell") return theme.secondary
+    return theme.primary
+  })
 
   const placeholderText = createMemo(() => {
     if (props.showPlaceholder === false) return undefined
@@ -1392,24 +1397,9 @@ export function Prompt(props: PromptProps) {
   return (
     <>
       <box ref={(r: BoxRenderable) => (anchor = r)} visible={props.visible !== false} width="100%">
-        <box
-          width="100%"
-          border={["left"]}
-          borderColor={borderHighlight()}
-          customBorderChars={{
-            ...SplitBorder.customBorderChars,
-            bottomLeft: "╹",
-          }}
-        >
-          <box
-            paddingLeft={2}
-            paddingRight={2}
-            paddingTop={1}
-            flexShrink={0}
-            backgroundColor={theme.backgroundElement}
-            flexGrow={1}
-            width="100%"
-          >
+        {/* DeV: a rounded frame in the signature colour (OpenCode used a left bar and a shadow row). */}
+        <box width="100%" border borderStyle="rounded" borderColor={frameColor()}>
+          <box paddingLeft={1} paddingRight={1} flexShrink={0} flexGrow={1} width="100%">
             <textarea
               width="100%"
               placeholder={placeholderText()}
@@ -1480,7 +1470,7 @@ export function Prompt(props: PromptProps) {
                 }, 0)
               }}
               onMouseDown={(r: MouseEvent) => r.target?.focus()}
-              focusedBackgroundColor={theme.backgroundElement}
+              focusedBackgroundColor={theme.background}
               cursorColor={props.disabled ? theme.backgroundElement : theme.text}
               cursorStyle={tuiConfig.cursor}
               syntaxStyle={syntax()}
@@ -1530,32 +1520,6 @@ export function Prompt(props: PromptProps) {
               </Show>
             </box>
           </box>
-        </box>
-        <box
-          height={1}
-          border={["left"]}
-          borderColor={borderHighlight()}
-          customBorderChars={{
-            ...EmptyBorder,
-            vertical: theme.backgroundElement.a !== 0 ? "╹" : " ",
-          }}
-        >
-          <box
-            height={1}
-            border={["bottom"]}
-            borderColor={theme.backgroundElement}
-            customBorderChars={
-              theme.backgroundElement.a !== 0
-                ? {
-                    ...EmptyBorder,
-                    horizontal: "▀",
-                  }
-                : {
-                    ...EmptyBorder,
-                    horizontal: " ",
-                  }
-            }
-          />
         </box>
         <box width="100%" flexDirection="row" justifyContent="space-between">
           <Switch>
@@ -1724,6 +1688,12 @@ export function Prompt(props: PromptProps) {
                       )}
                     </Match>
                     <Match when={true}>
+                      <text fg={theme.text}>
+                        shift+tab <span style={{ fg: theme.textMuted }}>modes</span>
+                      </text>
+                      <text fg={theme.text}>
+                        # <span style={{ fg: theme.textMuted }}>remember</span>
+                      </text>
                       <text fg={theme.text}>
                         {agentShortcut()} <span style={{ fg: theme.textMuted }}>agents</span>
                       </text>

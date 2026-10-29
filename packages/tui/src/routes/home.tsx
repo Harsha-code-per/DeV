@@ -87,6 +87,7 @@ export function Home() {
           </pluginRuntime.Slot>
         </box>
         <box height={1} minHeight={0} flexShrink={1} />
+        <Greeting />
         <UpdateNotification width={logoWidth()} />
         <box width="100%" maxWidth={promptMaxWidth()} zIndex={1000} paddingTop={1} flexShrink={0}>
           <pluginRuntime.Slot name="home_prompt" mode="replace" ref={bind}>
@@ -101,6 +102,20 @@ export function Home() {
         <pluginRuntime.Slot name="home_footer" mode="single_winner" />
       </box>
     </HomeSessionDestinationProvider>
+  )
+}
+
+// DeV greets you like an assistant would, by the time of day.
+function Greeting() {
+  const { theme } = useTheme()
+  const hour = new Date().getHours()
+  const part = hour < 5 ? "Working late" : hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"
+  return (
+    <box flexShrink={0} paddingTop={1}>
+      <text fg={theme.textMuted}>
+        {part}. <span style={{ fg: theme.text }}>What are we building?</span>
+      </text>
+    </box>
   )
 }
 

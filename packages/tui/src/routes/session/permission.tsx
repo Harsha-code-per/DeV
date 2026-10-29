@@ -2,7 +2,7 @@ import { createStore } from "solid-js/store"
 import { dirname } from "node:path"
 import { createMemo, For, Match, Show, Switch } from "solid-js"
 import { Portal, useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
-import type { TextareaRenderable } from "@opentui/core"
+import { TextAttributes, type TextareaRenderable } from "@opentui/core"
 import { useTheme, selectedForeground } from "../../context/theme"
 import type { PermissionRequest } from "@dev-ai/sdk/v2"
 import { useSDK } from "../../context/sdk"
@@ -401,8 +401,10 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
           const header = () => (
             <box flexDirection="column" gap={0}>
               <box flexDirection="row" gap={1} flexShrink={0}>
-                <text fg={theme.warning}>{"△"}</text>
-                <text fg={theme.text}>Permission required</text>
+                <text fg={theme.primary}>{"◆"}</text>
+                <text fg={theme.text} attributes={TextAttributes.BOLD}>
+                  Permission required
+                </text>
               </box>
               <box flexDirection="row" gap={1} paddingLeft={2} flexShrink={0}>
                 <text fg={theme.textMuted} flexShrink={0}>
@@ -509,7 +511,6 @@ function RejectPrompt(props: { onConfirm: (message: string) => void; onCancel: (
         paddingLeft={2}
         paddingRight={3}
         paddingBottom={1}
-        backgroundColor={theme.backgroundElement}
         justifyContent={narrow() ? "flex-start" : "space-between"}
         alignItems={narrow() ? "flex-start" : "center"}
         gap={1}
@@ -646,11 +647,11 @@ function Prompt<const T extends Record<string, string>>(props: {
   useRenderer()
 
   const content = () => (
+    // DeV: a rounded saffron frame, matching the prompt (OpenCode used an orange bar on a panel).
     <box
-      backgroundColor={theme.backgroundPanel}
-      border={["left"]}
-      borderColor={theme.warning}
-      customBorderChars={SplitBorder.customBorderChars}
+      border
+      borderStyle="rounded"
+      borderColor={theme.primary}
       {...(store.expanded
         ? { top: dimensions().height * -1 + 1, bottom: 1, left: 2, right: 2, position: "absolute" }
         : {
@@ -667,8 +668,10 @@ function Prompt<const T extends Record<string, string>>(props: {
           when={props.header}
           fallback={
             <box flexDirection="row" gap={1} paddingLeft={1} flexShrink={0}>
-              <text fg={theme.warning}>{"△"}</text>
-              <text fg={theme.text}>{props.title}</text>
+              <text fg={theme.primary}>{"◆"}</text>
+              <text fg={theme.text} attributes={TextAttributes.BOLD}>
+                {props.title}
+              </text>
             </box>
           }
         >
@@ -686,7 +689,6 @@ function Prompt<const T extends Record<string, string>>(props: {
         paddingLeft={2}
         paddingRight={3}
         paddingBottom={1}
-        backgroundColor={theme.backgroundElement}
         justifyContent={narrow() ? "flex-start" : "space-between"}
         alignItems={narrow() ? "flex-start" : "center"}
       >
@@ -696,14 +698,14 @@ function Prompt<const T extends Record<string, string>>(props: {
               <box
                 paddingLeft={1}
                 paddingRight={1}
-                backgroundColor={option === store.selected ? theme.warning : theme.backgroundMenu}
+                backgroundColor={option === store.selected ? theme.primary : theme.backgroundElement}
                 onMouseOver={() => setStore("selected", option)}
                 onMouseUp={() => {
                   setStore("selected", option)
                   props.onSelect(option)
                 }}
               >
-                <text fg={option === store.selected ? selectedForeground(theme, theme.warning) : theme.textMuted}>
+                <text fg={option === store.selected ? selectedForeground(theme, theme.primary) : theme.textMuted}>
                   {props.options[option]}
                 </text>
               </box>

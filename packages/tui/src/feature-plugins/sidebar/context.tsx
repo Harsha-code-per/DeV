@@ -37,7 +37,9 @@ function View(props: { api: TuiPluginApi; session_id: string }) {
   return (
     <box>
       <text fg={theme().text}>
-        <b>Context</b>
+        <span style={{ fg: theme().primary }}>
+          <b>Context</b>
+        </span>
       </text>
       <text fg={theme().textMuted}>{state().tokens.toLocaleString()} tokens</text>
       <text fg={theme().textMuted}>{state().percent ?? 0}% used</text>

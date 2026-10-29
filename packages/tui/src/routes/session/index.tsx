@@ -1333,11 +1333,13 @@ function UserMessage(props: {
         <box
           id={props.message.id}
           ref={(el: BoxRenderable) => alwaysSeparate.add(el)}
-          border={["left"]}
-          borderColor={color()}
-          customBorderChars={SplitBorder.customBorderChars}
           marginTop={props.index === 0 ? 0 : 1}
+          flexDirection="row"
         >
+          {/* DeV: your messages carry a saffron chevron instead of OpenCode's coloured bar and panel. */}
+          <box flexShrink={0} paddingTop={1} paddingLeft={1}>
+            <text fg={color()}>›</text>
+          </box>
           <box
             onMouseOver={() => {
               setHover(true)
@@ -1348,11 +1350,15 @@ function UserMessage(props: {
             onMouseUp={props.onMouseUp}
             paddingTop={1}
             paddingBottom={1}
-            paddingLeft={2}
-            backgroundColor={hover() ? theme.backgroundElement : theme.backgroundPanel}
-            flexShrink={0}
+            paddingLeft={1}
+            paddingRight={1}
+            backgroundColor={hover() ? theme.backgroundElement : undefined}
+            flexShrink={1}
+            flexGrow={1}
           >
-            <text fg={theme.text}>{text()}</text>
+            <text fg={theme.text} attributes={TextAttributes.BOLD}>
+              {text()}
+            </text>
             <Show when={files().length}>
               <box flexDirection="row" paddingBottom={metadataVisible() ? 1 : 0} paddingTop={1} gap={1} flexWrap="wrap">
                 <For each={files()}>
@@ -1493,7 +1499,7 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
                       : local.agent.color(props.message.agent),
                 }}
               >
-                ▣{" "}
+                ◆{" "}
               </span>{" "}
               <span style={{ fg: theme.text }}>{Locale.titlecase(props.message.mode)}</span>
               <span style={{ fg: theme.textMuted }}> · {model()}</span>
@@ -1595,8 +1601,8 @@ function ReasoningHeader(props: {
   const { theme } = useTheme()
   const fg = () =>
     props.open
-      ? RGBA.fromValues(theme.warning.r, theme.warning.g, theme.warning.b, theme.thinkingOpacity)
-      : theme.warning
+      ? RGBA.fromValues(theme.textMuted.r, theme.textMuted.g, theme.textMuted.b, theme.thinkingOpacity)
+      : theme.textMuted
   const completed = () => {
     if (props.encrypted) return `Thought${props.duration ? ` · ${props.duration}` : ""}`
     const detail = [props.title, props.duration].filter(Boolean).join(" · ")

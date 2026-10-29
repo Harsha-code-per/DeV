@@ -80,14 +80,15 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       const [agentStore, setAgentStore] = createStore({
         current: undefined as string | undefined,
       })
+      // The first agent (build) wears DeV's signature colour.
       const colors = createMemo(() => [
-        theme.secondary,
-        theme.accent,
-        theme.success,
-        theme.warning,
         theme.primary,
-        theme.error,
+        theme.secondary,
+        theme.success,
         theme.info,
+        theme.accent,
+        theme.warning,
+        theme.error,
       ])
       return {
         list() {
