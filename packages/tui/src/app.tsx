@@ -66,6 +66,9 @@ import { UpdateNotificationProvider, useUpdateNotification, type UpdateSource } 
 import * as Model from "./util/model"
 import { ArgsProvider, useArgs, type Args } from "./context/args"
 import { openUrl } from "@dev-ai/core/open"
+import type { AssistantMessage } from "@dev-ai/sdk/v2"
+import { Locale } from "./util/locale"
+import { DialogSelect } from "./ui/dialog-select"
 import { PromptRefProvider, usePromptRef } from "./context/prompt"
 import { TuiConfigProvider, useTuiConfig, type TuiConfig } from "./config"
 import { createTuiApiAdapters } from "./plugin/adapters"
@@ -586,8 +589,9 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
           if (!root) return
           // The file DeV already reads, so editing never hides an existing AGENTS.md or CLAUDE.md.
           const file =
-            ["DEV.md", "AGENTS.md", "CLAUDE.md"].map((name) => path.join(root, name)).find((item) => existsSync(item)) ??
-            path.join(root, "DEV.md")
+            ["DEV.md", "AGENTS.md", "CLAUDE.md"]
+              .map((name) => path.join(root, name))
+              .find((item) => existsSync(item)) ?? path.join(root, "DEV.md")
           await openEditor({ value: "# Project memory\n\n", renderer, file, cwd: root }).catch(toast.error)
         },
       },
@@ -646,7 +650,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         category: "Agent",
         slashName: "models",
         // Bias /mo toward /models over /move without changing global fuzzy scoring.
-        slashAliases: ["mo"],
+        slashAliases: ["mo", "model"],
         run: () => {
           dialog.replace(() => <DialogModel />)
         },
@@ -701,6 +705,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         title: "Toggle MCPs",
         category: "Agent",
         slashName: "mcps",
+        slashAliases: ["mcp"],
         run: () => {
           dialog.replace(() => <DialogMcp />)
         },
@@ -797,6 +802,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         name: "opencode.debug",
         title: "View debug info",
         slashName: "debug",
+        slashAliases: ["doctor"],
         run: () => {
           dialog.replace(() => <DialogDebug />)
         },
@@ -843,7 +849,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         name: "docs.open",
         title: "Open docs",
         run: () => {
-          openUrl("https://opencode.ai/docs").catch(() => {})
+          openUrl("https://github.com/Harsha-code-per/DeV#readme").catch(() => {})
           dialog.clear()
         },
         category: "System",
@@ -969,18 +975,98 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
       },
       {
         name: "permission.mode",
-        title:
-          local.permission.mode === "auto" ? "Disable auto-approve permissions" : "Enable auto-approve permissions",
+        title: "Permission mode",
         category: "System",
+        slashName: "permissions",
         run: () => {
-          local.permission.toggle()
+          const modes = [
+            {
+              value: "normal" as const,
+              title: "Default",
+              description: "Ask before edits, web fetches and unsandboxed commands",
+            },
+            { value: "edits" as const, title: "Accept edits", description: "Approve file edits, ask for the rest" },
+            { value: "auto" as const, title: "Auto", description: "Approve everything that isn't explicitly denied" },
+          ]
+          dialog.replace(() => (
+            <DialogSelect
+              title="Permission mode (Shift+Tab cycles, including plan)"
+              options={modes.map((mode) => ({
+                ...mode,
+                title: mode.value === local.permission.mode ? `${mode.title} (current)` : mode.title,
+              }))}
+              onSelect={(option) => {
+                local.permission.set(option.value)
+                dialog.clear()
+                if (option.value === "auto")
+                  toast.show({
+                    variant: "warning",
+                    message:
+                      "Auto mode: DeV approves every action that isn't explicitly denied. Shift+Tab to leave it.",
+                    duration: 5000,
+                  })
+              }}
+            />
+          ))
+        },
+      },
+      {
+        name: "session.cost",
+        title: "Show session cost and tokens",
+        category: "Session",
+        slashName: "cost",
+        enabled: () => route.data.type === "session",
+        run: () => {
           dialog.clear()
-          if (local.permission.mode === "auto")
-            toast.show({
-              variant: "warning",
-              message: "Auto mode: DeV approves every action that isn't explicitly denied. Shift+Tab to leave it.",
-              duration: 5000,
-            })
+          if (route.data.type !== "session") return
+          const sessionID = route.data.sessionID
+          const tokens = (sync.data.message[sessionID] ?? [])
+            .filter((item): item is AssistantMessage => item.role === "assistant")
+            .reduce(
+              (sum, item) => ({
+                input: sum.input + item.tokens.input + item.tokens.cache.read,
+                output: sum.output + item.tokens.output + item.tokens.reasoning,
+              }),
+              { input: 0, output: 0 },
+            )
+          const cost = sync.session.get(sessionID)?.cost ?? 0
+          toast.show({
+            variant: "info",
+            message: `Cost $${cost.toFixed(4)} · ${Locale.number(tokens.input)} input and ${Locale.number(tokens.output)} output tokens${cost === 0 ? " (free models cost nothing)" : ""}`,
+            duration: 6000,
+          })
+        },
+      },
+      {
+        name: "config.edit",
+        title: "Edit DeV settings (dev.json)",
+        category: "System",
+        slashName: "config",
+        run: async () => {
+          dialog.clear()
+          if (!process.env.VISUAL && !process.env.EDITOR) {
+            toast.show({ message: "Set $EDITOR to edit settings", variant: "warning" })
+            return
+          }
+          const paths = await sdk.client.path.get()
+          const dir = paths.data?.config
+          if (!dir) return
+          const file =
+            ["dev.jsonc", "dev.json", "opencode.jsonc", "opencode.json"]
+              .map((name) => path.join(dir, name))
+              .find((item) => existsSync(item)) ?? path.join(dir, "dev.json")
+          await openEditor({ value: "{}\n", renderer, file, cwd: dir }).catch(toast.error)
+          toast.show({ message: "Settings saved; restart DeV if a change doesn't apply", variant: "info" })
+        },
+      },
+      {
+        name: "bug.report",
+        title: "Report a bug",
+        category: "System",
+        slashName: "bug",
+        run: () => {
+          openUrl("https://github.com/Harsha-code-per/DeV/issues/new?template=bug_report.yml").catch(() => {})
+          dialog.clear()
         },
       },
       {
@@ -1117,9 +1203,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         evt.stopPropagation()
       }}
       onMouseUp={
-        !Flag.DEV_EXPERIMENTAL_DISABLE_COPY_ON_SELECT
-          ? () => Selection.copy(renderer, toast, clipboard)
-          : undefined
+        !Flag.DEV_EXPERIMENTAL_DISABLE_COPY_ON_SELECT ? () => Selection.copy(renderer, toast, clipboard) : undefined
       }
     >
       <Show when={Flag.DEV_SHOW_TTFD}>

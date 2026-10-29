@@ -11,14 +11,23 @@ import { PartID } from "@/session/schema"
 export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
   const state: { hooks?: ConfigHooksV1.Info } = {}
   const run = (event: ConfigHooksV1.Event, payload: Record<string, unknown>, tool?: string) =>
-    runHooks(state.hooks?.[event] ?? [], { hook_event_name: event, cwd: input.directory, ...payload }, input.directory, tool)
+    runHooks(
+      state.hooks?.[event] ?? [],
+      { hook_event_name: event, cwd: input.directory, ...payload },
+      input.directory,
+      tool,
+    )
 
   return {
     config: async (cfg) => {
       state.hooks = (cfg as { hooks?: ConfigHooksV1.Info }).hooks
     },
     "tool.execute.before": async (info, output) => {
-      const results = await run("PreToolUse", { session_id: info.sessionID, tool_name: info.tool, tool_input: output.args }, info.tool)
+      const results = await run(
+        "PreToolUse",
+        { session_id: info.sessionID, tool_name: info.tool, tool_input: output.args },
+        info.tool,
+      )
       const blocked = results.find((result) => result.code === 2)
       if (blocked) throw new Error(`Blocked by a PreToolUse hook: ${blocked.stderr.trim() || "no reason given"}`)
     },
@@ -32,11 +41,16 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
       if (feedback.length > 0) output.output += `\n\nPostToolUse hook:\n${feedback.join("\n")}`
     },
     "chat.message": async (info, output) => {
-      const prompt = output.parts.flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : [])).join("\n")
+      const prompt = output.parts
+        .flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : []))
+        .join("\n")
       const results = await run("UserPromptSubmit", { session_id: info.sessionID, prompt })
       const blocked = results.find((result) => result.code === 2)
-      if (blocked) throw new Error(`Prompt blocked by a UserPromptSubmit hook: ${blocked.stderr.trim() || "no reason given"}`)
-      const context = results.flatMap((result) => (result.code === 0 && result.stdout.trim() ? [result.stdout.trim()] : []))
+      if (blocked)
+        throw new Error(`Prompt blocked by a UserPromptSubmit hook: ${blocked.stderr.trim() || "no reason given"}`)
+      const context = results.flatMap((result) =>
+        result.code === 0 && result.stdout.trim() ? [result.stdout.trim()] : [],
+      )
       if (context.length === 0) return
       output.parts.push({
         id: PartID.ascending(),
@@ -50,12 +64,18 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
     event: async ({ event }) => {
       const props = event.properties as { sessionID?: string; info?: { id?: string } } | undefined
       if (event.type === "session.idle") await run("Stop", { session_id: props?.sessionID })
-      if (event.type === "session.created") await run("SessionStart", { session_id: props?.info?.id, source: "startup" })
+      if (event.type === "session.created")
+        await run("SessionStart", { session_id: props?.info?.id, source: "startup" })
     },
   }
 }
 
-async function runHooks(matchers: ConfigHooksV1.Info["PreToolUse"] & {}, payload: Record<string, unknown>, cwd: string, tool?: string) {
+async function runHooks(
+  matchers: ConfigHooksV1.Info["PreToolUse"] & {},
+  payload: Record<string, unknown>,
+  cwd: string,
+  tool?: string,
+) {
   const commands = matchers
     .filter((entry) => !tool || !entry.matcher || new RegExp(`^(?:${entry.matcher})$`, "i").test(tool))
     .flatMap((entry) => entry.hooks)

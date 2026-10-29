@@ -18,7 +18,10 @@ test("PreToolUse exit 2 blocks a matching tool and gets the call as JSON", async
       { matcher: "Bash", hooks: [{ type: "command", command: `cat > ${log}; echo "no rm here" >&2; exit 2` }] },
     ],
   })
-  const call = plugin["tool.execute.before"]!({ tool: "bash", sessionID: "s1", callID: "c1" }, { args: { command: "rm -rf x" } })
+  const call = plugin["tool.execute.before"]!(
+    { tool: "bash", sessionID: "s1", callID: "c1" },
+    { args: { command: "rm -rf x" } },
+  )
   expect(call).rejects.toThrow("Blocked by a PreToolUse hook: no rm here")
   await call.catch(() => {})
   expect(await Bun.file(log).json()).toMatchObject({

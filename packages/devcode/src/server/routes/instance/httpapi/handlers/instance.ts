@@ -71,7 +71,9 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
           ),
         )
         const file = existing.find((item) => item !== undefined) ?? path.join(dir, "DEV.md")
-        const current = await Bun.file(file).text().catch(() => "")
+        const current = await Bun.file(file)
+          .text()
+          .catch(() => "")
         const separator = current === "" || current.endsWith("\n") ? "" : "\n"
         await Bun.write(file, `${current}${separator}- ${ctx.payload.text.trim()}\n`)
         return { path: file }
