@@ -81,8 +81,7 @@ function createUpdater(latest: () => Promise<UpdateNotice | undefined>): UpdateS
     apply: async (target) => {
       const { Installation } = await import("@/installation")
       const method = await Installation.method()
-      if (method === "unknown") throw new Error("Installation method not found")
-      if (target.type === "major") return Installation.upgradeMajor(method)
+      if (method === "unknown") throw new Error("DeV Code is running from source; update it with git pull")
       return Installation.upgrade(method, target.version)
     },
   }

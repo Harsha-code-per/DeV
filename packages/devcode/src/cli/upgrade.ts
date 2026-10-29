@@ -4,7 +4,7 @@ import { Flag } from "@dev-ai/core/flag/flag"
 import { Installation } from "@/installation"
 import { InstallationVersion } from "@dev-ai/core/installation/version"
 
-// Checking never installs anything. Updates only happen when the user runs `/update` or `opencode upgrade`.
+// Checking never installs anything. Updates only happen when the user runs `/update` or `devcode upgrade`.
 export function shouldNotify(input: {
   autoupdate: boolean | "notify" | undefined
   disabled: boolean
@@ -17,7 +17,7 @@ export function shouldNotify(input: {
   return Installation.isUpdate(input.current, input.latest)
 }
 
-// Returns undefined when checks are disabled or fail, so the TUI only suggests OpenCode 2 after a successful check.
+// Returns undefined when checks are disabled, fail, or find nothing newer.
 export async function upgrade() {
   const config = await AppRuntime.runPromise(Config.Service.use((cfg) => cfg.getGlobal()))
   if (config.autoupdate === false || Flag.DEV_DISABLE_AUTOUPDATE) return
@@ -33,5 +33,4 @@ export async function upgrade() {
     })
   )
     return { type: "available" as const, version: latest }
-  return { type: "major" as const }
 }
