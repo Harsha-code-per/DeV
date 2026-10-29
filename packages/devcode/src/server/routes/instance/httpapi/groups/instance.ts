@@ -85,7 +85,7 @@ export const InstanceApi = HttpApi.make("instance")
             identifier: "path.get",
             summary: "Get paths",
             description:
-              "Retrieve the current working directory and related path information for the OpenCode instance.",
+              "Retrieve the current working directory and related path information for the DeV instance.",
           }),
         ),
         HttpApiEndpoint.get("vcs", InstancePaths.vcs, {
