@@ -27,6 +27,9 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 - Fewer silent stops: a reply that only announces its next step, or is empty, gets a "go ahead".
 - Code mode and on-demand MCP servers keep requests near 20K tokens; a catalog of skills, plugins and MCP servers (`/plugins`), with superpowers and ponytail built in.
 
+### DeV for Chrome (first slice)
+- A side-panel extension that chats with DeV and can attach the current page (as untrusted content). It talks to DeV through native messaging (`devcode native-host --install --extension-id <id>`), so no port is opened; the host only forwards four calls, on sessions it created, with tools disabled.
+
 ### Identity
 - DeV's saffron colour, mark and wordmark across the TUI, CLI, web favicon and desktop app; a redesigned TUI (rounded saffron prompt and dialogs, quieter conversation view, a greeting on the home screen).
 - The desktop app is DeV, with its own app IDs, `devai://` links and update feed.

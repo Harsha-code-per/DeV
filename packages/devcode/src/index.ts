@@ -27,6 +27,7 @@ import { SessionCommand } from "./cli/cmd/session"
 import { DbCommand } from "./cli/cmd/db"
 import { errorMessage } from "./util/error"
 import { PluginCommand } from "./cli/cmd/plug"
+import { NativeHostCommand } from "./cli/cmd/native-host"
 import { Heap } from "./cli/heap"
 
 // As in Claude Code, `dev -p "prompt"` (or --print) runs headless: it is `dev run`, with
@@ -119,6 +120,7 @@ const cli = yargs(args)
   .command(SessionCommand)
   .command(PluginCommand)
   .command(DbCommand)
+  .command(NativeHostCommand)
   .fail((msg, err) => {
     if (
       msg?.startsWith("Unknown argument") ||

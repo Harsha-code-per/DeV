@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@dev-ai/chrome",
+  "version": "1.19.4",
+  "description": "DeV for Chrome: a side-panel chat that talks to DeV over native messaging",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "bun run build.ts",
+    "typecheck": "tsgo --noEmit --checkers 1",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  }
+}

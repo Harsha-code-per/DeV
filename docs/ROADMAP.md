@@ -171,8 +171,8 @@ All surfaces share **one engine and one set of sessions**: start in the app, con
 
 - [x] Rebrand `packages/desktop` (Electron): name, app ID, icons, our own update feed (GitHub Releases), unsigned builds with first-run steps documented.
 - [ ] Chat and coding in one window over the shared engine; the session list syncs with the CLI.
-- [ ] Runs in the tray and starts with the system. Idle budget: ≤150 MB RAM and ~0% CPU.
-- [ ] Wake on name or hotkey; a popup.
+- [ ] Runs in the tray and starts with the system. Idle budget: ≤150 MB RAM and ~0% CPU. Tray (open, quick prompt, new session, start at login, quit), close-to-tray and start at login (`--hidden`) are in; tick once the idle budget is measured on a real desktop.
+- [ ] Wake on name or hotkey; a popup. The hotkey popup is in (Ctrl/Cmd+Shift+Space, `quickPromptHotkey` setting); wake on name waits for voice.
 - [ ] **Voice**, local and free:
   - VAD and wake word always on and tiny;
   - whisper.cpp and Piper load only on wake and unload after 60s idle;
@@ -185,7 +185,7 @@ All surfaces share **one engine and one set of sessions**: start in the app, con
 ## M5 — DeV for Chrome
 
 - [ ] MV3 extension with a side-panel chat; controls your real Chrome through CDP (tabs, read, click, type, screenshots, console, network).
-- [ ] Connects to the local engine through native messaging (no open port).
+- [x] Connects to the local engine through native messaging (no open port).
 - [ ] Per-site permissions; confirmation for purchases, sending and credentials; page content treated as untrusted.
 - [ ] Distributed through GitHub Releases plus the Firefox and Edge add-on stores (free). The Chrome Web Store comes in M7.
 

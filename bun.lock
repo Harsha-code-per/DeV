@@ -93,6 +93,15 @@
         "vite-plugin-solid": "catalog:",
       },
     },
+    "packages/chrome": {
+      "name": "@dev-ai/chrome",
+      "version": "1.19.4",
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
     "packages/cli": {
       "name": "@dev-ai/cli",
       "version": "1.19.4",
@@ -622,7 +631,6 @@
       "name": "@dev-ai/session-ui",
       "version": "1.19.4",
       "dependencies": {
-        "@dev-ai/client": "workspace:*",
         "@dev-ai/core": "workspace:*",
         "@dev-ai/sdk": "workspace:*",
         "@dev-ai/ui": "workspace:*",
@@ -1099,6 +1107,8 @@
     "@corvu/utils": ["@corvu/utils@0.4.2", "", { "dependencies": { "@floating-ui/dom": "^1.6.11" }, "peerDependencies": { "solid-js": "^1.8" } }, "sha512-Ox2kYyxy7NoXdKWdHeDEjZxClwzO4SKM8plAaVwmAJPxHMqA0rLOoAsa+hBDwRLpctf+ZRnAd/ykguuJidnaTA=="],
 
     "@dev-ai/app": ["@dev-ai/app@workspace:packages/app"],
+
+    "@dev-ai/chrome": ["@dev-ai/chrome@workspace:packages/chrome"],
 
     "@dev-ai/cli": ["@dev-ai/cli@workspace:packages/cli"],
 

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DeV</title>
+    <style>
+      :root {
+        --saffron: #f2a516;
+        --ink: #121317;
+        --bg: #f7f6f3;
+        --surface: #ffffff;
+        --text: #1d1e22;
+        --muted: #6b6d75;
+        --line: #e4e2dc;
+        --danger: #b42318;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121317;
+          --surface: #1c1d22;
+          --text: #ecebe7;
+          --muted: #9a9ca5;
+          --line: #2c2e35;
+          --danger: #f97066;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        color: var(--text);
+        font: 14px/1.5 system-ui, sans-serif;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        font-weight: 600;
+      }
+      header img {
+        width: 22px;
+        height: 22px;
+      }
+      header button {
+        margin-left: auto;
+      }
+      #messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .message {
+        padding: 8px 12px;
+        border-radius: 10px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        max-width: 92%;
+      }
+      .user {
+        align-self: flex-end;
+        background: var(--saffron);
+        color: var(--ink);
+      }
+      .assistant {
+        align-self: flex-start;
+        background: var(--surface);
+        border: 1px solid var(--line);
+      }
+      .note {
+        display: block;
+        font-size: 12px;
+        opacity: 0.75;
+        margin-top: 4px;
+      }
+      .error {
+        color: var(--danger);
+      }
+      footer {
+        padding: 10px 14px 14px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        min-width: 0;
+      }
+      label span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      input[type="checkbox"] {
+        accent-color: var(--saffron);
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+      }
+      textarea {
+        flex: 1;
+        resize: none;
+        min-height: 60px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+      }
+      textarea:focus,
+      button:focus-visible {
+        outline: 2px solid var(--saffron);
+        outline-offset: 1px;
+      }
+      button {
+        border: 0;
+        border-radius: 8px;
+        padding: 6px 14px;
+        background: var(--saffron);
+        color: var(--ink);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      header button {
+        background: transparent;
+        color: var(--muted);
+        font-weight: 400;
+      }
+      #status {
+        font-size: 12px;
+        color: var(--danger);
+        min-height: 0;
+      }
+      #status:empty {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon-32.png" alt="" />
+      DeV
+      <button id="new" type="button">New chat</button>
+    </header>
+    <main id="messages" aria-live="polite"></main>
+    <footer>
+      <div id="status" role="alert"></div>
+      <label><input id="use-page" type="checkbox" /> Use this page <span id="page"></span></label>
+      <div class="row">
+        <textarea id="input" placeholder="Ask DeV…" aria-label="Message"></textarea>
+        <button id="send" type="button">Send</button>
+      </div>
+    </footer>
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>
