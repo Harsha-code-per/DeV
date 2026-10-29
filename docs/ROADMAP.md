@@ -145,7 +145,8 @@ Not urgent, but it must be done before v1.0.
 - [x] **Logo and mark:** a D with a v in its bowl, ink on saffron (`packages/identity/mark.svg`, rendered by `build.sh` to PNGs and the web favicons); the wordmark's V is saffron in the TUI, CLI and exit screen.
 - [ ] Desktop app icons (`packages/desktop/icons`, .icns/.ico) from the same mark, with the M4 desktop rebrand.
 - [x] Default TUI theme `dev` in the signature colour.
-- [ ] **TUI redesign** so it no longer looks like OpenCode: layout, header and status line, prompt box, message styling, permission dialogs, the splash and home screen. Needs tmux to check screens (`sudo pacman -S tmux`).
+- [x] **TUI redesign, first pass** (checked on screen): rounded saffron prompt and permission frames; your messages marked with a saffron chevron instead of a bar on a panel; saffron reply marker, main agent, sidebar titles and footer mark; a time-of-day greeting on the home screen; hint row teaches shift+tab modes and # memory.
+- [ ] TUI redesign, second pass: tool output blocks, sidebar layout, the light theme on screen, the `dev run` splash. (`script/ansi-to-png.py` turns tmux captures into images.)
 - [ ] **Web and desktop UI theme** from the same palette; replace OpenCode's SVG wordmark in `packages/ui` and the desktop app.
 - [ ] Website and docs styled to match.
 
