@@ -1,13 +1,22 @@
 import { expect, test } from "bun:test"
 import { SessionGoal } from "../../src/session/goal"
 
-test("a goal keeps the session working until the agent reports it met", () => {
+test("a goal keeps the session working, and a claimed MET goes to an independent reviewer", () => {
   SessionGoal.apply("g1", { action: "set", objective: "all tests pass" })
-  expect(SessionGoal.next("g1", "I fixed one test.")).toContain("all tests pass")
+  const check = SessionGoal.next("g1", "I fixed one test.")
+  expect(check?.type).toBe("continue")
+  expect(check?.type === "continue" && check.text).toContain("all tests pass")
   expect(SessionGoal.get("g1")).toMatchObject({ status: "active", rounds: 1 })
-  expect(SessionGoal.next("g1", `Everything passes.\n${SessionGoal.MET_MARKER}`)).toBeUndefined()
+
+  const review = SessionGoal.next("g1", `Everything passes.\n${SessionGoal.MET_MARKER}`)
+  expect(review?.type).toBe("review")
+  // The reviewer says not met: its findings become the next instruction.
+  expect(SessionGoal.reviewed("g1", "test_b fails.\nVERDICT: NOT MET - test_b fails")).toContain("test_b fails")
+  expect(SessionGoal.get("g1")?.status).toBe("active")
+  // Quoting the instructions doesn't pass; the last verdict counts.
+  expect(SessionGoal.reviewed("g1", "I must say VERDICT: MET or VERDICT: NOT MET.\nVERDICT: NOT MET")).toBeDefined()
+  expect(SessionGoal.reviewed("g1", "All 12 tests pass.\nVERDICT: MET")).toBeUndefined()
   expect(SessionGoal.get("g1")?.status).toBe("met")
-  // A met goal lets the session stop.
   expect(SessionGoal.next("g1", "anything")).toBeUndefined()
 })
 

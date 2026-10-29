@@ -142,6 +142,32 @@ const layer = Layer.effect(
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
     const { db } = database
+    // The /goal step at a stop: the agent's own check, or, when it claims the goal is met, an independent
+    // review in a child session that can't edit files, whose verdict decides.
+    const goalStep = Effect.fn("SessionPrompt.goalStep")(function* (
+      sessionID: SessionID,
+      reply: string,
+      user: SessionV1.User,
+    ) {
+      const step = SessionGoal.next(sessionID, reply)
+      if (step?.type !== "review") return step?.text
+      const reviewer = yield* sessions.create({
+        parentID: sessionID,
+        title: "Goal review (@general subagent)",
+        agent: "general",
+        permission: Permission.fromConfig({ edit: "deny", task: "deny", external_agent: "deny" }),
+      })
+      const result = yield* prompt({
+        messageID: MessageID.ascending(),
+        sessionID: reviewer.id,
+        model: user.model,
+        agent: "general",
+        parts: [{ type: "text", text: step.prompt }],
+      }).pipe(Effect.catch(() => Effect.succeed(undefined)))
+      const review = result?.parts.findLast((part) => part.type === "text")?.text ?? ""
+      return SessionGoal.reviewed(sessionID, review || "The reviewer gave no verdict.")
+    })
+
     const ops = Effect.fn("SessionPrompt.ops")(function* () {
       return {
         cancel: (sessionID: SessionID) => cancel(sessionID),
@@ -1131,7 +1157,7 @@ const layer = Layer.effect(
             const reply = (lastAssistantMsg?.parts ?? [])
               .flatMap((part) => (part.type === "text" ? [part.text] : []))
               .join("\n")
-            const goal = SessionGoal.next(sessionID, reply)
+            const goal = yield* goalStep(sessionID, reply, lastUser)
             const stop = goal
               ? { continue: goal }
               : yield* plugin.trigger(

@@ -221,4 +221,4 @@ Review OpenCode's releases regularly (`gh release list -R anomalyco/opencode`). 
 - [ ] Consider: scheduled prompts (`/schedule`), for the M4 scheduler.
 - [ ] Consider: plugin-managed session instructions that don't bust the prompt cache (2.2.0), and per-model prompt-cache TTLs.
 - [ ] Consider: an opt-in `image_generate` tool.
-- [ ] Upgrade the `/goal` reviewer from self-review to an independent reviewer subagent.
+- [x] `/goal` reviews with an independent reviewer: when the agent claims GOAL MET, a child session (general agent, edits denied) checks the project with real evidence and its VERDICT decides; NOT MET findings become the next instruction. Verified end to end.

@@ -2,8 +2,8 @@ import { Schema } from "effect"
 
 // `/goal <objective>`: the session keeps working until the objective is met. Each time the agent would
 // stop, DeV asks it to check the objective against real evidence (tests, builds, the files themselves)
-// and either continue or end its reply with MET_MARKER. Pause, resume and clear control it.
-// ponytail: the agent reviews its own work; an independent reviewer subagent would be stricter.
+// and either continue or end its reply with MET_MARKER. A claimed MET goes to an independent reviewer
+// (a separate session that can't edit files), whose verdict decides. Pause, resume and clear control it.
 // ponytail: goals live in memory, so a server restart forgets them.
 
 export const MET_MARKER = "GOAL MET"
@@ -45,22 +45,54 @@ export function apply(sessionID: string, input: Action) {
   return save(sessionID, { ...current, status: input.action === "pause" ? "paused" : "active" })
 }
 
+export type Next = { type: "continue"; text: string } | { type: "review"; prompt: string }
+
 /**
- * Called when the agent is about to stop. Returns the instruction that keeps it working, or undefined
- * when it may stop: no active goal, the goal is met, or it has used its rounds.
+ * Called when the agent is about to stop: keep working (`continue`), have the claimed goal checked by
+ * an independent reviewer (`review`), or undefined when it may stop (no active goal, met, or out of rounds).
  */
-export function next(sessionID: string, reply: string) {
+export function next(sessionID: string, reply: string): Next | undefined {
   const current = goals.get(sessionID)
   if (current?.status !== "active") return undefined
-  if (reply.includes(MET_MARKER)) {
-    save(sessionID, { ...current, status: "met" })
-    return undefined
-  }
   if (current.rounds >= MAX_ROUNDS) {
     save(sessionID, { ...current, status: "stopped" })
     return undefined
   }
   save(sessionID, { ...current, rounds: current.rounds + 1 })
+  if (reply.includes(MET_MARKER)) return { type: "review", prompt: reviewPrompt(current.objective) }
+  return { type: "continue", text: checkPrompt(current) }
+}
+
+/** Applies the reviewer's verdict: undefined when the goal is met, else the instruction to keep working. */
+export function reviewed(sessionID: string, review: string) {
+  const current = goals.get(sessionID)
+  if (!current) return undefined
+  // The last verdict counts, so a reviewer quoting the instructions doesn't pass by accident.
+  const verdict = [...review.matchAll(/VERDICT:\s*(NOT MET|MET)\b/gi)].at(-1)?.[1]?.toUpperCase()
+  if (verdict === "MET") {
+    save(sessionID, { ...current, status: "met" })
+    return undefined
+  }
+  return [
+    "An independent reviewer checked the goal and found it is not met yet:",
+    review.trim(),
+    "",
+    `Fix what it found, verify it, and end your reply with ${MET_MARKER} only when it is really done.`,
+  ].join("\n")
+}
+
+function reviewPrompt(objective: string) {
+  return [
+    "You are an independent reviewer. Another agent says this goal is met:",
+    objective,
+    "",
+    "Check it yourself against real evidence in this project: read the relevant files and run the project's tests,",
+    "typecheck or build where they exist. Do not change any files.",
+    "End your reply with exactly one line: VERDICT: MET, or VERDICT: NOT MET followed by what is missing or failing.",
+  ].join("\n")
+}
+
+function checkPrompt(current: State) {
   return [
     `Goal check (round ${current.rounds + 1} of ${MAX_ROUNDS}). The goal for this session is:`,
     current.objective,
