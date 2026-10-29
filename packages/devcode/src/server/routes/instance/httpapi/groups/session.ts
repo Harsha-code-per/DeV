@@ -8,6 +8,7 @@ import { SessionPrompt } from "@/session/prompt"
 import { SessionRevert } from "@/session/revert"
 import { SessionStatus } from "@/session/status"
 import { SessionSummary } from "@/session/summary"
+import { SessionGoal } from "@/session/goal"
 import { Todo } from "@/session/todo"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Snapshot } from "@/snapshot"
@@ -89,6 +90,7 @@ export const SessionPaths = {
   update: `${root}/:sessionID`,
   fork: `${root}/:sessionID/fork`,
   abort: `${root}/:sessionID/abort`,
+  goal: `${root}/:sessionID/goal`,
   share: `${root}/:sessionID/share`,
   init: `${root}/:sessionID/init`,
   summarize: `${root}/:sessionID/summarize`,
@@ -260,6 +262,31 @@ export const SessionApi = HttpApi.make("session")
             identifier: "session.abort",
             summary: "Abort session",
             description: "Abort an active session and stop any ongoing AI processing or command execution.",
+          }),
+        ),
+        HttpApiEndpoint.get("goal", SessionPaths.goal, {
+          params: { sessionID: SessionID },
+          query: WorkspaceRoutingQuery,
+          success: described(Schema.NullOr(SessionGoal.State), "The session's goal, or null"),
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "session.goal.get",
+            summary: "Get session goal",
+            description: "The /goal objective the session is working toward, with its status and review rounds.",
+          }),
+        ),
+        HttpApiEndpoint.post("goalUpdate", SessionPaths.goal, {
+          params: { sessionID: SessionID },
+          query: WorkspaceRoutingQuery,
+          payload: SessionGoal.Action,
+          success: described(Schema.NullOr(SessionGoal.State), "The goal after the change, or null when cleared"),
+          error: HttpApiError.BadRequest,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "session.goal.update",
+            summary: "Set, pause, resume or clear the session goal",
+            description:
+              "Set a /goal objective the session keeps working toward until it is met, or pause, resume or clear it.",
           }),
         ),
         HttpApiEndpoint.post("init", SessionPaths.init, {

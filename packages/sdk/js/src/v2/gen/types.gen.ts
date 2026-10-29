@@ -2633,6 +2633,17 @@ export type NotFoundError = {
   }
 }
 
+export type SessionGoal = {
+  objective: string
+  status: "active" | "paused" | "met" | "stopped"
+  rounds: number
+}
+
+export type SessionGoalAction = {
+  action: "set" | "pause" | "resume" | "clear"
+  objective?: string
+}
+
 export type TextPartInput = {
   id?: string
   type: "text"
@@ -10099,6 +10110,66 @@ export type SessionAbortResponses = {
 }
 
 export type SessionAbortResponse = SessionAbortResponses[keyof SessionAbortResponses]
+
+export type SessionGoalGetData = {
+  body?: never
+  path: {
+    sessionID: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/session/{sessionID}/goal"
+}
+
+export type SessionGoalGetErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type SessionGoalGetError = SessionGoalGetErrors[keyof SessionGoalGetErrors]
+
+export type SessionGoalGetResponses = {
+  /**
+   * The session's goal, or null
+   */
+  200: SessionGoal
+}
+
+export type SessionGoalGetResponse = SessionGoalGetResponses[keyof SessionGoalGetResponses]
+
+export type SessionGoalUpdateData = {
+  body?: SessionGoalAction
+  path: {
+    sessionID: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/session/{sessionID}/goal"
+}
+
+export type SessionGoalUpdateErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type SessionGoalUpdateError = SessionGoalUpdateErrors[keyof SessionGoalUpdateErrors]
+
+export type SessionGoalUpdateResponses = {
+  /**
+   * The goal after the change, or null when cleared
+   */
+  200: SessionGoal
+}
+
+export type SessionGoalUpdateResponse = SessionGoalUpdateResponses[keyof SessionGoalUpdateResponses]
 
 export type SessionInitData = {
   body?: {

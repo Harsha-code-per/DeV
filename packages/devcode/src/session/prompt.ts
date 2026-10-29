@@ -4,6 +4,7 @@ import path from "path"
 import { SessionV1 } from "@dev-ai/core/v1/session"
 import os from "os"
 import { SessionID, MessageID, PartID } from "./schema"
+import { SessionGoal } from "./goal"
 import { MessageV2 } from "./message-v2"
 import { SessionRevert } from "./revert"
 import { Session } from "./session"
@@ -1125,12 +1126,19 @@ const layer = Layer.effect(
                 callID: orphan.callID,
               })
             }
-            // A plugin (such as a Stop hook) can keep the agent working with a follow-up instruction.
-            const stop = yield* plugin.trigger(
-              "experimental.session.stop",
-              { sessionID, parentID: session.parentID },
-              { continue: undefined as string | undefined },
-            )
+            // A /goal keeps the agent working until it reports the goal met; otherwise a plugin (such as a
+            // Stop hook) can keep it going with a follow-up instruction.
+            const reply = (lastAssistantMsg?.parts ?? [])
+              .flatMap((part) => (part.type === "text" ? [part.text] : []))
+              .join("\n")
+            const goal = SessionGoal.next(sessionID, reply)
+            const stop = goal
+              ? { continue: goal }
+              : yield* plugin.trigger(
+                  "experimental.session.stop",
+                  { sessionID, parentID: session.parentID },
+                  { continue: undefined as string | undefined },
+                )
             if (!stop.continue) {
               yield* Effect.logInfo("exiting loop", { "session.id": sessionID })
               break

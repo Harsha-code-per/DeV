@@ -262,6 +262,21 @@ export function Prompt(props: PromptProps) {
   })
 
   const [statusLine, setStatusLine] = createSignal<string>()
+  // The session's /goal, refreshed while one is being worked on.
+  const [goal, setGoal] = createSignal<{ objective: string; status: string; rounds: number }>()
+  createEffect(() => {
+    const sessionID = props.sessionID
+    setGoal(undefined)
+    if (!sessionID) return
+    const refresh = () =>
+      sdk.client.session.goal
+        .get({ sessionID })
+        .then((res) => setGoal(res.data ?? undefined))
+        .catch(() => {})
+    void refresh()
+    const timer = setInterval(refresh, 3000)
+    onCleanup(() => clearInterval(timer))
+  })
   onMount(() => {
     const config = tuiConfig.status_line
     if (!config) return
@@ -1100,6 +1115,35 @@ export function Prompt(props: PromptProps) {
           ]
         : []
 
+    // /goal <objective> sets a goal the session keeps working toward and sends it as the first instruction;
+    // /goal pause|resume|clear control it, and /goal alone shows it.
+    const goalCommand = store.mode === "normal" ? /^\/goal(?:\s+([\s\S]*))?$/.exec(inputText.trim()) : null
+    const goalArg = goalCommand?.[1]?.trim() ?? ""
+    if (goalCommand) {
+      const action = ["pause", "resume", "clear"].includes(goalArg) ? goalArg : goalArg ? "set" : undefined
+      const res = action
+        ? await sdk.client.session.goal.update({
+            sessionID,
+            sessionGoalAction: { action: action as "set", objective: action === "set" ? goalArg : undefined },
+          })
+        : await sdk.client.session.goal.get({ sessionID })
+      if (res.error) toast.show({ message: "That didn't work. Set a goal with /goal <objective>.", variant: "error" })
+      if (!res.error) setGoal(res.data ?? undefined)
+      if (!res.error && action !== "set")
+        toast.show({
+          variant: "info",
+          message: res.data ? `Goal (${res.data.status}): ${res.data.objective}` : "No goal for this session.",
+        })
+      if (res.error || action !== "set") {
+        input.extmarks.clear()
+        setStore("prompt", { input: "", parts: [] })
+        setStore("extmarkToPartIndex", new Map())
+        input.clear()
+        if (finishMoveProgress) move.finishSubmit()
+        return true
+      }
+    }
+
     if (store.mode === "shell") {
       move.startSubmit()
       void sdk.client.session.shell({
@@ -1147,7 +1191,7 @@ export function Prompt(props: PromptProps) {
               ...editorParts,
               {
                 type: "text",
-                text: inputText,
+                text: goalCommand ? `Goal: ${goalArg}` : inputText,
               },
               ...nonTextParts,
             ],
@@ -1521,6 +1565,17 @@ export function Prompt(props: PromptProps) {
             </box>
           </box>
         </box>
+        <Show when={goal()}>
+          {(current) => (
+            <box width="100%" paddingLeft={1}>
+              <text fg={theme.textMuted} wrapMode="none">
+                <span style={{ fg: theme.primary }}>◆ goal</span>{" "}
+                {current().status === "active" ? `round ${current().rounds}` : current().status} ·{" "}
+                {Locale.truncate(current().objective, Math.max(20, dimensions().width - 40))}
+              </text>
+            </box>
+          )}
+        </Show>
         <box width="100%" flexDirection="row" justifyContent="space-between">
           <Switch>
             <Match when={status().type !== "idle"}>

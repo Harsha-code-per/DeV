@@ -1,4 +1,5 @@
 import { PermissionV1 } from "@dev-ai/core/v1/permission"
+import { SessionGoal } from "@/session/goal"
 import { Agent } from "@/agent/agent"
 import { SessionV1 } from "@dev-ai/core/v1/session"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -229,6 +230,20 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       return yield* fork({ params: ctx.params, payload })
     })
 
+    const goal = Effect.fn("SessionHttpApi.goal")(function* (ctx: { params: { sessionID: SessionID } }) {
+      return SessionGoal.get(ctx.params.sessionID) ?? null
+    })
+
+    const goalUpdate = Effect.fn("SessionHttpApi.goalUpdate")(function* (ctx: {
+      params: { sessionID: SessionID }
+      payload: SessionGoal.Action
+    }) {
+      return yield* Effect.try({
+        try: () => SessionGoal.apply(ctx.params.sessionID, ctx.payload) ?? null,
+        catch: () => new HttpApiError.BadRequest({}),
+      })
+    })
+
     const abort = Effect.fn("SessionHttpApi.abort")(function* (ctx: { params: { sessionID: SessionID } }) {
       yield* promptSvc.cancel(ctx.params.sessionID)
       return true
@@ -424,6 +439,8 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       .handle("update", update)
       .handleRaw("fork", forkRaw)
       .handle("abort", abort)
+      .handle("goal", goal)
+      .handle("goalUpdate", goalUpdate)
       .handle("init", init)
       .handle("share", share)
       .handle("unshare", unshare)
