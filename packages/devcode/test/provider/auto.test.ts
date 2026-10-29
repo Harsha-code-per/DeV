@@ -87,4 +87,20 @@ describe("AutoProvider", () => {
     const lm = AutoProvider.language([{ model: model("groq", "x"), language: fake(() => Promise.reject(rateLimited)) }])
     await expect(lm.doGenerate({ prompt: [] } as never)).rejects.toBe(rateLimited as never)
   })
+
+  test("ranks free models by how often they have answered", () => {
+    const flaky = model("groq", "flaky")
+    const steady = model("mistral", "steady")
+    const fresh = model("nvidia", "fresh")
+    for (let i = 0; i < 4; i++) AutoProvider.record(flaky, false)
+    for (let i = 0; i < 4; i++) AutoProvider.record(steady, true)
+    expect(AutoProvider.score(fresh)).toBe(0.5)
+    const providers = {
+      groq: { id: "groq", models: { flaky } },
+      mistral: { id: "mistral", models: { steady } },
+      nvidia: { id: "nvidia", models: { fresh } },
+    } as unknown as Record<string, Provider.Info>
+    // Reliable first, untried in the middle (so new models still get a chance), unreliable last.
+    expect(AutoProvider.candidates(providers).map((m) => String(m.id))).toEqual(["steady", "fresh", "flaky"])
+  })
 })

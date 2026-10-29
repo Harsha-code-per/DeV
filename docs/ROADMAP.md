@@ -131,7 +131,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] **Use your subscriptions safely:** the `external_agent` tool hands a task to the user's own installed Claude Code, Codex or Gemini CLI (offered only when one is installed; asks first; TUI shows "Hand off to …"). Their own login and terms apply; DeV never touches those credentials. Verified end to end with Claude Code.
   - Not built on purpose: signing in to Claude Pro/Max or Google Antigravity inside DeV. Anthropic's terms forbid third-party use of subscription sign-in, and Google suspends accounts that connect Antigravity or Gemini CLI sign-in to third-party tools. Gemini is available through a free Google AI Studio key (part of `auto/free`).
 
-- [ ] Free-model quality routing: rank `auto/free` candidates by measured success per task type.
+- [x] Free-model quality routing: `auto/free` ranks candidates by each model's measured success (kept in `~/.local/state/dev/auto-free-stats.json`, recent results weigh most; untried models start neutral). Per task type is a follow-up.
 - [ ] Persistent memory across sessions and projects, with privacy controls.
 - [ ] Catalog auto-update: new skills, plugins and MCP servers, health-checked before switching, with rollback.
 - [ ] One shared MCP hub per machine, used by every DeV surface.

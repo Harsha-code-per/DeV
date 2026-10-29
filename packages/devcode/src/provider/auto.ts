@@ -3,6 +3,8 @@ import { APICallError } from "ai"
 import { sortBy } from "remeda"
 import type { Provider } from "./provider"
 import { ProviderError } from "./error"
+import path from "path"
+import { Global } from "@dev-ai/core/global"
 
 // DeV: virtual "auto" provider. Its single model routes each request across every free
 // model from the connected providers and falls through to the next one on any failure.
@@ -32,6 +34,37 @@ const FREE_TIER = new Set([
 
 const cooldown = new Map<string, number>()
 
+// Measured quality: how often each free model answered without an error, kept across runs, so the
+// router learns which free models actually work for this user. Unknown models start neutral.
+// ponytail: one score per model; per task type (edit vs chat vs long context) would rank finer.
+const STATS_FILE = path.join(Global.Path.state, "auto-free-stats.json")
+const stats: Record<string, { ok: number; fail: number }> = await Bun.file(STATS_FILE)
+  .json()
+  .catch(() => ({}))
+let saving: ReturnType<typeof setTimeout> | undefined
+
+/** Laplace-smoothed success rate: 0.5 with no history. */
+export function score(model: Provider.Model) {
+  const entry = stats[key(model)]
+  return ((entry?.ok ?? 0) + 1) / ((entry?.ok ?? 0) + (entry?.fail ?? 0) + 2)
+}
+
+export function record(model: Provider.Model, ok: boolean) {
+  const entry = (stats[key(model)] ??= { ok: 0, fail: 0 })
+  if (ok) entry.ok++
+  if (!ok) entry.fail++
+  // Halve old counts so recent behaviour matters most.
+  if (entry.ok + entry.fail > 50) {
+    entry.ok = Math.round(entry.ok / 2)
+    entry.fail = Math.round(entry.fail / 2)
+  }
+  saving ??= setTimeout(() => {
+    saving = undefined
+    void Bun.write(STATS_FILE, JSON.stringify(stats)).catch(() => {})
+  }, 2000)
+  saving.unref?.()
+}
+
 export function candidates(providers: Record<string, Provider.Info>, now = Date.now()) {
   // Rank within each provider, then interleave providers so one broken provider
   // (bad key, unsupported plan) can't fill every slot.
@@ -50,7 +83,11 @@ export function candidates(providers: Record<string, Provider.Info>, now = Date.
   const interleaved = Array.from({ length: Math.max(0, ...groups.map((g) => g.length)) }, (_, i) =>
     groups.flatMap((g) => (g[i] ? [g[i]] : [])),
   ).flat()
-  return sortBy(interleaved, (m) => (cooldown.get(key(m)) ?? 0) > now).slice(0, MAX_CANDIDATES)
+  // Models on cooldown go last; among the rest, the most reliable first (stable, so ties keep the interleave).
+  return sortBy(interleaved, (m) => (cooldown.get(key(m)) ?? 0) > now, [(m) => score(m), "desc"]).slice(
+    0,
+    MAX_CANDIDATES,
+  )
 }
 
 export function info(providers: Record<string, Provider.Info>): Provider.Info | undefined {
@@ -130,20 +167,29 @@ export function language(
     supportedUrls: {},
     doGenerate: (options) =>
       // Non-streaming: the window covers the whole answer, so it is longer.
-      attempt(options.abortSignal, (opts.firstResponseMs ?? FIRST_RESPONSE_MS) * 4, (item, abortSignal) =>
-        item.language.doGenerate({ ...options, abortSignal }),
-      ),
+      attempt(options.abortSignal, (opts.firstResponseMs ?? FIRST_RESPONSE_MS) * 4, async (item, abortSignal) => {
+        const result = await item.language.doGenerate({ ...options, abortSignal })
+        record(item.model, true)
+        return result
+      }),
     doStream: (options) =>
       attempt(options.abortSignal, opts.firstResponseMs ?? FIRST_RESPONSE_MS, async (item, abortSignal) => {
         // The deadline only guards the wait for headers; once streaming starts it is cleared.
         const result = await item.language.doStream({ ...options, abortSignal })
+        const seen = { error: false }
         return {
           ...result,
           stream: result.stream.pipeThrough(
             new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
               transform(part, controller) {
-                if (part.type === "error") cool(item.model, part.error)
+                if (part.type === "error") {
+                  seen.error = true
+                  cool(item.model, part.error)
+                }
                 controller.enqueue(part)
+              },
+              flush() {
+                if (!seen.error) record(item.model, true)
               },
             }),
           ),
@@ -157,6 +203,8 @@ export function cool(model: Provider.Model, error: unknown, now = Date.now()) {
   const retryAfter = APICallError.isInstance(error) ? Number(error.responseHeaders?.["retry-after"]) : NaN
   const ms = wait(status, retryAfter)
   cooldown.set(key(model), now + ms)
+  // A rejected oversized request says nothing about the model's quality.
+  if (!overflow(error)) record(model, false)
 }
 
 function wait(status: number | undefined, retryAfter: number) {
