@@ -12,10 +12,14 @@ import fs from "fs/promises"
 
 export const ID = "auto"
 export const MODEL = "free"
-const MAX_CANDIDATES = 12
+const MAX_CANDIDATES = 8
 // ponytail: one window for every candidate; per-provider latency stats would let slow-but-good
 // providers have longer.
-const FIRST_RESPONSE_MS = 30_000
+const FIRST_RESPONSE_MS = 12_000
+// However many candidates fail, the user gets an answer or a clear error within this time.
+const TOTAL_BUDGET_MS = 45_000
+// Say what's happening once the wait is long enough to be noticed.
+const STATUS_AFTER_MS = 2_000
 
 // Providers whose models are usable on a free tier even though models.dev lists paid prices.
 // ponytail: static list, swap for a live free-tier catalog (e.g. freellmapi's) if it drifts.
@@ -39,7 +43,7 @@ const cooldown = new Map<string, number>()
 // router learns which free models actually work for this user. Unknown models start neutral.
 // ponytail: one score per model; per task type (edit vs chat vs long context) would rank finer.
 const STATS_FILE = path.join(Global.Path.state, "auto-free-stats.json")
-const stats: Record<string, { ok: number; fail: number }> = await fs
+const stats: Record<string, { ok: number; fail: number; until?: number }> = await fs
   .readFile(STATS_FILE, "utf8")
   .then((text) => JSON.parse(text))
   .catch(() => ({}))
@@ -51,10 +55,11 @@ export function score(model: Provider.Model) {
   return ((entry?.ok ?? 0) + 1) / ((entry?.ok ?? 0) + (entry?.fail ?? 0) + 2)
 }
 
-export function record(model: Provider.Model, ok: boolean) {
+export function record(model: Provider.Model, ok: boolean, until?: number) {
   const entry = (stats[key(model)] ??= { ok: 0, fail: 0 })
   if (ok) entry.ok++
   if (!ok) entry.fail++
+  entry.until = until
   // Halve old counts so recent behaviour matters most.
   if (entry.ok + entry.fail > 50) {
     entry.ok = Math.round(entry.ok / 2)
@@ -68,6 +73,17 @@ export function record(model: Provider.Model, ok: boolean) {
       .catch(() => {})
   }, 2000)
   saving.unref?.()
+}
+
+// What the session shows while the router works; keyed by session because one router serves them all.
+const watchers = new Map<string, (message: string | undefined) => void>()
+
+/** Reports routing progress for a session; undefined means a model has started answering. */
+export function watch(sessionID: string, listener: (message: string | undefined) => void) {
+  watchers.set(sessionID, listener)
+  return () => {
+    watchers.delete(sessionID)
+  }
 }
 
 export function candidates(providers: Record<string, Provider.Info>, now = Date.now()) {
@@ -89,10 +105,7 @@ export function candidates(providers: Record<string, Provider.Info>, now = Date.
     groups.flatMap((g) => (g[i] ? [g[i]] : [])),
   ).flat()
   // Models on cooldown go last; among the rest, the most reliable first (stable, so ties keep the interleave).
-  return sortBy(interleaved, (m) => (cooldown.get(key(m)) ?? 0) > now, [(m) => score(m), "desc"]).slice(
-    0,
-    MAX_CANDIDATES,
-  )
+  return sortBy(interleaved, (m) => cooling(m, now), [(m) => score(m), "desc"]).slice(0, MAX_CANDIDATES)
 }
 
 export function info(providers: Record<string, Provider.Info>): Provider.Info | undefined {
@@ -133,36 +146,52 @@ export function info(providers: Record<string, Provider.Info>): Provider.Info | 
 
 export function language(
   list: { model: Provider.Model; language: LanguageModelV3 }[],
-  opts: { firstResponseMs?: number } = {},
+  opts: { firstResponseMs?: number; totalBudgetMs?: number } = {},
 ): LanguageModelV3 {
   const attempt = async <T>(
     signal: AbortSignal | undefined,
     windowMs: number,
+    headers: Record<string, string | undefined> | undefined,
     run: (item: (typeof list)[number], signal: AbortSignal) => PromiseLike<T>,
   ) => {
+    const report = (message: string | undefined) => watchers.get(headers?.["X-Session-Id"] ?? "")?.(message)
+    const started = Date.now()
+    const budget = opts.totalBudgetMs ?? TOTAL_BUDGET_MS
     const errors: unknown[] = []
-    for (const item of list) {
+    for (const [index, item] of list.entries()) {
       if (signal?.aborted) throw signal.reason
+      if (Date.now() - started > budget) break
+      const name = item.model.name ?? item.model.id
+      const waiting = setTimeout(() => report(`Waiting for ${name}…`), STATUS_AFTER_MS)
       // Free endpoints sometimes accept the connection and never answer. Give each candidate a
       // short window to start responding (headers or full result), then move on to the next.
       const deadline = new AbortController()
       const timer = setTimeout(() => deadline.abort(new Error(`${key(item.model)} did not respond`)), windowMs)
       try {
-        return await run(item, signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal)
+        const result = await run(item, signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal)
+        report(undefined)
+        return result
       } catch (e) {
         if (signal?.aborted) throw e
         cool(item.model, e)
         errors.push(e)
+        const next = list[index + 1]
+        if (next) report(`${name} ${problem(e)}, trying ${next.model.name ?? next.model.id}…`)
       } finally {
         clearTimeout(timer)
+        clearTimeout(waiting)
       }
     }
+    report(undefined)
     // A context overflow must surface even if later candidates failed for other reasons:
     // it is what triggers compaction, the session's real recovery.
     throw (
       errors.find((e) => overflow(e)) ??
-      errors.at(-1) ??
-      new Error("No free models available. Connect a provider with /connect.")
+      new Error(
+        errors.length > 0
+          ? `No free model answered (tried ${errors.length}; last: ${String(errors.at(-1)).slice(0, 160)}). Try again shortly, or add another free provider with /connect.`
+          : "No free models available. Connect a provider with /connect.",
+      )
     )
   }
   return {
@@ -172,48 +201,74 @@ export function language(
     supportedUrls: {},
     doGenerate: (options) =>
       // Non-streaming: the window covers the whole answer, so it is longer.
-      attempt(options.abortSignal, (opts.firstResponseMs ?? FIRST_RESPONSE_MS) * 4, async (item, abortSignal) => {
-        const result = await item.language.doGenerate({ ...options, abortSignal })
-        record(item.model, true)
-        return result
-      }),
+      attempt(
+        options.abortSignal,
+        (opts.firstResponseMs ?? FIRST_RESPONSE_MS) * 4,
+        options.headers,
+        async (item, abortSignal) => {
+          const result = await item.language.doGenerate({ ...options, abortSignal })
+          record(item.model, true)
+          return result
+        },
+      ),
     doStream: (options) =>
-      attempt(options.abortSignal, opts.firstResponseMs ?? FIRST_RESPONSE_MS, async (item, abortSignal) => {
-        // The deadline only guards the wait for headers; once streaming starts it is cleared.
-        const result = await item.language.doStream({ ...options, abortSignal })
-        const seen = { error: false }
-        return {
-          ...result,
-          stream: result.stream.pipeThrough(
-            new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
-              transform(part, controller) {
-                if (part.type === "error") {
-                  seen.error = true
-                  cool(item.model, part.error)
-                }
-                controller.enqueue(part)
-              },
-              flush() {
-                if (!seen.error) record(item.model, true)
-              },
-            }),
-          ),
-        }
-      }),
+      attempt(
+        options.abortSignal,
+        opts.firstResponseMs ?? FIRST_RESPONSE_MS,
+        options.headers,
+        async (item, abortSignal) => {
+          // The deadline only guards the wait for headers; once streaming starts it is cleared.
+          const result = await item.language.doStream({ ...options, abortSignal })
+          const seen = { error: false }
+          return {
+            ...result,
+            stream: result.stream.pipeThrough(
+              new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
+                transform(part, controller) {
+                  if (part.type === "error") {
+                    seen.error = true
+                    cool(item.model, part.error)
+                  }
+                  controller.enqueue(part)
+                },
+                flush() {
+                  if (!seen.error) record(item.model, true)
+                },
+              }),
+            ),
+          }
+        },
+      ),
   }
 }
 
 export function cool(model: Provider.Model, error: unknown, now = Date.now()) {
   const status = APICallError.isInstance(error) ? error.statusCode : undefined
   const retryAfter = APICallError.isInstance(error) ? Number(error.responseHeaders?.["retry-after"]) : NaN
-  const ms = wait(status, retryAfter)
+  const ms = wait(status, retryAfter, error)
   cooldown.set(key(model), now + ms)
-  // A rejected oversized request says nothing about the model's quality.
-  if (!overflow(error)) record(model, false)
+  // A rejected oversized request says nothing about the model's quality. Long cooldowns outlive this
+  // process, so the next run doesn't walk the same exhausted models.
+  if (!overflow(error)) record(model, false, ms >= 60_000 ? now + ms : undefined)
 }
 
-function wait(status: number | undefined, retryAfter: number) {
+function cooling(model: Provider.Model, now: number) {
+  return Math.max(cooldown.get(key(model)) ?? 0, stats[key(model)]?.until ?? 0) > now
+}
+
+function problem(error: unknown) {
+  const status = APICallError.isInstance(error) ? error.statusCode : undefined
+  if (status === 429) return "is rate limited"
+  if (status === 401 || status === 403) return "rejected the key"
+  if (status !== undefined && status >= 500) return "is busy"
+  if (status === undefined) return "didn't respond"
+  return "failed"
+}
+
+function wait(status: number | undefined, retryAfter: number, error: unknown) {
   if (!Number.isNaN(retryAfter) && retryAfter > 0) return retryAfter * 1000
+  // A spent daily quota won't come back in a minute.
+  if (status === 429 && /quota|billing|limit: 0/i.test(error instanceof Error ? error.message : "")) return 3_600_000
   if (status === 429) return 60_000
   // Other 4xx (bad key, unsupported model or plan) won't fix itself soon.
   if (status !== undefined && status >= 400 && status < 500) return 600_000

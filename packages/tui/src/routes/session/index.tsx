@@ -2213,7 +2213,11 @@ function Task(props: ToolProps) {
 
     const retrying = retry()
     if (isRunning() && retrying) {
-      content.push(`↳ ${formatSubagentRetry(retrying.attempt, Locale.truncate(retrying.message, 80))}`)
+      content.push(
+        retrying.attempt === 0
+          ? `↳ ${Locale.truncate(retrying.message, 80)}`
+          : `↳ ${formatSubagentRetry(retrying.attempt, Locale.truncate(retrying.message, 80))}`,
+      )
     } else if (isRunning() && tools().length > 0) {
       if (current()) {
         const state = current()!.state

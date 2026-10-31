@@ -16,6 +16,8 @@ import { isOverflow } from "./overflow"
 import { PartID } from "./schema"
 import type { SessionID } from "./schema"
 import { SessionRetry } from "./retry"
+import { AutoProvider } from "@/provider/auto"
+import { EffectBridge } from "@/effect/bridge"
 import { SessionStatus } from "./status"
 import { SessionSummary } from "./summary"
 import type { Provider } from "@/provider/provider"
@@ -652,11 +654,22 @@ const layer = Layer.effect(
             ctx.reasoningMap = {}
             yield* status.set(ctx.sessionID, { type: "busy" })
             const stream = llm.stream(streamInput)
+            // Show which free model the router is on; attempt 0 marks progress rather than a retry.
+            const bridge = yield* EffectBridge.make()
+            const unwatch = AutoProvider.watch(ctx.sessionID, (message) => {
+              bridge.fork(
+                status.set(
+                  ctx.sessionID,
+                  message ? { type: "retry", attempt: 0, message, next: Date.now() } : { type: "busy" },
+                ),
+              )
+            })
 
             yield* stream.pipe(
               Stream.tap((event) => handleEvent(event)),
               Stream.takeUntil(() => ctx.needsCompaction),
               Stream.runDrain,
+              Effect.ensuring(Effect.sync(unwatch)),
             )
           }).pipe(
             Effect.onInterrupt(() =>

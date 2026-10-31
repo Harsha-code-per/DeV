@@ -83,9 +83,9 @@ describe("AutoProvider", () => {
     await expect(lm.doGenerate({ prompt: [] } as never)).rejects.toBe(tooLarge as never)
   })
 
-  test("throws the last error when every candidate fails", async () => {
+  test("gives a clear error with the last failure when every candidate fails", async () => {
     const lm = AutoProvider.language([{ model: model("groq", "x"), language: fake(() => Promise.reject(rateLimited)) }])
-    await expect(lm.doGenerate({ prompt: [] } as never)).rejects.toBe(rateLimited as never)
+    await expect(lm.doGenerate({ prompt: [] } as never)).rejects.toThrow("No free model answered")
   })
 
   test("ranks free models by how often they have answered", () => {
@@ -102,5 +102,43 @@ describe("AutoProvider", () => {
     } as unknown as Record<string, Provider.Info>
     // Reliable first, untried in the middle (so new models still get a chance), unreliable last.
     expect(AutoProvider.candidates(providers).map((m) => String(m.id))).toEqual(["steady", "fresh", "flaky"])
+  })
+})
+
+describe("AutoProvider routing", () => {
+  const quota = new APICallError({
+    message: "You exceeded your current quota, please check your plan and billing details.",
+    url: "https://example.com",
+    requestBodyValues: {},
+    statusCode: 429,
+  })
+
+  test("reports progress for the session, and gives up with a clear error", async () => {
+    const messages: (string | undefined)[] = []
+    const unwatch = AutoProvider.watch("s1", (message) => messages.push(message))
+    const first = { ...model("groq", "budget-a"), name: "Model A" } as Provider.Model
+    const second = { ...model("google", "budget-b"), name: "Model B" } as Provider.Model
+    const lm = AutoProvider.language([
+      { model: first, language: fake(() => Promise.reject(quota)) },
+      { model: second, language: fake(() => Promise.reject(quota)) },
+    ])
+    await expect(lm.doGenerate({ prompt: [], headers: { "X-Session-Id": "s1" } } as never)).rejects.toThrow(
+      "No free model answered",
+    )
+    expect(messages).toContain("Model A is rate limited, trying Model B…")
+    unwatch()
+  })
+
+  test("a spent quota stays cooled down across runs", () => {
+    const spent = model("cerebras", "spent")
+    const fresh = model("cerebras", "fresh")
+    const now = Date.now()
+    AutoProvider.cool(spent, quota, now)
+    const providers = { cerebras: { id: "cerebras", models: { spent, fresh } } } as unknown as Record<
+      string,
+      Provider.Info
+    >
+    expect(AutoProvider.candidates(providers, now + 600_000).map((m) => String(m.id))).toEqual(["fresh", "spent"])
+    expect(AutoProvider.candidates(providers, now + 3_700_000).at(-1)?.id).toBeDefined()
   })
 })

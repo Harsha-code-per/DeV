@@ -799,6 +799,16 @@ export const RunCommand = effectCmd({
               break
             }
 
+            // Keep stdout clean for scripts; progress goes to stderr.
+            if (
+              event.type === "session.status" &&
+              event.properties.sessionID === sessionID &&
+              event.properties.status.type === "retry" &&
+              args.format !== "json"
+            ) {
+              process.stderr.write(event.properties.status.message + EOL)
+            }
+
             if (event.type === "permission.asked") {
               const permission = event.properties
               if (!sessions.has(permission.sessionID)) continue

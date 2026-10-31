@@ -1636,6 +1636,8 @@ export function Prompt(props: PromptProps) {
                         const baseMessage = message()
                         const truncatedHint = isTruncated() ? " (click to expand)" : ""
                         const duration = formatDuration(seconds())
+                        // Attempt 0 is free-model routing progress, not a retry.
+                        if (r.attempt === 0) return baseMessage
                         const retryInfo = ` [retrying ${duration ? `in ${duration} ` : ""}attempt #${r.attempt}]`
                         return baseMessage + truncatedHint + retryInfo
                       }
