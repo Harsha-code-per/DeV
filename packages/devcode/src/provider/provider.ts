@@ -1495,7 +1495,14 @@ const layer = Layer.effect(
 
         // now read config providers - includes any modifications from plugin config() hook
         // DeV: running local model servers (Ollama, LM Studio) join as providers unless configured.
-        const local = Flag.DEV_DISABLE_BUNDLED_DEFAULTS ? {} : yield* Effect.promise(() => LocalProviders.detect())
+        const freeLLMAuth = yield* auth.get(ProviderV2.ID.make(LocalProviders.FREELLMAPI.id)).pipe(Effect.orDie)
+        const localServers = [
+          ...LocalProviders.servers,
+          ...(freeLLMAuth?.type === "api" ? [{ ...LocalProviders.FREELLMAPI, apiKey: freeLLMAuth.key }] : []),
+        ]
+        const local = Flag.DEV_DISABLE_BUNDLED_DEFAULTS
+          ? {}
+          : yield* Effect.promise(() => LocalProviders.detect(localServers))
         const configProviders = [
           ...Object.entries(cfg.provider ?? {}),
           ...Object.entries(local).filter(([id]) => !cfg.provider?.[id]),

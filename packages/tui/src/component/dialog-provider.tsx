@@ -17,7 +17,18 @@ import { useBindings } from "../keymap"
 import { useClipboard } from "../context/clipboard"
 
 // DeV: providers with a free tier first, so anyone can start without paying.
-const FREE_TIER = ["groq", "google", "openrouter", "cerebras", "nvidia", "mistral"]
+const FREE_TIER = [
+  "groq",
+  "google",
+  "openrouter",
+  "cerebras",
+  "nvidia",
+  "mistral",
+  "cohere",
+  "huggingface",
+  "cloudflare-workers-ai",
+  "freellmapi",
+]
 const PROVIDER_PRIORITY: Record<string, number> = Object.fromEntries(
   [...FREE_TIER, "openai", "github-copilot", "anthropic"].map((id, index) => [id, index]),
 )
@@ -56,7 +67,9 @@ export function providerOptions(list: { id: string; name: string }[]): ProviderO
         value: provider.id,
         providerID: provider.id,
         description: FREE_TIER.includes(provider.id)
-          ? "(free tier)"
+          ? provider.id === "freellmapi"
+            ? "(many free providers, one key)"
+            : "(free tier)"
           : {
               opencode: "(free models with your Zen key)",
               anthropic: "(API key)",
@@ -111,7 +124,12 @@ export function createDialogProviderOptions() {
 
   const options = createMemo(() => {
     return pipe(
-      providerOptions(sync.data.provider_next.all),
+      // FreeLLMAPI isn't in the provider catalog; it joins once it's running and its key is saved.
+      providerOptions(
+        sync.data.provider_next.all.some((item) => item.id === "freellmapi")
+          ? sync.data.provider_next.all
+          : [...sync.data.provider_next.all, { id: "freellmapi", name: "FreeLLMAPI" }],
+      ),
       map((provider) => {
         if (provider.type === "custom") {
           return {
@@ -399,6 +417,20 @@ function ApiMethod(props: ApiMethodProps) {
       placeholder="API key"
       description={() =>
         ({
+          freellmapi: (
+            <box gap={1}>
+              <text fg={theme.textMuted}>
+                FreeLLMAPI runs on your machine and combines the free tiers of many providers behind one key. It is a
+                separate open-source app for personal use. The capacity is large but not unlimited, and you add a key
+                for each provider you want in it.
+              </text>
+              <text fg={theme.text}>
+                Install it from <span style={{ fg: theme.primary }}>https://github.com/tashfeenahmed/freellmapi</span>,
+                open <span style={{ fg: theme.primary }}>http://localhost:3001</span>, add your keys, then paste its
+                unified key here.
+              </text>
+            </box>
+          ),
           opencode: (
             <box gap={1}>
               <text fg={theme.textMuted}>
@@ -436,6 +468,14 @@ function ApiMethod(props: ApiMethodProps) {
         })
         await sdk.client.instance.dispose()
         await sync.bootstrap()
+        if (props.providerID === "freellmapi" && !sync.data.provider_next.connected.includes("freellmapi")) {
+          toast.show({
+            variant: "warning",
+            message: "Key saved, but FreeLLMAPI isn't answering on localhost:3001. Start it and it will connect.",
+          })
+          dialog.clear()
+          return
+        }
         if (props.custom && !sync.data.provider_next.all.some((provider) => provider.id === props.providerID)) {
           toast.show({
             variant: "info",

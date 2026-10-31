@@ -35,6 +35,7 @@ const FREE_TIER = new Set([
   "cloudflare-workers-ai",
   "ollama",
   "lmstudio",
+  "freellmapi",
 ])
 
 const cooldown = new Map<string, number>()
