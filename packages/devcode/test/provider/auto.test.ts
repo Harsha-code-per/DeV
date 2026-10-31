@@ -43,11 +43,15 @@ describe("AutoProvider", () => {
     expect(AutoProvider.candidates(providers).map((m) => String(m.providerID))).toEqual(["cerebras", "groq"])
   })
 
-  test("only free-tier or zero-cost models are candidates", () => {
+  test("only models confirmed free are candidates, not ones with a missing price", () => {
     const providers = {
-      openai: { id: "openai", models: { paid: model("openai", "paid", 5), zero: model("openai", "zero", 0) } },
+      anyapi: { id: "anyapi", models: { unpriced: model("anyapi", "unpriced", 0) } },
+      openrouter: {
+        id: "openrouter",
+        models: { paid: model("openrouter", "paid", 5), free: model("openrouter", "free-model:free", 0) },
+      },
     } as unknown as Record<string, Provider.Info>
-    expect(AutoProvider.candidates(providers).map((m) => String(m.id))).toEqual(["zero"])
+    expect(AutoProvider.candidates(providers).map((m) => String(m.id))).toEqual(["free-model:free"])
   })
 
   test("moves on when a candidate never starts responding", async () => {
