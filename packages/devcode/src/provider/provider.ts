@@ -98,8 +98,9 @@ function timeoutController(ms: number) {
 // fetch layer, on top of `options.fetch` when a custom fetch is configured.
 function timeoutFetch(options: Record<string, any>) {
   const customFetch = options["fetch"]
-  const chunkTimeout = options["chunkTimeout"] ?? 300_000
-  const headerTimeout = options["headerTimeout"] ?? 300_000
+  // A stuck model must fail while someone is still watching, so the defaults are well under OpenCode's 5 minutes.
+  const chunkTimeout = options["chunkTimeout"] ?? 90_000
+  const headerTimeout = options["headerTimeout"] ?? 60_000
   const timeout = options["timeout"]
 
   return async (input: any, init?: BunFetchRequestInit) => {

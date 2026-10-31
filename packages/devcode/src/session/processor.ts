@@ -656,20 +656,42 @@ const layer = Layer.effect(
             const stream = llm.stream(streamInput)
             // Show which free model the router is on; attempt 0 marks progress rather than a retry.
             const bridge = yield* EffectBridge.make()
-            const unwatch = AutoProvider.watch(ctx.sessionID, (message) => {
+            const progress = (message: string | undefined) => {
               bridge.fork(
                 status.set(
                   ctx.sessionID,
                   message ? { type: "retry", attempt: 0, message, next: Date.now() } : { type: "busy" },
                 ),
               )
-            })
+            }
+            const unwatch = AutoProvider.watch(ctx.sessionID, progress)
+            // The router reports for itself; a directly chosen model gets the same "still waiting" signal.
+            const state = { waiting: false }
+            const waiting =
+              streamInput.model.providerID === AutoProvider.ID
+                ? undefined
+                : setTimeout(() => {
+                    state.waiting = true
+                    progress(`Waiting for ${streamInput.model.name}…`)
+                  }, 2_000)
 
             yield* stream.pipe(
-              Stream.tap((event) => handleEvent(event)),
+              Stream.tap((event) =>
+                Effect.gen(function* () {
+                  clearTimeout(waiting)
+                  if (state.waiting) progress(undefined)
+                  state.waiting = false
+                  yield* handleEvent(event)
+                }),
+              ),
               Stream.takeUntil(() => ctx.needsCompaction),
               Stream.runDrain,
-              Effect.ensuring(Effect.sync(unwatch)),
+              Effect.ensuring(
+                Effect.sync(() => {
+                  clearTimeout(waiting)
+                  unwatch()
+                }),
+              ),
             )
           }).pipe(
             Effect.onInterrupt(() =>
