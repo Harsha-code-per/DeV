@@ -121,6 +121,15 @@ it.instance("provider loaded from env variable", () =>
   }),
 )
 
+it.instance("a shell key doesn't connect a provider in interactive use", () =>
+  Effect.gen(function* () {
+    yield* setProcessEnv("ANTHROPIC_API_KEY", "test-api-key")
+    yield* setProcessEnv("DEV_IGNORE_SHELL_KEYS", "1")
+    const providers = yield* list
+    expect(providers[ProviderV2.ID.anthropic]).toBeUndefined()
+  }),
+)
+
 it.instance(
   "provider loaded from config with apiKey option",
   Effect.gen(function* () {

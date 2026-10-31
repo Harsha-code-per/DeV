@@ -93,9 +93,7 @@ export function createDialogProviderOptions() {
     const value = await DialogPrompt.show(dialog, "Other", {
       placeholder: "Provider id",
       description: () => (
-        <text fg={theme.textMuted}>
-          This only stores a credential. Configure the provider in opencode.json to use it.
-        </text>
+        <text fg={theme.textMuted}>This only stores a credential. Configure the provider in dev.json to use it.</text>
       ),
     })
     if (value === null) return
@@ -132,16 +130,51 @@ export function createDialogProviderOptions() {
         const providerID = provider.providerID
         const consoleManaged = isConsoleManagedProvider(sync.data.console_state.consoleManagedProviders, providerID)
         const connected = sync.data.provider_next.connected.includes(providerID)
+        const info = sync.data.provider_next.all.find((item) => item.id === providerID)
+        // A key in the shell is offered here and only used if chosen; it never connects by itself.
+        const shellKey = connected ? undefined : info?.env.find((name) => process.env[name])
 
         return {
           title: provider.title,
           value: provider.value,
-          description: provider.description,
+          description: connected
+            ? `(connected${info?.source === "config" ? " in dev.json" : ""})`
+            : shellKey
+              ? `(found ${shellKey} in your shell)`
+              : provider.description,
           footer: consoleManaged ? sync.data.console_state.activeOrgName : undefined,
           category: provider.category,
           gutter: connected && onboarded() ? () => <text fg={theme.success}>✓</text> : undefined,
           async onSelect() {
             if (consoleManaged) return
+
+            if (shellKey) {
+              const use = await new Promise<boolean | null>((resolve) => {
+                dialog.replace(
+                  () => (
+                    <DialogSelect
+                      title={`Connect ${provider.title}`}
+                      options={[
+                        { title: `Use ${shellKey} from your shell`, value: true },
+                        { title: "Connect another way", value: false },
+                      ]}
+                      onSelect={(option) => resolve(option.value)}
+                    />
+                  ),
+                  () => resolve(null),
+                )
+              })
+              if (use === null) return
+              if (use) {
+                await sdk.client.auth.set({
+                  providerID,
+                  auth: { type: "api", key: process.env[shellKey] ?? "" },
+                })
+                await sdk.client.instance.dispose()
+                await sync.bootstrap()
+                return dialog.replace(() => <DialogModel providerID={providerID} />)
+              }
+            }
 
             const methods = sync.data.provider_auth[providerID] ?? [
               {
@@ -406,7 +439,7 @@ function ApiMethod(props: ApiMethodProps) {
         if (props.custom && !sync.data.provider_next.all.some((provider) => provider.id === props.providerID)) {
           toast.show({
             variant: "info",
-            message: `Saved credential for ${props.providerID}. Configure it in opencode.json to use it.`,
+            message: `Saved credential for ${props.providerID}. Configure it in dev.json to use it.`,
           })
           dialog.clear()
           return

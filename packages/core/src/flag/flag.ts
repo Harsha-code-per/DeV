@@ -54,6 +54,10 @@ export const Flag = {
   get DEV_DISABLE_MCP_LAZY() {
     return truthy("DEV_DISABLE_MCP_LAZY")
   },
+  /** Interactive use: API keys in the shell connect a provider only when the user chooses them in /connect. */
+  get DEV_IGNORE_SHELL_KEYS() {
+    return truthy("DEV_IGNORE_SHELL_KEYS")
+  },
   /** Run shell commands without the OS sandbox (tests, or platforms where it can't start). */
   get DEV_DISABLE_SANDBOX() {
     return truthy("DEV_DISABLE_SANDBOX")

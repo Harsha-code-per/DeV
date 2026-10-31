@@ -257,9 +257,12 @@ export const TuiThreadCommand = cmd({
       if (password) UI.println(`Server username ${ServerAuth.displayUsername()} password ${password}`)
 
       const worker = new Worker(file, {
-        env: Object.fromEntries(
-          Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined),
-        ),
+        env: {
+          ...Object.fromEntries(
+            Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined),
+          ),
+          DEV_IGNORE_SHELL_KEYS: "1",
+        },
       })
       const client = Rpc.client<typeof rpc>(worker)
       const reload = () => {

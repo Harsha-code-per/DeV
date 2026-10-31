@@ -1639,8 +1639,8 @@ const layer = Layer.effect(
           database[providerID] = parsed
         }
 
-        // load env
-        const envs = yield* env.all()
+        // load env: headless runs only. In the TUI a shell key is offered in /connect, never connected silently.
+        const envs = Flag.DEV_IGNORE_SHELL_KEYS ? {} : yield* env.all()
         for (const [id, provider] of Object.entries(database)) {
           const providerID = ProviderV2.ID.make(id)
           if (disabled.has(providerID)) continue

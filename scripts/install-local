@@ -1,0 +1,18 @@
+#!/bin/sh
+# Builds DeV Code from this checkout and points `devcode` and `dev` at that build, for developing DeV
+# itself. The version carries the commit, so `dev --version` shows which code you are really running.
+# Users don't need this: they install a release with curl or npm.
+set -e
+root=$(cd "$(dirname "$0")/.." && pwd)
+cd "$root"
+commit=$(git rev-parse --short HEAD)
+[ -z "$(git status --porcelain -- packages)" ] || commit="$commit-dirty"
+cd packages/devcode
+DEV_VERSION="0.0.0-$commit" flock /var/tmp/dev-heavy.lock "$root/scripts/capped" 6G -- \
+  bun run script/build.ts --single --skip-install
+binary=$(ls -d "$PWD"/dist/devcode-*/bin/devcode | head -1)
+mkdir -p "$HOME/.local/bin"
+ln -sf "$binary" "$HOME/.local/bin/devcode"
+ln -sf "$binary" "$HOME/.local/bin/dev"
+echo "Linked devcode and dev to $binary"
+"$HOME/.local/bin/devcode" --version
