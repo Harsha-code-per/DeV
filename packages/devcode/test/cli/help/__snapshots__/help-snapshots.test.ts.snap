@@ -427,6 +427,7 @@ Commands:
   dev session                      manage sessions
   dev plugin <module>              install plugin and update config                  [aliases: plug]
   dev db                           database tools
+  dev native-host [origin]         native messaging host for DeV for Chrome
 
 Positionals:
   project  path to start dev in                                                             [string]
@@ -830,6 +831,7 @@ Commands:
   dev session                      manage sessions
   dev plugin <module>              install plugin and update config                  [aliases: plug]
   dev db                           database tools
+  dev native-host [origin]         native messaging host for DeV for Chrome
 
 Positionals:
   project  path to start dev in                                                             [string]
@@ -893,6 +895,7 @@ Commands:
   dev session                      manage sessions
   dev plugin <module>              install plugin and update config                  [aliases: plug]
   dev db                           database tools
+  dev native-host [origin]         native messaging host for DeV for Chrome
 
 Positionals:
   project  path to start dev in                                                             [string]
