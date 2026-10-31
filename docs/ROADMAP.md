@@ -2,6 +2,24 @@
 
 This is the single source of truth for what we build and in what order. Every item has a checkbox. Tick it in the commit that finishes it, and add anything new here before working on it.
 
+## How to read this roadmap
+
+A ticked item is **built**. It counts as **done** only once it is verified in the compiled `devcode` in a real terminal (and on GitHub CI, read from `gh run`). Most items below were checked from source only; the v1 plan re-verifies what matters on the shipped build.
+
+### Definition of v1
+
+v1 is **DeV Code** on Linux, macOS and Windows. It succeeds when, on the shipped build:
+
+1. One `curl` or `npm` command installs `dev` on a clean machine, checksums verified, and the owner uses that same install.
+2. A new user with no paid key and no env variables connects a model by command and gets a reply within 2 minutes of installing.
+3. Status appears within 2s, 90% of simple replies arrive within 15s, and 20 of 20 runs don't hang.
+4. The owner signs off on a design unlike any other agent, and a check finds no visible OpenCode branding (apart from OpenCode Zen, credits and the licence).
+5. At least 25 of 30 benchmark tasks pass on free models, published next to Claude Code and Codex.
+6. No paid model is used unless the user chose it, the sandbox works in the shipped binary, and the secret scan is clean.
+7. CI is green on GitHub, and `devcode upgrade` works from one real release to the next.
+
+Desktop, Chrome, voice and computer use follow as separate releases.
+
 ## What DeV is
 
 DeV is a **product family**, built as one open-source project (MIT), free to use, and working with any model.
@@ -89,10 +107,19 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] LICENSE (MIT with OpenCode's and DeV's copyright lines), NOTICE (OpenCode MIT, sandbox-runtime Apache-2.0).
 - [x] CONTRIBUTING (DCO sign-off, `scripts/capped`), CODE_OF_CONDUCT, issue and PR templates.
 - [x] Fix the 3 `packages/sdk-next` embedded tests that already fail in upstream v1.19.4 (SQLite "unable to open database file"), so CI starts fully green.
-- [ ] CI on every PR: typecheck, tests, brand check, gitleaks (`.github/workflows/ci.yml` written; tick after its first green run on GitHub).
+- [ ] CI on every PR: typecheck, tests, brand check, gitleaks. Written, and it has passed before; keep it green and read it with `gh run`.
 - [x] Rewrite README for the product family.
 
 ---
+
+## v1 blockers found by testing the shipped build (2026-10-31)
+
+- [ ] Free models feel broken: no on-screen status while failing over, a 30s silent window per candidate, no timeout for directly chosen models.
+- [ ] freellmapi: never integrated. Plan: detect a running FreeLLMAPI like Ollama, with guided setup, and add more free providers to `auto/free`. Honest wording: large free capacity, not unlimited.
+- [ ] `auto/free` must only use models confirmed free (`anyapi/openai/gpt-5.4` qualified on a listed price of 0).
+- [ ] DeV picks the mode (build, plan, goal) by itself, tells you, and you can override it.
+- [ ] Release versions still come from OpenCode's npm package in `packages/script/src/index.ts`; use DeV's own. `release.yml` has never run, and no release has ever been installed.
+- [x] Shell API keys no longer connect silently; `/connect` offers them. `scripts/install-local` builds and links a checkout, with the commit in the version.
 
 ## M1 — DeV Code: match, then beat, Claude Code
 
@@ -113,13 +140,13 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] **Project memory:** `DEV.md` (like `CLAUDE.md`), loaded hierarchically (user `~/.config/dev/DEV.md`, project, folders as files are read); AGENTS.md and CLAUDE.md still work. `# note` adds to the project memory, `#~ note` to yours; `/memory` opens it in `$EDITOR`; `/init` writes DEV.md.
 - [x] **Slash commands with Claude Code's names:** `/init`, `/review`, `/compact`, `/clear`, `/cost`, `/model`, `/permissions`, `/mcp`, `/plugins`, `/resume`, `/rewind`, `/status`, `/config`, `/doctor` (debug info for now), `/bug`, `/memory`.
 - [x] **Hooks** configured by the user (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SessionStart) as shell commands in dev.json `hooks`, in Claude Code's documented shape: JSON on stdin, exit 2 blocks with stderr as the reason. Verified end to end.
-  - [ ] Follow-ups: exit 2 on Stop (keep working) and SessionStart output as context.
+  - [x] Exit 2 on Stop keeps working; SessionStart output becomes context.
 - [x] **Subagents:** custom agents in `.dev/agents/`, parallel subagents, and background subagents (on by default).
 - [x] **Checkpoints and rewind** of both code and conversation: `/rewind` picks any earlier message to revert (files and conversation) or fork; `/undo` and `/redo` step.
 - [x] **Headless mode:** `dev -p "prompt"` (= `dev run`), `--output-format json|stream-json`, and the JS SDK for scripting.
 - [x] A GitHub Action for DeV Code (`github/action.yml`: `uses: Harsha-code-per/DeV/github@main`). Usable once the repo is public and has a release.
 - [x] **Status line:** `status_line: { command, interval }` in tui.json, as in Claude Code (JSON on stdin, first line shown under the prompt). `@` file mentions with fuzzy search already exist.
-- [ ] Output styles.
+- [x] Output styles (`output_style` in dev.json).
 - [ ] **Reliability:**
   - [x] a plan → do → verify loop (run tests and builds before saying "done"), asked of every model in the system prompt;
   - [x] no silent stops: a fresh reply that only announces its next step, or is empty, gets a "go ahead" (at most twice per message). Took 3 of the 6 failed benchmark tasks to passing;
@@ -147,9 +174,10 @@ Not urgent, but it must be done before v1.0.
 - [x] **Logo and mark:** a D with a v in its bowl, ink on saffron (`packages/identity/mark.svg`, rendered by `build.sh` to PNGs and the web favicons); the wordmark's V is saffron in the TUI, CLI and exit screen.
 - [x] Desktop app icons (`packages/desktop/icons`, .icns/.ico) from the same mark, with the M4 desktop rebrand.
 - [x] Default TUI theme `dev` in the signature colour.
-- [x] **TUI redesign, first pass** (checked on screen): rounded saffron prompt and permission frames; your messages marked with a saffron chevron instead of a bar on a panel; saffron reply marker, main agent, sidebar titles and footer mark; a time-of-day greeting on the home screen; hint row teaches shift+tab modes and # memory.
-- [x] TUI redesign, second pass: tool output in a thin rounded frame with a saffron marker; light theme checked on screen (deep saffron stays readable); `/goal` status row. (`script/ansi-to-png.py` turns tmux captures into images.)
-- [ ] TUI polish later: sidebar layout, the diff view's empty left column for new files.
+- [x] **TUI restyle** (colours and frames only; the layout is still OpenCode's): rounded saffron prompt and permission frames; your messages marked with a saffron chevron instead of a bar on a panel; saffron reply marker, main agent, sidebar titles and footer mark; a time-of-day greeting on the home screen; hint row teaches shift+tab modes and # memory.
+- [x] TUI restyle, tool output: a thin rounded frame with a saffron marker; light theme checked on screen (deep saffron stays readable); `/goal` status row. (`script/ansi-to-png.py` turns tmux captures into images.)
+- [ ] **Real TUI redesign, unlike any other agent:** the owner picks from three designs rendered as real screens, then the layout is rebuilt to match. Not started.
+- [ ] Also: the diff view's empty left column for new files; rename the visible `opencode.log` and `opencode-*.db` files, migrating sessions.
 - [ ] **Web and desktop UI theme** from the same palette; replace OpenCode's SVG wordmark in `packages/ui` and the desktop app.
 - [ ] Website and docs styled to match.
 
