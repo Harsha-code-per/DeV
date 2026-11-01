@@ -85,6 +85,9 @@ function wrapSSE(res: Response, ms: number, ctl: AbortController) {
   })
 }
 
+// These need a sign-in or service DeV doesn't offer.
+const UNAVAILABLE_PROVIDERS = ["opencode", "opencode-go", "github-copilot"]
+
 function timeoutController(ms: number) {
   const ctl = new AbortController()
   const id = setTimeout(() => ctl.abort(new ProviderError.HeaderTimeoutError(ms)), ms)
@@ -98,7 +101,7 @@ function timeoutController(ms: number) {
 // fetch layer, on top of `options.fetch` when a custom fetch is configured.
 function timeoutFetch(options: Record<string, any>) {
   const customFetch = options["fetch"]
-  // A stuck model must fail while someone is still watching, so the defaults are well under OpenCode's 5 minutes.
+  // A stuck model must fail while someone is still watching, so the defaults are short.
   const chunkTimeout = options["chunkTimeout"] ?? 90_000
   const headerTimeout = options["headerTimeout"] ?? 60_000
   const timeout = options["timeout"]
@@ -221,21 +224,6 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
           },
         },
       }),
-    opencode: Effect.fnUntraced(function* (input: Info) {
-      const env = yield* dep.env()
-      const hasKey = iife(() => {
-        if (input.env.some((item) => env[item])) return true
-        return false
-      })
-      const ok =
-        hasKey ||
-        Boolean(yield* dep.auth(input.id)) ||
-        Boolean((yield* dep.config()).provider?.["opencode"]?.options?.apiKey)
-
-      // Zen is OpenCode's service; it is used only with the user's own Zen key.
-      if (!ok) return { autoload: false }
-      return { autoload: Object.keys(input.models).length > 0, options: {} }
-    }),
     openai: () =>
       Effect.succeed({
         autoload: false,
@@ -417,7 +405,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
           }
 
           // Region resolution precedence (highest to lowest):
-          // 1. options.region from opencode.json provider config
+          // 1. options.region from dev.json provider config
           // 2. defaultRegion from AWS_REGION environment variable
           // 3. Default "us-east-1" (baked into defaultRegion)
           const region = options?.region ?? defaultRegion
@@ -659,7 +647,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
       const directory = yield* InstanceState.directory
 
       const aiGatewayHeaders = {
-        "User-Agent": `opencode/${InstallationVersion} gitlab-ai-provider/${GITLAB_PROVIDER_VERSION} (${os.platform()} ${os.release()}; ${os.arch()})`,
+        "User-Agent": `devcode/${InstallationVersion} gitlab-ai-provider/${GITLAB_PROVIDER_VERSION} (${os.platform()} ${os.release()}; ${os.arch()})`,
         "anthropic-beta": "context-1m-2025-08-07",
         ...providerConfig?.options?.aiGatewayHeaders,
       }
@@ -792,7 +780,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         options: {
           apiKey,
           headers: {
-            "User-Agent": `opencode/${InstallationVersion} cloudflare-workers-ai (${os.platform()} ${os.release()}; ${os.arch()})`,
+            "User-Agent": `devcode/${InstallationVersion} cloudflare-workers-ai (${os.platform()} ${os.release()}; ${os.arch()})`,
           },
         },
         async getModel(sdk: any, modelID: string) {
@@ -837,7 +825,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
       if (!apiToken) {
         throw new Error(
           "CLOUDFLARE_API_TOKEN (or CF_AIG_TOKEN) is required for Cloudflare AI Gateway. " +
-            "Set it via environment variable or run `opencode auth cloudflare-ai-gateway`.",
+            "Set it via environment variable or run `devcode auth cloudflare-ai-gateway`.",
         )
       }
 
@@ -862,7 +850,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         skipCache: input.options?.skipCache,
         collectLog: input.options?.collectLog,
         headers: {
-          "User-Agent": `opencode/${InstallationVersion} cloudflare-ai-gateway (${os.platform()} ${os.release()}; ${os.arch()})`,
+          "User-Agent": `devcode/${InstallationVersion} cloudflare-ai-gateway (${os.platform()} ${os.release()}; ${os.arch()})`,
         },
       }
 
@@ -1455,7 +1443,7 @@ const layer = Layer.effect(
         const bridge = yield* EffectBridge.make()
         const cfg = yield* config.get()
         const modelsDev = yield* modelsDevSvc.get()
-        const catalog = mapValues(modelsDev, fromModelsDevProvider)
+        const catalog = mapValues(pickBy(modelsDev, (_, id) => !UNAVAILABLE_PROVIDERS.includes(id)), fromModelsDevProvider)
         const database = mapValues(catalog, toPublicInfo)
 
         const providers: Record<ProviderV2.ID, Info> = {} as Record<ProviderV2.ID, Info>
@@ -2023,11 +2011,7 @@ const layer = Layer.effect(
         return undefined
       }
 
-      const priority = providerID.startsWith("opencode")
-        ? ["gpt-nano"]
-        : providerID.startsWith("github-copilot")
-          ? ["gpt-mini", ...smallModelFamilyPriority]
-          : smallModelFamilyPriority
+      const priority = smallModelFamilyPriority
       const models = sortBy(
         Object.values(provider.models),
         [(model) => model.release_date, "desc"],
@@ -2104,7 +2088,7 @@ const layer = Layer.effect(
   }),
 )
 
-const priority = ["gpt-5", "claude-sonnet-4", "big-pickle", "gemini-3-pro"]
+const priority = ["gpt-5", "claude-sonnet-4", "gemini-3-pro"]
 const smallModelFamilyPriority = ["gemini-flash", "gpt-nano", "claude-haiku"]
 export function sort<T extends { id: string }>(models: T[]) {
   return sortBy(

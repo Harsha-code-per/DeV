@@ -9,17 +9,14 @@ import type {
 import { Config } from "@/config/config"
 import { createDevcodeClient } from "@dev-ai/sdk"
 import { ServerAuth } from "@/server/auth"
-import { CodexAuthPlugin } from "./openai/codex"
 import { Session } from "@/session/session"
 import { NamedError } from "@dev-ai/core/util/error"
-import { CopilotAuthPlugin } from "./github-copilot/copilot"
 import { ModalPlugin } from "./modal/modal"
 import { gitlabAuthPlugin as GitlabAuthPlugin } from "opencode-gitlab-auth"
 import { PoeAuthPlugin } from "opencode-poe-auth"
 import { CloudflareAIGatewayAuthPlugin, CloudflareWorkersAuthPlugin } from "./cloudflare"
 import { AzureAuthPlugin } from "./azure"
 import { DigitalOceanAuthPlugin } from "./digitalocean"
-import { XaiAuthPlugin } from "./xai"
 import { CerebrasPlugin } from "./cerebras"
 import { HooksPlugin } from "./hooks"
 import { SnowflakeCortexAuthPlugin } from "./snowflake-cortex"
@@ -60,21 +57,11 @@ export interface Interface {
 
 export class Service extends Context.Service<Service, Interface>()("@dev-ai/Plugin") {}
 
-export function experimentalWebSocketsEnabled(input: { enabled: boolean; channel?: string }) {
-  return input.enabled || ["local", "dev", "beta"].includes(input.channel ?? InstallationChannel)
-}
-
 // Built-in plugins that are directly imported (not installed from npm)
-function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
+function internalPlugins(): PluginInstance[] {
   return [
-    // Temporary rollout: pre-release builds use WebSockets by default; releases require explicit opt-in.
-    (input) =>
-      CodexAuthPlugin(input, {
-        experimentalWebSockets: experimentalWebSocketsEnabled({ enabled: flags.experimentalWebSockets }),
-      }),
-    CopilotAuthPlugin,
     ModalPlugin,
-    // Third-party plugins are typed against OpenCode's published plugin SDK; same API as ours.
+    // Third-party plugins are typed against an upstream plugin SDK with the same API as ours.
     GitlabAuthPlugin as unknown as PluginInstance,
     PoeAuthPlugin as unknown as PluginInstance,
     CloudflareWorkersAuthPlugin,
@@ -82,7 +69,6 @@ function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
     AzureAuthPlugin,
     DigitalOceanAuthPlugin,
     SnowflakeCortexAuthPlugin,
-    XaiAuthPlugin,
     CerebrasPlugin,
     HooksPlugin,
   ]
@@ -170,7 +156,7 @@ const layer = Layer.effect(
           $: typeof Bun === "undefined" ? undefined : Bun.$,
         }
 
-        for (const plugin of flags.disableDefaultPlugins ? [] : internalPlugins(flags)) {
+        for (const plugin of flags.disableDefaultPlugins ? [] : internalPlugins()) {
           const init = yield* Effect.tryPromise({
             try: () => plugin(input),
             catch: errorMessage,

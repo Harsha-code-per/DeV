@@ -26,14 +26,6 @@ export const PLUGIN_SDK_PACKAGE = "@opencode-ai/plugin"
 // OpenCode's package has its own versions; this is the one DeV forked from, not DeV's version.
 export const PLUGIN_SDK_VERSION = "1.19.4"
 
-/**
- * The client name ChatGPT (Codex) and xAI sign-in send as their OAuth `originator`/`referrer`. These
- * providers accept known partner names, and DeV inherited OpenCode's integrations, so it stays
- * "opencode" for now to keep those sign-ins working. Switch to "devcode" once DeV is registered with
- * each provider (roadmap M0.2); this is the only place to change.
- */
-export const OAUTH_CLIENT = "opencode"
-
 /** `name.json` and `name.jsonc` for every config name, preferred first. */
 export function configFiles(dir: string) {
   return CONFIG_NAMES.flatMap((name) => [path.join(dir, `${name}.json`), path.join(dir, `${name}.jsonc`)])
