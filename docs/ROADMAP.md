@@ -14,7 +14,7 @@ v1 is **DeV Code** on Linux, macOS and Windows. It succeeds when, on the shipped
 2. A new user with no paid key and no env variables connects a model by command and gets a reply within 2 minutes of installing.
 3. Status appears within 2s, 90% of simple replies arrive within 15s, and 20 of 20 runs don't hang.
 4. The owner signs off on a design unlike any other agent, and a check finds no visible OpenCode branding (apart from OpenCode Zen, credits and the licence).
-5. At least 25 of 30 benchmark tasks pass on free models, published. Public material names no other company or product (the owner's decision, 2026-11-01); OpenCode is credited.
+5. At least 25 of 30 benchmark tasks pass on free models, published. Latest on v0.9.0-rc.3 with one free provider: 24/30, so this is not met yet. Public material names no other company or product (the owner's decision, 2026-11-01); OpenCode is credited.
 6. No paid model is used unless the user chose it, the sandbox works in the shipped binary, and the secret scan is clean.
 7. CI is green on GitHub, and `devcode upgrade` works from one real release to the next.
 
@@ -170,7 +170,8 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
   - [x] no silent stops: a fresh reply that only announces its next step, or is empty, gets a "go ahead" (at most twice per message). Took 3 of the 6 failed benchmark tasks to passing;
   - [x] automatic retries, with a visible wait;
   - [x] long sessions survive compaction: a real multi-file task on a forced 25K context compacted four times and kept working without an error;
-  - [x] no silent hang on a stuck model: first-response and between-chunk timeouts, and `dev run` exits at once on SIGTERM.
+  - [x] no silent hang on a stuck model: first-response and between-chunk timeouts.
+  - [x] `dev run` stops on SIGTERM: the sandbox library swallowed the signal once a shell command had run, leaving scripts stuck for over a minute. Found by the benchmark; proven with a test.
   - [x] a malformed tool call rejected by the provider (Groq) is retried instead of ending the session.
 
 ### Beyond Claude Code

@@ -101,7 +101,10 @@ export async function wrap(command: string, writable: string[], shell?: string, 
   if (!supported() || settings?.enabled === false) return undefined
   const { SandboxManager } = await import("@anthropic-ai/sandbox-runtime")
   ready ??= SandboxManager.initialize(config(writable, settings)).then(
-    () => true,
+    () => {
+      exitOnStop()
+      return true
+    },
     (error: unknown) => {
       console.error(`DeV sandbox unavailable, shell commands run unsandboxed: ${String(error)}`)
       return false
@@ -162,6 +165,16 @@ export async function env() {
 export async function cleanup() {
   const { SandboxManager } = await import("@anthropic-ai/sandbox-runtime")
   SandboxManager.cleanupAfterCommand()
+}
+
+// The library cleans up on SIGINT and SIGTERM but doesn't exit, which would turn a stop signal into a
+// no-op once a shell command has run. Exiting here still runs its cleanup through the exit event.
+function exitOnStop() {
+  process.once("SIGTERM", () => process.exit(143))
+  process.once("SIGINT", () => {
+    // Interactive `dev run` handles Ctrl-C itself.
+    if (process.listenerCount("SIGINT") === 0) process.exit(130)
+  })
 }
 
 function expand(entry: string) {

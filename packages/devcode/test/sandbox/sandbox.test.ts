@@ -39,6 +39,31 @@ describe.skipIf(!available)("shell sandbox", () => {
     expect((await sh("echo secret > .env", dir.path)).code).not.toBe(0)
   })
 
+  test("a stop signal still ends the process once the sandbox has started", async () => {
+    await using dir = await tmpdir()
+    const script = path.join(dir.path, "hold.ts")
+    await Bun.write(
+      script,
+      `import { Sandbox } from ${JSON.stringify(path.resolve(import.meta.dir, "../../src/sandbox"))}
+await Sandbox.wrap("true", [${JSON.stringify(dir.path)}], "/bin/bash")
+console.log("ready")
+setInterval(() => {}, 1000)
+`,
+    )
+    const proc = Bun.spawn(["bun", "run", script], {
+      cwd: path.resolve(import.meta.dir, "../.."),
+      env: { ...process.env, DEV_DISABLE_SANDBOX: "false" },
+      stdout: "pipe",
+      stderr: "inherit",
+    })
+    const reader = proc.stdout.getReader()
+    await reader.read()
+    const stopped = Date.now()
+    proc.kill("SIGTERM")
+    expect(await proc.exited).toBe(143)
+    expect(Date.now() - stopped).toBeLessThan(3000)
+  }, 20_000)
+
   test("leaves no placeholder files in the project", async () => {
     await using dir = await tmpdir()
     await sh("true", dir.path)

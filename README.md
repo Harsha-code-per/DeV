@@ -136,7 +136,7 @@ The [docs](https://harsha-code-per.github.io/DeV/docs.html) cover configuration,
 
 ## How we build it
 
-- **Measured, not claimed.** We test DeV on [real coding tasks](bench/README.md) with hidden tests it never sees. It passes 25 of 30 on free models, at no cost.
+- **Measured, not claimed.** We test DeV on [real coding tasks](bench/README.md) with hidden tests it never sees. It passes 24 of 30 on free models, at no cost.
 - **Tested as you get it.** Every release is installed on clean Linux, macOS and Windows machines.
 - **Secure by default.** We treat the model as untrusted. Read how in [SECURITY.md](SECURITY.md).
 
