@@ -42,10 +42,11 @@ DeV Code uses whatever `dev` has stored from `/connect`; set `XDG_DATA_HOME` to 
 
 | Date | Agent | Build | Models | Passed | Cost | Median time |
 |---|---|---|---|---|---|---|
+| 2026-11-01 | DeV Code | v0.9.0-rc.5 | `auto/free` with three free providers | 27/30 | $0 | 58s |
 | 2026-11-01 | DeV Code | v0.9.0-rc.3 | `auto/free` with one free provider | 24/30 | $0 | 113s |
 | 2026-11-01 | DeV Code | compiled binary, 59aeaeb3c | `auto/free` with three free providers | 25/30 | $0 | 40s |
 
-One run of each task. Failed: py-access-stats, py-parse-duration, py-spec-ini, ts-deep-merge, ts-emitter-once.
+One run of each task. Latest failures: py-access-stats, sh-log-errors, ts-emitter-once.
 
 ## Not yet
 
