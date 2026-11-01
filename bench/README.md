@@ -40,6 +40,14 @@ Each agent run is memory-capped with `scripts/capped 3G` and killed at the timeo
 | `claude` | `claude -p --dangerously-skip-permissions --output-format json <task>` |
 | `codex` | `codex exec --json --sandbox workspace-write <task>` (Codex reports tokens, not cost) |
 
+## Results
+
+| Date | Agent | Build | Models | Passed | Cost | Median time |
+|---|---|---|---|---|---|---|
+| 2026-11-01 | DeV Code | compiled binary, 59aeaeb3c | `auto/free` with NVIDIA, Google and Groq free keys | 25/30 | $0 | 40s |
+
+One run of each task. Failed: py-access-stats, py-parse-duration, py-spec-ini, ts-deep-merge, ts-emitter-once.
+
 ## Not yet
 
 - Running in CI and blocking regressions (roadmap M1).
