@@ -17,7 +17,7 @@
 // builders (`opencode.serve(opts)`, `opencode.acp(opts)`, `opencode.auth(...)`)
 // without changing the fixture. Long-lived commands like `serve` will need a
 // different return shape — see the TODO at the bottom of DevcodeCli.
-import { test, type TestOptions } from "bun:test"
+import { type TestOptions } from "bun:test"
 import { FSUtil } from "@dev-ai/core/fs-util"
 import { AppNodeBuilder } from "@dev-ai/core/effect/app-node-builder"
 import { LayerNode } from "@dev-ai/core/effect/layer-node"
@@ -527,6 +527,9 @@ function expectExit(result: RunResult, expected: number, label = "opencode") {
 // `it.live(name, () => withCliFixture(fixture))` — one fewer nesting level at
 // every call site. Use this for any test that needs the opencode CLI fixture.
 //
+// These run one at a time: many CLI startups at once on a small CI runner used up each other's
+// timeouts and failed different tests every run.
+//
 // Subprocess tests must run against the real clock — a TestClock-paused
 // environment can't drive a child process. If you need `.only` or `.skip`, fall
 // back to `it.live` + `withCliFixture` directly.
@@ -539,14 +542,4 @@ export const cliIt = {
     body: (input: CliFixture) => Effect.Effect<A, E, Scope.Scope | HttpClient.HttpClient>,
     opts?: number | TestOptions,
   ) => it.live(name, () => withCliFixture(body), opts),
-  concurrent: <A, E>(
-    name: string,
-    body: (input: CliFixture) => Effect.Effect<A, E, Scope.Scope | HttpClient.HttpClient>,
-    opts?: number | TestOptions,
-  ) =>
-    (process.platform === "win32" ? test : test.concurrent)(
-      name,
-      () => Effect.runPromise(Effect.scoped(withCliFixture(body))),
-      opts,
-    ),
 }
