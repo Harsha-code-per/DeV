@@ -4,7 +4,7 @@ name: pages
 on:
   push:
     branches: [main]
-    paths: [install, install.ps1, website/**, .github/workflows/pages.yml]
+    paths: [install, install.ps1, website/**, packages/core/src/v1/config/**, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:
@@ -30,6 +30,10 @@ jobs:
         with:
           persist-credentials: false
       - run: mkdir site && cp install install.ps1 website/* site/
+      - uses: ./.github/actions/setup-bun
+      # JSON schemas for dev.json and tui.json, so editors can autocomplete settings.
+      - run: mkdir -p ../../site/schema && bun script/schema.ts ../../site/schema/config.json ../../site/schema/tui.json
+        working-directory: packages/devcode
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
