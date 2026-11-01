@@ -25,6 +25,7 @@ import { AppProcess } from "@dev-ai/core/process"
 import { Deferred, Duration, Effect, Layer, Queue, Schedule, Scope, Stream } from "effect"
 import { FetchHttpClient, HttpClient } from "effect/unstable/http"
 import { ChildProcess } from "effect/unstable/process"
+import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { TestLLMServer } from "./llm-server"
 import { testProviderConfig } from "./test-provider"
@@ -57,6 +58,12 @@ function forkStderrDrain(stream: ReadableStream<Uint8Array>, into: string[]) {
       Effect.ignore({ log: true }),
     ),
   )
+}
+
+// A timed-out process loses its output, so its log file is the only record of what it was doing.
+function logTail(home: string) {
+  const file = path.join(home, ".local/share/dev/log/opencode.log")
+  return existsSync(file) ? readFileSync(file, "utf8").slice(-6000) : ""
 }
 
 function isolatedEnv(home: string, configJson: string): Record<string, string> {
@@ -236,7 +243,7 @@ export function withCliFixture<A, E>(
             command: err.command,
             exitCode: err.exitCode ?? -1,
             stdout: Buffer.alloc(0),
-            stderr: Buffer.from((err.stderr ?? String(err.cause ?? err.message)) + "\n"),
+            stderr: Buffer.from((err.stderr ?? String(err.cause ?? err.message)) + "\n" + logTail(home)),
             stdoutTruncated: false,
             stderrTruncated: false,
           } satisfies AppProcess.RunResult),

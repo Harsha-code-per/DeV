@@ -1,4 +1,4 @@
-import { type LanguageModelV3, type LanguageModelV3StreamPart } from "@ai-sdk/provider"
+import { type LanguageModelV3, type LanguageModelV3CallOptions, type LanguageModelV3StreamPart } from "@ai-sdk/provider"
 import { APICallError } from "ai"
 import { sortBy } from "remeda"
 import type { Provider } from "./provider"
@@ -44,7 +44,7 @@ const cooldown = new Map<string, number>()
 // router learns which free models actually work for this user. Unknown models start neutral.
 // ponytail: one score per model; per task type (edit vs chat vs long context) would rank finer.
 const STATS_FILE = path.join(Global.Path.state, "auto-free-stats.json")
-const stats: Record<string, { ok: number; fail: number; until?: number }> = await fs
+const stats: Record<string, { ok: number; fail: number; until?: number; budget?: number }> = await fs
   .readFile(STATS_FILE, "utf8")
   .then((text) => JSON.parse(text))
   .catch(() => ({}))
@@ -66,6 +66,10 @@ export function record(model: Provider.Model, ok: boolean, until?: number) {
     entry.ok = Math.round(entry.ok / 2)
     entry.fail = Math.round(entry.fail / 2)
   }
+  save()
+}
+
+function save() {
   saving ??= setTimeout(() => {
     saving = undefined
     void fs
@@ -74,6 +78,84 @@ export function record(model: Provider.Model, ok: boolean, until?: number) {
       .catch(() => {})
   }, 2000)
   saving.unref?.()
+}
+
+// Below this a model can't take even a lean request, so the router skips it.
+const MIN_BUDGET = 4_000
+// A rate limit that clears this soon is worth waiting out instead of failing the request.
+const MAX_PAUSE_MS = 20_000
+// Tools a lean request keeps, and prompt sections it drops.
+const LEAN_TOOLS = new Set(["bash", "read", "edit", "write", "grep", "glob", "todowrite"])
+const LEAN_DROP = [
+  /<available_skills>[\s\S]*?<\/available_skills>/g,
+  /<mcp_instructions>[\s\S]*?<\/mcp_instructions>/g,
+  /<example>[\s\S]*?<\/example>/g,
+  /# Ponytail[\s\S]*$/,
+]
+
+/**
+ * Free tiers can cap tokens per minute below one full request (all of Groq's are 8,000), so a model
+ * that rejects a full request gets a lean one, and the limit is kept so later requests skip the rejection.
+ * ponytail: a lean request has no skills, MCP tools or subagents, and text patterns find the sections
+ * to drop. Named prompt sections would be sturdier if these patterns start to miss.
+ */
+export function fit(language: LanguageModelV3, model: Provider.Model): LanguageModelV3 {
+  if (!isFree(model)) return language
+  const call = async <T>(
+    options: LanguageModelV3CallOptions,
+    run: (options: LanguageModelV3CallOptions) => PromiseLike<T>,
+  ) => {
+    const budget = stats[key(model)]?.budget
+    if (budget !== undefined && size(options) > budget) return run(lean(options))
+    return Promise.resolve(run(options)).catch((error) => {
+      const limit = perMinuteLimit(error)
+      if (limit === undefined) throw error
+      stats[key(model)] = { ...(stats[key(model)] ?? { ok: 0, fail: 0 }), budget: limit }
+      save()
+      return run(lean(options))
+    })
+  }
+  return {
+    specificationVersion: "v3",
+    provider: language.provider,
+    modelId: language.modelId,
+    supportedUrls: language.supportedUrls,
+    doGenerate: (options) => call(options, (next) => language.doGenerate(next)),
+    doStream: (options) => call(options, (next) => language.doStream(next)),
+  }
+}
+
+function lean(options: LanguageModelV3CallOptions): LanguageModelV3CallOptions {
+  return {
+    ...options,
+    prompt: options.prompt.map((message) => {
+      if (message.role === "system")
+        return { ...message, content: LEAN_DROP.reduce((text, section) => text.replace(section, ""), message.content) }
+      if (message.role !== "user") return message
+      return {
+        ...message,
+        content: message.content.filter(
+          (part) => part.type !== "text" || !part.text.startsWith("<EXTREMELY_IMPORTANT>"),
+        ),
+      }
+    }),
+    tools: options.tools
+      ?.filter((tool) => LEAN_TOOLS.has(tool.name))
+      .map((tool) =>
+        tool.type === "function" ? { ...tool, description: tool.description?.split("\n\n")[0]?.slice(0, 300) } : tool,
+      ),
+  }
+}
+
+/** Rough token count; JSON runs a little above the provider's own count, which errs on the safe side. */
+function size(options: LanguageModelV3CallOptions) {
+  return JSON.stringify([options.prompt, options.tools]).length / 4
+}
+
+function perMinuteLimit(error: unknown) {
+  if (!APICallError.isInstance(error) || error.statusCode !== 413) return undefined
+  const limit = /per minute.*?limit\D*(\d+)/i.exec(error.message)?.[1]
+  return limit ? Number(limit) : undefined
 }
 
 // What the session shows while the router works; keyed by session because one router serves them all.
@@ -103,7 +185,8 @@ export function candidates(providers: Record<string, Provider.Info>, now = Date.
       sortBy(
         Object.values(p.models)
           .filter((m) => m.capabilities.toolcall)
-          .filter((m) => isFree(m)),
+          .filter((m) => isFree(m))
+          .filter((m) => (stats[key(m)]?.budget ?? MIN_BUDGET) >= MIN_BUDGET),
         (m) => m.cost.input,
         [(m) => m.limit.context, "desc"],
         [(m) => m.release_date, "desc"],
@@ -166,39 +249,53 @@ export function language(
     const started = Date.now()
     const budget = opts.totalBudgetMs ?? TOTAL_BUDGET_MS
     const errors: unknown[] = []
-    for (const [index, item] of list.entries()) {
-      if (signal?.aborted) throw signal.reason
-      if (Date.now() - started > budget) break
-      const name = item.model.name ?? item.model.id
-      const waiting = setTimeout(() => report(`Waiting for ${name}…`), STATUS_AFTER_MS)
-      // Free endpoints sometimes accept the connection and never answer. Give each candidate a
-      // short window to start responding (headers or full result), then move on to the next.
-      const deadline = new AbortController()
-      const timer = setTimeout(() => deadline.abort(new Error(`${key(item.model)} did not respond`)), windowMs)
-      try {
-        const result = await run(item, signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal)
-        report(undefined)
-        return result
-      } catch (e) {
-        if (signal?.aborted) throw e
-        cool(item.model, e)
-        errors.push(e)
-        const next = list[index + 1]
-        if (next) report(`${name} ${problem(e)}, trying ${next.model.name ?? next.model.id}…`)
-      } finally {
-        clearTimeout(timer)
-        clearTimeout(waiting)
+    for (const round of [0, 1]) {
+      for (const [index, item] of list.entries()) {
+        if (signal?.aborted) throw signal.reason
+        if (Date.now() - started > budget) break
+        const name = item.model.name ?? item.model.id
+        const waiting = setTimeout(() => report(`Waiting for ${name}…`), STATUS_AFTER_MS)
+        // Free endpoints sometimes accept the connection and never answer. Give each candidate a
+        // short window to start responding (headers or full result), then move on to the next.
+        const deadline = new AbortController()
+        const timer = setTimeout(() => deadline.abort(new Error(`${key(item.model)} did not respond`)), windowMs)
+        try {
+          const result = await run(item, signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal)
+          report(undefined)
+          return result
+        } catch (e) {
+          if (signal?.aborted) throw e
+          cool(item.model, e)
+          errors.push(e)
+          const next = list[index + 1]
+          if (next) report(`${name} ${problem(e)}, trying ${next.model.name ?? next.model.id}…`)
+        } finally {
+          clearTimeout(timer)
+          clearTimeout(waiting)
+        }
       }
+      // Every model refused. On a free tier that is usually a limit about to clear.
+      const pause = round === 0 ? shortestCooldown(list.map((item) => item.model)) : undefined
+      if (pause === undefined || Date.now() - started + pause > budget) break
+      report(`Free models are rate limited, retrying in ${Math.ceil(pause / 1000)}s…`)
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, pause)
+        signal?.addEventListener("abort", () => (clearTimeout(timer), resolve()), { once: true })
+      })
     }
     report(undefined)
     // A context overflow must surface even if later candidates failed for other reasons:
     // it is what triggers compaction, the session's real recovery.
+    const limits = errors.map(perMinuteLimit)
+    const limit = limits.every((value) => value !== undefined) ? limits[0] : undefined
     throw (
       errors.find((e) => overflow(e)) ??
       new Error(
-        errors.length > 0
-          ? `No free model answered (tried ${errors.length}; last: ${String(errors.at(-1)).slice(0, 160)}). Try again shortly, or add another free provider with /connect.`
-          : "No free models available. Connect a provider with /connect.",
+        limit !== undefined
+          ? `This conversation is too large for your free models (limit ${limit} tokens a minute). Start a new session with /new, or connect a free provider with more room, such as NVIDIA or Google, with /connect.`
+          : errors.length > 0
+            ? `No free model answered (tried ${errors.length}; last: ${String(errors.at(-1)).slice(0, 160)}). Try again shortly, or add another free provider with /connect.`
+            : "No free models available. Connect a provider with /connect.",
       )
     )
   }
@@ -251,6 +348,8 @@ export function language(
 }
 
 export function cool(model: Provider.Model, error: unknown, now = Date.now()) {
+  // Too big for this model's budget says nothing about the model, and smaller requests still pass.
+  if (perMinuteLimit(error) !== undefined) return
   const status = APICallError.isInstance(error) ? error.statusCode : undefined
   const retryAfter = APICallError.isInstance(error) ? Number(error.responseHeaders?.["retry-after"]) : NaN
   const ms = wait(status, retryAfter, error)
@@ -260,11 +359,17 @@ export function cool(model: Provider.Model, error: unknown, now = Date.now()) {
   if (!overflow(error)) record(model, false, ms >= 60_000 ? now + ms : undefined)
 }
 
+function shortestCooldown(models: Provider.Model[], now = Date.now()) {
+  const pause = Math.min(...models.map((model) => (cooldown.get(key(model)) ?? 0) - now))
+  return pause > 0 && pause <= MAX_PAUSE_MS ? pause : undefined
+}
+
 function cooling(model: Provider.Model, now: number) {
   return Math.max(cooldown.get(key(model)) ?? 0, stats[key(model)]?.until ?? 0) > now
 }
 
 function problem(error: unknown) {
+  if (perMinuteLimit(error) !== undefined) return "can't take a request this large"
   const status = APICallError.isInstance(error) ? error.statusCode : undefined
   if (status === 429) return "is rate limited"
   if (status === 401 || status === 403) return "rejected the key"

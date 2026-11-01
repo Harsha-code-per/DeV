@@ -175,7 +175,10 @@ export function parseAPICallError(input: { providerID: ProviderV2.ID; error: API
   // A 429 is a throttle even when its wording sounds like an overflow, e.g. Cerebras's per-minute
   // "too many tokens processed" (ported from OpenCode #59649).
   const overflowText = input.error.statusCode !== 429 && isContextOverflow(m)
-  if (overflowText || input.error.statusCode === 413 || body?.error?.code === "context_length_exceeded") {
+  // Groq's free tier answers 413 when a request exceeds its tokens-per-minute budget. Compacting a
+  // new session can't help, so this is not an overflow; AutoProvider.fit retries with a lean request.
+  const overflowStatus = input.error.statusCode === 413 && !/per minute/i.test(m)
+  if (overflowText || overflowStatus || body?.error?.code === "context_length_exceeded") {
     return {
       type: "context_overflow",
       message: m,

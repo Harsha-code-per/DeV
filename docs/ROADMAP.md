@@ -114,9 +114,10 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 
 ## v1 blockers found by testing the shipped build (2026-10-31)
 
-- [ ] Free models feel broken: no on-screen status while failing over, a 30s silent window per candidate, no timeout for directly chosen models.
-- [ ] freellmapi: never integrated. Plan: detect a running FreeLLMAPI like Ollama, with guided setup, and add more free providers to `auto/free`. Honest wording: large free capacity, not unlimited.
-- [ ] `auto/free` must only use models confirmed free (`anyapi/openai/gpt-5.4` qualified on a listed price of 0).
+- [x] Free models feel broken: no on-screen status while failing over, a 30s silent window per candidate, no timeout for directly chosen models. Verified in the compiled binary with only a free Groq key: 20 of 20 fresh "hi" runs answered, first output at ~1s, 18 in ~4s, 2 waited out a visible rate limit (11s, 21s).
+- [x] A free tier with a small per-minute budget (Groq: 8,000 tokens) rejected every request, because a full request is ~17K tokens. The rejection was also misread as a context overflow, which compacted a new session and printed the summary as the answer. Such models now get a lean request; the limit is remembered per model.
+- [x] freellmapi: `/connect` takes its key and it joins `auto/free`. Verified in the compiled binary against the real FreeLLMAPI container (models listed, reply through it with all tools). Honest wording: large free capacity, not unlimited.
+- [x] `auto/free` must only use models confirmed free (`anyapi/openai/gpt-5.4` qualified on a listed price of 0).
 - [ ] DeV picks the mode (build, plan, goal) by itself, tells you, and you can override it.
 - [ ] Release versions still come from OpenCode's npm package in `packages/script/src/index.ts`; use DeV's own. `release.yml` has never run, and no release has ever been installed.
 - [x] Shell API keys no longer connect silently; `/connect` offers them. `scripts/install-local` builds and links a checkout, with the commit in the version.

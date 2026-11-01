@@ -26,6 +26,19 @@ describe("provider stream errors", () => {
 })
 
 describe("provider API errors", () => {
+  test("a 413 over a per-minute token budget is not a context overflow", () => {
+    const parsed = ProviderError.parseAPICallError({
+      providerID: ProviderV2.ID.make("groq"),
+      error: new APICallError({
+        message: "Request too large for model `a` on tokens per minute (TPM): Limit 8000, Requested 18980",
+        url: "https://example.com",
+        requestBodyValues: {},
+        statusCode: 413,
+      }),
+    })
+    expect(parsed.type).toBe("api_error")
+  })
+
   test("a 429 token throttle is a retryable rate limit, not a context overflow", () => {
     const body =
       '{"message":"Tokens per minute limit exceeded - too many tokens processed.","type":"too_many_tokens_error","code":"token_quota_exceeded"}'

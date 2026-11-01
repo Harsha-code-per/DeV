@@ -1967,12 +1967,12 @@ const layer = Layer.effect(
     })
 
     const getLanguage = Effect.fn("Provider.getLanguage")(function* (model: Model) {
-      if (model.providerID !== AutoProvider.ID) return yield* loadLanguage(model)
+      if (model.providerID !== AutoProvider.ID) return AutoProvider.fit(yield* loadLanguage(model), model)
       const s = yield* InstanceState.get(state)
       // A candidate whose SDK fails to load is skipped, not fatal.
       const list = yield* Effect.forEach(AutoProvider.candidates(s.providers), (m) =>
         loadLanguage(m).pipe(
-          Effect.map((language) => [{ model: m, language }]),
+          Effect.map((language) => [{ model: m, language: AutoProvider.fit(language, m) }]),
           Effect.catchCause(() => Effect.succeed([])),
         ),
       )

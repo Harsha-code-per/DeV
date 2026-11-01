@@ -18,11 +18,11 @@ import { useClipboard } from "../context/clipboard"
 
 // DeV: providers with a free tier first, so anyone can start without paying.
 const FREE_TIER = [
-  "groq",
+  "nvidia",
   "google",
   "openrouter",
   "cerebras",
-  "nvidia",
+  "groq",
   "mistral",
   "cohere",
   "huggingface",
@@ -69,7 +69,9 @@ export function providerOptions(list: { id: string; name: string }[]): ProviderO
         description: FREE_TIER.includes(provider.id)
           ? provider.id === "freellmapi"
             ? "(many free providers, one key)"
-            : "(free tier)"
+            : provider.id === "groq"
+              ? "(free tier, short tasks only)"
+              : "(free tier)"
           : {
               opencode: "(free models with your Zen key)",
               anthropic: "(API key)",
