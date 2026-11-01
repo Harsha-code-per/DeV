@@ -37,4 +37,6 @@ await Bun.write(
     2,
   ),
 )
-await $`npm publish --access public --tag ${Script.channel}`.cwd(dir)
+// `--pack` builds the tarball without publishing.
+if (process.argv.includes("--pack")) await $`npm pack`.cwd(dir)
+else await $`npm publish --access public --tag ${Script.channel}`.cwd(dir)
