@@ -7,7 +7,7 @@ import { Sandbox } from "../../src/sandbox"
 import { tmpdir } from "../fixture/fixture"
 
 // The real OS sandbox (bubblewrap). Tests disable it globally, so it is turned back on here.
-const available = process.platform === "linux" && Boolean(Bun.which("bwrap"))
+const available = process.platform === "darwin" || (process.platform === "linux" && Boolean(Bun.which("bwrap")))
 const outside = path.join(os.homedir(), `.dev-sandbox-test-${process.pid}`)
 
 afterAll(() => fs.rm(outside, { force: true }))

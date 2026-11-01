@@ -7,6 +7,8 @@ import { LSP } from "@/lsp/lsp"
 import DESCRIPTION from "./read.txt"
 import { InstanceState } from "@/effect/instance-state"
 import { assertExternalDirectoryEffect } from "./external-directory"
+import { containsPath } from "../project/instance-context"
+import { Untrusted } from "@/util/untrusted"
 import { Instruction } from "../session/instruction"
 import { isPdfAttachment, sniffAttachmentMime } from "@/util/media"
 
@@ -358,7 +360,8 @@ export const ReadTool = Tool.define<
 
       return {
         title,
-        output,
+        // A file from outside the project may be someone else's text, so the model treats it as data.
+        output: containsPath(filepath, instance) ? output : Untrusted.wrap(filepath, output),
         metadata: {
           preview: file.raw.slice(0, 20).join("\n"),
           truncated,

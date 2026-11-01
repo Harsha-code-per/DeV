@@ -53,6 +53,17 @@ jobs:
       - run: bun run test
         working-directory: packages/${{ matrix.package }}
 
+  sandbox-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - run: git config --global user.name ci && git config --global user.email ci@example.com
+      - run: bun test --timeout 30000 test/sandbox
+        working-directory: packages/devcode
+
   scripts:
     runs-on: ubuntu-latest
     steps:

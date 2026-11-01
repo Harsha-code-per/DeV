@@ -48,6 +48,22 @@ Each agent run is memory-capped with `scripts/capped 3G` and killed at the timeo
 
 One run of each task. Failed: py-access-stats, py-parse-duration, py-spec-ini, ts-deep-merge, ts-emitter-once.
 
+### Against Claude Code
+
+A sample of 5 tasks, one run each: every 6th task in sorted order, chosen so the sample couldn't favour DeV. Too small to say more than "in the same range". DeV Code used free models. Claude Code used Sonnet with no MCP servers or plugins and cost $0.22 in total.
+
+| Task | DeV Code | Time | Claude Code | Time | Cost |
+|---|---|---|---|---|---|
+| py-access-stats | fail | 33s | pass | 22s | $0.05 |
+| py-split-bill | pass | 36s | pass | 18s | $0.05 |
+| ts-cache-stale | pass | 145s | pass | 18s | $0.05 |
+| ts-markdown-toc | pass | 100s | pass | 20s | $0.05 |
+| ts-retry-async | pass | 17s | pass | 9s | $0.03 |
+
+Claude Code passed 5 of 5 and was faster. DeV Code passed 4 of 5 at no cost.
+
+Codex isn't included: the account's usage limit was reached, so it could not run.
+
 ## Not yet
 
 - Running in CI and blocking regressions (roadmap M1).
