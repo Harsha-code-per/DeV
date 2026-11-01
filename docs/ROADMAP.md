@@ -14,11 +14,21 @@ v1 is **DeV Code** on Linux, macOS and Windows. It succeeds when, on the shipped
 2. A new user with no paid key and no env variables connects a model by command and gets a reply within 2 minutes of installing.
 3. Status appears within 2s, 90% of simple replies arrive within 15s, and 20 of 20 runs don't hang.
 4. The owner signs off on a design unlike any other agent, and a check finds no visible OpenCode branding (apart from OpenCode Zen, credits and the licence).
-5. At least 25 of 30 benchmark tasks pass on free models, published next to Claude Code and Codex.
+5. At least 25 of 30 benchmark tasks pass on free models, published. Public material names no other company or product (the owner's decision, 2026-11-01); OpenCode is credited.
 6. No paid model is used unless the user chose it, the sandbox works in the shipped binary, and the secret scan is clean.
 7. CI is green on GitHub, and `devcode upgrade` works from one real release to the next.
 
 Desktop, Chrome, voice and computer use follow as separate releases.
+
+### Positioning
+
+DeV's motto is accessibility: anyone can develop without paying, and they get the premium features otherwise kept for paid plans. Going public and announcing happen only after the reliability check below.
+
+### Before going public
+
+- [ ] The owner has used the release candidate for real work and signs off on the design and reliability.
+- [ ] Remove comparisons with named products from `docs/ROADMAP.md`, `docs/GAP_MATRIX.md`, `docs/ECOSYSTEM.md`, `SECURITY.md` and the prompts where they aren't legally required.
+- [ ] The owner logs in to npm so `npm i -g devcode` can be published; add it back to the site and README.
 
 ## What DeV is
 

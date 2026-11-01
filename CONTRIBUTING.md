@@ -1,6 +1,6 @@
 # Contributing to DeV
 
-Thanks for helping. Bug fixes, docs, new providers, fixes for platform quirks and missing Claude Code behaviour are the easiest changes to merge. For a new feature or a UI change, open an issue first so we can agree on the approach. The plan lives in [docs/ROADMAP.md](docs/ROADMAP.md).
+Thanks for helping. Bug fixes, docs, new providers, fixes for platform quirks and missing behaviour are the easiest changes to merge. For a new feature or a UI change, open an issue first so we can agree on the approach. The plan lives in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Setup
 

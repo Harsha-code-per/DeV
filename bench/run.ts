@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // Runs coding agents on bench/tasks, one at a time, and scores each run with the task's hidden tests.
-// Usage: bun bench/run.ts [--agents devcode,claude,codex,none] [--tasks a,b] [--model m] [--timeout min] [--runs n]
+// Usage: bun bench/run.ts [--agents devcode,none] [--tasks a,b] [--model m] [--timeout min] [--runs n]
 import { cp, readdir, rm } from "node:fs/promises"
 import path from "node:path"
 import { parseArgs } from "node:util"
@@ -12,7 +12,6 @@ const CAPPED = path.join(DEV, "scripts/capped")
 const args = parseArgs({
   options: {
     agents: { type: "string", default: "devcode" },
-    "claude-budget": { type: "string", default: "0.4" },
     tasks: { type: "string" },
     model: { type: "string" },
     timeout: { type: "string", default: "10" },
@@ -29,17 +28,6 @@ type DevEvent = {
     tokens?: { input: number; output: number; reasoning: number; cache: { read: number; write: number } }
   }
 }
-type ClaudeResult = {
-  result?: string
-  total_cost_usd?: number
-  usage?: {
-    input_tokens: number
-    output_tokens: number
-    cache_creation_input_tokens?: number
-    cache_read_input_tokens?: number
-  }
-}
-type CodexEvent = { type: string; usage?: { input_tokens: number; output_tokens: number }; item?: { type: string; text?: string } }
 
 const agents: Record<string, { cmd: (prompt: string) => string[]; parse: (stdout: string) => Report }> = {
   // The installed binary with a stored login, exactly what a user runs. Never source or .env.
@@ -58,47 +46,6 @@ const agents: Record<string, { cmd: (prompt: string) => string[]; parse: (stdout
         },
         cost: sum(steps.map((s) => s.cost ?? 0)),
         message: events.findLast((e) => e.type === "text")?.part?.text,
-      }
-    },
-  },
-  claude: {
-    cmd: (prompt) => [
-      ...["claude", "-p", "--dangerously-skip-permissions", "--output-format", "json"],
-      // No MCP servers or user plugins, and a hard spending limit per task.
-      ...["--strict-mcp-config", "--setting-sources", "project", "--max-budget-usd", args["claude-budget"]],
-      ...(args.model ? ["--model", args.model] : []),
-      prompt,
-    ],
-    parse: (stdout) => {
-      const result = json<ClaudeResult>(stdout.trim())
-      if (!result?.usage) return {}
-      return {
-        tokens: {
-          input:
-            result.usage.input_tokens +
-            (result.usage.cache_creation_input_tokens ?? 0) +
-            (result.usage.cache_read_input_tokens ?? 0),
-          output: result.usage.output_tokens,
-        },
-        cost: result.total_cost_usd,
-        message: result.result,
-      }
-    },
-  },
-  // Codex reports tokens but not cost. `exec` never asks for approval; workspace-write lets it edit the copy.
-  codex: {
-    cmd: (prompt) => [
-      ...["codex", "exec", "--json", "--sandbox", "workspace-write"],
-      ...["-c", "mcp_servers={}", "-c", "model_reasoning_effort=medium"],
-      ...(args.model ? ["--model", args.model] : []),
-      prompt,
-    ],
-    parse: (stdout) => {
-      const events = jsonLines<CodexEvent>(stdout)
-      const turns = events.flatMap((e) => (e.type === "turn.completed" && e.usage ? [e.usage] : []))
-      return {
-        tokens: { input: sum(turns.map((u) => u.input_tokens)), output: sum(turns.map((u) => u.output_tokens)) },
-        message: events.findLast((e) => e.item?.type === "agent_message")?.item?.text,
       }
     },
   },

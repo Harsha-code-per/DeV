@@ -14,8 +14,6 @@
 <pre><code>curl -fsSL https://harsha-code-per.github.io/DeV/install | sh</code></pre>
 <p>On Windows, in PowerShell:</p>
 <pre><code>irm https://harsha-code-per.github.io/DeV/install.ps1 | iex</code></pre>
-<p>With npm, on any of them:</p>
-<pre><code>npm i -g devcode</code></pre>
 <p>The installers check the download against the release's SHA-256 checksums before installing anything. Update later with <code>dev upgrade</code>.</p>
 
 <h2 id="connect">Connect a model</h2>
@@ -24,17 +22,10 @@
 <p>Scripts and CI have nobody to answer that question, so <code>dev run</code> does read keys from the environment.</p>
 
 <h2 id="free">Free models</h2>
-<p>The default model is <code>auto/free</code>. For each request it tries the free models of the providers you've connected, moves to the next when one is busy, and remembers which ones answer well for you.</p>
-<div class="tw"><table>
-<tr><th>Provider</th><th>Good for</th></tr>
-<tr><td>NVIDIA</td><td>The best starting point. Handles full coding tasks.</td></tr>
-<tr><td>Google</td><td>A large free tier, with a daily limit per model.</td></tr>
-<tr><td>Groq</td><td>Very fast, but limited to 8,000 tokens a minute, so it suits short tasks. DeV sends it a smaller request with fewer tools.</td></tr>
-<tr><td>OpenRouter</td><td>Its models with a <code>:free</code> suffix.</td></tr>
-<tr><td>Ollama and LM Studio</td><td>Local models, found automatically.</td></tr>
-<tr><td>FreeLLMAPI</td><td>A separate app you run yourself. It combines many free tiers behind one key, for personal use. The capacity is large but not unlimited, and you add a key for each provider.</td></tr>
-</table></div>
-<p>Free tiers have limits. When every model is rate limited, DeV waits if the limit clears soon, tells you what it's doing, and otherwise ends with a clear error. Connecting a second provider helps more than anything else.</p>
+<p>DeV Code costs nothing, and you can run it on free models. The list in <code>/connect</code> puts providers with a free tier first, with the best starting point at the top. Local models on your machine are found automatically.</p>
+<p>The default model is <code>auto/free</code>. For each request it tries the free models you've connected, moves to the next when one is busy, and remembers which ones answer well for you. It never uses a paid model unless you choose one.</p>
+<p>Each provider sets its own free limits and terms. When every model is rate limited, DeV waits if the limit clears soon and tells you what it's doing. If it can't, it ends with a clear error. Connecting a second provider gives you more room.</p>
+<p>Some free tiers allow only a small amount per minute. DeV sends those a smaller request, so they suit short tasks. <code>/connect</code> marks them.</p>
 
 <h2 id="modes">Modes</h2>
 <p>DeV chooses how to work and shows you in the prompt. Press Shift+Tab to change it yourself.</p>
@@ -66,7 +57,7 @@
 dev -p "fix the failing test" --output-format json</code></pre>
 
 <h2 id="config">Configuration</h2>
-<p>Settings live in <code>dev.json</code>, either in your project or in <code>~/.config/dev/</code>. Project memory lives in <code>DEV.md</code>. DeV also reads <code>AGENTS.md</code> and <code>CLAUDE.md</code>.</p>
+<p>Settings live in <code>dev.json</code>, either in your project or in <code>~/.config/dev/</code>. Project memory lives in <code>DEV.md</code>. DeV also reads <code>AGENTS.md</code>.</p>
 <pre><code>{
   "sandbox": {
     "network": { "allow": ["npm.mycompany.com"] },
@@ -74,7 +65,7 @@ dev -p "fix the failing test" --output-format json</code></pre>
   },
   "hooks": {}
 }</code></pre>
-<p>Hooks use Claude Code's shape: PreToolUse, PostToolUse, UserPromptSubmit, Stop and SessionStart run as shell commands that get JSON on stdin. Exit code 2 blocks the action.</p>
+<p>Hooks: PreToolUse, PostToolUse, UserPromptSubmit, Stop and SessionStart run as shell commands that get JSON on stdin. Exit code 2 blocks the action.</p>
 
 <h2 id="security">Security</h2>
 <p>DeV treats the model as untrusted, because text it reads can try to steer it.</p>
@@ -89,18 +80,19 @@ dev -p "fix the failing test" --output-format json</code></pre>
 <p><b>Limits:</b> Windows has no sandbox yet, PowerShell commands are never sandboxed, and local MCP servers run outside the sandbox. Read the full <a href="https://github.com/Harsha-code-per/DeV/blob/main/SECURITY.md">security policy</a>.</p>
 
 <h2 id="bench">Benchmarks</h2>
-<p>DeV Code passed 25 of 30 benchmark tasks on free models at no cost, with one run of each task. The tasks use hidden tests, and a do-nothing agent fails all of them.</p>
-<p>On a sample of 5 of those tasks, Claude Code on Sonnet passed 5 and was faster, for $0.22. DeV Code passed 4 for free. A sample that small can't rank them. Codex hasn't been run yet. The tasks and results are in the <a href="https://github.com/Harsha-code-per/DeV/tree/main/bench">bench folder</a>.</p>
+<p>DeV Code passes 25 of 30 benchmark tasks on free models, at no cost, with one run of each task. The tasks use hidden tests, and a do-nothing agent fails all of them. The tasks and results are in the <a href="https://github.com/Harsha-code-per/DeV/tree/main/bench">bench folder</a>.</p>
 
 <h2 id="faq">FAQ</h2>
 <h3>Is it really free?</h3>
-<p>DeV is free and open source, and free-tier models cost nothing. Each provider sets its own limits and has its own data terms, so check those for anything sensitive.</p>
-<h3>Can I use my Claude or ChatGPT subscription?</h3>
-<p>DeV can sign in to ChatGPT. For a Claude subscription, install Claude Code and DeV can hand a task to it, using your own login. DeV doesn't sign in to Claude Pro or Max itself, because Anthropic's terms don't allow that.</p>
+<p>Yes. DeV Code is free and open source, with every feature included. Model providers set their own limits on their free tiers.</p>
+<h3>Can I use it for commercial work?</h3>
+<p>Yes. DeV Code is MIT licensed. Check the terms of the model provider you connect, especially for free tiers and sensitive code.</p>
+<h3>Can I use my own paid model?</h3>
+<p>Yes. Connect any provider with <code>/connect</code> and pick a model with <code>/models</code>.</p>
 <h3>Does it send my code anywhere?</h3>
 <p>Only to the model provider you connect, or nowhere if you use a local model.</p>
-<h3>Why does it stop on a long task with Groq alone?</h3>
-<p>Groq's free tier allows 8,000 tokens a minute, and a long conversation needs more than that. Connect NVIDIA or Google with <code>/connect</code>.</p>
+<h3>Why did a long task stop on a free model?</h3>
+<p>Some free tiers limit how much you can send per minute. Connect another provider with <code>/connect</code>.</p>
 </main></div>
-<footer><div class="wrap"><p>DeV is MIT licensed and independent. It started as a fork of OpenCode and isn't affiliated with OpenCode or Anthropic.</p></div></footer>
+<footer><div class="wrap"><p>DeV Code is MIT licensed and builds on <a href="https://github.com/anomalyco/opencode">OpenCode</a>. We're grateful to its authors.</p></div></footer>
 </body></html>

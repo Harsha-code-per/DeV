@@ -1,6 +1,6 @@
 # DeV benchmark
 
-Small and medium real coding tasks with hidden tests (30 so far), for measuring DeV Code against other coding agents on the same work.
+Small and medium real coding tasks with hidden tests (30 so far), for measuring DeV Code on real work.
 
 ## Tasks
 
@@ -21,48 +21,30 @@ From the repo root, one agent and one task at a time (the machine can't run seve
 ```sh
 bun bench/run.ts                                   # DeV Code with auto/free on every task
 bun bench/run.ts --tasks ts-paginate,ts-slugify    # selected tasks
-bun bench/run.ts --agents devcode --model groq/llama-3.3-70b-versatile
+bun bench/run.ts --agents devcode --model <provider/model>
 bun bench/run.ts --agents none                     # sanity check: everything must fail
-bun bench/run.ts --agents devcode,claude,codex --runs 3
+bun bench/run.ts --runs 3
 ```
 
-Options: `--agents` (`devcode`, `claude`, `codex`, `none`), `--tasks`, `--model`, `--timeout` (minutes per run, default 10), `--runs`.
+Options: `--agents` (`devcode`, `none`), `--tasks`, `--model`, `--timeout` (minutes per run, default 10), `--runs`.
 
 Each agent run is memory-capped with `scripts/capped 3G` and killed at the timeout. Results go to `results/<run-id>.json` (pass or fail, seconds, exit code, tokens, cost, the agent's last message and the test output) and a summary table is printed. Result files are not committed.
 
-**Running `claude` or `codex` uses your own Claude Code or Codex account and its quota or credit.** DeV Code uses whatever `dev` has stored from `/connect`; set `XDG_DATA_HOME` to run the benchmark from a separate login.
+DeV Code uses whatever `dev` has stored from `/connect`; set `XDG_DATA_HOME` to run the benchmark from a separate login.
 
 ## How each agent is run
 
 | Agent | Command |
 |---|---|
 | `devcode` | The installed `dev`: `dev run --format json --permission-mode auto --model auto/free <task>` |
-| `claude` | `claude -p --dangerously-skip-permissions --output-format json <task>` |
-| `codex` | `codex exec --json --sandbox workspace-write <task>` (Codex reports tokens, not cost) |
 
 ## Results
 
 | Date | Agent | Build | Models | Passed | Cost | Median time |
 |---|---|---|---|---|---|---|
-| 2026-11-01 | DeV Code | compiled binary, 59aeaeb3c | `auto/free` with NVIDIA, Google and Groq free keys | 25/30 | $0 | 40s |
+| 2026-11-01 | DeV Code | compiled binary, 59aeaeb3c | `auto/free` with free keys | 25/30 | $0 | 40s |
 
 One run of each task. Failed: py-access-stats, py-parse-duration, py-spec-ini, ts-deep-merge, ts-emitter-once.
-
-### Against Claude Code
-
-A sample of 5 tasks, one run each: every 6th task in sorted order, chosen so the sample couldn't favour DeV. Too small to say more than "in the same range". DeV Code used free models. Claude Code used Sonnet with no MCP servers or plugins and cost $0.22 in total.
-
-| Task | DeV Code | Time | Claude Code | Time | Cost |
-|---|---|---|---|---|---|
-| py-access-stats | fail | 33s | pass | 22s | $0.05 |
-| py-split-bill | pass | 36s | pass | 18s | $0.05 |
-| ts-cache-stale | pass | 145s | pass | 18s | $0.05 |
-| ts-markdown-toc | pass | 100s | pass | 20s | $0.05 |
-| ts-retry-async | pass | 17s | pass | 9s | $0.03 |
-
-Claude Code passed 5 of 5 and was faster. DeV Code passed 4 of 5 at no cost.
-
-Codex isn't included: the account's usage limit was reached, so it could not run.
 
 ## Not yet
 

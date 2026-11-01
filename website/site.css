@@ -28,6 +28,7 @@ h1,h2,h3{font-family:var(--display);line-height:1.05;margin:0;text-wrap:balance}
 .wrap{max-width:1180px;margin:0 auto;padding-inline:20px}
 .band{padding-block:clamp(48px,8vw,96px)}
 .lead h2{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;max-width:17ch}
+.big{font-size:clamp(1.2rem,2.4vw,1.6rem);line-height:1.45;max-width:38ch;margin:28px 0 0}
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:40px 56px;margin-top:48px}
 .facts h3{font-size:1.45rem;font-weight:700;margin-bottom:10px}
 .facts p{margin:0;color:var(--mut);max-width:42ch}
