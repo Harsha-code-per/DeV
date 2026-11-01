@@ -23,6 +23,8 @@ export const MDNS_DOMAIN = "dev-ai.local"
  * on npm yet (roadmap M0.4); until then this is OpenCode's published SDK, which has the same API.
  */
 export const PLUGIN_SDK_PACKAGE = "@opencode-ai/plugin"
+// OpenCode's package has its own versions; this is the one DeV forked from, not DeV's version.
+export const PLUGIN_SDK_VERSION = "1.19.4"
 
 /**
  * The client name ChatGPT (Codex) and xAI sign-in send as their OAuth `originator`/`referrer`. These

@@ -17,7 +17,6 @@ import { FSUtil } from "@dev-ai/core/fs-util"
 import { CurrentWorkingDirectory } from "./tui-cwd"
 import { ConfigPlugin } from "@/config/plugin"
 import { TuiKeybind } from "@dev-ai/tui/config/keybind"
-import { InstallationLocal, InstallationVersion } from "@dev-ai/core/installation/version"
 import { makeRuntime } from "@dev-ai/core/effect/runtime"
 import { Filesystem } from "@/util/filesystem"
 import { ConfigVariable } from "@/config/variable"
@@ -235,20 +234,15 @@ const layer = Layer.effect(
     const deps = yield* Effect.forEach(
       data.dirs,
       (dir) =>
-        npm
-          .install(dir, {
-            add: [
-              {
-                name: Brand.PLUGIN_SDK_PACKAGE,
-                version: InstallationLocal ? undefined : InstallationVersion,
-              },
-            ],
+        Effect.gen(function* () {
+          if (!(yield* Effect.promise(() => ConfigPlugin.usesSdk(dir)))) return []
+          const install = npm.install(dir, {
+            add: [{ name: Brand.PLUGIN_SDK_PACKAGE, version: Brand.PLUGIN_SDK_VERSION }],
           })
-          .pipe(Effect.forkScoped),
-      {
-        concurrency: "unbounded",
-      },
-    )
+          return [yield* install.pipe(Effect.forkScoped)]
+        }),
+      { concurrency: "unbounded" },
+    ).pipe(Effect.map((fibers) => fibers.flat()))
 
     const get = Effect.fn("TuiConfig.get")(() => Effect.succeed(data.config))
     const pluginOrigins = Effect.fn("TuiConfig.pluginOrigins")(() => Effect.succeed(data.pluginOrigins))

@@ -97,7 +97,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 
 ### M0.4 Install and update (free channels)
 
-- [ ] Release CI matrix: Linux x64/arm64 (glibc and musl), macOS x64/arm64, Windows x64. GitHub Releases with checksums.
+- [x] Release CI matrix: Linux x64/arm64 (glibc and musl), macOS x64/arm64, Windows x64/arm64. GitHub Releases with checksums.
 - [ ] `curl -fsSL https://harsha-code-per.github.io/DeV/install | sh` and `install.ps1`, both verifying checksums.
 - [ ] `npm i -g devcode`, a Homebrew tap and a Scoop bucket.
 - [ ] `devcode upgrade`: download the latest release, verify it, replace the binary.
@@ -122,7 +122,8 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] Sandbox on Linux: placeholder files were left in the project and `git add -A` failed inside it in every project. Both fixed and verified in the compiled binary.
 - [x] A model that kept announcing work was nudged forever, because each nudge reset the count. Now two per prompt.
 - [x] Release versions come from DeV's own git tags.
-- [ ] `release.yml` has never run, and no release has ever been installed.
+- [x] `release.yml` ran for real: v0.9.0-rc.1 built all 12 targets, and it installs on clean Linux x64 and arm64, Alpine, macOS and Windows runners (`install-test.yml`). The installer rejected a tampered archive. Still to test once public: plain `curl`, `npm i -g devcode`, `dev upgrade`.
+- [x] First run for a new user: a 60 MB plugin SDK download blocked startup for 88s, and a failing MCP server held the first reply for 22s. The SDK now installs only for folders with local plugins, and MCP servers get 2s before the reply goes ahead. A free key goes straight to `auto/free`. Measured with an empty profile: UI in 9s, first reply 5.6s, 22s from launch to answer.
 - [x] Shell API keys no longer connect silently; `/connect` offers them. `scripts/install-local` builds and links a checkout, with the commit in the version.
 
 ## M1 — DeV Code: match, then beat, Claude Code

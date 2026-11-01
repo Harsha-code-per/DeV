@@ -26,7 +26,7 @@ import { McpOAuthCallback } from "./oauth-callback"
 import { McpAuth } from "./auth"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { TuiEvent } from "@/server/tui-event"
-import { Cause, Effect, Exit, Layer, Context, Schema, Stream } from "effect"
+import { Cause, Effect, Exit, Fiber, Layer, Context, Schema, Stream } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { InstanceState } from "@/effect/instance-state"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
@@ -38,6 +38,7 @@ import { McpLazy } from "./lazy"
 import { Flag } from "@dev-ai/core/flag/flag"
 
 const DEFAULT_TIMEOUT = 30_000
+const MCP_START_WAIT = "2 seconds"
 const CLIENT_OPTIONS = {
   capabilities: {
     // https://github.com/anomalyco/opencode/issues/11948
@@ -550,18 +551,27 @@ const layer = Layer.effect(
                 return
               }
 
-              const result = yield* create(key, mcp)
-              s.status[key] = result.status
-              if (result.mcpClient) {
-                s.clients[key] = result.mcpClient
-                s.defs[key] = result.defs!
-                if (result.instructions) s.instructions[key] = result.instructions
-                watch(s, key, result.mcpClient, bridge, mcp.timeout)
-                if (lazy)
-                  yield* Effect.promise(() =>
-                    McpLazy.write(key, mcp, { defs: result.defs ?? [], instructions: result.instructions }),
-                  )
-              }
+              const connect = Effect.gen(function* () {
+                const result = yield* create(key, mcp)
+                s.status[key] = result.status
+                if (result.mcpClient) {
+                  s.clients[key] = result.mcpClient
+                  s.defs[key] = result.defs!
+                  if (result.instructions) s.instructions[key] = result.instructions
+                  watch(s, key, result.mcpClient, bridge, mcp.timeout)
+                  if (lazy)
+                    yield* Effect.promise(() =>
+                      McpLazy.write(key, mcp, { defs: result.defs ?? [], instructions: result.instructions }),
+                    )
+                }
+              })
+              if (!lazy) return yield* connect
+              // A first start is often an npx download, and a broken server is never cached, so neither may
+              // hold up a reply. After a short wait the reply goes ahead and the tools arrive on a later turn.
+              // ponytail: a one-shot `dev run` can exit before the server is ready; it starts again next time.
+              s.status[key] = { status: "failed", error: "Starting" }
+              const starting = yield* Effect.forkScoped(connect)
+              yield* Fiber.await(starting).pipe(Effect.timeoutOption(MCP_START_WAIT), Effect.asVoid)
             }),
           { concurrency: "unbounded" },
         )

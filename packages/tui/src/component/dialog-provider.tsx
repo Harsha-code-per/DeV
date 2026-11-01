@@ -1,4 +1,5 @@
 import { createMemo, createSignal, onMount, Show } from "solid-js"
+import { useLocal } from "../context/local"
 import { useSync } from "../context/sync"
 import { map, pipe, sortBy } from "remeda"
 import { DialogSelect } from "../ui/dialog-select"
@@ -408,6 +409,7 @@ interface ApiMethodProps {
 }
 function ApiMethod(props: ApiMethodProps) {
   const dialog = useDialog()
+  const local = useLocal()
   const sdk = useSDK()
   const sync = useSync()
   const toast = useToast()
@@ -483,6 +485,13 @@ function ApiMethod(props: ApiMethodProps) {
             variant: "info",
             message: `Saved credential for ${props.providerID}. Configure it in dev.json to use it.`,
           })
+          dialog.clear()
+          return
+        }
+        // A free key goes straight to the free router, which skips any model that's busy or stuck.
+        if (FREE_TIER.includes(props.providerID)) {
+          local.model.set({ providerID: "auto", modelID: "free" }, { recent: true })
+          toast.show({ variant: "success", message: "Connected. DeV will use the best free model it can reach." })
           dialog.clear()
           return
         }

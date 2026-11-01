@@ -15,6 +15,12 @@ export type Origin = {
   scope: Scope
 }
 
+/** Only local plugins and tools import the plugin SDK. It's a 60 MB download, so nobody else should wait for it. */
+export async function usesSdk(dir: string) {
+  const found = await Glob.scan("{plugin,plugins,tool,tools}/*.{ts,js}", { cwd: dir, absolute: true, dot: true })
+  return found.length > 0
+}
+
 export async function load(dir: string) {
   const plugins: ConfigPluginV1.Spec[] = []
 

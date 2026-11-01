@@ -12,7 +12,6 @@ import { Flag } from "@dev-ai/core/flag/flag"
 import { Auth } from "../auth"
 import { Env } from "../env"
 import { applyEdits, modify } from "jsonc-parser"
-import { InstallationLocal, InstallationVersion } from "@dev-ai/core/installation/version"
 import { existsSync } from "fs"
 import { Account } from "@/account/account"
 import { isRecord } from "@/util/record"
@@ -459,26 +458,28 @@ const layer = Layer.effect(
 
           yield* ensureGitignore(dir).pipe(Effect.orDie)
 
-          const dep = yield* npmSvc
-            .install(dir, {
-              add: [
-                {
-                  name: Brand.PLUGIN_SDK_PACKAGE,
-                  version: InstallationLocal ? undefined : InstallationVersion,
-                },
-              ],
-            })
-            .pipe(
-              Effect.exit,
-              Effect.tap((exit) =>
-                Exit.isFailure(exit)
-                  ? Effect.logWarning("background dependency install failed", { dir, error: String(exit.cause) })
-                  : Effect.void,
-              ),
-              Effect.asVoid,
-              Effect.forkDetach,
-            )
-          deps.push(dep)
+          if (yield* Effect.promise(() => ConfigPlugin.usesSdk(dir))) {
+            const dep = yield* npmSvc
+              .install(dir, {
+                add: [
+                  {
+                    name: Brand.PLUGIN_SDK_PACKAGE,
+                    version: Brand.PLUGIN_SDK_VERSION,
+                  },
+                ],
+              })
+              .pipe(
+                Effect.exit,
+                Effect.tap((exit) =>
+                  Exit.isFailure(exit)
+                    ? Effect.logWarning("background dependency install failed", { dir, error: String(exit.cause) })
+                    : Effect.void,
+                ),
+                Effect.asVoid,
+                Effect.forkDetach,
+              )
+            deps.push(dep)
+          }
 
           result.command = mergeDeep(result.command ?? {}, yield* Effect.promise(() => ConfigCommand.load(dir)))
           result.agent = mergeDeep(result.agent ?? {}, yield* Effect.promise(() => ConfigAgent.load(dir)))
