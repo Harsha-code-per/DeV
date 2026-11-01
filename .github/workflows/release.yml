@@ -43,11 +43,13 @@ jobs:
           gh release create "$GITHUB_REF_NAME" dist/release/* --repo "$GITHUB_REPOSITORY" \
             --title "$GITHUB_REF_NAME" --generate-notes --verify-tag $prerelease
 
-      # npm: one small launcher package. npm signs in through trusted publishing, so no token is stored;
+      # npm: the SDK and plugin SDK for plugin authors, then one small launcher package. npm signs in through trusted publishing, so no token is stored;
       # that and its provenance need a public repository. Pre-releases stay on GitHub only.
       - name: npm publish
         if: ${{ !github.event.repository.private && !contains(github.ref_name, '-') }}
         run: |
           npm install -g npm@11
+          (cd ../sdk/js && bun script/build.ts && bun script/publish.ts)
+          (cd ../plugin && bun script/publish.ts)
           bun script/publish.ts
         working-directory: packages/devcode

@@ -2018,6 +2018,35 @@ export type Config = {
             }
       }
   instructions?: Array<string>
+  /**
+   * OS sandbox for shell commands
+   */
+  sandbox?: {
+    enabled?: boolean
+    network?: {
+      allow?: Array<string>
+    }
+    filesystem?: {
+      allowWrite?: Array<string>
+      allowRead?: Array<string>
+    }
+  }
+  schedules?: Array<{
+    name: string
+    /**
+     * 5-field cron: minute hour day-of-month month day-of-week
+     */
+    cron: string
+    prompt: string
+    /**
+     * Project folder the prompt runs in
+     */
+    directory: string
+    model?: string
+    agent?: string
+    enabled?: boolean
+  }>
+  output_style?: string
   hooks?: {
     PreToolUse?: Array<{
       matcher?: string

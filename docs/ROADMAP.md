@@ -39,7 +39,7 @@ DeV brings premium AI to anyone, with nothing to pay. This page shows what we're
 - [ ] Benchmark at 25 of 30 or better on the release build, with at least two free providers
 - [ ] The owner uses it for real work for two weeks
 - [ ] Five outside testers finish a real task without help
-- [ ] DeV's own plugin SDK package on npm
+- [ ] DeV's own plugin SDK on npm: `@devcodeagent/sdk` and `@devcodeagent/plugin` build, install and run a real plugin; they publish with the first public release, and DeV then installs them instead of the upstream SDK
 - [ ] Public install, npm and upgrade tested from a clean machine
 - [ ] Name and trademark check, and a domain
 

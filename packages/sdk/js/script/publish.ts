@@ -31,14 +31,18 @@ function transformExports(exports: Record<string, unknown>) {
     }),
   )
 }
-if (await published(pkg.name, pkg.version)) {
+// Published under DeV's npm organisation at DeV's version. `--pack` builds the tarball without publishing.
+const pack = process.argv.includes("--pack")
+pkg.name = "@devcodeagent/sdk"
+pkg.version = Script.version
+if (!pack && (await published(pkg.name, pkg.version))) {
   console.log(`already published ${pkg.name}@${pkg.version}`)
 } else {
   pkg.exports = transformExports(pkg.exports)
   await Bun.write("package.json", JSON.stringify(pkg, null, 2))
   try {
     await $`bun pm pack`
-    await $`npm publish *.tgz --tag ${Script.channel} --access public`
+    if (!pack) await $`npm publish *.tgz --tag ${Script.channel} --access public`
   } finally {
     await Bun.write("package.json", originalText)
   }
