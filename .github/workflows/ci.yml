@@ -26,7 +26,7 @@ jobs:
       - name: No OpenCode names outside the credits
         run: |
           ! git grep -il opencode -- . ':!LICENSE' ':!NOTICE' ':!README.md' ':!CHANGELOG.md' ':!website' ':!bun.lock' ':!bunfig.toml' \
-            ':!.github/workflows/ci.yml' ':!.gitleaksignore' ':!script/brand-check.ts' ':!docs' ':!SECURITY.md' \
+            ':!.github/workflows/ci.yml' ':!.gitleaksignore' ':!script/brand-check.ts' \
             ':!packages/core/src/brand.ts' ':!packages/devcode/package.json' ':!packages/devcode/src/plugin/index.ts' \
             ':!packages/devcode/src/provider/provider.ts' ':!packages/session-ui/src/components/markdown-stream.ts' \
             ':!packages/devcode/test/image/fixtures'

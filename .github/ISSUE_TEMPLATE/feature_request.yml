@@ -13,7 +13,7 @@ body:
     id: proposal
     attributes:
       label: Proposal
-      description: What you would like DeV to do. If Claude Code or another tool already does this, say how.
+      description: What you would like DeV to do.
     validations:
       required: true
   - type: checkboxes

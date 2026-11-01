@@ -8,7 +8,7 @@ The model is not trusted. It can be wrong, and text it reads (files, web pages, 
 
 ### The OS sandbox
 
-Shell commands run inside [`@anthropic-ai/sandbox-runtime`](https://github.com/anthropics/sandbox-runtime) (Apache-2.0): bubblewrap on Linux, Seatbelt on macOS. The code is in [`packages/devcode/src/sandbox`](packages/devcode/src/sandbox/index.ts). Inside the sandbox a command:
+Shell commands run inside an open-source OS sandbox (see [NOTICE](NOTICE)): bubblewrap on Linux, Seatbelt on macOS. The code is in [`packages/devcode/src/sandbox`](packages/devcode/src/sandbox/index.ts). Inside the sandbox a command:
 
 - **writes** only to the project, any outside directory you approved for that command, temp folders and package-manager caches (`~/.npm`, `~/.bun`, `~/.cache`, `~/.cargo`, `~/go`, pnpm, Gradle, Maven);
 - **cannot write** `.env` or `.git/hooks` in those directories;

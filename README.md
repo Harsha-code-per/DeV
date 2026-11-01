@@ -26,7 +26,7 @@ DeV includes the features that usually sit behind a paid plan, for everyone. The
 
 | Product | What it is | Get it | Status |
 |---|---|---|---|
-| **DeV Code** | A coding agent for your terminal. Create projects and build software. | `curl`, npm, pnpm or bun | Available now |
+| **DeV Code** | A coding agent for your terminal. Create projects and build software. | `curl`, npm, pnpm or bun | Release candidate |
 | **DeV** | An assistant for Windows, macOS and Linux that runs in the background, wakes to your voice and works across your computer. | Installers: `.exe`, `.dmg` and Linux packages | In development |
 | **DeV for Chrome** | A browser extension that helps you debug and get things done on any page. | Browser extension | In development |
 | **DeV for Web** | A chat site where anyone can talk to free AI models, with nothing to install. | Your browser | Planned |

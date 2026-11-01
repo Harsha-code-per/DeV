@@ -1,283 +1,82 @@
 # DeV roadmap
 
-This is the single source of truth for what we build and in what order. Every item has a checkbox. Tick it in the commit that finishes it, and add anything new here before working on it.
+DeV brings premium AI to anyone, with nothing to pay. This page shows what we're building and where it stands. A ticked item is verified on the compiled release, not just in the source.
 
-## How to read this roadmap
+## The DeV family
 
-A ticked item is **built**. It counts as **done** only once it is verified in the compiled `devcode` in a real terminal (and on GitHub CI, read from `gh run`). Most items below were checked from source only; the v1 plan re-verifies what matters on the shipped build.
+| Product | What it is | How you get it | Status |
+|---|---|---|---|
+| **DeV Code** | A coding agent for your terminal | `curl`, npm, pnpm or bun | Release candidate |
+| **DeV** | An assistant for Windows, macOS and Linux that runs in the background, wakes to your voice and works across your computer | Installers (`.exe`, `.dmg`, Linux packages) | In development |
+| **DeV for Chrome** | A browser extension that helps you debug and get things done on any page | Browser extension | In development |
+| **DeV for Web** | A chat site for free AI models, with nothing to install | Your browser | Planned |
 
-### Definition of v1
+## Principles
 
-v1 is **DeV Code** on Linux, macOS and Windows. It succeeds when, on the shipped build:
+- **Free first.** Every feature is for everyone, and no paid model is used unless you choose one.
+- **Secure by default.** Shell commands run in an OS sandbox, and risky actions ask first.
+- **Light on your machine.** Heavy pieces load on demand and stop when idle.
+- **Measured, not claimed.** Benchmarks and clean-machine tests decide what we say.
 
-1. One `curl` or `npm` command installs `dev` on a clean machine, checksums verified, and the owner uses that same install.
-2. A new user with no paid key and no env variables connects a model by command and gets a reply within 2 minutes of installing.
-3. Status appears within 2s, 90% of simple replies arrive within 15s, and 20 of 20 runs don't hang.
-4. The owner signs off on a design unlike any other agent, and a check finds no visible OpenCode branding (apart from OpenCode Zen, credits and the licence).
-5. At least 25 of 30 benchmark tasks pass on free models, published. Latest on v0.9.0-rc.3 with one free provider: 24/30, so this is not met yet. Public material names no other company or product (the owner's decision, 2026-11-01); OpenCode is credited.
-6. No paid model is used unless the user chose it, the sandbox works in the shipped binary, and the secret scan is clean.
-7. CI is green on GitHub, and `devcode upgrade` works from one real release to the next.
+## DeV Code 1.0
 
-Desktop, Chrome, voice and computer use follow as separate releases.
+### Done
 
-### Positioning
+- [x] Installs on clean Linux, macOS, Alpine and Windows machines, with checksums verified
+- [x] One npm package that works with npm, pnpm and bun
+- [x] A new user can connect a free model and get an answer in under a minute
+- [x] Clear status at all times, and no silent hangs
+- [x] Free models routed automatically, with small free tiers handled
+- [x] DeV picks Build, Plan or Goal from your request
+- [x] Receipts for finished work and a live view of the current task
+- [x] OS sandbox on Linux and macOS, tested in CI
+- [x] Long sessions survive compaction
+- [x] Subagents, rewind, project memory, skills, plugins, hooks and MCP servers
+- [x] Its own name and identity throughout
 
-DeV's motto is accessibility: anyone can develop without paying, and they get the premium features otherwise kept for paid plans. Going public and announcing happen only after the reliability check below.
+### Before release
 
-### Before going public
+- [ ] Benchmark at 25 of 30 or better on the release build, with at least two free providers
+- [ ] The owner uses it for real work for two weeks
+- [ ] Five outside testers finish a real task without help
+- [ ] DeV's own plugin SDK package on npm
+- [ ] Public install, npm and upgrade tested from a clean machine
+- [ ] Name and trademark check, and a domain
 
-- [ ] The owner has used the release candidate for real work and signs off on the design and reliability.
-- [ ] Remove comparisons with named products from `docs/ROADMAP.md`, `docs/GAP_MATRIX.md`, `docs/ECOSYSTEM.md`, `SECURITY.md` and the prompts where they aren't legally required.
-- [x] npm name: `devcode` was refused as too similar to `dev-code`, so the package is `@devcodeagent/cli` (reserved at 0.0.1). A small launcher downloads the verified release, so one package serves npm, pnpm, bun and yarn.
-- [ ] At launch, remove the `gh` fallback from `script/npm-launcher.mjs` (owner-only, while the repo is private).
-- [ ] After the repo is public, add the one Trusted Publisher on npm (workflow `release.yml`).
-- [ ] The owner sets up GitHub Sponsors so the Sponsor links work.
+## After 1.0
 
-## What DeV is
+### DeV Code
 
-DeV is a **product family**, built as one open-source project (MIT), free to use, and working with any model.
+- [ ] Sign in with a ChatGPT plan through OpenAI's open-source route
+- [ ] Windows sandbox, and sandboxing for local MCP servers
+- [ ] Memory across projects, with privacy controls
+- [ ] Benchmark regressions blocking merges in CI
 
-| Product | What it is | Install name |
-|---|---|---|
-| **DeV** | The main product: an assistant for Windows, macOS and Linux that runs in the background, wakes to your voice and operates the machine. | Installers (`.exe`, `.dmg`, Linux packages) from GitHub Releases |
-| **DeV Code** | The coding agent for the terminal, for creating projects and building software. | `curl`, or npm `@devcodeagent/cli`; commands `devcode` and `dev` |
-| **DeV for Chrome** | Browser extension that debugs and works on any page. | Browser extension |
-| **DeV for Web** | A chat site for talking to free models with nothing to install. | Browser |
+### DeV
 
-DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine. It is now an independent project: we ship our own fixes and releases and don't track upstream. The only exception is that we watch OpenCode's security advisories and port relevant security fixes by hand.
+- [ ] Chat and coding in one window, sharing sessions with the terminal
+- [ ] Background mode, tray and start at login, with an idle budget of 150 MB
+- [ ] Voice, local and free: wake word, speech recognition and dictation
+- [ ] Computer use on Windows, macOS and Linux
+- [ ] Installers for every platform
 
-### Principles
+### DeV for Chrome
 
-- **Claude Code is the bar.** Where Claude Code has a behaviour, mode or command that works, DeV Code matches it, then improves on it.
-- **Free first.** DeV works out of the box with free and local models. Paid models are optional.
-- **Secure by default.** OS-level sandbox and safe permission defaults. Never "run it in Docker to be safe".
-- **Light on the machine.** It must never make the computer lag. Heavy pieces load on demand and unload when idle, and builds and tests run memory-capped.
-- **Measured, not claimed.** Benchmarks decide parity; CI blocks regressions.
+- [ ] Side-panel chat that works in your real browser
+- [ ] Per-site permissions, and confirmation for anything sensitive
+- [ ] Debugging tools: console, network and screenshots
 
-### Release policy
+### DeV for Web
 
-- The repo stays **private until v1.0** (milestone M3) and goes public with a polished first version.
-- Only free channels are used until DeV earns money: GitHub Releases, npm, GitHub Pages, our own Homebrew tap and Scoop bucket, and the free Firefox and Edge add-on stores.
-- Paid items are listed under M7.
-
----
-
-## Done so far
-
-- [x] Engine fork with `auto/free` model routing across free providers: cooldowns, a 30s first-response window, context-overflow handling.
-- [x] MCP servers start on demand and stop when idle. Code mode cuts input from ~107K to ~20K tokens per request.
-- [x] Catalog of skills, plugins and MCP servers, with user and project scope, `/plugins`, and the agent installing what it needs (with permission).
-- [x] ponytail and superpowers built in.
-- [x] DeV naming for config (`dev.json`, `.dev/`, `DEV_*`), the banner and wordmark, help text, prompts and 60 translations.
-- [x] Removed dependence on OpenCode's services: no keyless Zen, no upsells, no share or account features, DeV's own User-Agent.
-- [x] Free out of the box: Ollama and LM Studio detected automatically, and clear guidance when nothing is connected.
-- [x] Machine stability: serial, memory-capped typecheck (~2.3 GB peak); a capped pre-push hook; `scripts/capped`; earlyoom.
-- [x] One standalone monorepo (engine at the root, full history, Python prototype retired); history scanned for secrets (clean); the old GitHub fork archived.
-
----
-
-## M0 — Foundation: independent, secure, installable
-
-### M0.2 Hard-fork rename
-
-- [x] `@opencode-ai/*` → `@dev-ai/*` in every `package.json`, import and tsconfig path. One exception: `Brand.PLUGIN_SDK_PACKAGE` still installs OpenCode's published plugin SDK until `@dev-ai/plugin` is on npm (M0.4).
-- [x] `packages/opencode` → `packages/devcode`. The binary installs as `devcode` with `dev` as an alias.
-- [x] Internal `OPENCODE_*` → `DEV_*` (Zen keeps its own `OPENCODE_API_KEY`); alias loop removed.
-- [x] Remove stock mode; tests and snapshots are DeV-native. Only `DEV_DISABLE_BUNDLED_DEFAULTS` remains, which skips the bundled plugins, MCP servers, local-model detection and auto/free default (used by tests).
-- [x] Rename identifiers: `OpenCode` → `DevCode` namespaces, `createOpencodeClient`/`OpencodeClient` → `createDevcodeClient`/`DevcodeClient`, `OpenCodeEvent` → `DevCodeEvent`, `OpenCodeHttpApi` → `DevCodeHttpApi`; generators updated (`httpapi-codegen`, legacy SDK `instance`).
-- [x] `packages/app` and `packages/session-ui` use the workspace `@dev-ai/client`; the vendored OpenCode 1.17.13 client is gone. DeV's server answers the app's v1 probe, so the app talks to its legacy routes plus `/api` messages and revert commit; the reducer for OpenCode's newer v2 event names was dropped (DeV emits `session.next.*`).
-- [ ] ChatGPT (Codex) and xAI sign-in send `Brand.OAUTH_CLIENT` (still "opencode", the partner name those providers accept, so sign-in keeps working). Register DeV with OpenAI and xAI, then set it to "devcode" in `packages/core/src/brand.ts`.
-- [ ] Rename remaining internal names in the web/desktop apps: i18n keys (`provider.connect.opencodeZen.*`, `wsl.onboarding.*Opencode*`), the desktop WSL "install opencode" flow, the `x-opencode-directory` client↔server header, and the TUI theme and app IDs. Do this with the M4 desktop and M2 UI work.
-- [x] `script/brand-check.ts`: finds user-visible OpenCode text (quoted sentences, JSX text, prompts, docs, translations); `--check` fails when anything would change. The help-snapshot test asserts no command's help mentions opencode. (Wired into CI with M0.5.)
-- [x] OpenCode Zen is listed honestly in `/connect` as "OpenCode Zen (free models with your Zen key)", with what it is, how to get a key, and its data-use note.
-
-### M0.3 Security baseline (Claude Code-grade)
-
-- [x] Shell commands run inside `@anthropic-ai/sandbox-runtime` (Apache-2.0) on Linux (bubblewrap) and macOS (Seatbelt): `packages/devcode/src/sandbox`. Verified end to end on Linux.
-  - Writes only to the project, any outside directory approved for the command, temp folders and package caches; `.env` and `.git/hooks` stay read-only.
-  - Unreadable: `~/.ssh`, `~/.aws`, `~/.gnupg`, gh/gcloud/kube/docker credentials, `~/.netrc`, `~/.git-credentials`, `~/.npmrc`, `~/.pypirc`, DeV's `auth.json`.
-  - Network only through the allowlist proxy (package registries, git hosts).
-  - `DEV_DISABLE_SANDBOX=1` turns it off; if it can't start, commands run unsandboxed and that's logged.
-- [ ] Sandbox follow-ups (the Linux build now ships `vendor/seccomp` next to the binary, so Unix sockets are blocked): local MCP servers; Windows (restricted user plus network fence). macOS now runs the sandbox tests in CI.
-- [x] Safe permission defaults (bundled config): reading in the project is allowed; file edits and web fetches ask; shell commands ask except a read-only set (ls, pwd, git status/diff/log/show/branch, rg, grep, cat, head, tail, wc, which, echo), and anything with a redirect, `--output` or `--pre` asks even then. Verified end to end per permission mode.
-- [x] Sandboxed shell commands run without asking (deny rules still apply); unsandboxed ones and outside directories still ask.
-- [x] `sandbox` section in dev.json: `enabled`, `network.allow` (extra hosts), `filesystem.allowWrite`, and `filesystem.allowRead` to unhide a credential such as `~/.npmrc` for a private registry. Verified live.
-- [x] Leaving the sandbox, as in Claude Code: when the sandbox blocks a command, DeV tells the agent, which can rerun it with `dangerouslyDisableSandbox`. That always asks the user ("Shell command outside the sandbox"); bundled allow rules don't cover it, an "always" approval does, and auto mode approves it. Verified end to end.
-- [x] Server listens on localhost only and generates a random password by default.
-- [x] Web pages, web search results and MCP results (also through code mode) reach the model inside `<untrusted_content>` blocks that can't be closed from inside, and the system prompt says to treat them as data. Risky actions are covered by the sandbox: deleting outside the project or pushing with your credentials needs to leave it, which asks.
-- [x] Mark file content from outside the project as untrusted too.
-- [ ] Supply chain: pinned deps, gitleaks and Renovate in CI, npm provenance, SHA-256 checksums on releases. Workflows, `renovate.json` and `.gitleaksignore` are in; tick after the first green CI run and first release. Needs: the Renovate GitHub app installed, and `NPM_TOKEN` (provenance needs a public repo).
-- [x] New `SECURITY.md`: threat model, the sandbox, private reporting through GitHub Security Advisories.
-
-### M0.4 Install and update (free channels)
-
-- [x] Release CI matrix: Linux x64/arm64 (glibc and musl), macOS x64/arm64, Windows x64/arm64. GitHub Releases with checksums.
-- [ ] `curl -fsSL https://harsha-code-per.github.io/DeV/install | sh` and `install.ps1`, both verifying checksums.
-- [ ] `npm i -g devcode`, a Homebrew tap and a Scoop bucket.
-- [ ] `devcode upgrade`: download the latest release, verify it, replace the binary.
-
-### M0.5 Project hygiene
-
-- [x] LICENSE (MIT with OpenCode's and DeV's copyright lines), NOTICE (OpenCode MIT, sandbox-runtime Apache-2.0).
-- [x] CONTRIBUTING (DCO sign-off, `scripts/capped`), CODE_OF_CONDUCT, issue and PR templates.
-- [x] Fix the 3 `packages/sdk-next` embedded tests that already fail in upstream v1.19.4 (SQLite "unable to open database file"), so CI starts fully green.
-- [ ] CI on every PR: typecheck, tests, brand check, gitleaks. Written, and it has passed before; keep it green and read it with `gh run`.
-- [x] Rewrite README for the product family.
-
----
-
-## v1 blockers found by testing the shipped build (2026-10-31)
-
-- [x] Free models feel broken: no on-screen status while failing over, a 30s silent window per candidate, no timeout for directly chosen models. Verified in the compiled binary with only a free Groq key: 20 of 20 fresh "hi" runs answered, first output at ~1s, 18 in ~4s, 2 waited out a visible rate limit (11s, 21s).
-- [x] A free tier with a small per-minute budget (Groq: 8,000 tokens) rejected every request, because a full request is ~17K tokens. The rejection was also misread as a context overflow, which compacted a new session and printed the summary as the answer. Such models now get a lean request; the limit is remembered per model.
-- [x] freellmapi: `/connect` takes its key and it joins `auto/free`. Verified in the compiled binary against the real FreeLLMAPI container (models listed, reply through it with all tools). Honest wording: large free capacity, not unlimited.
-- [x] `auto/free` must only use models confirmed free (`anyapi/openai/gpt-5.4` qualified on a listed price of 0).
-- [x] DeV picks the mode (build, plan, goal) by itself, tells you, and you can override it. Decided in code from the prompt (`session/mode-pick.ts`), because models ignored the instruction: 8/10 on Groq and 3/10 on NVIDIA when left to the model. Measured in the compiled TUI on NVIDIA: 10/10. The full plan, approve, build flow is verified.
-- [x] Sandbox on Linux: placeholder files were left in the project and `git add -A` failed inside it in every project. Both fixed and verified in the compiled binary.
-- [x] A model that kept announcing work was nudged forever, because each nudge reset the count. Now two per prompt.
-- [x] Release versions come from DeV's own git tags.
-- [x] `release.yml` ran for real: v0.9.0-rc.1 built all 12 targets, and it installs on clean Linux x64 and arm64, Alpine, macOS and Windows runners (`install-test.yml`). The installer rejected a tampered archive. Still to test once public: plain `curl`, `npm i -g devcode`, `dev upgrade`.
-- [x] First run for a new user: a 60 MB plugin SDK download blocked startup for 88s, and a failing MCP server held the first reply for 22s. The SDK now installs only for folders with local plugins, and MCP servers get 2s before the reply goes ahead. A free key goes straight to `auto/free`. Measured with an empty profile: UI in 9s, first reply 5.6s, 22s from launch to answer.
-- [x] Shell API keys no longer connect silently; `/connect` offers them. `scripts/install-local` builds and links a checkout, with the commit in the version.
-
-## M1 — DeV Code: match, then beat, Claude Code
-
-### Measure first
-
-- [x] Benchmark harness (`bench/`, see its README): 10 real tasks with hidden tests so far; a do-nothing agent fails all of them. First run (2026-10-29): DeV Code on `auto/free` passed 10/10 (21–253 s each, $0).
-- [ ] Grow it to ~30 harder tasks (larger multi-file features, real-world repos, terminal work): 10/10 on free models means these don't separate agents yet. Now 30 tasks: 20 harder ones added (layered multi-file feature, async/cache/timezone/money/unicode bugs, refactor, parser, spec, perf budget, CLI, shell); a do-nothing agent fails all 20 and reference solutions pass all 20. DeV Code on `auto/free` (2026-10-29): 14/20 on the harder set (4 of the 6 fails were runs that stopped before finishing the work). Compiled binary with stored free keys (NVIDIA, Google, Groq; 2026-11-01): **25/30**, $0, median 40s, 7.7M tokens. Fails: py-access-stats, py-parse-duration, py-spec-ini, ts-deep-merge, ts-emitter-once. Claude Code on a fixed 5-task sample (2026-11-01): 5/5 for $0.22, against DeV's 4/5 at $0; see bench/README.md. Codex is still to run: the owner's account has hit its limit until 2026-11-26.
-  - It runs `devcode`, `claude -p` and `codex exec` on identical copies.
-  - It records pass rate, time, tokens and cost, against free models and against one strong model.
-- [ ] Benchmark in CI; regressions block merges.
-
-### Claude Code parity: modes and behaviour
-
-- [x] **Permission modes**, cycled with Shift+Tab: default (ask) → accept edits → plan → auto (approve everything not denied).
-  - Auto joins the cycle only after `--auto`/`--yolo`/`--dangerously-skip-permissions`/`--permission-mode auto` or an opt-in from the command palette (with a warning), like Claude Code's bypass mode.
-  - `--permission-mode default|accept-edits|auto` for `dev` and `dev run`; the prompt shows the active mode.
-  - Becomes meaningful with the M0.3 safe defaults (today most actions are allowed without asking).
-- [x] **Project memory:** `DEV.md` (like `CLAUDE.md`), loaded hierarchically (user `~/.config/dev/DEV.md`, project, folders as files are read); AGENTS.md and CLAUDE.md still work. `# note` adds to the project memory, `#~ note` to yours; `/memory` opens it in `$EDITOR`; `/init` writes DEV.md.
-- [x] **Slash commands with Claude Code's names:** `/init`, `/review`, `/compact`, `/clear`, `/cost`, `/model`, `/permissions`, `/mcp`, `/plugins`, `/resume`, `/rewind`, `/status`, `/config`, `/doctor` (debug info for now), `/bug`, `/memory`.
-- [x] **Hooks** configured by the user (PreToolUse, PostToolUse, UserPromptSubmit, Stop, SessionStart) as shell commands in dev.json `hooks`, in Claude Code's documented shape: JSON on stdin, exit 2 blocks with stderr as the reason. Verified end to end.
-  - [x] Exit 2 on Stop keeps working; SessionStart output becomes context.
-- [x] **Subagents:** custom agents in `.dev/agents/`, parallel subagents, and background subagents (on by default).
-- [x] **Checkpoints and rewind** of both code and conversation: `/rewind` picks any earlier message to revert (files and conversation) or fork; `/undo` and `/redo` step.
-- [x] **Headless mode:** `dev -p "prompt"` (= `dev run`), `--output-format json|stream-json`, and the JS SDK for scripting.
-- [x] A GitHub Action for DeV Code (`github/action.yml`: `uses: Harsha-code-per/DeV/github@main`). Usable once the repo is public and has a release.
-- [x] **Status line:** `status_line: { command, interval }` in tui.json, as in Claude Code (JSON on stdin, first line shown under the prompt). `@` file mentions with fuzzy search already exist.
-- [x] Output styles (`output_style` in dev.json).
-- [x] **Reliability:**
-  - [x] a plan → do → verify loop (run tests and builds before saying "done"), asked of every model in the system prompt;
-  - [x] no silent stops: a fresh reply that only announces its next step, or is empty, gets a "go ahead" (at most twice per message). Took 3 of the 6 failed benchmark tasks to passing;
-  - [x] automatic retries, with a visible wait;
-  - [x] long sessions survive compaction: a real multi-file task on a forced 25K context compacted four times and kept working without an error;
-  - [x] no silent hang on a stuck model: first-response and between-chunk timeouts.
-  - [x] `dev run` stops on SIGTERM: the sandbox library swallowed the signal once a shell command had run, leaving scripts stuck for over a minute. Found by the benchmark; proven with a test.
-  - [x] a malformed tool call rejected by the provider (Groq) is retried instead of ending the session.
-
-### Beyond Claude Code
-
-- [x] **Use your subscriptions safely:** the `external_agent` tool hands a task to the user's own installed Claude Code, Codex or Gemini CLI (offered only when one is installed; asks first; TUI shows "Hand off to …"). Their own login and terms apply; DeV never touches those credentials. Verified end to end with Claude Code.
-  - Not built on purpose: signing in to Claude Pro/Max or Google Antigravity inside DeV. Anthropic's terms forbid third-party use of subscription sign-in, and Google suspends accounts that connect Antigravity or Gemini CLI sign-in to third-party tools. Gemini is available through a free Google AI Studio key (part of `auto/free`).
-
-- [x] Free-model quality routing: `auto/free` ranks candidates by each model's measured success (kept in `~/.local/state/dev/auto-free-stats.json`, recent results weigh most; untried models start neutral). Per task type is a follow-up.
-- [ ] Persistent memory across sessions and projects, with privacy controls.
-- [ ] Catalog auto-update: new skills, plugins and MCP servers, health-checked before switching, with rollback.
-- [ ] One shared MCP hub per machine, used by every DeV surface.
-
----
-
-## M2 — Identity and UX: DeV looks like DeV
-
-Not urgent, but it must be done before v1.0.
-
-- [x] **Signature colour: Saffron** `#F2A516` (deep `#9A5F00` for text on light backgrounds), chosen 2026-10-29 from three contrast-checked candidates. Palette: warm neutrals, teal `#4FB8C6`/`#0A6F7C` complement (in the `dev` TUI theme).
-- [x] **Logo and mark:** a D with a v in its bowl, ink on saffron (`packages/identity/mark.svg`, rendered by `build.sh` to PNGs and the web favicons); the wordmark's V is saffron in the TUI, CLI and exit screen.
-- [x] Desktop app icons (`packages/desktop/icons`, .icns/.ico) from the same mark, with the M4 desktop rebrand.
-- [x] Default TUI theme `dev` in the signature colour.
-- [x] **TUI restyle** (colours and frames only; the layout is still OpenCode's): rounded saffron prompt and permission frames; your messages marked with a saffron chevron instead of a bar on a panel; saffron reply marker, main agent, sidebar titles and footer mark; a time-of-day greeting on the home screen; hint row teaches shift+tab modes and # memory.
-- [x] TUI restyle, tool output: a thin rounded frame with a saffron marker; light theme checked on screen (deep saffron stays readable); `/goal` status row. (`script/ansi-to-png.py` turns tmux captures into images.)
-- [x] **Real TUI redesign, unlike any other agent:** the owner chose Receipts for finished work plus the live Mission Spine. A saffron band opens home, a NOW bar says what is happening, the current task runs on a Plan/Do/Verify spine, finished tasks fold into a receipt (`/steps` or a click opens them), the prompt has no frame, the sidebar is off by default, and exit prints a session receipt. Checked in the compiled binary, in dark and light, down to 76 columns.
-- [x] Rename the visible `opencode.log` and `opencode-*.db` files to `dev.log` and `dev*.db`; existing sessions move over on first run.
-- [x] The diff view's empty left column for new files: a diff that only adds lines uses the unified view.
-- [x] Replace OpenCode's SVG wordmark and mark in `packages/ui`.
-- [ ] **Web and desktop UI theme** from the same palette.
-- [x] Website and docs styled to match (`website/`, served by `pages.yml` once the repo is public).
-
----
-
-## M3 — v1.0 public launch (DeV Code)
-
-- [ ] M0 complete, the M1 parity checklist complete, the M2 identity done.
-- [x] Benchmark results published honestly (free and strong models). Codex is still to add.
-- [ ] Website and docs on GitHub Pages: install, quick start, configuration, security, free-model guide, FAQ. Written in `website/`; goes live with the repo.
-- [ ] Demo video or GIFs; launch post. The demo GIF is in `website/`.
-- [ ] Make the repo public. Announce, invite contributors, and label good first issues.
-
----
-
-## M4 — DeV app (desktop: Windows, macOS, Linux)
-
-All surfaces share **one engine and one set of sessions**: start in the app, continue with `dev` in a terminal.
-
-- [x] Rebrand `packages/desktop` (Electron): name, app ID, icons, our own update feed (GitHub Releases), unsigned builds with first-run steps documented.
-- [ ] Chat and coding in one window over the shared engine; the session list syncs with the CLI.
-- [ ] Runs in the tray and starts with the system. Idle budget: ≤150 MB RAM and ~0% CPU. Tray (open, quick prompt, new session, start at login, quit), close-to-tray and start at login (`--hidden`) are in; tick once the idle budget is measured on a real desktop.
-- [ ] Wake on name or hotkey; a popup. The hotkey popup is in (Ctrl/Cmd+Shift+Space, `quickPromptHotkey` setting); wake on name waits for voice.
-- [ ] **Voice**, local and free:
-  - VAD and wake word always on and tiny;
-  - whisper.cpp and Piper load only on wake and unload after 60s idle;
-  - dictation mode.
-- [ ] Computer use: screenshot and input on Wayland/X11, macOS and Windows.
-- [x] Scheduler: `schedules` in the global dev.json (5-field cron, prompt, project folder, optional model/agent) runs prompts in new sessions while `dev serve` or the TUI is running; a lock per run prevents duplicates. Verified with `dev serve`.
-- [ ] Scheduler follow-ups: run it in the desktop app (call `Scheduler.start` from the embedded server, exported in `node.ts`), notifications when a scheduled run finishes, a `/schedule` command to add one, live web data.
-- [ ] Machine and system control (files, packages, services) through a privileged helper that asks for approval on every privileged action.
-
-## M5 — DeV for Chrome
-
-- [ ] MV3 extension with a side-panel chat; controls your real Chrome through CDP (tabs, read, click, type, screenshots, console, network).
-- [x] Connects to the local engine through native messaging (no open port).
-- [ ] Per-site permissions; confirmation for purchases, sending and credentials; page content treated as untrusted.
-- [ ] Distributed through GitHub Releases plus the Firefox and Edge add-on stores (free). The Chrome Web Store comes in M7.
-
-## M5.5 — DeV for Web
-
-- [ ] A chat site for free models, with no paid server. First version: static hosting, and each user adds their own free key, which stays in their browser.
-- [ ] Shared free access needs a budget: free tiers don't allow one key to serve the public. Revisit with sponsorship.
-
-## M6 — Personal and for everyone
-
-- [ ] Onboarding interview builds a profile and connects free providers or a local model.
-- [ ] Low-RAM profile chosen automatically.
-- [ ] Multi-language docs; accessibility.
-
-## M7 — Paid polish (once DeV earns money)
-
-- [ ] Own domain.
-- [ ] Apple notarization ($99/yr).
-- [ ] Windows code signing.
-- [ ] Chrome Web Store ($5).
-- [ ] Hosted services if wanted (sync, team features).
-
----
-
-## Cross-cutting, always
-
-- **Performance budgets:** idle daemon ≤150 MB; ~20K tokens per request; typecheck ≤2.5 GB.
-- **Security reviews** for every feature that touches the shell, network or credentials.
-- **Privacy:** local-first, nothing leaves the machine without the user knowing.
-- **Docs and a changelog** updated in the same PR as each feature.
-- See [GAP_MATRIX.md](GAP_MATRIX.md) for feature parity with Claude Code and Codex, and [ECOSYSTEM.md](ECOSYSTEM.md) for the open-source projects we build on.
-
-## Watching OpenCode (hard fork: we port fixes by hand and build features ourselves)
-
-Review OpenCode's releases regularly (`gh release list -R anomalyco/opencode`). Last review: 2026-10-29 (v1.19.5, v2.2.0, v2.2.1).
-
-- [x] Ported #54936 (v1.19.5): a failed TUI worker request answers with an error instead of hanging.
-- [x] Ported #59649 (v2.2.1): a 429 that sounds like an overflow (Cerebras) is a rate limit, not a context overflow.
-- [x] Built our own `/goal <objective>` (their 2.2.1 idea): keeps working until the goal is verified, with pause/resume/clear and a status row.
-- Not applicable: #59934 and #59441 change OpenCode 2's rewritten session runner, which DeV doesn't use.
-- [x] Scheduled prompts: built as DeV's own scheduler (see M4).
-- [ ] Consider: plugin-managed session instructions that don't bust the prompt cache (2.2.0), and per-model prompt-cache TTLs.
-- [ ] Consider: an opt-in `image_generate` tool.
-- [x] `/goal` reviews with an independent reviewer: when the agent claims GOAL MET, a child session (general agent, edits denied) checks the project with real evidence and its VERDICT decides; NOT MET findings become the next instruction. Verified end to end.
+- [ ] A chat site with static hosting, where each user adds their own free key
+- [ ] Shared free access, once sponsorship can pay for it
+
+### Across the family
+
+- [ ] One optional account that carries your settings and models across devices, end-to-end encrypted
+- [ ] Onboarding that sets up free models for you
+- [ ] Docs in more languages
+
+## Support
+
+DeV is built without funding. If you'd like it to grow faster, please [sponsor the project](https://github.com/sponsors/Harsha-code-per).
