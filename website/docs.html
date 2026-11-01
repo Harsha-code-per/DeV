@@ -1,0 +1,102 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="mark.svg"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@75..150,400..900&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap"><link rel="stylesheet" href="site.css">
+<title>DeV Code docs</title>
+<meta name="description" content="Install DeV Code, connect a free model and configure it.">
+</head><body>
+<header class="topbar"><a href="./"><img src="mark.svg" alt="DeV home"></a><nav><a href="docs.html">Docs</a><a href="https://github.com/Harsha-code-per/DeV">GitHub</a></nav></header>
+<div class="docs">
+<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#connect">Connect a model</a><a href="#free">Free models</a><a href="#modes">Modes</a><a href="#commands">Commands</a><a href="#config">Configuration</a><a href="#security">Security</a><a href="#faq">FAQ</a></nav>
+<main class="doc">
+<h1>DeV Code docs</h1>
+<p>DeV Code is a coding agent for your terminal. The commands <code>dev</code> and <code>devcode</code> do the same thing.</p>
+
+<h2 id="install">Install</h2>
+<p>On Linux or macOS:</p>
+<pre><code>curl -fsSL https://harsha-code-per.github.io/DeV/install | sh</code></pre>
+<p>On Windows, in PowerShell:</p>
+<pre><code>irm https://harsha-code-per.github.io/DeV/install.ps1 | iex</code></pre>
+<p>With npm, on any of them:</p>
+<pre><code>npm i -g devcode</code></pre>
+<p>The installers check the download against the release's SHA-256 checksums before installing anything. Update later with <code>dev upgrade</code>.</p>
+
+<h2 id="connect">Connect a model</h2>
+<p>Start <code>dev</code> in a project folder and type <code>/connect</code>. Pick a provider, paste its key, and you're ready. DeV saves the key in its own private store, so you don't need env variables or a <code>.env</code> file.</p>
+<p>If a provider's key is already in your shell, <code>/connect</code> offers to use it. It's never picked up silently.</p>
+<p>Scripts and CI have nobody to answer that question, so <code>dev run</code> does read keys from the environment.</p>
+
+<h2 id="free">Free models</h2>
+<p>The default model is <code>auto/free</code>. For each request it tries the free models of the providers you've connected, moves to the next when one is busy, and remembers which ones answer well for you.</p>
+<div class="tw"><table>
+<tr><th>Provider</th><th>Good for</th></tr>
+<tr><td>NVIDIA</td><td>The best starting point. Handles full coding tasks.</td></tr>
+<tr><td>Google</td><td>A large free tier, with a daily limit per model.</td></tr>
+<tr><td>Groq</td><td>Very fast, but limited to 8,000 tokens a minute, so it suits short tasks. DeV sends it a smaller request with fewer tools.</td></tr>
+<tr><td>OpenRouter</td><td>Its models with a <code>:free</code> suffix.</td></tr>
+<tr><td>Ollama and LM Studio</td><td>Local models, found automatically.</td></tr>
+<tr><td>FreeLLMAPI</td><td>A separate app you run yourself. It combines many free tiers behind one key, for personal use. The capacity is large but not unlimited, and you add a key for each provider.</td></tr>
+</table></div>
+<p>Free tiers have limits. When every model is rate limited, DeV waits if the limit clears soon, tells you what it's doing, and otherwise ends with a clear error. Connecting a second provider helps more than anything else.</p>
+
+<h2 id="modes">Modes</h2>
+<p>DeV chooses how to work and shows you in the prompt. Press Shift+Tab to change it yourself.</p>
+<div class="tw"><table>
+<tr><th>Mode</th><th>What happens</th></tr>
+<tr><td>Build</td><td>The default. DeV edits files, and asks before anything risky.</td></tr>
+<tr><td>Plan</td><td>For larger or unclear work. DeV reads the code and writes a plan, and changes nothing until you approve it.</td></tr>
+<tr><td>Goal</td><td>For "keep going until the tests pass". DeV checks the goal each time it stops, and a separate reviewer confirms it. Control it with <code>/goal pause</code>, <code>/goal resume</code> and <code>/goal clear</code>.</td></tr>
+<tr><td>Accept edits</td><td>File edits are approved; everything else asks as usual.</td></tr>
+<tr><td>Auto</td><td>Everything that isn't denied is approved, including leaving the sandbox. Turn it on with <code>--auto</code>.</td></tr>
+</table></div>
+<p>Free models pick the right mode most of the time, not always. A wrong pick just means it starts in Build, and you can switch.</p>
+
+<h2 id="commands">Commands</h2>
+<div class="tw"><table>
+<tr><th>Command</th><th>What it does</th></tr>
+<tr><td><code>/connect</code></td><td>Add a provider</td></tr>
+<tr><td><code>/models</code></td><td>Pin a model instead of <code>auto/free</code></td></tr>
+<tr><td><code>/goal &lt;objective&gt;</code></td><td>Keep working until something is true</td></tr>
+<tr><td><code>/init</code></td><td>Write a <code>DEV.md</code> for this project</td></tr>
+<tr><td><code>/memory</code></td><td>Edit the project's memory</td></tr>
+<tr><td><code>/rewind</code></td><td>Go back to an earlier message, files included</td></tr>
+<tr><td><code>/plugins</code></td><td>Manage skills, plugins and MCP servers</td></tr>
+<tr><td><code># note</code></td><td>Add a note to the project's memory</td></tr>
+<tr><td><code>@file</code></td><td>Mention a file</td></tr>
+</table></div>
+<p>To run one prompt from a script:</p>
+<pre><code>dev run "explain this repo"
+dev -p "fix the failing test" --output-format json</code></pre>
+
+<h2 id="config">Configuration</h2>
+<p>Settings live in <code>dev.json</code>, either in your project or in <code>~/.config/dev/</code>. Project memory lives in <code>DEV.md</code>. DeV also reads <code>AGENTS.md</code> and <code>CLAUDE.md</code>.</p>
+<pre><code>{
+  "sandbox": {
+    "network": { "allow": ["npm.mycompany.com"] },
+    "filesystem": { "allowWrite": ["~/shared"], "allowRead": ["~/.npmrc"] }
+  },
+  "hooks": {}
+}</code></pre>
+<p>Hooks use Claude Code's shape: PreToolUse, PostToolUse, UserPromptSubmit, Stop and SessionStart run as shell commands that get JSON on stdin. Exit code 2 blocks the action.</p>
+
+<h2 id="security">Security</h2>
+<p>DeV treats the model as untrusted, because text it reads can try to steer it.</p>
+<ul>
+<li>On Linux and macOS, shell commands run in an OS sandbox. They can write only to your project, temp folders and package caches.</li>
+<li>They can't read <code>~/.ssh</code>, <code>~/.aws</code>, other credential stores or DeV's key store.</li>
+<li>Network access goes through an allowlist of package registries and git hosts.</li>
+<li>Leaving the sandbox always asks you, unless you turned on Auto.</li>
+<li>File edits and web fetches ask by default. Deny rules win in every mode.</li>
+<li>Web pages and MCP results reach the model marked as untrusted.</li>
+</ul>
+<p><b>Limits:</b> Windows has no sandbox yet, PowerShell commands are never sandboxed, and local MCP servers run outside the sandbox. Read the full <a href="https://github.com/Harsha-code-per/DeV/blob/main/SECURITY.md">security policy</a>.</p>
+
+<h2 id="faq">FAQ</h2>
+<h3>Is it really free?</h3>
+<p>DeV is free and open source, and free-tier models cost nothing. Each provider sets its own limits and has its own data terms, so check those for anything sensitive.</p>
+<h3>Can I use my Claude or ChatGPT subscription?</h3>
+<p>DeV can sign in to ChatGPT. For a Claude subscription, install Claude Code and DeV can hand a task to it, using your own login. DeV doesn't sign in to Claude Pro or Max itself, because Anthropic's terms don't allow that.</p>
+<h3>Does it send my code anywhere?</h3>
+<p>Only to the model provider you connect, or nowhere if you use a local model.</p>
+<h3>Why does it stop on a long task with Groq alone?</h3>
+<p>Groq's free tier allows 8,000 tokens a minute, and a long conversation needs more than that. Connect NVIDIA or Google with <code>/connect</code>.</p>
+</main></div>
+<footer><div class="wrap"><p>DeV is MIT licensed and independent. It started as a fork of OpenCode and isn't affiliated with OpenCode or Anthropic.</p></div></footer>
+</body></html>

@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="mark.svg"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@75..150,400..900&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap"><link rel="stylesheet" href="site.css">
+<title>DeV Code</title>
+<meta name="description" content="An open-source coding agent for your terminal that works on free models.">
+</head><body>
+<section class="hero">
+  <header class="topbar"><a href="./"><img src="mark.svg" alt="DeV home"></a><nav><a href="docs.html">Docs</a><a href="https://github.com/Harsha-code-per/DeV">GitHub</a></nav></header>
+  <div class="hero-in">
+    <h1>Code with free AI.</h1>
+    <p>DeV Code is an open-source agent for your terminal. It plans, edits, runs your tests and checks its own work, on free models you connect in a minute.</p>
+    <div class="cmd"><code id="install">curl -fsSL https://harsha-code-per.github.io/DeV/install | sh</code><button data-copy="#install">Copy</button></div>
+    <p class="alt">Or <code>npm i -g devcode</code>. On Windows, see <a href="docs.html#install" style="color:inherit">the install guide</a>.</p>
+  </div>
+</section>
+<section class="band"><div class="wrap lead">
+  <h2>Everything you expect from an agent, without the bill.</h2>
+  <div class="facts">
+    <div><h3>Free comes first</h3><p>The default model tries the free models of every provider you connect, moves on when one is busy, and learns which ones work for you. It never uses a paid model unless you pick it.</p></div>
+    <div><h3>It picks the mode</h3><p>Small fixes start straight away. Larger work gets a plan you approve first. Ask it to keep going until the tests pass and it keeps working, for up to 25 rounds. You can override any of this with Shift+Tab.</p></div>
+    <div><h3>A real sandbox</h3><p>On Linux and macOS, shell commands run in an OS sandbox. They can't read your SSH keys or cloud credentials, and they reach only package registries and git hosts. Anything else asks you.</p></div>
+    <div><h3>It proves the work</h3><p>Before saying a task is done, DeV runs your tests or build and reports the real result. With a goal set, a separate reviewer checks the claim before the goal ends.</p></div>
+    <div><h3>No env files</h3><p>Connect a model with <code>/connect</code> and DeV keeps the key in its own private store. A key already in your shell is only used if you say yes.</p></div>
+    <div><h3>Yours to change</h3><p>MIT licensed, with skills, plugins, hooks, MCP servers and custom agents. Paid models and your local Ollama work too, whenever you want them.</p></div>
+  </div>
+</div></section>
+<section class="band steps"><div class="wrap lead">
+  <h2>Start in three steps.</h2>
+  <ol>
+    <li><div><b>Install</b>Run the command at the top of this page.</div></li>
+    <li><div><b>Connect a free model</b>Type <code>dev</code>, then <code>/connect</code>. NVIDIA and Google both offer free API keys.</div></li>
+    <li><div><b>Say what you want built</b>DeV works in the folder you started it from.</div></li>
+  </ol>
+</div></section>
+<footer><div class="wrap"><p>DeV is MIT licensed and independent. It started as a fork of OpenCode and isn't affiliated with OpenCode or Anthropic. <a href="docs.html">Read the docs</a>.</p></div></footer>
+<script src="site.js"></script>
+</body></html>

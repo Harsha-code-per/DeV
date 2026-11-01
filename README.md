@@ -4,7 +4,7 @@ DeV is a family of open-source AI assistants that work with any model, and with 
 
 | Product | What it is | Status |
 |---|---|---|
-| **DeV Code** | A coding agent for the terminal. Commands `devcode` and `dev`. | Usable today, from source |
+| **DeV Code** | A coding agent for the terminal. Commands `devcode` and `dev`. | Available now |
 | **DeV** (app) | A desktop app for Windows, macOS and Linux: chat and coding in one. | Coming |
 | **DeV for Chrome** | A browser extension that works with the app and DeV Code. | Coming |
 
@@ -23,29 +23,15 @@ DeV is MIT licensed and is not affiliated with Anthropic or OpenCode. The plan i
 
 ## Install
 
-For now, DeV Code is installed from source. `curl`, npm (`npm i -g devcode`), Homebrew and Scoop installs are coming with the first release.
-
-You need [Bun](https://bun.sh) 1.3 or newer and git. REA also needs Node 26.12.1 or newer (or ^24.22.1 / ^22.23.4).
-
-Run DeV Code straight from the source tree:
-
 ```sh
-git clone https://github.com/Harsha-code-per/DeV.git && cd DeV
-bun install
-bun dev            # starts DeV Code in packages/devcode; `bun dev <dir>` for another folder
+curl -fsSL https://harsha-code-per.github.io/DeV/install | sh   # Linux and macOS
+irm https://harsha-code-per.github.io/DeV/install.ps1 | iex     # Windows PowerShell
+npm i -g devcode                                                # any of them
 ```
 
-Or build a standalone binary for your machine (Linux x64 shown):
+The installers verify the release's SHA-256 checksums. Update with `dev upgrade`.
 
-```sh
-cd packages/devcode
-DEV_VERSION=1.19.4 DEV_CHANNEL=dev-engine \
-  ../../scripts/capped -- bun run script/build.ts --single --skip-install --skip-embed-web-ui
-ln -sf "$PWD/dist/devcode-linux-x64/bin/devcode" ~/.local/bin/devcode
-ln -sf "$PWD/dist/devcode-linux-x64/bin/devcode" ~/.local/bin/dev
-```
-
-`--single` builds only for your platform. Without it, the build covers every target (Linux x64/arm64 with glibc and musl, macOS, Windows).
+To work on DeV itself, you need [Bun](https://bun.sh) and git: `bun install`, then `bun dev`. `scripts/install-local` builds your checkout and links `dev` to it.
 
 ## Quick start
 

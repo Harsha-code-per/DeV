@@ -186,7 +186,7 @@ Not urgent, but it must be done before v1.0.
 - [x] The diff view's empty left column for new files: a diff that only adds lines uses the unified view.
 - [x] Replace OpenCode's SVG wordmark and mark in `packages/ui`.
 - [ ] **Web and desktop UI theme** from the same palette.
-- [ ] Website and docs styled to match.
+- [x] Website and docs styled to match (`website/`, served by `pages.yml` once the repo is public).
 
 ---
 
