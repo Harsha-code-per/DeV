@@ -2,11 +2,11 @@
 
 <img src="packages/identity/mark.svg" alt="DeV logo" width="96" height="96">
 
-# DeV Code
+# DeV
 
 **Pro coding for everyone.**
 
-A coding agent for your terminal, with the premium features included and nothing to pay.
+DeV gives every developer the premium features of an AI assistant, with nothing to pay. DeV Code, the coding agent for your terminal, is available now.
 
 [Website](https://harsha-code-per.github.io/DeV) · [Docs](https://harsha-code-per.github.io/DeV/docs.html) · [Roadmap](docs/ROADMAP.md) · [Report a bug](https://github.com/Harsha-code-per/DeV/issues/new/choose)
 
@@ -20,7 +20,13 @@ A coding agent for your terminal, with the premium features included and nothing
 
 Great tools shouldn't depend on what you can pay. A student, a freelancer and a team on a tight budget deserve the same tools as anyone else.
 
-DeV Code includes the features that usually sit behind a paid plan, for everyone. There's no subscription and no card to add. It's open source under the MIT licence, so you can use it in your commercial work.
+DeV includes the features that usually sit behind a paid plan, for everyone. There's no subscription and no card to add. It's open source under the MIT licence, so you can use it in your commercial work.
+
+| Product | What it is | Status |
+|---|---|---|
+| **DeV Code** | The coding agent for your terminal | Available now |
+| **DeV** (app) | A desktop app for Windows, macOS and Linux | Coming |
+| **DeV for Chrome** | A browser extension that works with DeV Code and the app | Coming |
 
 ## Install
 
@@ -40,13 +46,15 @@ The installers check the download against the release's SHA-256 checksums before
 
 ## Quick start
 
-**1. Start DeV in your project.**
+**1. Start DeV Code in your project.**
 
 ```sh
-dev
+devcode
 ```
 
-**2. Connect a model.** Type this inside DeV. Providers with a free tier are listed first.
+`dev` is a shorter name for the same command.
+
+**2. Connect a model.** Type this inside DeV Code. Providers with a free tier are listed first.
 
 ```text
 /connect
@@ -77,7 +85,7 @@ dev
 | **Plan** | DeV writes a plan and changes nothing until you approve it. |
 | **Goal** | DeV keeps working until something is true, and a reviewer confirms it. |
 | **Accept edits** | File edits are approved, and everything else asks as usual. |
-| **Auto** | Everything that isn't denied is approved. Start DeV with `--auto`. |
+| **Auto** | Everything that isn't denied is approved. Start DeV Code with `--auto`. |
 
 ## Commands
 
@@ -94,13 +102,13 @@ dev
 Run a single prompt from a script:
 
 ```sh
-dev run "explain this repo"
+devcode run "explain this repo"
 ```
 
 Get the result as JSON:
 
 ```sh
-dev -p "fix the failing test" --output-format json
+devcode -p "fix the failing test" --output-format json
 ```
 
 The [docs](https://harsha-code-per.github.io/DeV/docs.html) cover configuration, free models and security.

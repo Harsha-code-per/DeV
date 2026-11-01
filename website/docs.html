@@ -8,17 +8,17 @@
 <nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#connect">Connect a model</a><a href="#free">Free models</a><a href="#modes">Modes</a><a href="#commands">Commands</a><a href="#config">Configuration</a><a href="#security">Security</a><a href="#bench">Benchmarks</a><a href="#faq">FAQ</a></nav>
 <main class="doc">
 <h1>DeV Code docs</h1>
-<p>DeV Code is a coding agent for your terminal. The commands <code>dev</code> and <code>devcode</code> do the same thing.</p>
+<p>DeV Code is a coding agent for your terminal. Start it with <code>devcode</code>, or the shorter <code>dev</code>. Both run the same program.</p>
 
 <h2 id="install">Install</h2>
 <p>On Linux or macOS:</p>
 <pre><code>curl -fsSL https://harsha-code-per.github.io/DeV/install | sh</code></pre>
 <p>On Windows, in PowerShell:</p>
 <pre><code>irm https://harsha-code-per.github.io/DeV/install.ps1 | iex</code></pre>
-<p>The installers check the download against the release's SHA-256 checksums before installing anything. Update later with <code>dev upgrade</code>.</p>
+<p>The installers check the download against the release's SHA-256 checksums before installing anything. Update later with <code>devcode upgrade</code>.</p>
 
 <h2 id="connect">Connect a model</h2>
-<p>Start <code>dev</code> in a project folder and type <code>/connect</code>. Pick a provider, paste its key, and you're ready. DeV saves the key in its own private store, so you don't need env variables or a <code>.env</code> file.</p>
+<p>Start <code>devcode</code> in a project folder and type <code>/connect</code>. Pick a provider, paste its key, and you're ready. DeV saves the key in its own private store, so you don't need env variables or a <code>.env</code> file.</p>
 <p>If a provider's key is already in your shell, <code>/connect</code> offers to use it. It's never picked up silently.</p>
 <p>Scripts and CI have nobody to answer that question, so <code>dev run</code> does read keys from the environment.</p>
 
@@ -54,9 +54,9 @@
 <tr><td><code>@file</code></td><td>Mention a file</td></tr>
 </table></div>
 <p>To run one prompt from a script:</p>
-<pre><code>dev run "explain this repo"</code></pre>
+<pre><code>devcode run "explain this repo"</code></pre>
 <p>To get the result as JSON:</p>
-<pre><code>dev -p "fix the failing test" --output-format json</code></pre>
+<pre><code>devcode -p "fix the failing test" --output-format json</code></pre>
 
 <h2 id="config">Configuration</h2>
 <p>Settings live in <code>dev.json</code>, either in your project or in <code>~/.config/dev/</code>. Project memory lives in <code>DEV.md</code>. DeV also reads <code>AGENTS.md</code>.</p>
