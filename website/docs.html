@@ -54,8 +54,9 @@
 <tr><td><code>@file</code></td><td>Mention a file</td></tr>
 </table></div>
 <p>To run one prompt from a script:</p>
-<pre><code>dev run "explain this repo"
-dev -p "fix the failing test" --output-format json</code></pre>
+<pre><code>dev run "explain this repo"</code></pre>
+<p>To get the result as JSON:</p>
+<pre><code>dev -p "fix the failing test" --output-format json</code></pre>
 
 <h2 id="config">Configuration</h2>
 <p>Settings live in <code>dev.json</code>, either in your project or in <code>~/.config/dev/</code>. Project memory lives in <code>DEV.md</code>. DeV also reads <code>AGENTS.md</code>.</p>
@@ -96,4 +97,5 @@ dev -p "fix the failing test" --output-format json</code></pre>
 <p>Some free tiers limit how much you can send per minute. Connect another provider with <code>/connect</code>.</p>
 </main></div>
 <footer><div class="wrap"><p>DeV Code is MIT licensed and builds on <a href="https://github.com/anomalyco/opencode">OpenCode</a>. We're grateful to its authors.</p></div></footer>
+<script src="site.js"></script>
 </body></html>

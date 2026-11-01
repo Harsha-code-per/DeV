@@ -51,7 +51,9 @@ footer p{margin:0;max-width:64ch}
 .doc h2{font-size:1.75rem;font-weight:800;margin:56px 0 14px}
 .doc h3{font-size:1.2rem;font-weight:700;margin:28px 0 8px}
 .doc pre{background:var(--ink);color:#FFF6E2;padding:14px 18px;border-radius:8px;overflow-x:auto;font:.86rem/1.55 var(--mono)}
+.doc pre{position:relative;padding-right:84px}
 .doc pre code{font:inherit}
+.copy-block{position:absolute;top:8px;right:8px;font:700 .82rem var(--body);background:var(--saffron);color:var(--ink);border:0;border-radius:6px;padding:6px 12px;cursor:pointer}
 .doc :not(pre)>code{background:var(--wash);padding:1px 5px;border-radius:4px}
 .tw{overflow-x:auto}
 .doc table{border-collapse:collapse;width:100%;font-size:1rem}
