@@ -4,6 +4,16 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 
 ## Unreleased (toward v1.0)
 
+### A terminal app of its own
+- Finished tasks fold into a receipt: how it ended, files, checks, time and cost, with the answer below. `/steps` or a click opens the steps.
+- The running task sits on a Plan, Do, Verify spine, under a NOW bar that always says what DeV is doing.
+- Home opens with a saffron band and your recent work, and exit prints a session receipt.
+
+### Works the moment you install it
+- A new user gets an answer in seconds: connecting a free key goes straight to `auto/free`, and nothing optional holds up the first launch or reply.
+- Free tiers with small limits, like Groq's, get a lean request instead of failing.
+- DeV picks Build, Plan or Goal itself, and you can override it.
+
 ### Free and any-model
 - `auto/free` routes each request across the free models of every connected provider, with cooldowns, a first-response window, and correct handling of context overflows and rate limits. It learns which free models actually answer and tries those first.
 - Local models (Ollama, LM Studio) are detected automatically, and DeV explains how to start when nothing is connected.

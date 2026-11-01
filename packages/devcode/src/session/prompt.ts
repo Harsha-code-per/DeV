@@ -6,6 +6,7 @@ import os from "os"
 import { SessionID, MessageID, PartID } from "./schema"
 import { SessionGoal } from "./goal"
 import { SessionNudge } from "./nudge"
+import { ModePick } from "./mode-pick"
 import { OutputStyle } from "./output-style"
 import { MessageV2 } from "./message-v2"
 import { SessionRevert } from "./revert"
@@ -1324,6 +1325,9 @@ const layer = Layer.effect(
             if (step === 1)
               yield* summary.summarize({ sessionID, messageID: lastUser.id }).pipe(Effect.ignore, Effect.forkIn(scope))
 
+            // Read before plugins run: they add their own text to the message.
+            const wanted = pickMode(msgs, agent.name)
+
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
             const styleConfig = yield* config.get()
@@ -1344,6 +1348,8 @@ const layer = Layer.effect(
             ]
             const format = lastUser.format ?? { type: "text" as const }
             if (format.type === "json_schema") system.push(STRUCTURED_OUTPUT_SYSTEM_PROMPT)
+            const picked = wanted && tools[wanted] && format.type !== "json_schema" ? wanted : undefined
+
             const result = yield* handle.process({
               user: lastUser,
               agent,
@@ -1355,9 +1361,11 @@ const layer = Layer.effect(
                 ...modelMsgs,
                 ...(isLastStep ? [{ role: "assistant" as const, content: MAX_STEPS_PROMPT }] : []),
               ],
-              tools,
+              // DeV: the mode is decided from your prompt; on that first step the one tool that switches
+              // to it is the only choice. It is absent where it isn't allowed, such as `dev run` and plan_enter.
+              tools: picked ? { [picked]: tools[picked] } : tools,
               model,
-              toolChoice: format.type === "json_schema" ? "required" : undefined,
+              toolChoice: picked || format.type === "json_schema" ? "required" : undefined,
             })
 
             if (structured !== undefined) {
@@ -1702,5 +1710,12 @@ export const node = LayerNode.make({
     Database.node,
   ],
 })
+
+function pickMode(messages: SessionV1.WithParts[], agent: string) {
+  const last = messages.at(-1)
+  if (agent !== "build" || last?.info.role !== "user") return undefined
+  const text = last.parts.flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : [])).join("\n")
+  return text ? ModePick.pick(text) : undefined
+}
 
 export * as SessionPrompt from "./prompt"

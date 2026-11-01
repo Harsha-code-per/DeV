@@ -1493,7 +1493,7 @@ it.instance("prompt submitted during an active run is included in the next LLM i
     expect(inputs).toHaveLength(2)
     const messages = inputs.at(-1)?.messages
     if (!Array.isArray(messages)) throw new Error("expected LLM messages")
-    expect(JSON.stringify(messages.at(-1))).toContain('"text":"second"')
+    expect(messages.at(-1)).toEqual({ role: "user", content: "second" })
   }),
 )
 

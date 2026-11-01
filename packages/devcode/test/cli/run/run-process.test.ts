@@ -133,6 +133,9 @@ describe("opencode run (non-interactive subprocess)", () => {
         const result = yield* opencode.run("keep going until the tests pass")
         opencode.expectExit(result, 0)
         expect(result.stdout).toContain("all green")
+        // The prompt decides the mode, so the first step offers only the tool that starts the goal.
+        const [first] = (yield* llm.inputs).filter((input) => !JSON.stringify(input).includes("title"))
+        expect(JSON.stringify(first)).toContain('"tool_choice":"required"')
       }),
     60_000,
   )

@@ -84,7 +84,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
   - Unreadable: `~/.ssh`, `~/.aws`, `~/.gnupg`, gh/gcloud/kube/docker credentials, `~/.netrc`, `~/.git-credentials`, `~/.npmrc`, `~/.pypirc`, DeV's `auth.json`.
   - Network only through the allowlist proxy (package registries, git hosts).
   - `DEV_DISABLE_SANDBOX=1` turns it off; if it can't start, commands run unsandboxed and that's logged.
-- [ ] Sandbox follow-ups (the Linux build now ships `vendor/seccomp` next to the binary, so Unix sockets are blocked): local MCP servers; Windows (restricted user plus network fence); check on macOS in CI.
+- [ ] Sandbox follow-ups (the Linux build now ships `vendor/seccomp` next to the binary, so Unix sockets are blocked): local MCP servers; Windows (restricted user plus network fence). macOS now runs the sandbox tests in CI.
 - [x] Safe permission defaults (bundled config): reading in the project is allowed; file edits and web fetches ask; shell commands ask except a read-only set (ls, pwd, git status/diff/log/show/branch, rg, grep, cat, head, tail, wc, which, echo), and anything with a redirect, `--output` or `--pre` asks even then. Verified end to end per permission mode.
 - [x] Sandboxed shell commands run without asking (deny rules still apply); unsandboxed ones and outside directories still ask.
 - [x] `sandbox` section in dev.json: `enabled`, `network.allow` (extra hosts), `filesystem.allowWrite`, and `filesystem.allowRead` to unhide a credential such as `~/.npmrc` for a private registry. Verified live.
@@ -118,7 +118,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] A free tier with a small per-minute budget (Groq: 8,000 tokens) rejected every request, because a full request is ~17K tokens. The rejection was also misread as a context overflow, which compacted a new session and printed the summary as the answer. Such models now get a lean request; the limit is remembered per model.
 - [x] freellmapi: `/connect` takes its key and it joins `auto/free`. Verified in the compiled binary against the real FreeLLMAPI container (models listed, reply through it with all tools). Honest wording: large free capacity, not unlimited.
 - [x] `auto/free` must only use models confirmed free (`anyapi/openai/gpt-5.4` qualified on a listed price of 0).
-- [x] DeV picks the mode (build, plan, goal) by itself, tells you, and you can override it. Measured in the compiled TUI on free models: right mode 8 of 10 times (small 3/3, large 3/4, "keep going" 2/3); a miss just stays in Build.
+- [x] DeV picks the mode (build, plan, goal) by itself, tells you, and you can override it. Decided in code from the prompt (`session/mode-pick.ts`), because models ignored the instruction: 8/10 on Groq and 3/10 on NVIDIA when left to the model. Measured in the compiled TUI on NVIDIA: 10/10. The full plan, approve, build flow is verified.
 - [x] Sandbox on Linux: placeholder files were left in the project and `git add -A` failed inside it in every project. Both fixed and verified in the compiled binary.
 - [x] A model that kept announcing work was nudged forever, because each nudge reset the count. Now two per prompt.
 - [x] Release versions come from DeV's own git tags.
@@ -194,9 +194,9 @@ Not urgent, but it must be done before v1.0.
 ## M3 — v1.0 public launch (DeV Code)
 
 - [ ] M0 complete, the M1 parity checklist complete, the M2 identity done.
-- [ ] Benchmark results published honestly (free and strong models).
-- [ ] Website and docs on GitHub Pages: install, quick start, configuration, security, free-model guide, FAQ.
-- [ ] Demo video or GIFs; launch post.
+- [x] Benchmark results published honestly (free and strong models). Codex is still to add.
+- [ ] Website and docs on GitHub Pages: install, quick start, configuration, security, free-model guide, FAQ. Written in `website/`; goes live with the repo.
+- [ ] Demo video or GIFs; launch post. The demo GIF is in `website/`.
 - [ ] Make the repo public. Announce, invite contributors, and label good first issues.
 
 ---

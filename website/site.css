@@ -38,6 +38,8 @@ h1,h2,h3{font-family:var(--display);line-height:1.05;margin:0;text-wrap:balance}
 .steps b{display:block;font-size:1.2rem}
 footer{border-top:1px solid var(--line);padding-block:30px;color:var(--mut);font-size:1rem}
 footer p{margin:0;max-width:64ch}
+.demo{background:var(--ink);padding-block:clamp(24px,5vw,56px)}
+.demo img{display:block;width:100%;max-width:826px;height:auto;margin:0 auto;border-radius:8px}
 /* Docs */
 .docs{display:grid;grid-template-columns:230px minmax(0,1fr);gap:56px;max-width:1120px;margin:0 auto;padding:32px 20px 80px}
 .toc{position:sticky;top:24px;align-self:start;display:grid;gap:8px;font-weight:700}

@@ -10,6 +10,8 @@ DeV is a family of open-source AI assistants that work with any model, and with 
 
 DeV is MIT licensed and is not affiliated with Anthropic or OpenCode. The plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
+![DeV fixing a failing test on a free model, then showing a one-line receipt](website/demo.gif)
+
 ## What DeV Code does today
 
 - **Free by default.** The default model, `auto/free`, routes each request across the free models of every provider you have connected. When one fails or hits its rate limit, DeV moves to the next and puts the failed one on cooldown. It also handles context overflow and slow first responses.

@@ -4,7 +4,7 @@
 </head><body>
 <header class="topbar"><a href="./"><img src="mark.svg" alt="DeV home"></a><nav><a href="docs.html">Docs</a><a href="https://github.com/Harsha-code-per/DeV">GitHub</a></nav></header>
 <div class="docs">
-<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#connect">Connect a model</a><a href="#free">Free models</a><a href="#modes">Modes</a><a href="#commands">Commands</a><a href="#config">Configuration</a><a href="#security">Security</a><a href="#faq">FAQ</a></nav>
+<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#connect">Connect a model</a><a href="#free">Free models</a><a href="#modes">Modes</a><a href="#commands">Commands</a><a href="#config">Configuration</a><a href="#security">Security</a><a href="#bench">Benchmarks</a><a href="#faq">FAQ</a></nav>
 <main class="doc">
 <h1>DeV Code docs</h1>
 <p>DeV Code is a coding agent for your terminal. The commands <code>dev</code> and <code>devcode</code> do the same thing.</p>
@@ -46,7 +46,7 @@
 <tr><td>Accept edits</td><td>File edits are approved; everything else asks as usual.</td></tr>
 <tr><td>Auto</td><td>Everything that isn't denied is approved, including leaving the sandbox. Turn it on with <code>--auto</code>.</td></tr>
 </table></div>
-<p>Free models pick the right mode most of the time, not always. A wrong pick just means it starts in Build, and you can switch.</p>
+<p>DeV decides from how you word the request, so unusual wording may just start in Build. You can switch at any time, or say "without planning" to skip a plan. Plan approval still asks you in Auto, because it is your decision and not a permission.</p>
 
 <h2 id="commands">Commands</h2>
 <div class="tw"><table>
@@ -87,6 +87,10 @@ dev -p "fix the failing test" --output-format json</code></pre>
 <li>Web pages and MCP results reach the model marked as untrusted.</li>
 </ul>
 <p><b>Limits:</b> Windows has no sandbox yet, PowerShell commands are never sandboxed, and local MCP servers run outside the sandbox. Read the full <a href="https://github.com/Harsha-code-per/DeV/blob/main/SECURITY.md">security policy</a>.</p>
+
+<h2 id="bench">Benchmarks</h2>
+<p>DeV Code passed 25 of 30 benchmark tasks on free models at no cost, with one run of each task. The tasks use hidden tests, and a do-nothing agent fails all of them.</p>
+<p>On a sample of 5 of those tasks, Claude Code on Sonnet passed 5 and was faster, for $0.22. DeV Code passed 4 for free. A sample that small can't rank them. Codex hasn't been run yet. The tasks and results are in the <a href="https://github.com/Harsha-code-per/DeV/tree/main/bench">bench folder</a>.</p>
 
 <h2 id="faq">FAQ</h2>
 <h3>Is it really free?</h3>
