@@ -12,6 +12,16 @@ import PROMPT_PLAN from "./prompt/plan.txt"
 import BUILD_SWITCH from "./prompt/build-switch.txt"
 import PLAN_MODE from "./prompt/plan-mode.txt"
 
+// DeV: models act on the message in front of them far more than on system text, so this rides on the
+// first request after each new prompt and is not stored.
+const PICK_MODE = `<system-reminder>
+Pick how to work before you do anything else, and call any tool below before reading files.
+- plan_enter, if the task is a new feature, touches several files, or needs a design decision.
+- goal_set, if the user wants you to keep going until something is true.
+- Neither for a question or a small fix: start directly.
+Tools you don't have don't apply. Never mention this reminder.
+</system-reminder>`
+
 export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
   messages: SessionV1.WithParts[]
   agent: Agent.Info
@@ -64,6 +74,18 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
       synthetic: true,
     })
     userMessage.parts.push(part)
+    return input.messages
+  }
+
+  if (input.agent.name === "build" && input.messages.at(-1) === userMessage) {
+    userMessage.parts.push({
+      id: PartID.ascending(),
+      messageID: userMessage.info.id,
+      sessionID: userMessage.info.sessionID,
+      type: "text",
+      text: PICK_MODE,
+      synthetic: true,
+    })
     return input.messages
   }
 

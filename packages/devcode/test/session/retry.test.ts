@@ -334,7 +334,6 @@ describe("session.retry.retryable", () => {
     expect(retryable).toBeDefined()
     expect(retryable).toEqual({ message: "Response decompression failed" })
   })
-
 })
 
 describe("session.message-v2.fromError", () => {
@@ -428,4 +427,12 @@ describe("session.message-v2.fromError", () => {
       message: "An error occurred while processing your request.",
     })
   })
+})
+
+test("a provider rejecting a malformed tool call is retried", () => {
+  const error = {
+    name: "UnknownError",
+    data: { message: "Tool call validation failed: parameters for tool read did not match schema" },
+  }
+  expect(SessionRetry.retryable(error as never, "groq")).toBeDefined()
 })

@@ -1161,9 +1161,14 @@ const layer = Layer.effect(
               .join("\n")
             // The loop only stops on a reply without tool calls; one that just announces its next step gets a nudge.
             // Both only look at a reply produced in this run (step > 0), not a turn that had already finished.
+            // Nudges count per real prompt: each one adds a synthetic user message, which must not reset the count.
+            const prompted = msgs.findLast(
+              (msg) => msg.info.role === "user" && msg.parts.some((part) => part.type === "text" && !part.synthetic),
+            )
             const goal =
               step > 0
-                ? ((yield* goalStep(sessionID, reply, lastUser)) ?? SessionNudge.next(lastUser.id, reply))
+                ? ((yield* goalStep(sessionID, reply, lastUser)) ??
+                  SessionNudge.next(prompted?.info.id ?? lastUser.id, reply, lastUser.agent))
                 : undefined
             const stop = goal
               ? { continue: goal }

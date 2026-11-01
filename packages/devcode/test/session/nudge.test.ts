@@ -19,3 +19,8 @@ test("real endings are left alone", () => {
   ])
     expect(SessionNudge.next("m2", reply), reply).toBeUndefined()
 })
+
+test("a plan that only names plan_exit gets told to call it; other plan replies are left alone", () => {
+  expect(SessionNudge.next("plan1", "Plan written.plan_exit", "plan")).toContain("call the plan_exit tool")
+  expect(SessionNudge.next("plan2", "This module parses the config.", "plan")).toBeUndefined()
+})

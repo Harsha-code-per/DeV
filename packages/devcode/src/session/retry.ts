@@ -36,6 +36,8 @@ const RETRYABLE_MESSAGE_PATTERNS = [
   /^timeout$|\b(?:request|response|connection|network|stream|read) (?:timeout|timed out|time out)\b/i,
   /try your request again|retry your request|resource exhausted|resource_exhausted/i,
   /\btry again (?:later|in\b)|\b(?:currently|temporarily) at capacity\b/i,
+  // Groq rejects a malformed tool call mid-stream; the model usually gets it right on a second try.
+  /tool call validation failed/i,
 ]
 
 function cap(ms: number) {

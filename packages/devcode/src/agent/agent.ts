@@ -141,6 +141,13 @@ const layer = Layer.effect(
 
         const user = Permission.fromConfig(cfg.permission ?? {})
 
+        const planFiles = Object.fromEntries(
+          [
+            ...Brand.CONFIG_DIRS.map((dir) => path.join(dir, "plans", "*.md")),
+            path.relative(ctx.worktree, path.join(Global.Path.data, path.join("plans", "*.md"))),
+          ].map((pattern) => [pattern, "allow" as const]),
+        )
+
         const agents: Record<string, Info> = {
           build: {
             name: "build",
@@ -175,11 +182,12 @@ const layer = Layer.effect(
                 },
                 edit: {
                   "*": "deny",
-                  ...Object.fromEntries(Brand.CONFIG_DIRS.map((dir) => [path.join(dir, "plans", "*.md"), "allow"])),
-                  [path.relative(ctx.worktree, path.join(Global.Path.data, path.join("plans", "*.md")))]: "allow",
+                  ...planFiles,
                 },
               }),
               user,
+              // Plan mode's own plan file never asks, even when the user's rules ask for every edit.
+              Permission.fromConfig({ edit: planFiles }),
             ),
             mode: "primary",
             native: true,

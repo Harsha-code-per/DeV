@@ -105,6 +105,22 @@ describe("opencode run (non-interactive subprocess)", () => {
     60_000,
   )
 
+  // Regression: each nudge is a new user message, which used to reset the count and loop forever.
+  cliIt.concurrent(
+    "a model that keeps announcing work is nudged twice, then the run ends",
+    ({ llm, opencode }) =>
+      Effect.gen(function* () {
+        yield* llm.text("I'll start now.")
+        yield* llm.text("I'll start now.")
+        yield* llm.text("I'll start now.")
+        yield* llm.text("this reply must never be requested")
+        const result = yield* opencode.run("do the thing")
+        opencode.expectExit(result, 0)
+        expect(result.stdout).not.toContain("must never")
+      }),
+    60_000,
+  )
+
   // A goal the agent starts itself runs the same loop as /goal: checked at each stop, then reviewed.
   cliIt.concurrent(
     "the agent can start a goal that keeps it working until a reviewer agrees",

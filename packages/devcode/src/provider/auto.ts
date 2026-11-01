@@ -85,13 +85,29 @@ const MIN_BUDGET = 4_000
 // A rate limit that clears this soon is worth waiting out instead of failing the request.
 const MAX_PAUSE_MS = 20_000
 // Tools a lean request keeps, and prompt sections it drops.
-const LEAN_TOOLS = new Set(["bash", "read", "edit", "write", "grep", "glob", "todowrite"])
+const LEAN_TOOLS = new Set([
+  "bash",
+  "read",
+  "edit",
+  "write",
+  "grep",
+  "glob",
+  "todowrite",
+  "question",
+  "plan_enter",
+  "plan_exit",
+  "goal_set",
+])
 const LEAN_DROP = [
   /<available_skills>[\s\S]*?<\/available_skills>/g,
   /<mcp_instructions>[\s\S]*?<\/mcp_instructions>/g,
   /<example>[\s\S]*?<\/example>/g,
   /# Ponytail[\s\S]*$/,
 ]
+
+// Plan mode's long workflow alone is a third of a small budget.
+const LEAN_PLAN_WORKFLOW = /## Plan Workflow[\s\S]*(?=<\/system-reminder>)/
+const LEAN_PLAN_STEPS = "Read what you need, write the plan to the plan file, then call plan_exit.\n"
 
 /**
  * Free tiers can cap tokens per minute below one full request (all of Groq's are 8,000), so a model
@@ -134,9 +150,11 @@ function lean(options: LanguageModelV3CallOptions): LanguageModelV3CallOptions {
       if (message.role !== "user") return message
       return {
         ...message,
-        content: message.content.filter(
-          (part) => part.type !== "text" || !part.text.startsWith("<EXTREMELY_IMPORTANT>"),
-        ),
+        content: message.content
+          .filter((part) => part.type !== "text" || !part.text.startsWith("<EXTREMELY_IMPORTANT>"))
+          .map((part) =>
+            part.type === "text" ? { ...part, text: part.text.replace(LEAN_PLAN_WORKFLOW, LEAN_PLAN_STEPS) } : part,
+          ),
       }
     }),
     tools: options.tools
@@ -286,8 +304,7 @@ export function language(
     report(undefined)
     // A context overflow must surface even if later candidates failed for other reasons:
     // it is what triggers compaction, the session's real recovery.
-    const limits = errors.map(perMinuteLimit)
-    const limit = limits.every((value) => value !== undefined) ? limits[0] : undefined
+    const limit = errors.map(perMinuteLimit).find((value) => value !== undefined)
     throw (
       errors.find((e) => overflow(e)) ??
       new Error(

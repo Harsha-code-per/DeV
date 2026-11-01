@@ -31,27 +31,26 @@ const tooLargePerMinute = new APICallError({
   statusCode: 413,
 })
 
-const fullRequest = (): any =>
-  ({
-    prompt: [
-      {
-        role: "system",
-        content:
-          "You are DeV.\n<available_skills>many skills</available_skills>\n<mcp_instructions>servers</mcp_instructions>\n<example>long</example>\nBe direct.\n# Ponytail\nmore rules",
-      },
-      {
-        role: "user",
-        content: [
-          { type: "text", text: "<EXTREMELY_IMPORTANT>bootstrap</EXTREMELY_IMPORTANT>" },
-          { type: "text", text: "hi" },
-        ],
-      },
-    ],
-    tools: [
-      { type: "function", name: "bash", description: "Run a command.\n\nPages of detail.", inputSchema: {} },
-      { type: "function", name: "execute", description: "Code mode.", inputSchema: {} },
-    ],
-  })
+const fullRequest = (): any => ({
+  prompt: [
+    {
+      role: "system",
+      content:
+        "You are DeV.\n<available_skills>many skills</available_skills>\n<mcp_instructions>servers</mcp_instructions>\n<example>long</example>\nBe direct.\n# Ponytail\nmore rules",
+    },
+    {
+      role: "user",
+      content: [
+        { type: "text", text: "<EXTREMELY_IMPORTANT>bootstrap</EXTREMELY_IMPORTANT>" },
+        { type: "text", text: "hi" },
+      ],
+    },
+  ],
+  tools: [
+    { type: "function", name: "bash", description: "Run a command.\n\nPages of detail.", inputSchema: {} },
+    { type: "function", name: "execute", description: "Code mode.", inputSchema: {} },
+  ],
+})
 
 describe("AutoProvider", () => {
   test("falls through to the next candidate on 429 and cools the failed one", async () => {
@@ -202,6 +201,35 @@ describe("AutoProvider routing", () => {
     } as never)
     expect(seen).toHaveLength(3)
     expect(seen[2].tools[0].description.length).toBeLessThan(400)
+  })
+
+  test("a lean request swaps plan mode's long workflow for its short form", async () => {
+    const small = model("groq", `plan-${Date.now()}`)
+    const seen: any[] = []
+    const lm = AutoProvider.fit(
+      fake(async (...args: any[]) => {
+        seen.push(args[0])
+        if (seen.length === 1) throw tooLargePerMinute
+        return { content: [] }
+      }),
+      small,
+    )
+    await lm.doGenerate({
+      prompt: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "<system-reminder>\nPlan mode is active.\n## Plan Workflow\npages\n</system-reminder>",
+            },
+          ],
+        },
+      ],
+    } as never)
+    expect(seen[1].prompt[0].content[0].text).toBe(
+      "<system-reminder>\nPlan mode is active.\nRead what you need, write the plan to the plan file, then call plan_exit.\n</system-reminder>",
+    )
   })
 
   test("other errors are not treated as a budget problem", async () => {
