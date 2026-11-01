@@ -44,7 +44,7 @@ export class Service extends ConfigService.Service<Service>()("@dev-ai/RuntimeFl
   experimentalLspTy: bool("DEV_EXPERIMENTAL_LSP_TY"),
   experimentalLspTool: enabledByExperimental("DEV_EXPERIMENTAL_LSP_TOOL"),
   experimentalOxfmt: enabledByExperimental("DEV_EXPERIMENTAL_OXFMT"),
-  experimentalPlanMode: enabledByExperimental("DEV_EXPERIMENTAL_PLAN_MODE"),
+  experimentalPlanMode: Config.boolean("DEV_EXPERIMENTAL_PLAN_MODE").pipe(Config.withDefault(true)),
   experimentalCodeMode: enabledByExperimental("DEV_EXPERIMENTAL_CODE_MODE"),
   experimentalEventSystem: enabledByExperimental("DEV_EXPERIMENTAL_EVENT_SYSTEM"),
   experimentalWorkspaces: enabledByExperimental("DEV_EXPERIMENTAL_WORKSPACES"),

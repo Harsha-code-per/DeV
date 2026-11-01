@@ -98,9 +98,25 @@ describe("opencode run (non-interactive subprocess)", () => {
         yield* llm.fail("upstream provider exploded mid-stream")
         yield* llm.text("recovered")
         const result = yield* opencode.run("trigger midstream error", { timeoutMs: 30_000 })
-        expect(result.exitCode).toBe(0)
+        opencode.expectExit(result, 0)
         expect(result.stdout).toBe("partial response\nrecovered\n")
         expect(result.stderr).not.toContain("upstream provider exploded mid-stream")
+      }),
+    60_000,
+  )
+
+  // A goal the agent starts itself runs the same loop as /goal: checked at each stop, then reviewed.
+  cliIt.concurrent(
+    "the agent can start a goal that keeps it working until a reviewer agrees",
+    ({ llm, opencode }) =>
+      Effect.gen(function* () {
+        yield* llm.tool("goal_set", { objective: "the tests pass" })
+        yield* llm.text("still failing")
+        yield* llm.text("all green. GOAL MET")
+        yield* llm.text("VERDICT: MET")
+        const result = yield* opencode.run("keep going until the tests pass")
+        opencode.expectExit(result, 0)
+        expect(result.stdout).toContain("all green")
       }),
     60_000,
   )
@@ -228,8 +244,8 @@ describe("opencode run (non-interactive subprocess)", () => {
         yield* llm.text("recovered")
         const result = yield* opencode.run("fail after output", { format: "json" })
 
+        opencode.expectExit(result, 0)
         const events = opencode.parseJsonEvents(result.stdout)
-        expect(result.exitCode).toBe(0)
         expect(events.map((event) => event.type)).toEqual([
           "step_start",
           "text",

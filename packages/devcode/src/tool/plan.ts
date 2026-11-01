@@ -8,9 +8,69 @@ import { MessageV2 } from "../session/message-v2"
 import { Provider } from "@/provider/provider"
 import { InstanceState } from "@/effect/instance-state"
 import { MessageID, PartID } from "../session/schema"
+import ENTER_DESCRIPTION from "./plan-enter.txt"
 import EXIT_DESCRIPTION from "./plan-exit.txt"
 
 export const Parameters = Schema.Struct({})
+
+// The loop runs the agent of the latest user message, so a synthetic one switches modes.
+const switchAgent = Effect.fnUntraced(function* (
+  session: Session.Interface,
+  provider: Provider.Interface,
+  ctx: Tool.Context,
+  agent: string,
+  text: string,
+) {
+  const messages = yield* session.messages({ sessionID: ctx.sessionID }).pipe(Effect.orDie)
+  const lastUser = messages.findLast((item) => item.info.role === "user" && item.info.model)
+  const model =
+    lastUser?.info.role === "user" && lastUser.info.model ? lastUser.info.model : yield* provider.defaultModel()
+  const msg: SessionV1.User = {
+    id: MessageID.ascending(),
+    sessionID: ctx.sessionID,
+    role: "user",
+    time: { created: Date.now() },
+    agent,
+    model,
+  }
+  yield* session.updateMessage(msg)
+  yield* session.updatePart({
+    id: PartID.ascending(),
+    messageID: msg.id,
+    sessionID: ctx.sessionID,
+    type: "text",
+    text,
+    synthetic: true,
+  } satisfies SessionV1.TextPart)
+})
+
+export const PlanEnterTool = Tool.define(
+  "plan_enter",
+  Effect.gen(function* () {
+    const session = yield* Session.Service
+    const provider = yield* Provider.Service
+
+    return {
+      description: ENTER_DESCRIPTION,
+      parameters: Parameters,
+      execute: (_params: {}, ctx: Tool.Context) =>
+        Effect.gen(function* () {
+          yield* switchAgent(
+            session,
+            provider,
+            ctx,
+            "plan",
+            "You moved to plan mode for this task. Research it and write the plan, then call plan_exit for approval.",
+          )
+          return {
+            title: "Planning first",
+            output: "Switched to plan mode. Don't change anything until the plan is approved.",
+            metadata: {},
+          }
+        }).pipe(Effect.orDie),
+    }
+  }),
+)
 
 export const PlanExitTool = Tool.define(
   "plan_exit",
@@ -45,28 +105,13 @@ export const PlanExitTool = Tool.define(
 
           if (answers[0]?.[0] === "No") yield* new Question.RejectedError()
 
-          const messages = yield* session.messages({ sessionID: ctx.sessionID }).pipe(Effect.orDie)
-          const lastUser = messages.findLast((item) => item.info.role === "user" && item.info.model)
-          const model =
-            lastUser?.info.role === "user" && lastUser.info.model ? lastUser.info.model : yield* provider.defaultModel()
-
-          const msg: SessionV1.User = {
-            id: MessageID.ascending(),
-            sessionID: ctx.sessionID,
-            role: "user",
-            time: { created: Date.now() },
-            agent: "build",
-            model,
-          }
-          yield* session.updateMessage(msg)
-          yield* session.updatePart({
-            id: PartID.ascending(),
-            messageID: msg.id,
-            sessionID: ctx.sessionID,
-            type: "text",
-            text: `The plan at ${plan} has been approved, you can now edit files. Execute the plan`,
-            synthetic: true,
-          } satisfies SessionV1.TextPart)
+          yield* switchAgent(
+            session,
+            provider,
+            ctx,
+            "build",
+            `The plan at ${plan} has been approved, you can now edit files. Execute the plan`,
+          )
 
           return {
             title: "Switching to build agent",

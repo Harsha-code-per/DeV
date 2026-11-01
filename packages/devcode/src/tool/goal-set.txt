@@ -1,0 +1,3 @@
+Start a goal when the user wants work to continue until something is true, such as "keep going until the tests pass" or "don't stop until the build is green". DeV then checks the objective each time you stop, and an independent reviewer confirms it before the goal ends. The user sees the goal and can pause or clear it with /goal.
+
+Do NOT use this for ordinary one-off tasks.

@@ -1,7 +1,8 @@
 import { LayerNode } from "@dev-ai/core/effect/layer-node"
 import { httpClient } from "@dev-ai/core/effect/app-node-platform"
 import { Ripgrep } from "@dev-ai/core/ripgrep"
-import { PlanExitTool } from "./plan"
+import { PlanEnterTool, PlanExitTool } from "./plan"
+import { GoalSetTool } from "./goal"
 import { Session } from "@/session/session"
 import { QuestionTool } from "./question"
 import { ShellTool } from "./shell"
@@ -107,6 +108,8 @@ const layer = Layer.effect(
     const todo = yield* TodoWriteTool
     const lsptool = yield* LspTool
     const plan = yield* PlanExitTool
+    const planEnter = yield* PlanEnterTool
+    const goalSet = yield* GoalSetTool
     const webfetch = yield* WebFetchTool
     const websearch = yield* WebSearchTool
     const externalAgent = yield* ExternalAgentTool
@@ -228,6 +231,8 @@ const layer = Layer.effect(
           question: Tool.init(question),
           lsp: Tool.init(lsptool),
           plan: Tool.init(plan),
+          planEnter: Tool.init(planEnter),
+          goal: Tool.init(goalSet),
           externalAgent: Tool.init(externalAgent),
           ...(codeModeTool ? { execute: Tool.init(codeModeTool) } : {}),
         })
@@ -254,7 +259,7 @@ const layer = Layer.effect(
             // Only offered when Claude Code, Codex or Gemini CLI is installed.
             ...(ExternalAgent.installed().length > 0 ? [tool.externalAgent] : []),
             ...(flags.experimentalLspTool ? [tool.lsp] : []),
-            ...(flags.experimentalPlanMode && flags.client === "cli" ? [tool.plan] : []),
+            ...(flags.experimentalPlanMode && flags.client === "cli" ? [tool.plan, tool.planEnter, tool.goal] : []),
           ],
           task: tool.task,
           read: tool.read,
