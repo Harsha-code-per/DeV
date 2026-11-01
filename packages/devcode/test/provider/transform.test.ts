@@ -2038,7 +2038,7 @@ describe("ProviderTransform.schema - openai supported schema subset", () => {
   })
 
   test.each([
-    ["opencode", "@ai-sdk/openai"],
+    ["devcode", "@ai-sdk/openai"],
     ["custom-openai-compatible", "@ai-sdk/openai"],
     ["azure", "@ai-sdk/azure"],
   ])("sanitizes %s models using %s", (providerID, npm) => {
@@ -2437,7 +2437,7 @@ describe("ProviderTransform.message - surrogate sanitization", () => {
         content: [
           { type: "text", text: text("assistant text") },
           { type: "reasoning", text: text("assistant reasoning") },
-          { type: "tool-call", toolCallId: "call-1", toolName: "Read", input: { filePath: ".opencode/tool/emoji.ts" } },
+          { type: "tool-call", toolCallId: "call-1", toolName: "Read", input: { filePath: ".dev/tool/emoji.ts" } },
           {
             type: "tool-result",
             toolCallId: "call-2",
@@ -3289,12 +3289,12 @@ describe("ProviderTransform.message - strip openai metadata when store=false", (
   })
 
   test("preserves metadata using providerID key when store is false", () => {
-    const opencodeModel = {
+    const devcodeModel = {
       ...openaiModel,
-      providerID: "opencode",
+      providerID: "devcode",
       api: {
-        id: "opencode-test",
-        url: "https://api.opencode.ai",
+        id: "devcode-test",
+        url: "https://api.devcode.ai",
         npm: "@ai-sdk/openai-compatible",
       },
     }
@@ -3306,7 +3306,7 @@ describe("ProviderTransform.message - strip openai metadata when store=false", (
             type: "text",
             text: "Hello",
             providerOptions: {
-              opencode: {
+              devcode: {
                 itemId: "msg_123",
                 otherOption: "value",
               },
@@ -3316,19 +3316,19 @@ describe("ProviderTransform.message - strip openai metadata when store=false", (
       },
     ] as any[]
 
-    const result = ProviderTransform.message(msgs, opencodeModel, { store: false }) as any[]
+    const result = ProviderTransform.message(msgs, devcodeModel, { store: false }) as any[]
 
-    expect(result[0].content[0].providerOptions?.opencode?.itemId).toBe("msg_123")
-    expect(result[0].content[0].providerOptions?.opencode?.otherOption).toBe("value")
+    expect(result[0].content[0].providerOptions?.devcode?.itemId).toBe("msg_123")
+    expect(result[0].content[0].providerOptions?.devcode?.otherOption).toBe("value")
   })
 
   test("preserves itemId across all providerOptions keys", () => {
-    const opencodeModel = {
+    const devcodeModel = {
       ...openaiModel,
-      providerID: "opencode",
+      providerID: "devcode",
       api: {
-        id: "opencode-test",
-        url: "https://api.opencode.ai",
+        id: "devcode-test",
+        url: "https://api.devcode.ai",
         npm: "@ai-sdk/openai-compatible",
       },
     }
@@ -3337,7 +3337,7 @@ describe("ProviderTransform.message - strip openai metadata when store=false", (
         role: "assistant",
         providerOptions: {
           openai: { itemId: "msg_root" },
-          opencode: { itemId: "msg_opencode" },
+          devcode: { itemId: "msg_devcode" },
           extra: { itemId: "msg_extra" },
         },
         content: [
@@ -3346,7 +3346,7 @@ describe("ProviderTransform.message - strip openai metadata when store=false", (
             text: "Hello",
             providerOptions: {
               openai: { itemId: "msg_openai_part" },
-              opencode: { itemId: "msg_opencode_part" },
+              devcode: { itemId: "msg_devcode_part" },
               extra: { itemId: "msg_extra_part" },
             },
           },
@@ -3354,13 +3354,13 @@ describe("ProviderTransform.message - strip openai metadata when store=false", (
       },
     ] as any[]
 
-    const result = ProviderTransform.message(msgs, opencodeModel, { store: false }) as any[]
+    const result = ProviderTransform.message(msgs, devcodeModel, { store: false }) as any[]
 
     expect(result[0].providerOptions?.openai?.itemId).toBe("msg_root")
-    expect(result[0].providerOptions?.opencode?.itemId).toBe("msg_opencode")
+    expect(result[0].providerOptions?.devcode?.itemId).toBe("msg_devcode")
     expect(result[0].providerOptions?.extra?.itemId).toBe("msg_extra")
     expect(result[0].content[0].providerOptions?.openai?.itemId).toBe("msg_openai_part")
-    expect(result[0].content[0].providerOptions?.opencode?.itemId).toBe("msg_opencode_part")
+    expect(result[0].content[0].providerOptions?.devcode?.itemId).toBe("msg_devcode_part")
     expect(result[0].content[0].providerOptions?.extra?.itemId).toBe("msg_extra_part")
   })
 
@@ -3846,8 +3846,8 @@ describe("ProviderTransform sampling defaults - DeepSeek", () => {
 
   test.each([
     ["deepseek", "deepseek-v4-flash"],
-    ["opencode", "deepseek-v4-flash"],
-    ["opencode-go", "deepseek-v4-flash"],
+    ["devcode", "deepseek-v4-flash"],
+    ["devcode-go", "deepseek-v4-flash"],
     ["openrouter", "deepseek/deepseek-v4-flash-0731"],
     ["ollama-cloud", "deepseek-v4-flash:0731"],
   ])("defaults top_p for %s/%s", (providerID, id) => {

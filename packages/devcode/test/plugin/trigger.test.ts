@@ -38,10 +38,10 @@ function withProject<A, E, R>(source: string, self: Effect.Effect<A, E, R>) {
         Effect.promise(() => Bun.write(file, source)),
         Effect.promise(() =>
           Bun.write(
-            path.join(test.directory, "opencode.json"),
+            path.join(test.directory, "dev.json"),
             JSON.stringify(
               {
-                $schema: "https://opencode.ai/config.json",
+                $schema: "https://harsha-code-per.github.io/DeV/schema/config.json",
                 plugin: [pathToFileURL(file).href],
               },
               null,

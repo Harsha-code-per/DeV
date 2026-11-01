@@ -285,7 +285,7 @@ function writeStandardFiles(dir: string) {
 function writeProjectSkill(dir: string) {
   return FSUtil.Service.use((fs) =>
     fs.writeWithDirs(
-      path.join(dir, ".opencode", "skills", "project-rest-skill", "SKILL.md"),
+      path.join(dir, ".dev", "skills", "project-rest-skill", "SKILL.md"),
       `---
 name: project-rest-skill
 description: A project skill visible to REST API prompts.
@@ -402,8 +402,8 @@ describe("HttpApi SDK", () => {
         expect(url.searchParams.get("workspace")).toBe(workspaceID)
         expect(url.searchParams.get("location[directory]")).toBe(directory)
         expect(url.searchParams.get("location[workspace]")).toBe(workspaceID)
-        expect(request!.headers.has("x-opencode-directory")).toBe(false)
-        expect(request!.headers.has("x-opencode-workspace")).toBe(false)
+        expect(request!.headers.has("x-dev-directory")).toBe(false)
+        expect(request!.headers.has("x-dev-workspace")).toBe(false)
       }),
     ),
   )
@@ -497,12 +497,12 @@ describe("HttpApi SDK", () => {
         const missing = yield* capture(() => missingSdk.file.read({ path: "hello.txt" }))
         const badSdk = yield* client("raw", directory, {
           password: "secret",
-          headers: { authorization: authorization("opencode", "wrong") },
+          headers: { authorization: authorization("devcode", "wrong") },
         })
         const bad = yield* capture(() => badSdk.file.read({ path: "hello.txt" }))
         const goodSdk = yield* client("raw", directory, {
           password: "secret",
-          headers: { authorization: authorization("opencode", "secret") },
+          headers: { authorization: authorization("devcode", "secret") },
         })
         const good = yield* capture(() => goodSdk.file.read({ path: "hello.txt" }))
 

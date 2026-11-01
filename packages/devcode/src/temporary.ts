@@ -4,7 +4,7 @@ import { InstallationVersion } from "@dev-ai/core/installation/version"
 import { hideBin } from "yargs/helpers"
 const cli = yargs(hideBin(process.argv))
   .parserConfiguration({ "populate--": true })
-  .scriptName("opencode")
+  .scriptName("devcode")
   .wrap(100)
   .help("help", "show help")
   .alias("help", "h")

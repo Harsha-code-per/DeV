@@ -8,7 +8,7 @@ The app is currently hybrid. In this document, V1 refers to the legacy unprefixe
   - `src/context/server-sdk.tsx`
 - [ ] Reduce current granular session and message events (`session.next.*`) into the existing app projections.
   - `src/context/server-session.ts`
-  - The reducer for OpenCode's newer event names was removed with the vendored client; DeV's server emits `session.next.*`.
+  - The reducer for DeV's newer event names was removed with the vendored client; DeV's server emits `session.next.*`.
 - [ ] Remove transitional session event dependencies: `session.created`, `session.updated`, `session.diff`, `session.status`, `session.idle`, and `session.error`.
   - `src/context/global-sync/event-reducer.ts`
   - `src/context/server-session.ts`

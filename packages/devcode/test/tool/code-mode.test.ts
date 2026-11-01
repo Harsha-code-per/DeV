@@ -637,7 +637,7 @@ describe("code mode execute", () => {
     expect(ran).toEqual([])
   })
 
-  test("leaves oversized results to OpenCode's native tool-output truncation", async () => {
+  test("leaves oversized results to DeV's native tool-output truncation", async () => {
     const tool = await build({})
     const output = await Effect.runPromise(tool.execute({ code: "return 'x'.repeat(40000)" }, ctx))
     expect(output.metadata.error).toBeUndefined()

@@ -10,7 +10,7 @@ const InterleavedField = Schema.Union([
   Schema.String,
 ])
 
-// models.dev's `reasoning_options`: OpenCode builds the model's reasoning variants from them.
+// models.dev's `reasoning_options`: DeV builds the model's reasoning variants from them.
 const ReasoningOption = Schema.Union([
   Schema.Struct({ type: Schema.Literal("effort"), values: Schema.Array(Schema.NullOr(Schema.String)) }),
   Schema.Struct({ type: Schema.Literal("toggle") }),

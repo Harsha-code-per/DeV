@@ -22,8 +22,8 @@ type Diff = {
   message: string
 }
 
-const repo = process.env.GH_REPO ?? "anomalyco/opencode"
-const bot = ["actions-user", "github-actions[bot]", "opencode", "opencode-agent[bot]"]
+const repo = process.env.GH_REPO ?? "Harsha-code-per/DeV"
+const bot = ["actions-user", "github-actions[bot]", "devcode", "devcode-agent[bot]"]
 const team = [
   ...(await Bun.file(new URL("../.github/TEAM_MEMBERS", import.meta.url))
     .text()
@@ -50,7 +50,7 @@ function ref(input: string) {
   return input
 }
 
-// OpenCode 2 releases share this repository, so only OpenCode 1 tags are candidates.
+// DeV 2 releases share this repository, so only DeV 1 tags are candidates.
 export function latestV1(releases: Release[]) {
   return releases.find((item) => !item.draft && /^v1\.\d+\.\d+$/.test(item.tag_name))?.tag_name.replace(/^v/, "")
 }
@@ -58,7 +58,7 @@ export function latestV1(releases: Release[]) {
 async function latest() {
   const data = await $`gh api "/repos/${repo}/releases?per_page=100"`.json()
   const release = latestV1(data as Release[])
-  if (!release) throw new Error("No OpenCode 1 releases found")
+  if (!release) throw new Error("No DeV 1 releases found")
   return release
 }
 

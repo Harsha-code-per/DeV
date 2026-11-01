@@ -13,7 +13,7 @@
     "typecheck": "tsgo --noEmit --checkers 1"
   },
   "bin": {
-    "opencode": "./bin/opencode"
+    "devcode": "./bin/devcode"
   },
   "exports": {
     "./effect/layer-node": "./src/effect/layer-node.ts",

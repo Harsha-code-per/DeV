@@ -288,9 +288,9 @@ describe("V2 configuration loading", () => {
     Effect.gen(function* () {
       const instance = yield* TestInstance
       const fs = yield* FSUtil.Service
-      const file = path.join(instance.directory, "opencode.jsonc")
+      const file = path.join(instance.directory, "dev.jsonc")
       const text =
-        '{\n  // Retain this comment\n  "$schema": "https://opencode.ai/config.json",\n  "plugins": ["native-only"]\n}\n'
+        '{\n  // Retain this comment\n  "$schema": "https://harsha-code-per.github.io/DeV/schema/config.json",\n  "plugins": ["native-only"]\n}\n'
       yield* fs.writeWithDirs(file, text)
       const messages: unknown[] = []
       const config = yield* Config.use.get().pipe(
@@ -317,9 +317,9 @@ describe("V2 configuration loading", () => {
       const instance = yield* TestInstance
       const fs = yield* FSUtil.Service
       yield* fs.writeWithDirs(
-        path.join(instance.directory, "opencode.json"),
+        path.join(instance.directory, "dev.json"),
         JSON.stringify({
-          $schema: "https://opencode.ai/config.json",
+          $schema: "https://harsha-code-per.github.io/DeV/schema/config.json",
           model: { providerID: "anthropic", model: "claude-sonnet", variant: "fast" },
           snapshots: false,
           skills: ["./skills", "https://example.com/skills"],
@@ -373,9 +373,9 @@ describe("V2 configuration loading", () => {
       const instance = yield* TestInstance
       const fs = yield* FSUtil.Service
       yield* fs.writeWithDirs(
-        path.join(instance.directory, "opencode.json"),
+        path.join(instance.directory, "dev.json"),
         JSON.stringify({
-          $schema: "https://opencode.ai/config.json",
+          $schema: "https://harsha-code-per.github.io/DeV/schema/config.json",
           model: { providerID: "openai", model: "gpt-4.1" },
           theme: "legacy",
           keybinds: { leader: "ctrl+x" },

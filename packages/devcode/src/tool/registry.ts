@@ -60,8 +60,8 @@ import { McpCatalog } from "@/mcp/catalog"
 
 export function webSearchEnabled(providerID: ProviderV2.ID, flags = { exa: false, parallel: false }) {
   return (
-    providerID === ProviderV2.ID.opencode ||
-    providerID === ProviderV2.ID.make("opencode-go") ||
+    providerID === ProviderV2.ID.devcode ||
+    providerID === ProviderV2.ID.make("devcode-go") ||
     flags.exa ||
     flags.parallel
   )

@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test"
 import { currentSession, mockDevCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/OpenCode/SubagentNavigation"
+const directory = "C:/DeV/SubagentNavigation"
 const projectID = "proj_subagent_navigation"
 const parentID = "ses_subagent_parent"
 const childID = "ses_subagent_child"
@@ -23,7 +23,7 @@ test("navigates to a subagent child session missing from the session list", asyn
   await expectSessionTitle(page, taskDescription)
   await expect(page.getByRole("heading", { name: parentTitle })).toHaveCount(0)
 
-  const titlebarRight = page.locator("#opencode-titlebar-right")
+  const titlebarRight = page.locator("#devcode-titlebar-right")
   await expect(titlebarRight.getByRole("button", { name: "Toggle review" })).toHaveCount(1)
 })
 
@@ -57,15 +57,15 @@ async function setup(page: Page, events?: () => EventPayload[]) {
     provider: {
       all: [
         {
-          id: "opencode",
-          name: "OpenCode",
+          id: "devcode",
+          name: "DeV",
           models: {
             "claude-opus-4-6": { id: "claude-opus-4-6", name: "Claude Opus 4.6", limit: { context: 200_000 } },
           },
         },
       ],
-      connected: ["opencode"],
-      default: { providerID: "opencode", modelID: "claude-opus-4-6" },
+      connected: ["devcode"],
+      default: { providerID: "devcode", modelID: "claude-opus-4-6" },
     },
     sessions: [session(parentID, parentTitle, 1700000000000), childSession()],
     pageMessages: (sessionID) => ({ items: sessionID === parentID ? parentMessages() : [] }),
@@ -129,7 +129,7 @@ function parentMessages() {
         role: "user",
         time: { created: 1700000000000 },
         agent: "build",
-        model: { providerID: "opencode", modelID: "claude-opus-4-6" },
+        model: { providerID: "devcode", modelID: "claude-opus-4-6" },
       },
       parts: [
         {
@@ -149,7 +149,7 @@ function parentMessages() {
         time: { created: 1700000001000, completed: 1700000002000 },
         parentID: userID,
         modelID: "claude-opus-4-6",
-        providerID: "opencode",
+        providerID: "devcode",
         mode: "build",
         agent: "build",
         path: { cwd: directory, root: directory },
@@ -185,13 +185,13 @@ async function configurePage(page: Page) {
     ({ directory, server, sessionId }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "devcode.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
-      localStorage.setItem("opencode.window.browser.dat:tabs", JSON.stringify([{ type: "session", server, sessionId }]))
+      localStorage.setItem("devcode.window.browser.dat:tabs", JSON.stringify([{ type: "session", server, sessionId }]))
     },
     { directory, server, sessionId: parentID },
   )

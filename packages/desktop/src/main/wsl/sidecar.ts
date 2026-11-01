@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto"
 import { createServer } from "node:net"
 import { app } from "electron"
 import { checkHealth } from "../server"
-import { type WslCommandLine, resolveWslOpencode, shellEscape, wslArgs } from "./runtime"
+import { type WslCommandLine, resolveWslDevcode, shellEscape, wslArgs } from "./runtime"
 import { pollWslHealth } from "./startup"
 import { nativeT } from "../native-translations"
 
@@ -18,12 +18,12 @@ export async function spawnWslSidecar(
   distro: string,
   opts: { onLine?: (line: WslCommandLine) => void; healthTimeoutMs?: number } = {},
 ): Promise<WslSidecar> {
-  const opencode = await resolveWslOpencode(distro)
-  if (!opencode) throw new Error(nativeT("desktop.wsl.error.opencodeNotInstalled", { distro }))
+  const devcode = await resolveWslDevcode(distro)
+  if (!devcode) throw new Error(nativeT("desktop.wsl.error.devcodeNotInstalled", { distro }))
 
   const port = await allocatePort()
   const password = randomUUID()
-  const username = "opencode"
+  const username = "devcode"
   const script = [
     "set -euo pipefail",
     'cd "$HOME" || cd /',
@@ -35,7 +35,7 @@ export async function spawnWslSidecar(
     `export DEV_SERVER_USERNAME=${shellEscape(username)}`,
     `export DEV_SERVER_PASSWORD=${shellEscape(password)}`,
     'export XDG_STATE_HOME="$HOME/.local/state"',
-    `exec ${shellEscape(opencode)} --print-logs --log-level ${app.isPackaged ? "WARN" : "INFO"} serve --hostname 0.0.0.0 --port ${port}`,
+    `exec ${shellEscape(devcode)} --print-logs --log-level ${app.isPackaged ? "WARN" : "INFO"} serve --hostname 0.0.0.0 --port ${port}`,
   ].join("\n")
   const child = spawn("wsl", wslArgs(["bash", "-se"], distro), {
     stdio: ["pipe", "pipe", "pipe"],

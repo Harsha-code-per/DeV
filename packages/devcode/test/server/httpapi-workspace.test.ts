@@ -41,7 +41,7 @@ function requestDefault(path: string, directory: string, init: RequestInit = {})
 
 function requestServer(path: string, directory: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers)
-  headers.set("x-opencode-directory", directory)
+  headers.set("x-dev-directory", directory)
   return Effect.promise(() => Promise.resolve(Server.Default().app.request(path, { ...init, headers })))
 }
 
@@ -397,9 +397,9 @@ describe("workspace HttpApi", () => {
           headers: {
             "accept-encoding": "br",
             "content-type": "application/json",
-            "x-opencode-workspace": "internal",
+            "x-dev-workspace": "internal",
           },
-          body: JSON.stringify({ $schema: "https://opencode.ai/config.json" }),
+          body: JSON.stringify({ $schema: "https://harsha-code-per.github.io/DeV/schema/config.json" }),
         })
 
         const responseBody = yield* response.text
@@ -416,11 +416,11 @@ describe("workspace HttpApi", () => {
               "content-type": "application/json",
               "x-target-auth": "secret",
             }),
-            body: JSON.stringify({ $schema: "https://opencode.ai/config.json" }),
+            body: JSON.stringify({ $schema: "https://harsha-code-per.github.io/DeV/schema/config.json" }),
           },
         ])
-        expect(forwarded[0]?.headers).not.toHaveProperty("x-opencode-directory")
-        expect(forwarded[0]?.headers).not.toHaveProperty("x-opencode-workspace")
+        expect(forwarded[0]?.headers).not.toHaveProperty("x-dev-directory")
+        expect(forwarded[0]?.headers).not.toHaveProperty("x-dev-workspace")
 
         const eventURL = new URL(`http://localhost${EventPaths.event}`)
         eventURL.searchParams.set("workspace", workspace.id)

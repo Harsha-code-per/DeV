@@ -3,12 +3,12 @@ import { Effect } from "effect"
 import path from "path"
 import { cliIt } from "../lib/cli-process"
 
-describe("opencode mcp add (non-interactive subprocess)", () => {
+describe("devcode mcp add (non-interactive subprocess)", () => {
   cliIt.live(
     "adds a remote server with HTTP headers",
-    ({ home, opencode }) =>
+    ({ home, devcode }) =>
       Effect.gen(function* () {
-        const result = yield* opencode.spawn([
+        const result = yield* devcode.spawn([
           "mcp",
           "add",
           "github",
@@ -19,7 +19,7 @@ describe("opencode mcp add (non-interactive subprocess)", () => {
           "--header",
           "X-Option=one=two",
         ])
-        opencode.expectExit(result, 0)
+        devcode.expectExit(result, 0)
 
         const config = yield* Effect.promise(() =>
           Bun.file(path.join(home, ".config", "dev", "dev.json")).json(),
@@ -38,9 +38,9 @@ describe("opencode mcp add (non-interactive subprocess)", () => {
 
   cliIt.live(
     "adds a local server while preserving argv and environment values",
-    ({ home, opencode }) =>
+    ({ home, devcode }) =>
       Effect.gen(function* () {
-        const result = yield* opencode.spawn([
+        const result = yield* devcode.spawn([
           "mcp",
           "add",
           "local",
@@ -55,7 +55,7 @@ describe("opencode mcp add (non-interactive subprocess)", () => {
           "--label",
           "two words",
         ])
-        opencode.expectExit(result, 0)
+        devcode.expectExit(result, 0)
 
         const config = yield* Effect.promise(() =>
           Bun.file(path.join(home, ".config", "dev", "dev.json")).json(),

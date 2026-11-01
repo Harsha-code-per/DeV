@@ -168,7 +168,7 @@
       "name": "@dev-ai/core",
       "version": "1.19.4",
       "bin": {
-        "opencode": "./bin/opencode",
+        "devcode": "./bin/devcode",
       },
       "dependencies": {
         "@ai-sdk/alibaba": "1.0.17",

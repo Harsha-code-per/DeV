@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test"
 import { mockDevCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/OpenCode/TerminalTabSwitch"
+const directory = "C:/DeV/TerminalTabSwitch"
 const projectID = "proj_terminal_tab_switch"
 const sessionA = "ses_terminal_tab_a"
 const sessionB = "ses_terminal_tab_b"
@@ -79,13 +79,13 @@ async function setup(page: Page) {
     provider: {
       all: [
         {
-          id: "opencode",
-          name: "OpenCode",
+          id: "devcode",
+          name: "DeV",
           models: { test: { id: "test", name: "Test", limit: { context: 200_000 } } },
         },
       ],
-      connected: ["opencode"],
-      default: { providerID: "opencode", modelID: "test" },
+      connected: ["devcode"],
+      default: { providerID: "devcode", modelID: "test" },
     },
     sessions: [session(sessionA, titleA, 1700000000000), session(sessionB, titleB, 1700000001000)],
     pageMessages: () => ({ items: [] }),
@@ -105,7 +105,7 @@ async function setup(page: Page) {
     }),
   )
   await page.route(`**/api/pty/${ptyID}/connect-token*`, (route) => {
-    expect(route.request().headers()["x-opencode-ticket"]).toBe("1")
+    expect(route.request().headers()["x-dev-ticket"]).toBe("1")
     const url = new URL(route.request().url())
     expect(url.searchParams.get("location[directory]")).toBe(directory)
     return route.fulfill({
@@ -124,14 +124,14 @@ async function setup(page: Page) {
     ({ directory, server, sessions }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "devcode.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem(
-        "opencode.window.browser.dat:tabs",
+        "devcode.window.browser.dat:tabs",
         JSON.stringify(sessions.map((sessionId: string) => ({ type: "session", server, sessionId }))),
       )
     },

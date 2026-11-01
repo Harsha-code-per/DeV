@@ -19,13 +19,13 @@ import { mockDevCodeServer } from "../../utils/mock-server"
 import { installSseTransport } from "../../utils/sse-transport"
 import { expectSessionTitle } from "../../utils/waits"
 
-export const directory = "C:/OpenCode/TimelineStability"
+export const directory = "C:/DeV/TimelineStability"
 export const projectID = "proj_timeline_stability"
 export const sessionID = "ses_timeline_stability"
 export const userID = "msg_1000_timeline_user"
 export const assistantID = "msg_1001_timeline_assistant"
 export const title = "Timeline visual stability"
-export const model = { providerID: "opencode", modelID: "claude-opus-4-6", variant: "max" }
+export const model = { providerID: "devcode", modelID: "claude-opus-4-6", variant: "max" }
 
 type TimelinePayload = Extract<
   GlobalEvent["payload"],
@@ -144,7 +144,7 @@ export async function setupTimeline(
   }, input.settings ?? {})
   if (input.locale) {
     await page.addInitScript((locale) => {
-      localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale }))
+      localStorage.setItem("devcode.global.dat:language", JSON.stringify({ locale }))
     }, input.locale)
   }
   if (input.reducedMotion) await page.emulateMedia({ reducedMotion: "reduce" })
@@ -557,12 +557,12 @@ function provider() {
   return {
     all: [
       {
-        id: "opencode",
-        name: "OpenCode",
+        id: "devcode",
+        name: "DeV",
         models: { "claude-opus-4-6": { id: "claude-opus-4-6", name: "Claude Opus 4.6", limit: { context: 200_000 } } },
       },
     ],
-    connected: ["opencode"],
-    default: { providerID: "opencode", modelID: "claude-opus-4-6" },
+    connected: ["devcode"],
+    default: { providerID: "devcode", modelID: "claude-opus-4-6" },
   }
 }

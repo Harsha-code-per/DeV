@@ -188,7 +188,7 @@ export const McpAuthCommand = effectCmd({
 
     if (servers.length === 0) {
       prompts.log.warn("No OAuth-capable MCP servers configured")
-      prompts.log.info("Remote MCP servers support OAuth by default. Add a remote server in opencode.json:")
+      prompts.log.info("Remote MCP servers support OAuth by default. Add a remote server in dev.json:")
       prompts.log.info(`
   "mcp": {
     "my-server": {
@@ -393,7 +393,7 @@ export const McpLogoutCommand = effectCmd({
 })
 
 async function resolveConfigPath(baseDir: string, global = false) {
-  // Check for existing config files, then the project config folders (.dev/ before .opencode/)
+  // Check for existing config files, then the project config folders (.dev/ before .dev/)
   const candidates = [
     ...Brand.configFiles(baseDir),
     ...(global ? [] : Brand.CONFIG_DIRS.flatMap((dir) => Brand.configFiles(path.join(baseDir, dir)))),
@@ -746,7 +746,7 @@ export const McpDebugCommand = effectCmd({
             params: {
               protocolVersion: LATEST_PROTOCOL_VERSION,
               capabilities: {},
-              clientInfo: { name: "opencode-debug", version: InstallationVersion },
+              clientInfo: { name: "devcode-debug", version: InstallationVersion },
             },
             id: 1,
           }),
@@ -790,7 +790,7 @@ export const McpDebugCommand = effectCmd({
 
           try {
             const client = new Client({
-              name: "opencode-debug",
+              name: "devcode-debug",
               version: InstallationVersion,
             })
             await client.connect(transport)

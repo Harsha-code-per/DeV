@@ -36,7 +36,7 @@ Run one heavy job at a time.
 ## Before you open a PR
 
 - Tests for what you changed pass, and `bun typecheck` passes in each package you touched.
-- The brand check passes: `bun script/brand-check.ts --check` from the repo root. It fails when user-visible text says "OpenCode" instead of DeV; run it without `--check` to fix it in place.
+- The brand check passes: `bun script/brand-check.ts --check` from the repo root. It fails when user-visible text says "DeV" instead of DeV; run it without `--check` to fix it in place.
 - You followed the [style guide](AGENTS.md).
 - If you changed the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`.
 

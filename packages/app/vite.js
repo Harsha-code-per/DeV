@@ -17,7 +17,7 @@ const channel = (() => {
  */
 export default [
   {
-    name: "opencode-desktop:config",
+    name: "devcode-desktop:config",
     config() {
       return {
         resolve: {
@@ -26,7 +26,7 @@ export default [
           },
         },
         define: {
-          "import.meta.env.VITE_OPENCODE_CHANNEL": JSON.stringify(channel),
+          "import.meta.env.VITE_DEV_CHANNEL": JSON.stringify(channel),
         },
         worker: {
           format: "es",
@@ -35,7 +35,7 @@ export default [
     },
   },
   {
-    name: "opencode-desktop:theme-preload",
+    name: "devcode-desktop:theme-preload",
     transformIndexHtml(html) {
       return html.replace(
         '<script id="oc-theme-preload-script" src="/oc-theme-preload.js"></script>',

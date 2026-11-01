@@ -78,7 +78,7 @@ export function useUsageExceededDialogs() {
               else {
                 void import("../../components/dialog-connect-provider").then((x) => {
                   const controller = x.useProviderConnectController()
-                  controller.select("opencode-go")
+                  controller.select("devcode-go")
                   void dialog.show(() => <x.DialogConnectProvider controller={controller} />)
                 })
               }

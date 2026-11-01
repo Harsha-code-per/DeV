@@ -46,7 +46,7 @@ import { ModelV2 } from "@dev-ai/core/model"
 import { Provider } from "@/provider/provider"
 import type { Command } from "@/command"
 
-export const AuthMethodID = "opencode-login"
+export const AuthMethodID = "devcode-login"
 
 export type Error = ACPError.Error
 type ServiceConnection = Pick<AgentSideConnection, "sessionUpdate"> &
@@ -95,14 +95,14 @@ export function make(input: {
     const started = performance.now()
     const authMethod: AuthMethod = {
       description: "Run `dev auth login` in the terminal",
-      name: "Login with opencode",
+      name: "Login with devcode",
       id: AuthMethodID,
     }
 
     if (params.clientCapabilities?._meta?.["terminal-auth"] === true) {
       authMethod._meta = {
         "terminal-auth": {
-          command: "opencode",
+          command: "devcode",
           args: ["auth", "login"],
           label: "DeV Login",
         },
@@ -805,11 +805,11 @@ function defaultModelFromConfig(
   if (configured && providers[configured.providerID]?.models[configured.modelID]) return configured
 
   // First-session ACP startup must not scan historical sessions just to infer
-  // a default. Configured model, opencode provider, then sorted best model keep
+  // a default. Configured model, devcode provider, then sorted best model keep
   // the protocol response deterministic without extra session/message reads.
-  const opencodeProvider = providers[ProviderV2.ID.make("opencode")]
-  const opencodeModel = opencodeProvider ? Provider.sort(Object.values(opencodeProvider.models))[0] : undefined
-  if (opencodeProvider && opencodeModel) return { providerID: opencodeProvider.id, modelID: opencodeModel.id }
+  const devcodeProvider = providers[ProviderV2.ID.make("devcode")]
+  const devcodeModel = devcodeProvider ? Provider.sort(Object.values(devcodeProvider.models))[0] : undefined
+  if (devcodeProvider && devcodeModel) return { providerID: devcodeProvider.id, modelID: devcodeModel.id }
 
   const best = Provider.sort(Object.values(providers).flatMap((provider) => Object.values(provider.models)))[0]
   if (best) return { providerID: best.providerID, modelID: best.id }

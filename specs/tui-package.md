@@ -2,7 +2,7 @@
 
 ## Goal
 
-Move the canonical OpenCode terminal application from
+Move the canonical DeV terminal application from
 `packages/devcode/src/cli/cmd/tui` into a self-contained workspace package while
 the legacy CLI and the new CLI continue to use the same implementation.
 
@@ -26,7 +26,7 @@ The TUI may directly depend on terminal and UI infrastructure such as
 generic presentation libraries. It must not depend on `packages/devcode`,
 `packages/cli`, or `@dev-ai/core`.
 
-The SDK is the TUI's OpenCode boundary. Missing backend data or operations must
+The SDK is the TUI's DeV boundary. Missing backend data or operations must
 be added to the server API and generated SDK rather than imported from backend
 implementation modules.
 
@@ -82,7 +82,7 @@ implementation modules.
 
 ### Server And SDK Own
 
-- OpenCode domain data displayed by the TUI
+- DeV domain data displayed by the TUI
 - Session, message, workspace, file, provider, model, agent, and permission
   operations
 - Retry, revert, fork, share, and other backend actions
@@ -144,7 +144,7 @@ Exit criteria:
 
 - `packages/tui` typechecks independently.
 - Its test command runs from `packages/tui`.
-- The package has no dependency on `opencode`, `@dev-ai/cli`, or
+- The package has no dependency on `devcode`, `@dev-ai/cli`, or
   `@dev-ai/core`.
 
 Checkpoint commit:
@@ -236,12 +236,12 @@ refactor(tui): decouple tool rendering from backend tools
 Status: Completed for the shared runtime contract and legacy host. The TUI now
 receives immutable launch-directory, path, capability, terminal/editor, startup,
 and build inputs through `@dev-ai/tui/runtime`. Movable app, component,
-route, and feature-plugin code no longer reads OpenCode globals or process state;
+route, and feature-plugin code no longer reads DeV globals or process state;
 command, config, plugin-loading, custom-theme discovery, editor/clipboard, and
 Windows lifecycle adapters remain host-owned. `packages/cli` does not consume
 this contract yet; that integration remains deferred to Section 9.
 
-Replace process-global OpenCode state with resolved TUI inputs.
+Replace process-global DeV state with resolved TUI inputs.
 
 Define narrow inputs rather than one unstructured host object. Expected groups
 include:
@@ -343,9 +343,9 @@ generated `reference.list` SDK operation; prompt payloads rely on optional
 server-assigned IDs; local attachment reads use the package platform contract.
 Legacy route files remain in place until the plugin slot boundary and app-root
 move, but their only private dependencies are plugin presentation or local host
-adapters rather than OpenCode domain implementations.
+adapters rather than DeV domain implementations.
 
-Make the SDK the only OpenCode domain boundary used by the TUI.
+Make the SDK the only DeV domain boundary used by the TUI.
 
 Tasks:
 
@@ -367,7 +367,7 @@ Tasks:
 
 Exit criteria:
 
-- Domain-facing TUI code imports OpenCode data and operations only from
+- Domain-facing TUI code imports DeV data and operations only from
   `@dev-ai/sdk`.
 - No TUI source imports private session, provider, reference, LSP, server, or
   core domain implementations.
@@ -568,7 +568,7 @@ refactor(tui): complete standalone package extraction
   failure, and renderer destruction.
 - TUI package imports do not reach into executable or backend implementation
   packages.
-- SDK wire data is treated as the source of truth for OpenCode domain state.
+- SDK wire data is treated as the source of truth for DeV domain state.
 - Unknown tools and plugin data render safely without backend type imports.
 - Remote-server use remains possible; the TUI must not require an in-process
   backend implementation.

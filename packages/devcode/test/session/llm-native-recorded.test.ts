@@ -28,7 +28,7 @@ import { LayerNodePlatform } from "@dev-ai/core/effect/app-node-platform"
 
 const FIXTURES_DIR = path.join(import.meta.dir, "../fixtures/recordings")
 
-const zenURL = (connection: string) => `https://console.opencode.ai/proxy/connections/${connection}/v1`
+const zenURL = (connection: string) => `https://console.devcode.ai/proxy/connections/${connection}/v1`
 
 const replayOpenAIOAuth = {
   type: "oauth",
@@ -119,7 +119,7 @@ const RECORDED_SCENARIOS = [
     modelID: "gpt-4.1-mini",
     cassette: "session/native-openai-tool-loop",
     protocol: "openai-responses",
-    tags: ["opencode", "native", "tool-loop"],
+    tags: ["devcode", "native", "tool-loop"],
     canRecord: () => Boolean(envValue("DEV_RECORD_OPENAI_API_KEY", "OPENAI_API_KEY")),
     config: (model) =>
       providerConfig({
@@ -136,41 +136,18 @@ const RECORDED_SCENARIOS = [
       }),
   },
   {
-    id: "openai-oauth",
-    name: "OpenAI OAuth",
-    providerID: ProviderV2.ID.openai,
-    modelID: "gpt-5.5",
-    cassette: "session/native-openai-oauth-tool-loop",
-    protocol: "openai-responses",
-    tags: ["opencode", "native", "oauth", "tool-loop"],
-    canRecord: () => recordOpenAIOAuth() !== undefined,
-    recordAuth: recordOpenAIOAuth,
-    replayAuth: replayOpenAIOAuth,
-    stableID: "openai-oauth",
-    config: (model) =>
-      providerConfig({
-        providerID: ProviderV2.ID.openai,
-        name: "OpenAI",
-        env: ["OPENAI_API_KEY"],
-        npm: "@ai-sdk/openai",
-        api: "https://api.openai.com/v1",
-        model,
-        options: { baseURL: "https://api.openai.com/v1" },
-      }),
-  },
-  {
-    id: "opencode-proxy",
-    name: "OpenCode proxy",
-    providerID: ProviderV2.ID.opencode,
+    id: "devcode-proxy",
+    name: "DeV proxy",
+    providerID: ProviderV2.ID.devcode,
     modelID: "gpt-5.2-codex",
     cassette: "session/native-zen-tool-loop",
     protocol: "openai-responses",
-    tags: ["opencode", "zen", "native", "tool-loop"],
+    tags: ["devcode", "zen", "native", "tool-loop"],
     canRecord: () => Boolean(process.env.DEV_RECORD_CONSOLE_TOKEN && process.env.DEV_RECORD_ZEN_ORG_ID),
     config: (model) =>
       providerConfig({
-        providerID: ProviderV2.ID.opencode,
-        name: "OpenCode Zen",
+        providerID: ProviderV2.ID.devcode,
+        name: "DeV Zen",
         env: ["DEV_CONSOLE_TOKEN"],
         npm: "@ai-sdk/openai-compatible",
         api: zenURL(process.env.DEV_RECORD_ZEN_CONNECTION ?? "fixture"),
@@ -188,7 +165,7 @@ const RECORDED_SCENARIOS = [
     modelID: "claude-haiku-4-5-20251001",
     cassette: "session/native-anthropic-tool-loop",
     protocol: "anthropic-messages",
-    tags: ["opencode", "native", "tool-loop"],
+    tags: ["devcode", "native", "tool-loop"],
     canRecord: () => Boolean(envValue("DEV_RECORD_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY")),
     config: (model) =>
       providerConfig({
@@ -261,7 +238,7 @@ const modelsFixture = Filesystem.readJson<Record<string, ModelsDev.Provider>>(
 
 function recordedNativeLLMLayer(scenario: RecordedScenario) {
   const auth = authLayer(scenario)
-  // Only the HTTP client is recorded; RequestExecutor and the opencode LLM stack remain real.
+  // Only the HTTP client is recorded; RequestExecutor and the devcode LLM stack remain real.
   const metadata = {
     provider: scenario.providerID,
     protocol: scenario.protocol,
@@ -290,8 +267,8 @@ function recordedNativeLLMLayer(scenario: RecordedScenario) {
 const writeConfig = (directory: string, scenario: RecordedScenario, model: ModelsDev.Provider["models"][string]) =>
   Effect.promise(() =>
     Bun.write(
-      path.join(directory, "opencode.json"),
-      JSON.stringify({ $schema: "https://opencode.ai/config.json", ...scenario.config(model) }),
+      path.join(directory, "dev.json"),
+      JSON.stringify({ $schema: "https://harsha-code-per.github.io/DeV/schema/config.json", ...scenario.config(model) }),
     ),
   )
 
@@ -398,12 +375,6 @@ const driveToolLoop = (scenario: RecordedScenario) =>
 describe("session.llm native recorded", () => {
   for (const scenario of RECORDED_SCENARIOS.filter(isSelected)) {
     if (!canRun(scenario)) {
-      if (shouldRecord && scenario.recordAuth && selectedScenarios.size > 0) {
-        test(`${scenario.name}: drives a tool loop to a final text answer`, () => {
-          throw new Error(recordError(scenario))
-        })
-        continue
-      }
       test.skip(`${scenario.name}: drives a tool loop to a final text answer`, () => {})
       continue
     }

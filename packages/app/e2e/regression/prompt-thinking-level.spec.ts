@@ -3,7 +3,7 @@ import { base64Encode } from "@dev-ai/core/util/encode"
 import { mockDevCodeServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
-const directory = "C:/OpenCode/PromptThinkingLevelRegression"
+const directory = "C:/DeV/PromptThinkingLevelRegression"
 const projectID = "proj_prompt_thinking_level_regression"
 const sessionID = "ses_prompt_thinking_level_regression"
 
@@ -21,8 +21,8 @@ test("shows the V2 thinking level control while relevant", async ({ page }) => {
     provider: {
       all: [
         {
-          id: "opencode",
-          name: "OpenCode",
+          id: "devcode",
+          name: "DeV",
           models: {
             "thinking-model": {
               id: "thinking-model",
@@ -33,8 +33,8 @@ test("shows the V2 thinking level control while relevant", async ({ page }) => {
           },
         },
       ],
-      connected: ["opencode"],
-      default: { providerID: "opencode", modelID: "thinking-model" },
+      connected: ["devcode"],
+      default: { providerID: "devcode", modelID: "thinking-model" },
     },
     sessions: [
       {

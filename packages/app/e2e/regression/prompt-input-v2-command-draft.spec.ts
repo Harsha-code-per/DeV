@@ -3,7 +3,7 @@ import { base64Encode } from "@dev-ai/core/util/encode"
 import { mockDevCodeServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
-const directory = "C:/OpenCode/PromptInputV2Editing"
+const directory = "C:/DeV/PromptInputV2Editing"
 const projectID = "proj_prompt_input_v2_editing"
 const sessionID = "ses_prompt_input_v2_editing"
 

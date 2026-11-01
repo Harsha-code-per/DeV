@@ -754,11 +754,11 @@ function createEventResponse(chunks: unknown[], includeDone = false) {
 
 describe("session.llm.stream", () => {
   const vivgridFixture = { providerID: "vivgrid", modelID: "gemini-3.1-pro-preview" }
-  const opencodeFixture = { providerID: "opencode-test", modelID: vivgridFixture.modelID }
+  const devcodeFixture = { providerID: "devcode-test", modelID: vivgridFixture.modelID }
 
   const headerCases = [
-    { providerID: opencodeFixture.providerID, child: false },
-    { providerID: opencodeFixture.providerID, child: true },
+    { providerID: devcodeFixture.providerID, child: false },
+    { providerID: devcodeFixture.providerID, child: true },
     { providerID: "custom-test", child: false },
     { providerID: "custom-test", child: true },
   ]
@@ -777,7 +777,7 @@ describe("session.llm.stream", () => {
           )
           const resolved = yield* Provider.use.getModel(
             ProviderV2.ID.make(input.providerID),
-            ModelV2.ID.make(opencodeFixture.modelID),
+            ModelV2.ID.make(devcodeFixture.modelID),
           )
           const sessionID = SessionID.make("session-child")
           const parentSessionID = input.child ? SessionID.make("session-parent") : undefined
@@ -811,12 +811,12 @@ describe("session.llm.stream", () => {
           })
 
           const headers = (yield* Effect.promise(() => request)).headers
-          // DeV identifies as itself to every provider, OpenCode Zen included.
+          // DeV identifies as itself to every provider, DeV Zen included.
           expect(headers.get("x-session-affinity")).toBe(sessionID)
           expect(headers.get("X-Session-Id")).toBe(sessionID)
           expect(headers.get("x-parent-session-id")).toBe(parentSessionID ?? null)
           expect(headers.get("User-Agent")).toStartWith("dev/")
-          expect([...headers.keys()].filter((key) => key.startsWith("x-opencode"))).toEqual([])
+          expect([...headers.keys()].filter((key) => key.startsWith("x-devcode"))).toEqual([])
         }),
       {
         config: () => {
@@ -825,7 +825,7 @@ describe("session.llm.stream", () => {
             enabled_providers: [input.providerID],
             provider: {
               [input.providerID]: {
-                name: "OpenCode Test",
+                name: "DeV Test",
                 npm: "@ai-sdk/openai-compatible",
                 models: { [fixture.model.id]: configModel(fixture.model) as ConfigModel },
                 options: { apiKey: "test-key", baseURL: `${state.server!.url.origin}/v1` },
@@ -1384,8 +1384,7 @@ describe("session.llm.stream", () => {
         expect((body.reasoning as { effort?: string } | undefined)?.effort).toBe("high")
         expect((body.reasoning as { mode?: string } | undefined)?.mode).toBe("pro")
 
-        const maxTokens = body.max_output_tokens as number | undefined
-        expect(maxTokens).toBe(undefined) // match codex cli behavior
+        expect(body.max_output_tokens).toBe(32000)
       }),
     { config: () => openAIConfig(loadFixture("openai", "gpt-5.2").model, `${state.server!.url.origin}/v1`) },
   )

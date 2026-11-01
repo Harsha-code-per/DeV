@@ -73,12 +73,12 @@ export const PrCommand = effectCmd({
 
     UI.println(`Successfully checked out PR #${prNumber} as branch '${localBranchName}'`)
     UI.println()
-    UI.println("Starting opencode...")
+    UI.println("Starting devcode...")
     UI.println()
 
     const code = yield* Effect.promise(
       () =>
-        Process.spawn(["opencode"], {
+        Process.spawn(["devcode"], {
           stdin: "inherit",
           stdout: "inherit",
           stderr: "inherit",
@@ -87,6 +87,6 @@ export const PrCommand = effectCmd({
     )
     // Match legacy throw semantics — propagate as a defect so the top-level
     // index.ts catch handles it identically (exit 1, "Unexpected error" banner).
-    if (code !== 0) return yield* Effect.die(new Error(`opencode exited with code ${code}`))
+    if (code !== 0) return yield* Effect.die(new Error(`devcode exited with code ${code}`))
   }),
 })

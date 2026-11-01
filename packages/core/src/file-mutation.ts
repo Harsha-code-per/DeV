@@ -68,7 +68,7 @@ export class Service extends Context.Service<Service, Interface>()("@dev-ai/v2/F
 
 /**
  * Serialize file changes by canonical target. Conditional writes compare and
- * write under the same process-local lock so cooperating OpenCode mutations do
+ * write under the same process-local lock so cooperating DeV mutations do
  * not overwrite changes made from the same stale content.
  */
 const layer = Layer.effect(

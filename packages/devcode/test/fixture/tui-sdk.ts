@@ -1,7 +1,7 @@
 import type { GlobalEvent } from "@dev-ai/sdk/v2"
 import type { EventSource } from "@dev-ai/tui/context/sdk"
 
-export const worktree = "/tmp/opencode"
+export const worktree = "/tmp/devcode"
 export const directory = `${worktree}/packages/devcode`
 
 export function json(data: unknown, init?: ResponseInit) {

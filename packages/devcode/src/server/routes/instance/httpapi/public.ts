@@ -75,7 +75,7 @@ const QueryParameterSchemas: Record<string, OpenApiSchema> = {
 
 const LegacyComponentDescriptions: Record<string, string> = {
   LogLevel: "Log level",
-  ServerConfig: "Server configuration for opencode serve and web commands",
+  ServerConfig: "Server configuration for devcode serve and web commands",
   LayoutConfig: "@deprecated Always uses stretch layout.",
 }
 
@@ -529,7 +529,7 @@ function normalizeParameter(param: OpenApiParameter, route: string) {
 
 export const PublicApi = DevCodeHttpApi.annotateMerge(
   OpenApi.annotations({
-    title: "opencode",
+    title: "devcode",
     version: "1.0.0",
     description: "dev api",
     transform: matchLegacyOpenApi,

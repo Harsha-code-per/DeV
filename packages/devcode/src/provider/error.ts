@@ -58,7 +58,7 @@ function message(providerID: ProviderV2.ID, e: APICallError) {
     // provide a human-readable message instead of dumping raw markup
     if (/^\s*<!doctype|^\s*<html/i.test(e.responseBody)) {
       if (e.statusCode === 401) {
-        return "Unauthorized: request was blocked by a gateway or proxy. Your authentication token may be missing or expired — try running `opencode auth login <your provider URL>` to re-authenticate."
+        return "Unauthorized: request was blocked by a gateway or proxy. Your authentication token may be missing or expired — try running `devcode auth login <your provider URL>` to re-authenticate."
       }
       if (e.statusCode === 403) {
         return "Forbidden: request was blocked by a gateway or proxy. You may not have permission to access this resource — check your account and provider settings."
@@ -173,7 +173,7 @@ export function parseAPICallError(input: { providerID: ProviderV2.ID; error: API
   const m = message(input.providerID, input.error)
   const body = json(input.error.responseBody)
   // A 429 is a throttle even when its wording sounds like an overflow, e.g. Cerebras's per-minute
-  // "too many tokens processed" (ported from OpenCode #59649).
+  // "too many tokens processed" (ported from DeV #59649).
   const overflowText = input.error.statusCode !== 429 && isContextOverflow(m)
   // Groq's free tier answers 413 when a request exceeds its tokens-per-minute budget. Compacting a
   // new session can't help, so this is not an overflow; AutoProvider.fit retries with a lean request.

@@ -41,7 +41,7 @@ export const Info = Schema.Struct({
     description: "Server configuration for dev serve and web commands",
   }),
   command: Schema.optional(Schema.Record(Schema.String, ConfigCommandV1.Info)).annotate({
-    description: "Command configuration, see https://opencode.ai/docs/commands",
+    description: "Command configuration, see https://harsha-code-per.github.io/DeV/docs/commands",
   }),
   skills: Schema.optional(ConfigSkillsV1.Info).annotate({ description: "Additional skill folder paths" }),
   references: Schema.optional(ConfigReference.Info).annotate({
@@ -65,7 +65,7 @@ export const Info = Schema.Struct({
   }),
   autoupdate: Schema.optional(Schema.Union([Schema.Boolean, Schema.Literal("notify")])).annotate({
     description:
-      "Check for new versions and show an update notice. Updates are never installed automatically; run /update or `opencode upgrade`. Set to false to disable update checks. true and 'notify' behave the same",
+      "Check for new versions and show an update notice. Updates are never installed automatically; run /update or `devcode upgrade`. Set to false to disable update checks. true and 'notify' behave the same",
   }),
   disabled_providers: Schema.optional(Schema.mutable(Schema.Array(Schema.String))).annotate({
     description: "Disable providers that are loaded automatically",
@@ -108,7 +108,7 @@ export const Info = Schema.Struct({
       }),
       [Schema.Record(Schema.String, ConfigAgentV1.Info)],
     ),
-  ).annotate({ description: "Agent configuration, see https://opencode.ai/docs/agents" }),
+  ).annotate({ description: "Agent configuration, see https://harsha-code-per.github.io/DeV/docs/agents" }),
   provider: Schema.optional(Schema.Record(Schema.String, ConfigProviderV1.Info)).annotate({
     description: "Custom provider configurations and model overrides",
   }),

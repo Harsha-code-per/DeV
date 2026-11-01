@@ -23,12 +23,12 @@ const config = {
 }
 
 describe("debug config redaction", () => {
-  cliIt.live("always masks resolved credentials", ({ opencode }) =>
+  cliIt.live("always masks resolved credentials", ({ devcode }) =>
     Effect.gen(function* () {
       const content = JSON.stringify({ provider: config.provider })
       const env = { DEV_CONFIG_CONTENT: content }
-      const result = yield* opencode.spawn(["debug", "config"], { env })
-      opencode.expectExit(result, 0, "debug config")
+      const result = yield* devcode.spawn(["debug", "config"], { env })
+      devcode.expectExit(result, 0, "debug config")
       expect(JSON.parse(result.stdout).provider.example.options).toMatchObject({
         apiKey: "***",
         timeout: 1200,

@@ -139,7 +139,7 @@ test("fatal startup errors set a nonzero exit after scoped cleanup", async () =>
           name: "ConfigRemoteAuthError",
           data: {
             url: "https://example.com",
-            remote: "https://config.example.com/opencode.json",
+            remote: "https://config.example.com/dev.json",
           },
         },
         { status: 400 },
@@ -176,7 +176,7 @@ test("fatal startup errors set a nonzero exit after scoped cleanup", async () =>
     )
 
     await task
-    expect(stderr).toContain("Run `opencode auth login https://example.com` to re-authenticate.")
+    expect(stderr).toContain("Run `devcode auth login https://example.com` to re-authenticate.")
     expect(stderr).not.toContain("Unexpected server error")
     expect(process.exitCode).toBe(1)
     expect(setup.renderer.isDestroyed).toBe(true)

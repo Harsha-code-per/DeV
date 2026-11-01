@@ -3,11 +3,11 @@
 import { DevCode } from "@dev-ai/core"
 import { ReadTool } from "@dev-ai/core/tools"
 
-const opencode = DevCode.make({})
+const devcode = DevCode.make({})
 
-opencode.tool.add(ReadTool)
+devcode.tool.add(ReadTool)
 
-opencode.tool.add({
+devcode.tool.add({
   name: "bash",
   schema: {
     type: "object",
@@ -22,13 +22,13 @@ opencode.tool.add({
   execute(input, ctx) {},
 })
 
-opencode.auth.add({
+devcode.auth.add({
   provider: "openai",
   type: "api",
   value: process.env.OPENAI_API_KEY,
 })
 
-opencode.agent.add({
+devcode.agent.add({
   name: "build",
   permissions: [],
   model: {
@@ -38,20 +38,20 @@ opencode.agent.add({
   },
 })
 
-const sessionID = await opencode.session.create({
+const sessionID = await devcode.session.create({
   agent: "build",
 })
 
-opencode.subscribe((event) => {
+devcode.subscribe((event) => {
   console.log(event)
 })
 
-await opencode.session.prompt({
+await devcode.session.prompt({
   sessionID,
   text: "hey what is up",
 })
 
-await opencode.session.prompt({
+await devcode.session.prompt({
   sessionID,
   text: "what is up with this",
   files: [
@@ -62,6 +62,6 @@ await opencode.session.prompt({
   ],
 })
 
-await opencode.session.wait()
+await devcode.session.wait()
 
-console.log(await opencode.session.messages(sessionID))
+console.log(await devcode.session.messages(sessionID))

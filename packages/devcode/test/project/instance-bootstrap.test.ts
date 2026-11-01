@@ -50,9 +50,9 @@ const bootstrapFixture = Effect.gen(function* () {
   )
   yield* Effect.promise(() =>
     Bun.write(
-      path.join(dir, "opencode.json"),
+      path.join(dir, "dev.json"),
       JSON.stringify({
-        $schema: "https://opencode.ai/config.json",
+        $schema: "https://harsha-code-per.github.io/DeV/schema/config.json",
         plugin: [pathToFileURL(pluginFile).href],
       }),
     ),

@@ -17,7 +17,7 @@ export type DecodedCredentials = {
 
 export class Config extends ConfigService.Service<Config>()("@dev-ai/ServerAuthConfig", {
   password: EffectConfig.string("DEV_SERVER_PASSWORD").pipe(EffectConfig.option),
-  username: EffectConfig.string("DEV_SERVER_USERNAME").pipe(EffectConfig.withDefault("opencode")),
+  username: EffectConfig.string("DEV_SERVER_USERNAME").pipe(EffectConfig.withDefault("devcode")),
 }) {}
 
 export type Info = Context.Service.Shape<typeof Config>
@@ -37,7 +37,7 @@ export function authorized(credentials: DecodedCredentials, config: Info) {
 // With no username configured, DeV's name "dev" is accepted next to the built-in default, which
 // existing clients (web app, desktop) still send.
 function defaultAlias(username: string, config: Info) {
-  return username === "dev" && config.username === "opencode" && Flag.DEV_SERVER_USERNAME === undefined
+  return username === "dev" && config.username === "devcode" && Flag.DEV_SERVER_USERNAME === undefined
 }
 
 // A listening server is never unauthenticated: with no password configured, generate one and publish it
@@ -60,7 +60,7 @@ export function header(credentials?: Credentials) {
   const password = credentials?.password ?? Flag.DEV_SERVER_PASSWORD
   if (!password) return undefined
 
-  const username = credentials?.username ?? Flag.DEV_SERVER_USERNAME ?? "opencode"
+  const username = credentials?.username ?? Flag.DEV_SERVER_USERNAME ?? "devcode"
   return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`
 }
 

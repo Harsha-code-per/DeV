@@ -1,8 +1,8 @@
 import { WorkerPoolManager } from "@pierre/diffs/worker"
 import ShikiWorkerUrl from "@pierre/diffs/worker/worker.js?worker&url"
-import { registerOpenCodeTheme } from "@dev-ai/ui/context/marked-theme-register"
+import { registerDevCodeTheme } from "@dev-ai/ui/context/marked-theme-register"
 
-registerOpenCodeTheme()
+registerDevCodeTheme()
 
 export type WorkerPoolStyle = "unified" | "split"
 
@@ -16,13 +16,13 @@ function createPool(lineDiffType: "none" | "word-alt") {
       workerFactory,
       // poolSize defaults to 8. More workers = more parallelism but
       // also more memory. Too many can actually slow things down.
-      // NOTE: 2 is probably better for OpenCode, as I think 8 might be
+      // NOTE: 2 is probably better for DeV, as I think 8 might be
       // a bit overkill, especially because Safari has a significantly slower
       // boot up time for workers
       poolSize: 2,
     },
     {
-      theme: "OpenCode",
+      theme: "DeV",
       lineDiffType,
       preferredHighlighter: "shiki-wasm",
     },

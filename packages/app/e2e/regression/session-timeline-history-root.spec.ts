@@ -64,8 +64,8 @@ for (const scenario of scenarios) {
       provider: {
         all: [
           {
-            id: "opencode",
-            name: "OpenCode",
+            id: "devcode",
+            name: "DeV",
             models: {
               "claude-opus-4-6": {
                 id: "claude-opus-4-6",
@@ -75,8 +75,8 @@ for (const scenario of scenarios) {
             },
           },
         ],
-        connected: ["opencode"],
-        default: { providerID: "opencode", modelID: "claude-opus-4-6" },
+        connected: ["devcode"],
+        default: { providerID: "devcode", modelID: "claude-opus-4-6" },
       },
       sessions: [session()],
       sessionStatus: { [sessionID]: { type: "busy" } },

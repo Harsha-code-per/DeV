@@ -3,7 +3,7 @@ import { base64Encode } from "@dev-ai/core/util/encode"
 import { mockDevCodeServer } from "../utils/mock-server"
 import { expectAppVisible, expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/OpenCode/ReviewImageFlashRegression"
+const directory = "C:/DeV/ReviewImageFlashRegression"
 const sessionID = "ses_review_image_flash_regression"
 const title = "Review image flash regression"
 const imageFile = "assets/preview.png"
@@ -119,7 +119,7 @@ async function openReview(page: Page) {
             time: { created: 1700000000000 },
             summary: { diffs: [] },
             agent: "build",
-            model: { providerID: "opencode", modelID: "test" },
+            model: { providerID: "devcode", modelID: "test" },
           },
           parts: [
             {

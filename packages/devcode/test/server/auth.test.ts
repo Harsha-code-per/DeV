@@ -22,12 +22,12 @@ describe("ServerAuth", () => {
     expect(ServerAuth.headers()).toBeUndefined()
   })
 
-  test("defaults to the opencode username", () => {
+  test("defaults to the devcode username", () => {
     Flag.DEV_SERVER_PASSWORD = "secret"
     Flag.DEV_SERVER_USERNAME = undefined
 
     expect(ServerAuth.headers()).toEqual({
-      Authorization: `Basic ${Buffer.from("opencode:secret").toString("base64")}`,
+      Authorization: `Basic ${Buffer.from("devcode:secret").toString("base64")}`,
     })
   })
 
@@ -54,17 +54,17 @@ describe("ServerAuth", () => {
 
     expect(ServerAuth.required(config)).toBe(true)
     expect(ServerAuth.authorized({ username: "alice", password: Redacted.make("secret") }, config)).toBe(true)
-    expect(ServerAuth.authorized({ username: "opencode", password: Redacted.make("secret") }, config)).toBe(false)
+    expect(ServerAuth.authorized({ username: "devcode", password: Redacted.make("secret") }, config)).toBe(false)
   })
 
   test("accepts dev as the default username only when none is configured", () => {
     Flag.DEV_SERVER_USERNAME = undefined
-    const defaulted = { password: Option.some("secret"), username: "opencode" }
+    const defaulted = { password: Option.some("secret"), username: "devcode" }
     expect(ServerAuth.authorized({ username: "dev", password: Redacted.make("secret") }, defaulted)).toBe(true)
-    expect(ServerAuth.authorized({ username: "opencode", password: Redacted.make("secret") }, defaulted)).toBe(true)
+    expect(ServerAuth.authorized({ username: "devcode", password: Redacted.make("secret") }, defaulted)).toBe(true)
     expect(ServerAuth.authorized({ username: "dev", password: Redacted.make("wrong") }, defaulted)).toBe(false)
 
-    Flag.DEV_SERVER_USERNAME = "opencode"
+    Flag.DEV_SERVER_USERNAME = "devcode"
     expect(ServerAuth.authorized({ username: "dev", password: Redacted.make("secret") }, defaulted)).toBe(false)
   })
 })

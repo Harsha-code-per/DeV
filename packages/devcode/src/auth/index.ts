@@ -5,7 +5,7 @@ import { NonNegativeInt } from "@dev-ai/core/schema"
 import { Global } from "@dev-ai/core/global"
 import { FSUtil } from "@dev-ai/core/fs-util"
 
-export const OAUTH_DUMMY_KEY = "opencode-oauth-dummy-key"
+export const OAUTH_DUMMY_KEY = "devcode-oauth-dummy-key"
 
 const file = path.join(Global.Path.data, "auth.json")
 

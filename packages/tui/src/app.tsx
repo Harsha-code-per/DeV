@@ -1,5 +1,5 @@
 import { render, TimeToFirstDraw, useRenderer, useTerminalDimensions } from "@opentui/solid"
-import { registerOpencodeSpinner } from "./component/register-spinner"
+import { registerDevcodeSpinner } from "./component/register-spinner"
 import { createDefaultOpenTuiKeymap } from "@opentui/keymap/opentui"
 import { Deferred, Effect } from "effect"
 import { Global } from "@dev-ai/core/global"
@@ -78,10 +78,10 @@ import { CommandPaletteDialog } from "./component/command-palette"
 import {
   COMMAND_PALETTE_COMMAND,
   DEV_BASE_MODE,
-  OpencodeKeymapProvider,
-  registerOpencodeKeymap,
+  DevcodeKeymapProvider,
+  registerDevcodeKeymap,
   useBindings,
-  useOpencodeKeymap,
+  useDevcodeKeymap,
 } from "./keymap"
 
 import type { EventSource } from "./context/sdk"
@@ -92,7 +92,7 @@ import { win32DisableProcessedInput, win32FlushInputBuffer } from "./terminal-wi
 import { destroyRenderer } from "./util/renderer"
 import { cliErrorMessage, errorFormat } from "./util/error"
 
-registerOpencodeSpinner()
+registerDevcodeSpinner()
 
 const appGlobalBindingCommands = [
   "session.list",
@@ -124,8 +124,8 @@ const appBindingCommands = [
   "variant.list",
   "provider.connect",
   "console.org.switch",
-  "opencode.status",
-  "opencode.debug",
+  "devcode.status",
+  "devcode.debug",
   "theme.switch",
   "theme.switch_mode",
   "theme.mode.lock",
@@ -204,7 +204,7 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
       win32DisableProcessedInput()
       const keymap = createDefaultOpenTuiKeymap(renderer)
       yield* Effect.acquireRelease(
-        Effect.sync(() => registerOpencodeKeymap(keymap, renderer, input.config)),
+        Effect.sync(() => registerDevcodeKeymap(keymap, renderer, input.config)),
         (unregister) => Effect.sync(unregister),
       )
       yield* Effect.addFinalizer(() =>
@@ -269,7 +269,7 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
                         }}
                       >
                         <ClipboardProvider>
-                          <OpencodeKeymapProvider keymap={keymap}>
+                          <DevcodeKeymapProvider keymap={keymap}>
                             <ArgsProvider {...input.args}>
                               <KVProvider>
                                 <ToastProvider>
@@ -331,7 +331,7 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
                                 </ToastProvider>
                               </KVProvider>
                             </ArgsProvider>
-                          </OpencodeKeymapProvider>
+                          </DevcodeKeymapProvider>
                         </ClipboardProvider>
                       </TuiStartupProvider>
                     </TuiTerminalEnvironmentProvider>
@@ -365,7 +365,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
   const dialog = useDialog()
   const local = useLocal()
   const kv = useKV()
-  const keymap = useOpencodeKeymap()
+  const keymap = useDevcodeKeymap()
   const event = useEvent()
   const sdk = useSDK()
   const toast = useToast()
@@ -779,7 +779,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
           ]
         : []),
       {
-        name: "opencode.status",
+        name: "devcode.status",
         title: "View status",
         slashName: "status",
         run: () => {
@@ -790,7 +790,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
       ...(update.open
         ? [
             {
-              name: "opencode.update",
+              name: "devcode.update",
               title: "Update DeV",
               slashName: "update",
               run: () => update.open?.(),
@@ -799,7 +799,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
           ]
         : []),
       {
-        name: "opencode.debug",
+        name: "devcode.debug",
         title: "View debug info",
         slashName: "debug",
         slashAliases: ["doctor"],
@@ -1052,7 +1052,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
           const dir = paths.data?.config
           if (!dir) return
           const file =
-            ["dev.jsonc", "dev.json", "opencode.jsonc", "opencode.json"]
+            ["dev.jsonc", "dev.json", "dev.jsonc", "dev.json"]
               .map((name) => path.join(dir, name))
               .find((item) => existsSync(item)) ?? path.join(dir, "dev.json")
           await openEditor({ value: "{}\n", renderer, file, cwd: dir }).catch(toast.error)

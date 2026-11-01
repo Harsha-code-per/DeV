@@ -1,13 +1,12 @@
 import path from "path"
 
-// DeV naming for config files and project folders. DeV names come first; opencode's names stay
-// readable so setups migrated from OpenCode keep working.
+// DeV naming for config files and project folders.
 
 /** Config file base names, preferred first. */
-export const CONFIG_NAMES = ["dev", "opencode"]
+export const CONFIG_NAMES = ["dev"]
 
 /** Project config folders, preferred first. */
-export const CONFIG_DIRS = [".dev", ".opencode"]
+export const CONFIG_DIRS = [".dev"]
 
 /** Where DeV writes new project config. */
 export const CONFIG_DIR = CONFIG_DIRS[0]
@@ -20,10 +19,10 @@ export const MDNS_DOMAIN = "dev-ai.local"
 
 /**
  * npm package installed into config folders so local plugins get typings. Our own plugin SDK isn't
- * on npm yet (roadmap M0.4); until then this is OpenCode's published SDK, which has the same API.
+ * on npm yet (roadmap M0.4); until then this is DeV's published SDK, which has the same API.
  */
 export const PLUGIN_SDK_PACKAGE = "@opencode-ai/plugin"
-// OpenCode's package has its own versions; this is the one DeV forked from, not DeV's version.
+// DeV's package has its own versions; this is the one DeV forked from, not DeV's version.
 export const PLUGIN_SDK_VERSION = "1.19.4"
 
 /** `name.json` and `name.jsonc` for every config name, preferred first. */

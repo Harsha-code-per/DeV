@@ -1,7 +1,7 @@
-import { createDevcodeClient, createOpencodeServer } from "@dev-ai/sdk"
+import { createDevcodeClient, createDevcodeServer } from "@dev-ai/sdk"
 import { pathToFileURL } from "bun"
 
-const server = await createOpencodeServer()
+const server = await createDevcodeServer()
 const client = createDevcodeClient({ baseUrl: server.url })
 
 const input = await Array.fromAsync(new Bun.Glob("packages/core/*.ts").scan())

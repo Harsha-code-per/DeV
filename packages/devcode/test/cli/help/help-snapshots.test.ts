@@ -96,17 +96,17 @@ describe("dev CLI help-text snapshots", () => {
   // versus ~1 minute if we serialized.
   cliIt.live(
     "every documented command emits stable help text",
-    ({ opencode }) =>
+    ({ devcode }) =>
       Effect.gen(function* () {
-        const topLevel = yield* opencode.spawn(["--help"], { env: SNAPSHOT_ENV })
+        const topLevel = yield* devcode.spawn(["--help"], { env: SNAPSHOT_ENV })
         expect(topLevel.exitCode).toBe(0)
         expect(topLevel.stderr.endsWith("\n")).toBe(true)
         expect(topLevel.stderr).toContain("--mini")
         expect(topLevel.stderr).not.toContain("--thinking")
         expect(topLevel.stderr).not.toContain("--variant")
         expect(topLevel.stderr).not.toContain("--demo")
-        // Brand guard: DeV's own help never mentions opencode.
-        expect(topLevel.stderr.toLowerCase()).not.toContain("opencode")
+        // Brand guard: DeV's own help never mentions devcode.
+        expect(topLevel.stderr.toLowerCase()).not.toContain("devcode")
 
         const argvs: Array<readonly string[]> = [...TOP_LEVEL.map((c) => [c] as const), ...SUBCOMMANDS]
 
@@ -118,7 +118,7 @@ describe("dev CLI help-text snapshots", () => {
           argvs,
           (argv) =>
             Effect.gen(function* () {
-              const result = yield* opencode.spawn([...argv, "--help"], { env: SNAPSHOT_ENV })
+              const result = yield* devcode.spawn([...argv, "--help"], { env: SNAPSHOT_ENV })
               if (result.exitCode !== 0) {
                 return yield* Effect.fail(`dev ${argv.join(" ")}: exit ${result.exitCode}`)
               }
@@ -131,7 +131,7 @@ describe("dev CLI help-text snapshots", () => {
           // yargs writes --help to stderr, not stdout. Snapshotting stderr
           // means our test catches the help body; stdout for these commands
           // is expected to be empty.
-          expect(result.stderr.toLowerCase(), `dev ${argv.join(" ")} --help mentions opencode`).not.toContain("opencode")
+          expect(result.stderr.toLowerCase(), `dev ${argv.join(" ")} --help mentions devcode`).not.toContain("devcode")
           expect(normalize(result.stderr)).toMatchSnapshot(`dev ${argv.join(" ")} --help`)
         }
         if (failures.length > 0) {

@@ -188,10 +188,10 @@ export function watch(sessionID: string, listener: (message: string | undefined)
 }
 
 // Explicit on purpose: a catalog price of 0 can just mean the price is missing, and DeV must never
-// spend the user's money without being asked. OpenCode Zen's free models need the user's own Zen key.
+// spend the user's money without being asked. DeV Zen's free models need the user's own Zen key.
 function isFree(model: Provider.Model) {
   if (FREE_TIER.has(model.providerID) || model.id.endsWith(":free")) return true
-  return model.providerID === "opencode" && model.cost.input === 0 && model.cost.output === 0
+  return model.providerID === "devcode" && model.cost.input === 0 && model.cost.output === 0
 }
 
 export function candidates(providers: Record<string, Provider.Info>, now = Date.now()) {

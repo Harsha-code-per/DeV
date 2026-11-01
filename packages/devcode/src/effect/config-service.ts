@@ -31,7 +31,7 @@ export type ServiceClass<Self, Id extends string, Service> = Context.ServiceClas
  *   "@dev-ai/ServerAuthConfig",
  *   {
  *     password: Config.string("DEV_SERVER_PASSWORD").pipe(Config.option),
- *     username: Config.string("DEV_SERVER_USERNAME").pipe(Config.withDefault("opencode")),
+ *     username: Config.string("DEV_SERVER_USERNAME").pipe(Config.withDefault("devcode")),
  *   },
  * ) {}
  *

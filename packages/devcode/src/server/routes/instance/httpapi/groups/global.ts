@@ -130,7 +130,7 @@ export const GlobalApi = HttpApi.make("global").add(
       }).annotateMerge(
         OpenApi.annotations({
           identifier: "global.upgrade",
-          summary: "Upgrade opencode",
+          summary: "Upgrade devcode",
           description: "Upgrade dev to the specified version.",
         }),
       ),

@@ -33,7 +33,7 @@ export type PatchDeps = {
   readText: (file: string) => Promise<string>
   write: (file: string, text: string) => Promise<void>
   exists: (file: string) => Promise<boolean>
-  files: (dir: string, name: "opencode" | "tui") => string[]
+  files: (dir: string, name: "devcode" | "tui") => string[]
 }
 
 export type PatchInput = {
@@ -336,13 +336,13 @@ function patchDir(input: PatchInput) {
   if (input.global) return input.config ?? Global.Path.config
   const git = input.vcs === "git" && input.worktree !== "/"
   const root = git ? input.worktree : input.directory
-  // Use the project's existing config folder (.dev, or .opencode when migrated) before creating .dev.
+  // Use the project's existing config folder (.dev, or .dev when migrated) before creating .dev.
   const existing = Brand.CONFIG_DIRS.map((dir) => path.join(root, dir)).find((dir) => existsSync(dir))
   return existing ?? path.join(root, Brand.CONFIG_DIR)
 }
 
-function patchName(kind: Kind): "opencode" | "tui" {
-  if (kind === "server") return "opencode"
+function patchName(kind: Kind): "devcode" | "tui" {
+  if (kind === "server") return "devcode"
   return "tui"
 }
 

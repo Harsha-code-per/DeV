@@ -154,8 +154,8 @@ describe("plugin.install.task", () => {
   test("preserves JSONC comments when adding plugins to server and tui config", async () => {
     await using tmp = await tmpdir()
     const target = await plugin(tmp.path, ["server", "tui"])
-    const cfg = path.join(tmp.path, ".opencode")
-    const server = path.join(cfg, "opencode.jsonc")
+    const cfg = path.join(tmp.path, ".dev")
+    const server = path.join(cfg, "dev.jsonc")
     const tui = path.join(cfg, "tui.jsonc")
     await fs.mkdir(cfg, { recursive: true })
     await Bun.write(
@@ -180,7 +180,7 @@ describe("plugin.install.task", () => {
     "seed@1.0.0"
   ],
   // tui tail
-  "theme": "opencode"
+  "theme": "devcode"
 }
 `,
     )
@@ -213,7 +213,7 @@ describe("plugin.install.task", () => {
   test("preserves JSONC comments when force replacing plugin version", async () => {
     await using tmp = await tmpdir()
     const target = await plugin(tmp.path, ["server"])
-    const cfg = path.join(tmp.path, ".opencode", "opencode.jsonc")
+    const cfg = path.join(tmp.path, ".dev", "dev.jsonc")
     await fs.mkdir(path.dirname(cfg), { recursive: true })
     await Bun.write(
       cfg,
@@ -265,7 +265,7 @@ describe("plugin.install.task", () => {
   test("does not change configured package version without force", async () => {
     await using tmp = await tmpdir()
     const target = await plugin(tmp.path, ["server"])
-    const cfg = path.join(tmp.path, ".opencode", "opencode.json")
+    const cfg = path.join(tmp.path, ".dev", "dev.json")
     await fs.mkdir(path.dirname(cfg), { recursive: true })
     await Bun.write(cfg, JSON.stringify({ plugin: ["acme@1.0.0"] }, null, 2))
 
@@ -285,7 +285,7 @@ describe("plugin.install.task", () => {
   test("does not change scoped package version without force", async () => {
     await using tmp = await tmpdir()
     const target = await plugin(tmp.path, ["server"])
-    const cfg = path.join(tmp.path, ".opencode", "opencode.json")
+    const cfg = path.join(tmp.path, ".dev", "dev.json")
     await fs.mkdir(path.dirname(cfg), { recursive: true })
     await Bun.write(cfg, JSON.stringify({ plugin: ["@scope/acme@1.0.0"] }, null, 2))
 
@@ -305,7 +305,7 @@ describe("plugin.install.task", () => {
   test("keeps file plugin entries and still adds npm plugin", async () => {
     await using tmp = await tmpdir()
     const target = await plugin(tmp.path, ["server"])
-    const cfg = path.join(tmp.path, ".opencode", "opencode.json")
+    const cfg = path.join(tmp.path, ".dev", "dev.json")
     await fs.mkdir(path.dirname(cfg), { recursive: true })
     await Bun.write(cfg, JSON.stringify({ plugin: ["file:///tmp/acme.ts"] }, null, 2))
 
@@ -325,7 +325,7 @@ describe("plugin.install.task", () => {
   test("force replaces configured package version and keeps tuple options", async () => {
     await using tmp = await tmpdir()
     const target = await plugin(tmp.path, ["server"])
-    const cfg = path.join(tmp.path, ".opencode", "opencode.json")
+    const cfg = path.join(tmp.path, ".dev", "dev.json")
     await fs.mkdir(path.dirname(cfg), { recursive: true })
     await Bun.write(
       cfg,
@@ -474,15 +474,15 @@ describe("plugin.install.task", () => {
 
     const ok = await run(ctx(tmp.path))
     expect(ok).toBe(false)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "tui.jsonc"))).toBe(false)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "opencode.jsonc"))).toBe(false)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "tui.jsonc"))).toBe(false)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "dev.jsonc"))).toBe(false)
   })
 
   test("force replaces version in both server and tui configs", async () => {
     await using tmp = await tmpdir()
     const target = await plugin(tmp.path, ["server", "tui"])
-    const server = path.join(tmp.path, ".opencode", "opencode.json")
-    const tui = path.join(tmp.path, ".opencode", "tui.json")
+    const server = path.join(tmp.path, ".dev", "dev.json")
+    const tui = path.join(tmp.path, ".dev", "tui.json")
     await fs.mkdir(path.dirname(server), { recursive: true })
     await Bun.write(server, JSON.stringify({ plugin: ["acme@1.0.0", "other@1.0.0"] }, null, 2))
     await Bun.write(tui, JSON.stringify({ plugin: [["acme@1.0.0", { mode: "safe" }], "other@1.0.0"] }, null, 2))
@@ -506,7 +506,7 @@ describe("plugin.install.task", () => {
   test("returns false and keeps config unchanged for invalid JSONC", async () => {
     await using tmp = await tmpdir()
     const target = await plugin(tmp.path, ["server"])
-    const cfg = path.join(tmp.path, ".opencode", "opencode.jsonc")
+    const cfg = path.join(tmp.path, ".dev", "dev.jsonc")
     await fs.mkdir(path.dirname(cfg), { recursive: true })
     const bad = '{"plugin": ["acme@1.0.0",}'
     await Bun.write(cfg, bad)
@@ -535,8 +535,8 @@ describe("plugin.install.task", () => {
 
     const ok = await run(ctx(tmp.path))
     expect(ok).toBe(false)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "opencode.jsonc"))).toBe(false)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "tui.jsonc"))).toBe(false)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "dev.jsonc"))).toBe(false)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "tui.jsonc"))).toBe(false)
   })
 
   test("returns false when manifest cannot be read", async () => {
@@ -552,7 +552,7 @@ describe("plugin.install.task", () => {
 
     const ok = await run(ctx(tmp.path))
     expect(ok).toBe(false)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "opencode.jsonc"))).toBe(false)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "dev.jsonc"))).toBe(false)
   })
 
   test("returns false when install fails", async () => {
@@ -566,6 +566,6 @@ describe("plugin.install.task", () => {
 
     const ok = await run(ctx(tmp.path))
     expect(ok).toBe(false)
-    expect(await Filesystem.exists(path.join(tmp.path, ".opencode", "opencode.jsonc"))).toBe(false)
+    expect(await Filesystem.exists(path.join(tmp.path, ".dev", "dev.jsonc"))).toBe(false)
   })
 })

@@ -16,7 +16,7 @@ export const files = Effect.fn("ConfigPaths.projectFiles")(function* (
   const afs = yield* FSUtil.Service
   return (yield* afs.up({
     // The main config name means every brand name (dev first); others ("tui") are literal.
-    targets: (name === "opencode" ? Brand.CONFIG_NAMES : [name]).flatMap((item) => [`${item}.jsonc`, `${item}.json`]),
+    targets: (name === "devcode" ? Brand.CONFIG_NAMES : [name]).flatMap((item) => [`${item}.jsonc`, `${item}.json`]),
     start: directory,
     stop: worktree,
   })).toReversed()
@@ -45,6 +45,6 @@ export const directories = Effect.fn("ConfigPaths.directories")(function* (direc
 })
 
 export function fileInDirectory(dir: string, name: string) {
-  if (name === "opencode") return Brand.configFiles(dir)
+  if (name === "devcode") return Brand.configFiles(dir)
   return [path.join(dir, `${name}.json`), path.join(dir, `${name}.jsonc`)]
 }

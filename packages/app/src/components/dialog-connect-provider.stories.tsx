@@ -60,8 +60,8 @@ export const ApiKey = {
   render: renderConnection("openrouter", [{ type: "api", label: "API key" }]),
 }
 
-export const OpenCodeZen = {
-  render: renderConnection("opencode", [{ type: "api", label: "API key" }]),
+export const DevCodeZen = {
+  render: renderConnection("devcode", [{ type: "api", label: "API key" }]),
 }
 
 export const LoginMethods = {

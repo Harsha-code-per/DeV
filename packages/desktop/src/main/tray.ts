@@ -14,7 +14,7 @@ import { autostartEntry, newSessionLink, quickPromptDirectory, quickPromptHotkey
 import { iconsDir, preloadPath } from "./windows"
 
 // Mirrors GLOBAL_STORAGE in packages/app/src/utils/persist.ts, where the renderer keeps its server state.
-const GLOBAL_STORE = "opencode.global.dat"
+const GLOBAL_STORE = "devcode.global.dat"
 
 // Electron gives no way to ask whether a tray will be visible. macOS and Windows always have one;
 // on Linux it needs a StatusNotifierItem host (GNOME has none without the AppIndicator extension).

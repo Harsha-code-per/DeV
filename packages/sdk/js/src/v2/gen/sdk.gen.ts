@@ -1361,7 +1361,7 @@ export class Global extends HeyApiClient {
   }
 
   /**
-   * Upgrade opencode
+   * Upgrade devcode
    *
    * Upgrade dev to the specified version.
    */
@@ -5633,7 +5633,7 @@ export class Session3 extends HeyApiClient {
   /**
    * List active sessions
    *
-   * Retrieve foreground Session drains currently owned by this OpenCode process. Sessions absent from the result are inactive.
+   * Retrieve foreground Session drains currently owned by this DeV process. Sessions absent from the result are inactive.
    */
   public active<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).get<V2SessionActiveResponses, V2SessionActiveErrors, ThrowOnError>({
@@ -5902,7 +5902,7 @@ export class Session3 extends HeyApiClient {
   /**
    * Interrupt session execution
    *
-   * Interrupt active execution owned by this OpenCode process. Idle interruption is a no-op.
+   * Interrupt active execution owned by this DeV process. Idle interruption is a no-op.
    */
   public interrupt<ThrowOnError extends boolean = false>(
     parameters: {

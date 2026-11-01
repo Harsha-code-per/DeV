@@ -5,7 +5,7 @@ import { mockDevCodeServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
 const NAMES = ["alpha-service", "bravo-web", "charlie-api", "delta-tools", "echo-infra", "foxtrot-docs"]
-const worktrees = NAMES.map((name) => `/opencode-demo/${name}`)
+const worktrees = NAMES.map((name) => `/devcode-demo/${name}`)
 
 // The sixth project sits outside the five-item recent cap, so it is only reachable if the
 // dialog hands every recent project to the list filter instead of a pre-truncated slice.
@@ -28,7 +28,7 @@ async function openProjectDialog(page: Page) {
   })
   await page.addInitScript((dirs) => {
     localStorage.setItem(
-      "opencode.global.dat:server",
+      "devcode.global.dat:server",
       JSON.stringify({
         projects: { local: dirs.map((worktree: string) => ({ worktree, expanded: false })) },
         lastProject: {},

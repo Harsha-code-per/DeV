@@ -647,7 +647,7 @@ function Prompt<const T extends Record<string, string>>(props: {
   useRenderer()
 
   const content = () => (
-    // DeV: a rounded saffron frame, matching the prompt (OpenCode used an orange bar on a panel).
+    // DeV: a rounded saffron frame, matching the prompt (DeV used an orange bar on a panel).
     <box
       border
       borderStyle="rounded"

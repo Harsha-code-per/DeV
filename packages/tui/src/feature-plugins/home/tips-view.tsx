@@ -128,7 +128,7 @@ export function Tips(props: { api: TuiPluginApi; connected?: boolean }) {
     sessionQuickSwitch9: useCommandShortcut("session.quick_switch.9"),
     sessionSidebarToggle: configShortcut(props.api, "session.sidebar.toggle"),
     sessionTimeline: configShortcut(props.api, "session.timeline"),
-    statusView: useCommandShortcut("opencode.status"),
+    statusView: useCommandShortcut("devcode.status"),
     terminalSuspend: useCommandShortcut("terminal.suspend"),
     themeList: useCommandShortcut("theme.switch"),
   }
@@ -267,7 +267,7 @@ const TIPS: Tip[] = [
     shortcuts.commandList()
       ? `Toggle username display in chat via the command palette (${shortcutText(shortcuts.commandList())})`
       : "Toggle username display in chat via the command palette",
-  "Use {highlight}/connect{/highlight} to add a free provider, or OpenCode Zen with your own Zen key",
+  "Use {highlight}/connect{/highlight} to add a free provider, or DeV Zen with your own Zen key",
   "Commit your project's {highlight}AGENTS.md{/highlight} file to Git for team sharing",
   "Use {highlight}/review{/highlight} to review uncommitted changes, branches, or PRs",
   (shortcuts) => `Use ${commandText("/help", shortcuts.helpShow())} to show the help dialog`,

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# opencode Korean IME Fix Installer
-# https://github.com/anomalyco/opencode/issues/14371
+# devcode Korean IME Fix Installer
+# https://github.com/Harsha-code-per/DeV/issues/14371
 #
-# Patches opencode to prevent Korean (and other CJK) IME last character
+# Patches devcode to prevent Korean (and other CJK) IME last character
 # truncation when pressing Enter in Kitty and other terminals.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/claudianus/opencode/fix-zhipuai-coding-plan-thinking/patches/install-korean-ime-fix.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/claudianus/devcode/fix-zhipuai-coding-plan-thinking/patches/install-korean-ime-fix.sh | bash
 #   # or from a cloned repo:
 #   ./patches/install-korean-ime-fix.sh
 
@@ -18,9 +18,9 @@ ORANGE='\033[38;5;214m'
 MUTED='\033[0;2m'
 NC='\033[0m'
 
-DEV_DIR="${DEV_DIR:-$HOME/.opencode}"
-DEV_SRC="${DEV_SRC:-$HOME/.opencode-src}"
-FORK_REPO="${FORK_REPO:-https://github.com/claudianus/opencode.git}"
+DEV_DIR="${DEV_DIR:-$HOME/.dev}"
+DEV_SRC="${DEV_SRC:-$HOME/.dev-src}"
+FORK_REPO="${FORK_REPO:-https://github.com/claudianus/devcode.git}"
 FORK_BRANCH="${FORK_BRANCH:-fix-zhipuai-coding-plan-thinking}"
 
 info()  { echo -e "${MUTED}$*${NC}"; }
@@ -76,7 +76,7 @@ cd "$DEV_SRC"
 bun install --frozen-lockfile 2>/dev/null || bun install
 
 # ── 4. Build (current platform only) ──────────────────────────────────
-info "Building opencode for current platform ..."
+info "Building devcode for current platform ..."
 cd "$DEV_SRC/packages/devcode"
 bun run build --single
 
@@ -90,19 +90,19 @@ ARCH=$(uname -m)
 [ "$PLATFORM" = "darwin" ] && true
 [ "$PLATFORM" = "linux" ] && true
 
-BUILT_BINARY="$DEV_SRC/packages/devcode/dist/opencode-${PLATFORM}-${ARCH}/bin/opencode"
+BUILT_BINARY="$DEV_SRC/packages/devcode/dist/devcode-${PLATFORM}-${ARCH}/bin/devcode"
 
 if [ ! -f "$BUILT_BINARY" ]; then
-  BUILT_BINARY=$(find "$DEV_SRC/packages/devcode/dist" -name "opencode" -type f -executable 2>/dev/null | head -1)
+  BUILT_BINARY=$(find "$DEV_SRC/packages/devcode/dist" -name "devcode" -type f -executable 2>/dev/null | head -1)
 fi
 
 if [ -f "$BUILT_BINARY" ]; then
-  if [ -f "$DEV_DIR/bin/opencode" ]; then
-    cp "$DEV_DIR/bin/opencode" "$DEV_DIR/bin/opencode.bak.$(date +%Y%m%d%H%M%S)"
+  if [ -f "$DEV_DIR/bin/devcode" ]; then
+    cp "$DEV_DIR/bin/devcode" "$DEV_DIR/bin/devcode.bak.$(date +%Y%m%d%H%M%S)"
   fi
-  cp "$BUILT_BINARY" "$DEV_DIR/bin/opencode"
-  chmod +x "$DEV_DIR/bin/opencode"
-  ok "Installed to $DEV_DIR/bin/opencode"
+  cp "$BUILT_BINARY" "$DEV_DIR/bin/devcode"
+  chmod +x "$DEV_DIR/bin/devcode"
+  ok "Installed to $DEV_DIR/bin/devcode"
 else
   err "Build failed - binary not found in dist/"
   info "Try running manually:"
@@ -114,7 +114,7 @@ echo ""
 ok "Done! Korean IME fix is now active."
 echo ""
 info "To uninstall and revert to the official release:"
-echo "  curl -fsSL https://opencode.ai/install | bash"
+echo "  curl -fsSL https://harsha-code-per.github.io/DeV/install | bash"
 echo ""
 info "To update (re-pull and rebuild):"
 echo "  $0"

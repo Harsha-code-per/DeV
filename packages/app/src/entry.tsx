@@ -12,7 +12,7 @@ import { authFromToken } from "@/utils/server"
 import pkg from "../package.json"
 import { ServerConnection } from "./context/server"
 
-const DEFAULT_SERVER_URL_KEY = "opencode.settings.dat:defaultServerUrl"
+const DEFAULT_SERVER_URL_KEY = "devcode.settings.dat:defaultServerUrl"
 
 const getLocale = () => {
   if (typeof navigator !== "object") return "en" as const
@@ -99,7 +99,7 @@ if (!(root instanceof HTMLElement) && import.meta.env.DEV) {
 const getCurrentUrl = () => {
   if (location.hostname.includes("harsha-code-per.github.io")) return "http://localhost:4096"
   if (import.meta.env.DEV)
-    return `http://${import.meta.env.VITE_OPENCODE_SERVER_HOST ?? "localhost"}:${import.meta.env.VITE_OPENCODE_SERVER_PORT ?? "4096"}`
+    return `http://${import.meta.env.VITE_DEV_SERVER_HOST ?? "localhost"}:${import.meta.env.VITE_DEV_SERVER_PORT ?? "4096"}`
   return location.origin
 }
 

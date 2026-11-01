@@ -236,11 +236,11 @@ describe("SessionStatus.Info", () => {
       message: "transient",
       action: {
         reason: "free_tier_limit",
-        provider: "opencode",
+        provider: "devcode",
         title: "Free limit reached",
-        message: "Subscribe to OpenCode Go.",
+        message: "Subscribe to DeV Go.",
         label: "subscribe",
-        link: "https://opencode.ai/go",
+        link: "https://harsha-code-per.github.io/DeV/go",
       },
       next: 500,
     }

@@ -66,6 +66,6 @@ if (Script.release && !Script.preview) {
 }
 
 if (Script.release) {
-  // OpenCode 1 clients resolve updates through GitHub's Latest release, so keep it on 1.x explicitly.
+  // DeV 1 clients resolve updates through GitHub's Latest release, so keep it on 1.x explicitly.
   await $`gh release edit ${tag} --draft=false --latest --repo ${process.env.GH_REPO}`
 }

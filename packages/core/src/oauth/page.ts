@@ -6,7 +6,7 @@
 // offline and drop into any transport (`res.end(...)`, Effect `response.end`,
 // etc.).
 //
-// The visual language mirrors the OpenCode app: the design tokens are a curated
+// The visual language mirrors the DeV app: the design tokens are a curated
 // subset of the OC-2 semantic tokens in `packages/ui/src/styles/theme.css`, and
 // the wordmark is the same geometry as `packages/ui/src/components/logo.tsx`.
 // Keep this file in sync with those sources when the brand changes.
@@ -40,8 +40,8 @@ export function error(detail: string, options?: CallbackPageOptions) {
       status: "error",
       headline: "Authorization failed",
       message: provider
-        ? `OpenCode couldn't finish connecting to ${escapeHtml(provider)}.`
-        : "OpenCode couldn't complete authorization.",
+        ? `DeV couldn't finish connecting to ${escapeHtml(provider)}.`
+        : "DeV couldn't complete authorization.",
       detail,
       footnote: "Close this window and try again from DeV.",
     }),
@@ -249,8 +249,8 @@ const STYLES = `
   @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 `
 
-// OpenCode wordmark — same path geometry as packages/ui/src/components/logo.tsx (Logo).
-const WORDMARK = `<svg class="wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 234 42" fill="none" aria-label="OpenCode" role="img">
+// DeV wordmark — same path geometry as packages/ui/src/components/logo.tsx (Logo).
+const WORDMARK = `<svg class="wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 234 42" fill="none" aria-label="DeV" role="img">
         <path d="M18 30H6V18H18V30Z" fill="var(--oc-icon-weak)" />
         <path d="M18 12H6V30H18V12ZM24 36H0V6H24V36Z" fill="var(--oc-icon-base)" />
         <path d="M48 30H36V18H48V30Z" fill="var(--oc-icon-weak)" />

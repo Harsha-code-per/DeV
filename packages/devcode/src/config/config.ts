@@ -369,7 +369,7 @@ const layer = Layer.effect(
           if (value.type === "wellknown") {
             const url = key.replace(/\/+$/, "")
             authEnv[value.key] = value.token
-            const wellknownURL = `${url}/.well-known/opencode`
+            const wellknownURL = `${url}/.well-known/devcode`
             yield* Effect.logDebug("fetching remote config", { url: wellknownURL })
             const wellknown = yield* fetchRemoteJson(wellknownURL, undefined, ConfigV1.WellKnown, url)
             const remote = yield* Effect.promise(() =>
@@ -427,7 +427,7 @@ const layer = Layer.effect(
         }
 
         if (!Flag.DEV_DISABLE_PROJECT_CONFIG) {
-          for (const file of yield* ConfigPaths.files("opencode", ctx.directory, ctx.worktree).pipe(Effect.orDie)) {
+          for (const file of yield* ConfigPaths.files("devcode", ctx.directory, ctx.worktree).pipe(Effect.orDie)) {
             yield* merge(file, yield* loadFile(file, authEnv), "local")
           }
         }
@@ -484,7 +484,7 @@ const layer = Layer.effect(
           result.command = mergeDeep(result.command ?? {}, yield* Effect.promise(() => ConfigCommand.load(dir)))
           result.agent = mergeDeep(result.agent ?? {}, yield* Effect.promise(() => ConfigAgent.load(dir)))
           result.agent = mergeDeep(result.agent ?? {}, yield* Effect.promise(() => ConfigAgent.loadMode(dir)))
-          // Auto-discovered plugins under `.opencode/plugin(s)` are already local files, so ConfigPlugin.load
+          // Auto-discovered plugins under `.dev/plugin(s)` are already local files, so ConfigPlugin.load
           // returns normalized Specs and we only need to attach origin metadata here.
           const list = yield* Effect.promise(() => ConfigPlugin.load(dir))
           yield* mergePluginOrigins(dir, list)

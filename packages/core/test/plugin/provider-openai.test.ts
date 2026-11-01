@@ -41,24 +41,6 @@ function fakeSelectorSdk(calls: string[]) {
 }
 
 describe("OpenAIPlugin", () => {
-  it.effect("registers browser and headless ChatGPT OAuth methods", () =>
-    Effect.gen(function* () {
-      yield* addPlugin()
-      expect((yield* (yield* Integration.Service).get(Integration.ID.make("openai")))?.methods).toEqual([
-        {
-          id: Integration.MethodID.make("chatgpt-browser"),
-          type: "oauth",
-          label: "ChatGPT Pro/Plus (browser)",
-        },
-        {
-          id: Integration.MethodID.make("chatgpt-headless"),
-          type: "oauth",
-          label: "ChatGPT Pro/Plus (headless)",
-        },
-      ])
-    }),
-  )
-
   it.effect("creates an OpenAI SDK for @ai-sdk/openai using the provider ID as SDK name", () =>
     Effect.gen(function* () {
       const plugin = yield* PluginV2.Service

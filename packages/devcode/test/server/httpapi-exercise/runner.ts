@@ -126,7 +126,7 @@ function withContext<A, E>(
         const base: ScenarioContext = {
           directory: context.dir?.path,
           headers: (extra) => ({
-            ...(context.dir?.path ? { "x-opencode-directory": context.dir.path } : {}),
+            ...(context.dir?.path ? { "x-dev-directory": context.dir.path } : {}),
             ...extra,
           }),
           file: (name, content) =>
@@ -153,7 +153,7 @@ function withContext<A, E>(
                 time: { created: Date.now() },
                 agent: "build",
                 model: {
-                  providerID: ProviderV2.ID.opencode,
+                  providerID: ProviderV2.ID.devcode,
                   modelID: ModelV2.ID.make("test"),
                 },
               }

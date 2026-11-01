@@ -1,4 +1,4 @@
-export const deepLinkEvent = "opencode:deep-link"
+export const deepLinkEvent = "devcode:deep-link"
 
 const parseUrl = (input: string) => {
   if (!input.startsWith("devai://")) return
@@ -36,15 +36,15 @@ export const collectOpenProjectDeepLinks = (urls: string[]) =>
 export const collectNewSessionDeepLinks = (urls: string[]) =>
   urls.map(parseNewSessionDeepLink).filter((link): link is { directory: string; prompt?: string } => !!link)
 
-type OpenCodeWindow = Window & {
-  __OPENCODE__?: {
+type DevCodeWindow = Window & {
+  __DEV__?: {
     deepLinks?: string[]
   }
 }
 
-export const drainPendingDeepLinks = (target: OpenCodeWindow) => {
-  const pending = target.__OPENCODE__?.deepLinks ?? []
+export const drainPendingDeepLinks = (target: DevCodeWindow) => {
+  const pending = target.__DEV__?.deepLinks ?? []
   if (pending.length === 0) return []
-  if (target.__OPENCODE__) target.__OPENCODE__.deepLinks = []
+  if (target.__DEV__) target.__DEV__.deepLinks = []
   return pending
 }

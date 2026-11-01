@@ -6,7 +6,7 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
-declare module "virtual:opencode-server" {
+declare module "virtual:devcode-server" {
   export namespace Server {
     export const listen: typeof import("../../../devcode/dist/types/src/node").Server.listen
     export type Listener = import("../../../devcode/dist/types/src/node").Server.Listener

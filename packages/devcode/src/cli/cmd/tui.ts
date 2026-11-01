@@ -292,7 +292,7 @@ export const TuiThreadCommand = cmd({
             headers,
           }
         : {
-            url: "http://opencode.internal",
+            url: "http://devcode.internal",
             fetch: createWorkerFetch(client),
             events: createEventSource(client),
           }

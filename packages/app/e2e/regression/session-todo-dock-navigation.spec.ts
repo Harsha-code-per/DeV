@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test"
 import { mockDevCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/OpenCode/TodoDockNavigation"
+const directory = "C:/DeV/TodoDockNavigation"
 const projectID = "proj_todo_dock_navigation"
 const sourceID = "ses_todo_dock_source"
 const otherID = "ses_todo_dock_other"
@@ -42,8 +42,8 @@ test("animates todo lifecycle without replaying it across session tabs", async (
     provider: {
       all: [
         {
-          id: "opencode",
-          name: "OpenCode",
+          id: "devcode",
+          name: "DeV",
           models: {
             "claude-opus-4-6": {
               id: "claude-opus-4-6",
@@ -53,8 +53,8 @@ test("animates todo lifecycle without replaying it across session tabs", async (
           },
         },
       ],
-      connected: ["opencode"],
-      default: { providerID: "opencode", modelID: "claude-opus-4-6" },
+      connected: ["devcode"],
+      default: { providerID: "devcode", modelID: "claude-opus-4-6" },
     },
     sessions: [session(sourceID, sourceTitle, 1700000000000), session(otherID, otherTitle, 1700000001000)],
     sessionStatus: { [sourceID]: { type: "busy" } },
@@ -142,14 +142,14 @@ async function configurePage(page: Page) {
     ({ directory, dirBase64, server, sessionIDs }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "devcode.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem(
-        "opencode.window.browser.dat:tabs",
+        "devcode.window.browser.dat:tabs",
         JSON.stringify(sessionIDs.map((sessionId) => ({ type: "session", server, dirBase64, sessionId }))),
       )
     },

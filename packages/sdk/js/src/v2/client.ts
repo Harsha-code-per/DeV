@@ -22,8 +22,8 @@ function rewrite(request: Request, values: { directory?: string; workspace?: str
   let changed = false
 
   for (const [name, key] of [
-    ["x-opencode-directory", "directory"],
-    ["x-opencode-workspace", "workspace"],
+    ["x-dev-directory", "directory"],
+    ["x-dev-workspace", "workspace"],
   ] as const) {
     const value = pick(
       request.headers.get(name),
@@ -42,8 +42,8 @@ function rewrite(request: Request, values: { directory?: string; workspace?: str
   if (!changed) return request
 
   const next = new Request(url, request)
-  next.headers.delete("x-opencode-directory")
-  next.headers.delete("x-opencode-workspace")
+  next.headers.delete("x-dev-directory")
+  next.headers.delete("x-dev-workspace")
   return next
 }
 
@@ -63,14 +63,14 @@ export function createDevcodeClient(config?: Config & { directory?: string; expe
   if (config?.directory) {
     config.headers = {
       ...config.headers,
-      "x-opencode-directory": encodeURIComponent(config.directory),
+      "x-dev-directory": encodeURIComponent(config.directory),
     }
   }
 
   if (config?.experimental_workspaceID) {
     config.headers = {
       ...config.headers,
-      "x-opencode-workspace": config.experimental_workspaceID,
+      "x-dev-workspace": config.experimental_workspaceID,
     }
   }
 
@@ -84,7 +84,7 @@ export function createDevcodeClient(config?: Config & { directory?: string; expe
   client.interceptors.response.use((response) => {
     const contentType = response.headers.get("content-type")
     if (contentType === "text/html")
-      throw new Error("Request is not supported by this version of OpenCode Server (Server responded with text/html)")
+      throw new Error("Request is not supported by this version of DeV Server (Server responded with text/html)")
 
     return response
   })

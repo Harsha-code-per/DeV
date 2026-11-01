@@ -34,7 +34,7 @@ const PROVIDER_PRIORITY: Record<string, number> = Object.fromEntries(
   [...FREE_TIER, "openai", "github-copilot", "anthropic"].map((id, index) => [id, index]),
 )
 
-const CUSTOM_PROVIDER_OPTION_VALUE = "__opencode_custom_provider__"
+const CUSTOM_PROVIDER_OPTION_VALUE = "__devcode_custom_provider__"
 const CUSTOM_PROVIDER_ID = /^[a-z0-9][a-z0-9-_]*$/
 
 type ProviderOptionBase = {
@@ -74,7 +74,7 @@ export function providerOptions(list: { id: string; name: string }[]): ProviderO
               ? "(free tier, short tasks only)"
               : "(free tier)"
           : {
-              opencode: "(free models with your Zen key)",
+              devcode: "(free models with your Zen key)",
               anthropic: "(API key)",
               openai: "(ChatGPT Plus/Pro or API key)",
             }[provider.id],
@@ -435,26 +435,26 @@ function ApiMethod(props: ApiMethodProps) {
               </text>
             </box>
           ),
-          opencode: (
+          devcode: (
             <box gap={1}>
               <text fg={theme.textMuted}>
-                OpenCode Zen is OpenCode's model service. With your own Zen key, its free models cost nothing. They are
+                DeV Zen is DeV's model service. With your own Zen key, its free models cost nothing. They are
                 offered for a limited time, and some collect usage data to improve the model.
               </text>
               <text fg={theme.text}>
-                Get a key at <span style={{ fg: theme.primary }}>https://opencode.ai/zen</span> (sign in and add billing
+                Get a key at <span style={{ fg: theme.primary }}>https://harsha-code-per.github.io/DeV/zen</span> (sign in and add billing
                 details)
               </text>
             </box>
           ),
-          "opencode-go": (
+          "devcode-go": (
             <box gap={1}>
               <text fg={theme.textMuted}>
-                OpenCode Go is a $10 per month subscription that provides reliable access to popular open coding models
+                DeV Go is a $10 per month subscription that provides reliable access to popular open coding models
                 with generous usage limits.
               </text>
               <text fg={theme.text}>
-                Go to <span style={{ fg: theme.primary }}>https://opencode.ai/go</span> and enable OpenCode Go
+                Go to <span style={{ fg: theme.primary }}>https://harsha-code-per.github.io/DeV/go</span> and enable DeV Go
               </text>
             </box>
           ),

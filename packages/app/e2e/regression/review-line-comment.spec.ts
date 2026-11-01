@@ -3,7 +3,7 @@ import { base64Encode } from "@dev-ai/core/util/encode"
 import { mockDevCodeServer } from "../utils/mock-server"
 import { expectAppVisible, expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/OpenCode/ReviewLineCommentRegression"
+const directory = "C:/DeV/ReviewLineCommentRegression"
 const sessionID = "ses_review_line_comment_regression"
 const title = "Review line comment regression"
 
@@ -130,7 +130,7 @@ async function openReview(page: Page) {
             time: { created: 1700000000000 },
             summary: { diffs: [] },
             agent: "build",
-            model: { providerID: "opencode", modelID: "test" },
+            model: { providerID: "devcode", modelID: "test" },
           },
           parts: [
             {

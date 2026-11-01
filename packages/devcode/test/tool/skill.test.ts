@@ -33,7 +33,7 @@ describe("tool.skill", () => {
   it.instance("execute returns skill content block with files", () =>
     Effect.gen(function* () {
       const dir = (yield* TestInstance).directory
-      const skill = path.join(dir, ".opencode", "skill", "tool-skill")
+      const skill = path.join(dir, ".dev", "skill", "tool-skill")
       yield* Effect.promise(() =>
         Bun.write(
           path.join(skill, "SKILL.md"),
@@ -61,7 +61,7 @@ Use this skill.
       const registry = yield* ToolRegistry.Service
       const agent = { name: "build", mode: "primary" as const, permission: [], options: {} }
       const tool = (yield* registry.tools({
-        providerID: "opencode" as any,
+        providerID: "devcode" as any,
         modelID: "gpt-5" as any,
         agent,
       })).find((tool) => tool.id === SkillTool.id)
@@ -107,7 +107,7 @@ Use this skill.
       const registry = yield* ToolRegistry.Service
       const agent = { name: "build", mode: "primary" as const, permission: [], options: {} }
       const tool = (yield* registry.tools({
-        providerID: "opencode" as any,
+        providerID: "devcode" as any,
         modelID: "gpt-5" as any,
         agent,
       })).find((tool) => tool.id === SkillTool.id)

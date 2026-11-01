@@ -78,7 +78,7 @@ const list = Provider.use.list()
 
 // Paid Zen models; DeV doesn't load Zen at all without the user's key, which counts as zero.
 const paid = (providers: Record<string, { models: Record<string, { cost: { input: number } }> }>) => {
-  const item = providers[ProviderV2.ID.make("opencode")]
+  const item = providers[ProviderV2.ID.make("devcode")]
   return item ? Object.values(item.models).filter((model) => model.cost.input > 0).length : 0
 }
 
@@ -1991,12 +1991,12 @@ it.instance(
     expect(providers[ProviderV2.ID.make("cloudflare-ai-gateway")]).toBeDefined()
     expect(providers[ProviderV2.ID.make("cloudflare-ai-gateway")].options.metadata).toEqual({
       invoked_by: "test",
-      project: "opencode",
+      project: "devcode",
     })
   }),
   {
     config: {
-      provider: { "cloudflare-ai-gateway": { options: { metadata: { invoked_by: "test", project: "opencode" } } } },
+      provider: { "cloudflare-ai-gateway": { options: { metadata: { invoked_by: "test", project: "devcode" } } } },
     },
   },
 )
@@ -2013,7 +2013,7 @@ const provideMultiInstance = <A, E, R>(eff: Effect.Effect<A, E, R>) =>
 it.effect("plugin config providers persist after instance dispose", () =>
   Effect.gen(function* () {
     const dir = yield* tmpdirScoped()
-    const configDir = path.join(dir, ".opencode")
+    const configDir = path.join(dir, ".dev")
     const root = path.join(configDir, "plugin")
     yield* Effect.promise(() => mkdir(root, { recursive: true }))
     yield* Effect.promise(() => markPluginDependenciesReady(configDir))
@@ -2070,7 +2070,7 @@ it.instance(
   "plugin config enabled and disabled providers are honored",
   Effect.gen(function* () {
     const instance = yield* TestInstance
-    const configDir = path.join(instance.directory, ".opencode")
+    const configDir = path.join(instance.directory, ".dev")
     const root = path.join(configDir, "plugin")
     yield* Effect.promise(() => mkdir(root, { recursive: true }))
     yield* Effect.promise(() => markPluginDependenciesReady(configDir))

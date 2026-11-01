@@ -4,7 +4,7 @@ import { mockDevCodeServer } from "../utils/mock-server"
 import { installSseTransport } from "../utils/sse-transport"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/OpenCode/RequestDocks"
+const directory = "C:/DeV/RequestDocks"
 const projectID = "proj_request_docks"
 const sessionID = "ses_request_docks"
 const title = "Request dock regression"
@@ -186,8 +186,8 @@ async function mockServer(
     provider: {
       all: [
         {
-          id: "opencode",
-          name: "OpenCode",
+          id: "devcode",
+          name: "DeV",
           models: {
             "claude-opus-4-6": {
               id: "claude-opus-4-6",
@@ -197,8 +197,8 @@ async function mockServer(
           },
         },
       ],
-      connected: ["opencode"],
-      default: { providerID: "opencode", modelID: "claude-opus-4-6" },
+      connected: ["devcode"],
+      default: { providerID: "devcode", modelID: "claude-opus-4-6" },
     },
     sessions: [
       {
