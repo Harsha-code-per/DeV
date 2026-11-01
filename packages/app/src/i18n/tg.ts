@@ -197,11 +197,7 @@ export const dict = {
   "dialog.provider.group.other": "Дигар",
   "dialog.provider.custom.label": "Фармоишгар OpenAI-провайдери мувофиқ",
   "dialog.provider.tag.recommended": "Тавсия дода мешавад",
-  "dialog.provider.devcode.note": "Моделҳои интихобшуда, аз ҷумла Claude, GPT, Gemini ва ғайра",
-  "dialog.provider.devcode.tagline": "Моделҳои боэътимоди оптимизатсияшуда",
-  "dialog.provider.devcodeGo.tagline": "Обунаи арзон барои ҳама",
   "dialog.provider.anthropic.note": "Дастрасии мустақим ба моделҳои Claude, аз ҷумла Pro ва Max",
-  "dialog.provider.copilot.note": "Моделҳои AI барои кӯмаки рамзгузорӣ тавассути GitHub Copilot",
   "dialog.provider.openai.note": "GPT моделҳо барои вазифаҳои зуд ва тавонои умумии AI",
   "dialog.provider.google.note": "Gemini моделҳо барои посухҳои зуд ва сохторӣ",
   "dialog.provider.openrouter.note": "Ба ҳама моделҳои дастгирӣшаванда аз як провайдер дастрасӣ пайдо кунед",
@@ -230,13 +226,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API калид",
   "provider.connect.apiKey.placeholder": "API калид",
   "provider.connect.apiKey.required": "API калид лозим аст",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen ба шумо дастрасӣ ба маҷмӯи мураттабшудаи моделҳои боэътимоди оптимизатсияшуда барои агентҳои рамзгузориро медиҳад.",
-  "provider.connect.devcodeZen.line2":
-    "Бо як калиди API шумо метавонед ба моделҳое мисли Claude, GPT, Gemini, GLM ва ғайра дастрасӣ пайдо кунед.",
-  "provider.connect.devcodeZen.visit.prefix": "Ташриф",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": "барои гирифтани калиди API худ.",
   "provider.connect.oauth.code.visit.prefix": "Ташриф",
   "provider.connect.oauth.code.visit.link": "ин пайванд",
   "provider.connect.oauth.code.visit.suffix":

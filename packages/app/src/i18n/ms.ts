@@ -196,11 +196,7 @@ export const dict = {
   "dialog.provider.group.other": "Lain-lain",
   "dialog.provider.custom.label": "Penyedia serasi OpenAI tersuai",
   "dialog.provider.tag.recommended": "Disyorkan",
-  "dialog.provider.devcode.note": "Model terpilih termasuk Claude, GPT, Gemini dan banyak lagi",
-  "dialog.provider.devcode.tagline": "Model dioptimumkan yang boleh dipercayai",
-  "dialog.provider.devcodeGo.tagline": "Langganan kos rendah untuk semua",
   "dialog.provider.anthropic.note": "Akses terus ke model Claude, termasuk Pro dan Max",
-  "dialog.provider.copilot.note": "Model AI untuk bantuan pengekodan melalui GitHub Copilot",
   "dialog.provider.openai.note": "Model GPT untuk tugasan AI umum yang pantas dan berkeupayaan",
   "dialog.provider.google.note": "Model Gemini untuk respons pantas dan berstruktur",
   "dialog.provider.openrouter.note": "Akses semua model yang disokong daripada satu penyedia",
@@ -229,13 +225,6 @@ export const dict = {
   "provider.connect.apiKey.label": "Kunci API {{provider}}",
   "provider.connect.apiKey.placeholder": "Kunci API",
   "provider.connect.apiKey.required": "Kunci API diperlukan",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen memberi anda akses kepada set model terpilih yang boleh dipercayai dan dioptimumkan untuk ejen pengekodan.",
-  "provider.connect.devcodeZen.line2":
-    "Dengan satu kunci API, anda akan mendapat akses kepada model seperti Claude, GPT, Gemini, GLM dan banyak lagi.",
-  "provider.connect.devcodeZen.visit.prefix": "Layari",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": "untuk mendapatkan kunci API anda.",
   "provider.connect.oauth.code.visit.prefix": "Layari",
   "provider.connect.oauth.code.visit.link": "pautan ini",
   "provider.connect.oauth.code.visit.suffix":

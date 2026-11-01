@@ -99,11 +99,7 @@ export const dict = {
   "dialog.provider.group.other": "Muut",
   "dialog.provider.custom.label": "Mukautettu OpenAI-yhteensopiva palveluntarjoaja",
   "dialog.provider.tag.recommended": "Suositeltu",
-  "dialog.provider.devcode.note": "Kuratoituja malleja, kuten Claude, GPT, Gemini ja muita",
-  "dialog.provider.devcode.tagline": "Luotettavat optimoidut mallit",
-  "dialog.provider.devcodeGo.tagline": "Edullinen tilaus kaikille",
   "dialog.provider.anthropic.note": "Suora pääsy Claude-malleihin, mukaan lukien Pro ja Max",
-  "dialog.provider.copilot.note": "AI-malleja koodausapuun GitHub Copilotin kautta",
   "dialog.provider.openai.note": "GPT-mallit nopeisiin, suorituskykyisiin yleisiin tekoälytehtäviin",
   "dialog.provider.google.note": "Gemini-mallit nopeisiin, jäsenneltyihin vastauksiin",
   "dialog.provider.openrouter.note": "Käytä kaikkia tuettuja malleja yhdeltä palveluntarjoajalta",
@@ -132,13 +128,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}}-API-avain",
   "provider.connect.apiKey.placeholder": "API-avain",
   "provider.connect.apiKey.required": "API-avain vaaditaan",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen antaa sinulle pääsyn kuratoituun joukkoon luotettavia optimoituja malleja koodausagenteille.",
-  "provider.connect.devcodeZen.line2":
-    "Yhdellä API-avaimella pääset käyttämään malleja, kuten Claude, GPT, Gemini, GLM ja paljon muuta.",
-  "provider.connect.devcodeZen.visit.prefix": "Avaa ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " ja hae API-avaimesi.",
   "provider.connect.oauth.code.visit.prefix": "Avaa ",
   "provider.connect.oauth.code.visit.link": "tämä linkki",
   "provider.connect.oauth.code.visit.suffix":

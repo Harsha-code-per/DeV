@@ -198,11 +198,7 @@ export const dict = {
   "dialog.provider.group.other": "Andra",
   "dialog.provider.custom.label": "Anpassad OpenAI-kompatibel leverantör",
   "dialog.provider.tag.recommended": "Rekommenderad",
-  "dialog.provider.devcode.note": "Kurerade modeller inklusive Claude, GPT, Gemini och mer",
-  "dialog.provider.devcode.tagline": "Pålitliga optimerade modeller",
-  "dialog.provider.devcodeGo.tagline": "Lågprisprenumeration för alla",
   "dialog.provider.anthropic.note": "Direkt tillgång till Claude-modeller, inklusive Pro och Max",
-  "dialog.provider.copilot.note": "AI-modeller för kodningshjälp via GitHub Copilot",
   "dialog.provider.openai.note": "GPT-modeller för snabba, kapabla allmänna AI-uppgifter",
   "dialog.provider.google.note": "Gemini-modeller för snabba, strukturerade svar",
   "dialog.provider.openrouter.note": "Få tillgång till alla modeller som stöds från en leverantör",
@@ -231,13 +227,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}}-API-nyckel",
   "provider.connect.apiKey.placeholder": "API-nyckel",
   "provider.connect.apiKey.required": "API-nyckel krävs",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen ger dig tillgång till en utvald uppsättning pålitliga optimerade modeller för kodningsagenter.",
-  "provider.connect.devcodeZen.line2":
-    "Med en enda API-nyckel får du tillgång till modeller som Claude, GPT, Gemini, GLM och mer.",
-  "provider.connect.devcodeZen.visit.prefix": "Besök ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " för att hämta din API-nyckel.",
   "provider.connect.oauth.code.visit.prefix": "Besök ",
   "provider.connect.oauth.code.visit.link": "denna länk",
   "provider.connect.oauth.code.visit.suffix":

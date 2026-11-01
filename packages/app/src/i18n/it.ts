@@ -100,11 +100,7 @@ export const dict = {
   "dialog.provider.group.other": "Altro",
   "dialog.provider.custom.label": "Provider personalizzato compatibile con OpenAI",
   "dialog.provider.tag.recommended": "Consigliato",
-  "dialog.provider.devcode.note": "Modelli selezionati tra cui Claude, GPT, Gemini e altri",
-  "dialog.provider.devcode.tagline": "Modelli affidabili e ottimizzati",
-  "dialog.provider.devcodeGo.tagline": "Abbonamento economico per tutti",
   "dialog.provider.anthropic.note": "Accesso diretto ai modelli Claude, inclusi Pro e Max",
-  "dialog.provider.copilot.note": "Modelli di IA per assistere nella programmazione tramite GitHub Copilot",
   "dialog.provider.openai.note": "Modelli GPT veloci e potenti per attività generiche di IA",
   "dialog.provider.google.note": "Modelli Gemini per risposte rapide e strutturate",
   "dialog.provider.openrouter.note": "Accedi a tutti i modelli supportati da un unico provider",
@@ -133,13 +129,6 @@ export const dict = {
   "provider.connect.apiKey.label": "Chiave API di {{provider}}",
   "provider.connect.apiKey.placeholder": "Chiave API",
   "provider.connect.apiKey.required": "È richiesta la chiave API",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen offre l'accesso a una selezione di modelli affidabili e ottimizzati per gli agenti di programmazione.",
-  "provider.connect.devcodeZen.line2":
-    "Con una sola chiave API avrai accesso a modelli come Claude, GPT, Gemini, GLM e altri.",
-  "provider.connect.devcodeZen.visit.prefix": "Visita ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " per ottenere la tua chiave API.",
   "provider.connect.oauth.code.visit.prefix": "Visita ",
   "provider.connect.oauth.code.visit.link": "questo collegamento",
   "provider.connect.oauth.code.visit.suffix":

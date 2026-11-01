@@ -196,11 +196,7 @@ export const dict = {
   "dialog.provider.group.other": "სხვა",
   "dialog.provider.custom.label": "მორგებული OpenAI-თავსებადი პროვაიდერი",
   "dialog.provider.tag.recommended": "რეკომენდებულია",
-  "dialog.provider.devcode.note": "კურირებული მოდელები, მათ შორის Claude, GPT, Gemini და სხვა",
-  "dialog.provider.devcode.tagline": "სანდო ოპტიმიზებული მოდელები",
-  "dialog.provider.devcodeGo.tagline": "დაბალფასიანი გამოწერა ყველასთვის",
   "dialog.provider.anthropic.note": "პირდაპირი წვდომა Claude მოდელზე, მათ შორის Pro და Max",
-  "dialog.provider.copilot.note": "AI მოდელები კოდირების დახმარებისთვის GitHub Copilot",
   "dialog.provider.openai.note": "GPT მოდელები სწრაფი, ზოგადი AI ამოცანების შესასრულებლად",
   "dialog.provider.google.note": "Gemini მოდელები სწრაფი, სტრუქტურირებული პასუხებისთვის",
   "dialog.provider.openrouter.note": "წვდომა ყველა მხარდაჭერილ მოდელზე ერთი პროვაიდერისგან",
@@ -229,13 +225,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API გასაღები",
   "provider.connect.apiKey.placeholder": "API გასაღები",
   "provider.connect.apiKey.required": "API გასაღები საჭიროა",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen გაძლევთ წვდომას კოდირების აგენტებისთვის საიმედო ოპტიმიზირებული მოდელების კურირებულ კომპლექტზე.",
-  "provider.connect.devcodeZen.line2":
-    "ერთი API გასაღებით თქვენ მიიღებთ წვდომას ისეთ მოდელებზე, როგორიცაა Claude, GPT, Gemini, GLM და სხვა.",
-  "provider.connect.devcodeZen.visit.prefix": "ეწვიეთ ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " თქვენი API გასაღების შესაგროვებლად.",
   "provider.connect.oauth.code.visit.prefix": "ეწვიეთ ",
   "provider.connect.oauth.code.visit.link": "ეს ბმული",
   "provider.connect.oauth.code.visit.suffix":

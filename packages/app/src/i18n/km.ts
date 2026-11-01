@@ -196,11 +196,7 @@ export const dict = {
   "dialog.provider.group.other": "ផ្សេងទៀត។",
   "dialog.provider.custom.label": "អ្នកផ្តល់សេវាដែលត្រូវគ្នានឹង OpenAI ផ្ទាល់ខ្លួន",
   "dialog.provider.tag.recommended": "បានណែនាំ",
-  "dialog.provider.devcode.note": "ម៉ូដែលដែលបានជ្រើសរើសរួមមាន Claude, GPT, Gemini និងច្រើនទៀត",
-  "dialog.provider.devcode.tagline": "ម៉ូដែលដែលបានកែលម្អដែលអាចទុកចិត្តបាន។",
-  "dialog.provider.devcodeGo.tagline": "ការជាវតម្លៃទាបសម្រាប់អ្នករាល់គ្នា",
   "dialog.provider.anthropic.note": "ការចូលប្រើដោយផ្ទាល់ទៅកាន់ម៉ូដែល Claude រួមទាំង Pro និង Max",
-  "dialog.provider.copilot.note": "ម៉ូដែល AI សម្រាប់ជំនួយការសរសេរកូដតាមរយៈ GitHub Copilot",
   "dialog.provider.openai.note": "ម៉ូដែល GPT សម្រាប់កិច្ចការ AI ទូទៅដែលមានល្បឿនលឿន និងមានសមត្ថភាព",
   "dialog.provider.google.note": "ម៉ូដែល Gemini សម្រាប់ការឆ្លើយតបរហ័ស និងមានរចនាសម្ព័ន្ធ",
   "dialog.provider.openrouter.note": "ចូលប្រើម៉ូដែលដែលបានគាំទ្រទាំងអស់ពីអ្នកផ្តល់សេវាមួយ។",
@@ -229,13 +225,6 @@ export const dict = {
   "provider.connect.apiKey.label": "សោ API {{provider}}",
   "provider.connect.apiKey.placeholder": "សោ API",
   "provider.connect.apiKey.required": "ត្រូវការសោ API",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen ផ្តល់ឱ្យអ្នកនូវម៉ូដែលដែលបានជ្រើសរើស និងកែលម្អសម្រាប់ភ្នាក់ងារសរសេរកូដ។",
-  "provider.connect.devcodeZen.line2":
-    "ជាមួយនឹងសោ API តែមួយ អ្នកនឹងទទួលបានការចូលប្រើម៉ូដែលដូចជា Claude, GPT, Gemini, GLM និងច្រើនទៀត។",
-  "provider.connect.devcodeZen.visit.prefix": "ទស្សនា",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": "ដើម្បីប្រមូលសោ API របស់អ្នក។",
   "provider.connect.oauth.code.visit.prefix": "ទស្សនា",
   "provider.connect.oauth.code.visit.link": "តំណនេះ។",
   "provider.connect.oauth.code.visit.suffix":

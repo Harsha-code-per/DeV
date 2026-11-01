@@ -197,11 +197,7 @@ export const dict = {
   "dialog.provider.group.other": "Të tjera",
   "dialog.provider.custom.label": "Ofrues i personalizuar i përputhshëm me OpenAI",
   "dialog.provider.tag.recommended": "Rekomanduar",
-  "dialog.provider.devcode.note": "Modele të kuruara duke përfshirë Claude, GPT, Gemini dhe më shumë",
-  "dialog.provider.devcode.tagline": "Modele të besueshme të optimizuara",
-  "dialog.provider.devcodeGo.tagline": "Abonim me kosto të ulët për të gjithë",
   "dialog.provider.anthropic.note": "Qasje e drejtpërdrejtë në modelet Claude, duke përfshirë Pro dhe Max",
-  "dialog.provider.copilot.note": "Modele të AI për ndihmë kodimi përmes GitHub Copilot",
   "dialog.provider.openai.note": "Modelet GPT për detyra të shpejta dhe të afta të përgjithshme të AI",
   "dialog.provider.google.note": "Modele Gemini për përgjigje të shpejta dhe të strukturuara",
   "dialog.provider.openrouter.note": "Hyni në të gjitha modelet e mbështetura nga një ofrues",
@@ -230,13 +226,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} Tasti API",
   "provider.connect.apiKey.placeholder": "Tasti API",
   "provider.connect.apiKey.required": "Kërkohet çelësi API",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen ju jep akses në një grup të kuruar modelesh të optimizuara të besueshme për agjentët e kodimit.",
-  "provider.connect.devcodeZen.line2":
-    "Me një çelës të vetëm API do të keni akses në modele të tilla si Claude, GPT, Gemini, GLM dhe më shumë.",
-  "provider.connect.devcodeZen.visit.prefix": "Vizitoni ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " për të mbledhur çelësin tuaj API.",
   "provider.connect.oauth.code.visit.prefix": "Vizitoni ",
   "provider.connect.oauth.code.visit.link": "kjo lidhje",
   "provider.connect.oauth.code.visit.suffix":

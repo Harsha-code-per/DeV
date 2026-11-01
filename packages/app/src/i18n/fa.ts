@@ -197,11 +197,7 @@ export const dict = {
   "dialog.provider.group.other": "دیگر",
   "dialog.provider.custom.label": "ارائه دهنده سفارشی سازگار با OpenAI",
   "dialog.provider.tag.recommended": "توصیه می شود",
-  "dialog.provider.devcode.note": "مدل های انتخاب شده از جمله Claude، GPT، Gemini و موارد دیگر",
-  "dialog.provider.devcode.tagline": "مدل های بهینه شده قابل اعتماد",
-  "dialog.provider.devcodeGo.tagline": "اشتراک کم هزینه برای همه",
   "dialog.provider.anthropic.note": "دسترسی مستقیم به مدل های Claude، از جمله Pro و Max",
-  "dialog.provider.copilot.note": "مدل های AI برای کمک به کدنویسی از طریق GitHub Copilot",
   "dialog.provider.openai.note": "مدل های GPT برای کارهای عمومی سریع و با قابلیت AI",
   "dialog.provider.google.note": "مدل های Gemini برای پاسخ های سریع و ساختاریافته",
   "dialog.provider.openrouter.note": "به تمام مدل های پشتیبانی شده از یک ارائه دهنده دسترسی داشته باشید",
@@ -230,13 +226,6 @@ export const dict = {
   "provider.connect.apiKey.label": "کلید {{provider}} API",
   "provider.connect.apiKey.placeholder": "کلید API",
   "provider.connect.apiKey.required": "کلید API مورد نیاز است",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen به شما امکان دسترسی به مجموعه‌ای از مدل‌های بهینه‌شده قابل اعتماد را برای عوامل کدنویسی می‌دهد.",
-  "provider.connect.devcodeZen.line2":
-    "با یک کلید API به مدل هایی مانند Claude، GPT، Gemini، GLM و موارد دیگر دسترسی خواهید داشت.",
-  "provider.connect.devcodeZen.visit.prefix": "بازدید کنید ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " برای جمع آوری کلید API.",
   "provider.connect.oauth.code.visit.prefix": "بازدید کنید ",
   "provider.connect.oauth.code.visit.link": "این لینک",
   "provider.connect.oauth.code.visit.suffix":

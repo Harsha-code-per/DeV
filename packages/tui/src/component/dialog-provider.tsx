@@ -74,7 +74,6 @@ export function providerOptions(list: { id: string; name: string }[]): ProviderO
               ? "(free tier, short tasks only)"
               : "(free tier)"
           : {
-              devcode: "(free models with your Zen key)",
               anthropic: "(API key)",
               openai: "(ChatGPT Plus/Pro or API key)",
             }[provider.id],
@@ -432,29 +431,6 @@ function ApiMethod(props: ApiMethodProps) {
                 Install it from <span style={{ fg: theme.primary }}>https://github.com/tashfeenahmed/freellmapi</span>,
                 open <span style={{ fg: theme.primary }}>http://localhost:3001</span>, add your keys, then paste its
                 unified key here.
-              </text>
-            </box>
-          ),
-          devcode: (
-            <box gap={1}>
-              <text fg={theme.textMuted}>
-                DeV Zen is DeV's model service. With your own Zen key, its free models cost nothing. They are
-                offered for a limited time, and some collect usage data to improve the model.
-              </text>
-              <text fg={theme.text}>
-                Get a key at <span style={{ fg: theme.primary }}>https://harsha-code-per.github.io/DeV/zen</span> (sign in and add billing
-                details)
-              </text>
-            </box>
-          ),
-          "devcode-go": (
-            <box gap={1}>
-              <text fg={theme.textMuted}>
-                DeV Go is a $10 per month subscription that provides reliable access to popular open coding models
-                with generous usage limits.
-              </text>
-              <text fg={theme.text}>
-                Go to <span style={{ fg: theme.primary }}>https://harsha-code-per.github.io/DeV/go</span> and enable DeV Go
               </text>
             </box>
           ),

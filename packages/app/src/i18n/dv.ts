@@ -199,12 +199,7 @@ export const dict = {
   "dialog.provider.group.other": "އެހެން",
   "dialog.provider.custom.label": "ކަސްޓަމް OpenAI އާއި އެއްގޮތްވާ ޕްރޮވައިޑަރެއް",
   "dialog.provider.tag.recommended": "ލަފާދެވިފައިވުން",
-  "dialog.provider.devcode.note":
-    "ކިއުރެޓް ކުރެވިފައިވާ މޮޑެލްތަކުގެ ތެރޭގައި Claude، GPT، Gemini އަދި އެހެނިހެން މޮޑެލްތައް ހިމެނެއެވެ",
-  "dialog.provider.devcode.tagline": "އިތުބާރު ހުރި އޮޕްޓިމައިޒްޑް މޮޑެލްތަކެވެ",
-  "dialog.provider.devcodeGo.tagline": "އެންމެންނަށް ކުޑަ އަގެއްގައި ސަބްސްކްރިޕްޝަން ދިނުމެވެ",
   "dialog.provider.anthropic.note": "ޕްރޯ އަދި މެކްސް ހިމެނޭ ގޮތަށް Claude މޮޑެލްތަކަށް ސީދާ އެކްސެސް ލިބޭނެ އެވެ",
-  "dialog.provider.copilot.note": "GitHub Copilot މެދުވެރިކޮށް ކޯޑިންގ އެހީތެރިވުމަށް AI މޮޑެލްތައް",
   "dialog.provider.openai.note": "އަވަސް، ގާބިލް އާންމު AI ޓާސްކްތަކަށް GPT މޮޑެލްތަކެވެ",
   "dialog.provider.google.note": "އަވަސް، ސްޓްރަކްޗަރޑް ރެސްޕޮންސްތަކަށް Gemini މޮޑެލްތަކެވެ",
   "dialog.provider.openrouter.note": "އެއް ޕްރޮވައިޑަރަކުން ސަޕޯޓްކުރާ ހުރިހާ މޮޑެލްތަކަށް އެކްސެސްވުން",
@@ -233,13 +228,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API ކީ އެވެ",
   "provider.connect.apiKey.placeholder": "API ކީ އެވެ",
   "provider.connect.apiKey.required": "API ކީ ބޭނުންވެއެވެ",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen އިން ކޯޑިންގ އޭޖެންޓުންނަށް އިތުބާރު ހުރި އޮޕްޓިމައިޒްޑް މޮޑެލްތަކުގެ ކިއުރެޓެޑް ސެޓަކަށް އެކްސެސް ލިބިގެންދެއެވެ.",
-  "provider.connect.devcodeZen.line2":
-    "އެއް API ކީ އާއެކު Claude، GPT، Gemini، GLM އަދި އެހެނިހެން މޮޑެލްތަކަށް އެކްސެސް ލިބިގެންދާނެއެވެ.",
-  "provider.connect.devcodeZen.visit.prefix": "ޒިޔާރަތްކުރުން ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen އެވެ",
-  "provider.connect.devcodeZen.visit.suffix": " ތިބާގެ API ކީ އެއްކުރުމަށްޓަކައެވެ.",
   "provider.connect.oauth.code.visit.prefix": "ޒިޔާރަތްކުރުން ",
   "provider.connect.oauth.code.visit.link": "މި ލިންކެވެ",
   "provider.connect.oauth.code.visit.suffix":

@@ -198,11 +198,7 @@ export const dict = {
   "dialog.provider.group.other": "အခြား",
   "dialog.provider.custom.label": "စိတ်ကြိုက် OpenAI-သဟဇာတ ပံ့ပိုးပေးသူ",
   "dialog.provider.tag.recommended": "အကြံပြုထားသည်။",
-  "dialog.provider.devcode.note": "Claude၊ GPT၊ Gemini နှင့် အခြားအရာများ အပါအဝင် ရွေးချယ်ထားသော မော်ဒယ်များ",
-  "dialog.provider.devcode.tagline": "ယုံကြည်စိတ်ချရသော အကောင်းဆုံးပြင်ဆင်ထားသော မော်ဒယ်များ",
-  "dialog.provider.devcodeGo.tagline": "လူတိုင်းအတွက် ကုန်ကျစရိတ်သက်သာသော စာရင်းသွင်းမှု",
   "dialog.provider.anthropic.note": "Pro နှင့် Max အပါအဝင် Claude မော်ဒယ်များသို့ တိုက်ရိုက်ဝင်ရောက်ခွင့်",
-  "dialog.provider.copilot.note": "GitHub Copilot မှတစ်ဆင့် ကုဒ်ရေးနည်းအကူအညီအတွက် AI မော်ဒယ်များ",
   "dialog.provider.openai.note": "လျင်မြန်ပြီး လုပ်ဆောင်နိုင်သော အထွေထွေ AI လုပ်ဆောင်ချက်များအတွက် GPT မော်ဒယ်များ",
   "dialog.provider.google.note": "မြန်ဆန်ပြီး ဖွဲ့စည်းတည်ဆောက်ထားသော တုံ့ပြန်မှုများအတွက် Gemini မော်ဒယ်များ",
   "dialog.provider.openrouter.note": "ပံ့ပိုးပေးသူတစ်ခုတည်းမှ ပံ့ပိုးပေးထားသော မော်ဒယ်အားလုံးကို ဝင်ရောက်ကြည့်ရှုပါ။",
@@ -231,13 +227,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API သော့",
   "provider.connect.apiKey.placeholder": "API သော့",
   "provider.connect.apiKey.required": "API ကီး လိုအပ်သည်။",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen သည် သင့်အား coding အေးဂျင့်များအတွက် ယုံကြည်စိတ်ချရသော အကောင်းဆုံးပုံစံများဖြင့် စုစည်းထားသော မော်ဒယ်များကို ဝင်ရောက်ခွင့်ပေးသည်။",
-  "provider.connect.devcodeZen.line2":
-    "API သော့တစ်ခုတည်းဖြင့် သင်သည် Claude၊ GPT၊ Gemini၊ GLM နှင့် အခြားအရာများကဲ့သို့သော မော်ဒယ်များသို့ ဝင်ရောက်ခွင့်ရရှိမည်ဖြစ်သည်။",
-  "provider.connect.devcodeZen.visit.prefix": "လည်ပတ်ပါ။ \nသင်၏ API သော့ကိုစုဆောင်းရန်",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " သို့သွား၍ သင်၏ API key ကို ရယူပါ။",
   "provider.connect.oauth.code.visit.prefix": "လည်ပတ်ပါ။",
   "provider.connect.oauth.code.visit.link": "ဤလင့်ခ်",
   "provider.connect.oauth.code.visit.suffix":

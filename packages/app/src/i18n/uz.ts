@@ -198,11 +198,7 @@ export const dict = {
   "dialog.provider.group.other": "Boshqa",
   "dialog.provider.custom.label": "Maxsus OpenAI-mos keladigan provayder",
   "dialog.provider.tag.recommended": "Tavsiya etilgan",
-  "dialog.provider.devcode.note": "Tanlangan modellar, jumladan Claude, GPT, Gemini va boshqalar",
-  "dialog.provider.devcode.tagline": "Ishonchli optimallashtirilgan modellar",
-  "dialog.provider.devcodeGo.tagline": "Hamma uchun arzon obuna",
   "dialog.provider.anthropic.note": "Claude modellariga, jumladan Pro va Maksga to'g'ridan-to'g'ri kirish",
-  "dialog.provider.copilot.note": "GitHub Copilot orqali kodlash yordami uchun AI modellari",
   "dialog.provider.openai.note": "Tez, qobiliyatli umumiy AI vazifalari uchun GPT modellari",
   "dialog.provider.google.note": "Tez, tuzilgan javoblar uchun Gemini modellari",
   "dialog.provider.openrouter.note": "Barcha qo'llab-quvvatlanadigan modellarga bitta provayderdan kiring",
@@ -231,13 +227,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API kaliti",
   "provider.connect.apiKey.placeholder": "API kaliti",
   "provider.connect.apiKey.required": "API kaliti talab qilinadi",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen sizga kodlash agentlari uchun ishonchli optimallashtirilgan modellar to'plamiga kirish imkonini beradi.",
-  "provider.connect.devcodeZen.line2":
-    "Bitta API kaliti bilan siz Claude, GPT, Gemini, GLM va boshqalar kabi modellarga kirishingiz mumkin.",
-  "provider.connect.devcodeZen.visit.prefix": "Tashrif buyuring ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " API kalitingizni olish uchun.",
   "provider.connect.oauth.code.visit.prefix": "Tashrif buyuring ",
   "provider.connect.oauth.code.visit.link": "bu havola",
   "provider.connect.oauth.code.visit.suffix":

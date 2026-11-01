@@ -463,10 +463,6 @@ export const ProvidersLoginCommand = effectCmd({
       )
     }
 
-    if (provider === "devcode") {
-      yield* Prompt.log.info("Create an api key at https://harsha-code-per.github.io/DeV/auth")
-    }
-
     if (provider === "vercel") {
       yield* Prompt.log.info("You can create an api key at https://vercel.link/ai-gateway-token")
     }

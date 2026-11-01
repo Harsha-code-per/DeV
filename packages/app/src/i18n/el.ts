@@ -197,11 +197,7 @@ export const dict = {
   "dialog.provider.group.other": "Άλλο",
   "dialog.provider.custom.label": "Προσαρμοσμένη OpenAI-συμβατός πάροχος",
   "dialog.provider.tag.recommended": "Συνιστάται",
-  "dialog.provider.devcode.note": "Επιμελημένα μοντέλα συμπεριλαμβανομένων των Claude, GPT, Gemini και άλλων",
-  "dialog.provider.devcode.tagline": "Αξιόπιστα βελτιστοποιημένα μοντέλα",
-  "dialog.provider.devcodeGo.tagline": "Συνδρομή χαμηλού κόστους για όλους",
   "dialog.provider.anthropic.note": "Άμεση πρόσβαση σε Claude μοντέλα, συμπεριλαμβανομένων των Pro και Max",
-  "dialog.provider.copilot.note": "Μοντέλα AI για βοήθεια κωδικοποίησης μέσω GitHub Copilot",
   "dialog.provider.openai.note": "GPT μοντέλα για γρήγορες, ικανές εργασίες γενικής τεχνητής νοημοσύνης",
   "dialog.provider.google.note": "Gemini μοντέλα για γρήγορες, δομημένες απαντήσεις",
   "dialog.provider.openrouter.note": "Πρόσβαση σε όλα τα υποστηριζόμενα μοντέλα από έναν πάροχο",
@@ -230,13 +226,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API κλειδί",
   "provider.connect.apiKey.placeholder": "API κλειδί",
   "provider.connect.apiKey.required": "API απαιτείται κλειδί",
-  "provider.connect.devcodeZen.line1":
-    "DeV Το Zen σάς δίνει πρόσβαση σε ένα επιμελημένο σύνολο αξιόπιστων βελτιστοποιημένων μοντέλων για πράκτορες κωδικοποίησης.",
-  "provider.connect.devcodeZen.line2":
-    "Με ένα μόνο κλειδί API θα έχετε πρόσβαση σε μοντέλα όπως Claude, GPT, Gemini, GLM και άλλα.",
-  "provider.connect.devcodeZen.visit.prefix": "Επίσκεψη ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " για τη συλλογή του κλειδιού σας API.",
   "provider.connect.oauth.code.visit.prefix": "Επίσκεψη ",
   "provider.connect.oauth.code.visit.link": "αυτός ο σύνδεσμος",
   "provider.connect.oauth.code.visit.suffix":

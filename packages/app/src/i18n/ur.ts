@@ -205,11 +205,7 @@ export const dict = {
   "dialog.provider.group.other": "دیگر",
   "dialog.provider.custom.label": "حسب ضرورت OpenAI سے ہم آہنگ فراہم کنندہ",
   "dialog.provider.tag.recommended": "تجویز کردہ",
-  "dialog.provider.devcode.note": "کیوریٹ شدہ ماڈلز بشمول Claude، GPT، Gemini اور مزید",
-  "dialog.provider.devcode.tagline": "قابل اعتماد آپٹمائزڈ ماڈلز",
-  "dialog.provider.devcodeGo.tagline": "سب کے لیے کم لاگت کی رکنیت",
   "dialog.provider.anthropic.note": "پرو اور میکس سمیت Claude ماڈلز تک براہ راست رسائی",
-  "dialog.provider.copilot.note": "GitHub Copilot کے ذریعے کوڈنگ امداد کے لیے AI ماڈلز",
   "dialog.provider.openai.note": "تیز رفتار اور مؤثر عمومی AI کاموں کے لیے GPT ماڈلز",
   "dialog.provider.google.note": "تیز، منظم جوابات کے لیے Gemini ماڈل",
   "dialog.provider.openrouter.note": "ایک فراہم کنندہ سے تمام تعاون یافتہ ماڈلز تک رسائی حاصل کریں۔",
@@ -238,13 +234,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API کلید",
   "provider.connect.apiKey.placeholder": "API کلید",
   "provider.connect.apiKey.required": "API کلید درکار ہے۔",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen آپ کو کوڈنگ ایجنٹوں کے لیے قابل اعتماد اصلاح شدہ ماڈلز کے کیوریٹڈ سیٹ تک رسائی فراہم کرتا ہے۔",
-  "provider.connect.devcodeZen.line2":
-    "ایک واحد API کلید کے ساتھ آپ Claude، GPT، Gemini، GLM اور مزید ماڈلز تک رسائی حاصل کریں گے۔",
-  "provider.connect.devcodeZen.visit.prefix": "ملاحظہ کریں ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " اور اپنی API کلید حاصل کریں۔",
   "provider.connect.oauth.code.visit.prefix": "ملاحظہ کریں ",
   "provider.connect.oauth.code.visit.link": "یہ لنک",
   "provider.connect.oauth.code.visit.suffix":

@@ -196,11 +196,7 @@ export const dict = {
   "dialog.provider.group.other": "Citi",
   "dialog.provider.custom.label": "Pielāgots OpenAI saderīgs nodrošinātājs",
   "dialog.provider.tag.recommended": "Ieteikts",
-  "dialog.provider.devcode.note": "Atlasīti modeļi, tostarp Claude, GPT, Gemini un citi",
-  "dialog.provider.devcode.tagline": "Uzticami optimizēti modeļi",
-  "dialog.provider.devcodeGo.tagline": "Zemas cenas abonements visiem",
   "dialog.provider.anthropic.note": "Tieša piekļuve Claude modeļiem, tostarp Pro un Max",
-  "dialog.provider.copilot.note": "AI modeļi programmēšanas atbalstam ar GitHub Copilot",
   "dialog.provider.openai.note": "GPT modeļi ātriem, spējīgiem vispārējiem AI uzdevumiem",
   "dialog.provider.google.note": "Gemini modeļi ātrām, strukturētām atbildēm",
   "dialog.provider.openrouter.note": "Piekļuve visiem atbalstītajiem modeļiem no viena nodrošinātāja",
@@ -229,13 +225,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API atslēga",
   "provider.connect.apiKey.placeholder": "API atslēga",
   "provider.connect.apiKey.required": "Nepieciešama API atslēga",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen nodrošina piekļuvi atlasītiem uzticamiem optimizētiem modeļiem kodēšanas aģentiem.",
-  "provider.connect.devcodeZen.line2":
-    "Ar vienu API atslēgu iegūsiet piekļuvi tādiem modeļiem kā Claude, GPT, Gemini, GLM un citiem.",
-  "provider.connect.devcodeZen.visit.prefix": "Apmeklējiet",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": ", lai saņemtu savu API atslēgu.",
   "provider.connect.oauth.code.visit.prefix": "Apmeklējiet",
   "provider.connect.oauth.code.visit.link": "šo saiti",
   "provider.connect.oauth.code.visit.suffix":

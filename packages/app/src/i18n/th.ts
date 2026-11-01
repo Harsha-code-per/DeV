@@ -211,11 +211,7 @@ export const dict = {
   "dialog.provider.group.other": "อื่น ๆ",
   "dialog.provider.custom.label": "ผู้ให้บริการแบบกำหนดเองที่เข้ากันได้กับ OpenAI",
   "dialog.provider.tag.recommended": "แนะนำ",
-  "dialog.provider.devcode.note": "โมเดลที่คัดสรร รวมถึง Claude, GPT, Gemini และอื่น ๆ",
-  "dialog.provider.devcode.tagline": "โมเดลที่เชื่อถือได้และปรับให้เหมาะสม",
-  "dialog.provider.devcodeGo.tagline": "การสมัครสมาชิกราคาประหยัดสำหรับทุกคน",
   "dialog.provider.anthropic.note": "เข้าถึงโมเดล Claude โดยตรง รวมถึง Pro และ Max",
-  "dialog.provider.copilot.note": "โมเดล AI สำหรับการช่วยเหลือในการเขียนโค้ดผ่าน GitHub Copilot",
   "dialog.provider.openai.note": "โมเดล GPT สำหรับงาน AI ทั่วไปที่รวดเร็วและมีความสามารถ",
   "dialog.provider.google.note": "โมเดล Gemini สำหรับการตอบสนองที่รวดเร็วและมีโครงสร้าง",
   "dialog.provider.openrouter.note": "เข้าถึงโมเดลที่รองรับทั้งหมดจากผู้ให้บริการเดียว",
@@ -248,13 +244,6 @@ export const dict = {
   "provider.connect.apiKey.label": "คีย์ API ของ {{provider}}",
   "provider.connect.apiKey.placeholder": "คีย์ API",
   "provider.connect.apiKey.required": "ต้องใช้คีย์ API",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen ให้คุณเข้าถึงชุดโมเดลที่เชื่อถือได้และปรับแต่งแล้วสำหรับเอเจนต์การเขียนโค้ด",
-  "provider.connect.devcodeZen.line2":
-    "ด้วยคีย์ API เดียวคุณจะได้รับการเข้าถึงโมเดล เช่น Claude, GPT, Gemini, GLM และอื่น ๆ",
-  "provider.connect.devcodeZen.visit.prefix": "เยี่ยมชม ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " เพื่อรับคีย์ API ของคุณ",
   "provider.connect.oauth.code.visit.prefix": "เยี่ยมชม ",
   "provider.connect.oauth.code.visit.link": "ลิงก์นี้",
   "provider.connect.oauth.code.visit.suffix":

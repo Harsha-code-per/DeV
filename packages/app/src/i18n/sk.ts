@@ -196,11 +196,7 @@ export const dict = {
   "dialog.provider.group.other": "Ostatné",
   "dialog.provider.custom.label": "Vlastný poskytovateľ kompatibilný s OpenAI",
   "dialog.provider.tag.recommended": "Odporúčané",
-  "dialog.provider.devcode.note": "Vybrané modely vrátane Claude, GPT, Gemini a ďalších",
-  "dialog.provider.devcode.tagline": "Spoľahlivé optimalizované modely",
-  "dialog.provider.devcodeGo.tagline": "Nízkonákladové predplatné pre každého",
   "dialog.provider.anthropic.note": "Priamy prístup k modelom Claude vrátane Pro a Max",
-  "dialog.provider.copilot.note": "AI modely na asistenciu pri kódovaní cez GitHub Copilot",
   "dialog.provider.openai.note": "GPT modely na rýchle a výkonné všeobecné AI úlohy",
   "dialog.provider.google.note": "Gemini modely na rýchle, štruktúrované odpovede",
   "dialog.provider.openrouter.note": "Prístup ku všetkým podporovaným modelom od jedného poskytovateľa",
@@ -229,13 +225,6 @@ export const dict = {
   "provider.connect.apiKey.label": "API kľúč {{provider}}",
   "provider.connect.apiKey.placeholder": "API kľúč",
   "provider.connect.apiKey.required": "API kľúč je povinný",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen vám poskytuje prístup k vybraným spoľahlivým optimalizovaným modelom pre kódovacích agentov.",
-  "provider.connect.devcodeZen.line2":
-    "S jediným API kľúčom získate prístup k modelom ako Claude, GPT, Gemini, GLM a ďalším.",
-  "provider.connect.devcodeZen.visit.prefix": "Navštívte",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": "a získajte svoj API kľúč.",
   "provider.connect.oauth.code.visit.prefix": "Navštívte",
   "provider.connect.oauth.code.visit.link": "tento odkaz",
   "provider.connect.oauth.code.visit.suffix":

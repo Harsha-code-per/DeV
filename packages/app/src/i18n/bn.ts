@@ -197,11 +197,7 @@ export const dict: Record<string, string> = {
   "dialog.provider.group.other": "অন্যান্য",
   "dialog.provider.custom.label": "কাস্টম OpenAI-সামঞ্জস্যপূর্ণ প্রদানকারী",
   "dialog.provider.tag.recommended": "প্রস্তাবিত",
-  "dialog.provider.devcode.note": "Claude, GPT, Gemini এবং আরও অনেক কিছু সহ কিউরেট করা মডেল",
-  "dialog.provider.devcode.tagline": "নির্ভরযোগ্য অপ্টিমাইজ করা মডেল",
-  "dialog.provider.devcodeGo.tagline": "সবার জন্য কম খরচে সাবস্ক্রিপশন",
   "dialog.provider.anthropic.note": "প্রো এবং ম্যাক্স সহ Claude মডেলগুলিতে সরাসরি অ্যাক্সেস",
-  "dialog.provider.copilot.note": "GitHub Copilot এর মাধ্যমে কোডিং সহায়তার জন্য AI মডেল",
   "dialog.provider.openai.note": "দ্রুত, সক্ষম সাধারণ AI কার্যগুলির জন্য GPT মডেল",
   "dialog.provider.google.note": "দ্রুত, কাঠামোগত প্রতিক্রিয়ার জন্য Gemini মডেল",
   "dialog.provider.openrouter.note": "একটি প্রদানকারী থেকে সমস্ত সমর্থিত মডেল অ্যাক্সেস করুন",
@@ -230,13 +226,6 @@ export const dict: Record<string, string> = {
   "provider.connect.apiKey.label": "{{provider}} API কী",
   "provider.connect.apiKey.placeholder": "API কী",
   "provider.connect.apiKey.required": "API কী প্রয়োজন",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen আপনাকে কোডিং এজেন্টের জন্য নির্ভরযোগ্য অপ্টিমাইজ করা মডেলের একটি কিউরেটেড সেটে অ্যাক্সেস দেয়।",
-  "provider.connect.devcodeZen.line2":
-    "একটি API কী দিয়ে আপনি Claude, GPT, Gemini, GLM এবং আরও অনেক কিছুর মতো মডেলগুলিতে অ্যাক্সেস পাবেন৷",
-  "provider.connect.devcodeZen.visit.prefix": "ভিজিট করুন",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": "আপনার API কী সংগ্রহ করতে।",
   "provider.connect.oauth.code.visit.prefix": "ভিজিট করুন",
   "provider.connect.oauth.code.visit.link": "এই লিঙ্ক",
   "provider.connect.oauth.code.visit.suffix":

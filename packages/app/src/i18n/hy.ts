@@ -198,11 +198,7 @@ export const dict = {
   "dialog.provider.group.other": "Այլ",
   "dialog.provider.custom.label": "Պատվիրված OpenAI-համատեղելի մատակարար",
   "dialog.provider.tag.recommended": "Խորհուրդ է տրվում",
-  "dialog.provider.devcode.note": "Ընտրված մոդելներ, ներառյալ՝ Claude, GPT, Gemini և ավելին",
-  "dialog.provider.devcode.tagline": "Վստահելի օպտիմիզացված մոդելներ",
-  "dialog.provider.devcodeGo.tagline": "Ցածր գնով բաժանորդագրություն բոլորի համար",
   "dialog.provider.anthropic.note": "Ուղիղ մուտք դեպի Claude մոդելներ, ներառյալ Pro և Max",
-  "dialog.provider.copilot.note": "AI մոդելներ կոդավորման օգնության համար՝ GitHub Copilot",
   "dialog.provider.openai.note": "GPT մոդելներ արագ, ունակ ընդհանուր AI առաջադրանքների համար",
   "dialog.provider.google.note": "Gemini մոդելներ արագ, կառուցվածքային պատասխանների համար",
   "dialog.provider.openrouter.note": "Մուտք գործեք բոլոր աջակցվող մոդելները մեկ մատակարարից",
@@ -231,13 +227,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API բանալի",
   "provider.connect.apiKey.placeholder": "API բանալի",
   "provider.connect.apiKey.required": "API բանալի է պահանջվում",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen-ը թույլ է տալիս մուտք գործել կոդավորման գործակալների համար հուսալի օպտիմիզացված մոդելների հավաքածու։",
-  "provider.connect.devcodeZen.line2":
-    "Մեկ API բանալիով դուք մուտք կունենաք այնպիսի մոդելների, ինչպիսիք են՝ Claude, GPT, Gemini, GLM և ավելին:",
-  "provider.connect.devcodeZen.visit.prefix": "Այցելություն ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " ձեր API բանալին հավաքելու համար",
   "provider.connect.oauth.code.visit.prefix": "Այցելություն ",
   "provider.connect.oauth.code.visit.link": "այս հղումը",
   "provider.connect.oauth.code.visit.suffix":

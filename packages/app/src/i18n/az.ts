@@ -199,11 +199,7 @@ export const dict = {
   "dialog.provider.group.other": "Digər",
   "dialog.provider.custom.label": "Xüsusi OpenAI-a uyğun provayder",
   "dialog.provider.tag.recommended": "Tövsiyə olunan",
-  "dialog.provider.devcode.note": "Claude, GPT, Gemini və daha çoxu daxil olmaqla seçilmiş modellər",
-  "dialog.provider.devcode.tagline": "Etibarlı optimallaşdırılmış modellər",
-  "dialog.provider.devcodeGo.tagline": "Hamı üçün aşağı qiymətli abunəlik",
   "dialog.provider.anthropic.note": "Pro və Max daxil olmaqla Claude modellərinə birbaşa giriş",
-  "dialog.provider.copilot.note": "GitHub Copilot vasitəsilə kodlaşdırma yardımı üçün AI modelləri",
   "dialog.provider.openai.note": "Sürətli və bacarıqlı ümumi AI tapşırıqları üçün GPT modelləri",
   "dialog.provider.google.note": "Sürətli, strukturlaşdırılmış cavablar üçün Gemini modelləri",
   "dialog.provider.openrouter.note": "Bir provayderdən bütün dəstəklənən modellərə giriş",
@@ -232,13 +228,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API açarı",
   "provider.connect.apiKey.placeholder": "API açarı",
   "provider.connect.apiKey.required": "API açarı tələb olunur",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen sizə kodlaşdırma agentləri üçün etibarlı optimallaşdırılmış seçilmiş modellər dəstinə giriş verir.",
-  "provider.connect.devcodeZen.line2":
-    "Tək bir API açarı ilə Claude, GPT, Gemini, GLM və daha çox modellərə giriş əldə edəcəksiniz.",
-  "provider.connect.devcodeZen.visit.prefix": "",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " səhifəsinə daxil olub API açarınızı əldə edin.",
   "provider.connect.oauth.code.visit.prefix": "",
   "provider.connect.oauth.code.visit.link": "Bu linkə",
   "provider.connect.oauth.code.visit.suffix":

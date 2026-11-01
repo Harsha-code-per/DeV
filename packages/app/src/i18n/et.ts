@@ -196,11 +196,7 @@ export const dict = {
   "dialog.provider.group.other": "muud",
   "dialog.provider.custom.label": "Kohandatud OpenAI-ga ühilduv pakkuja",
   "dialog.provider.tag.recommended": "Soovitatav",
-  "dialog.provider.devcode.note": "Kureeritud mudelid, sealhulgas Claude, GPT, Gemini ja palju muud",
-  "dialog.provider.devcode.tagline": "Usaldusväärsed optimeeritud mudelid",
-  "dialog.provider.devcodeGo.tagline": "Madala hinnaga tellimus kõigile",
   "dialog.provider.anthropic.note": "Otsene juurdepääs Claude mudelile, sealhulgas Pro ja Max",
-  "dialog.provider.copilot.note": "AI mudelid kodeerimisabiks GitHub Copilot kaudu",
   "dialog.provider.openai.note": "GPT mudelid kiirete ja võimekate üldiste AI-ülesannete jaoks",
   "dialog.provider.google.note": "Gemini mudelid kiirete ja struktureeritud vastuste jaoks",
   "dialog.provider.openrouter.note": "Juurdepääs kõigile ühe pakkuja toetatud mudelitele",
@@ -229,13 +225,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API klahv",
   "provider.connect.apiKey.placeholder": "API klahv",
   "provider.connect.apiKey.required": "Klahv API on nõutav",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen annab teile juurdepääsu kodeerimisagentide usaldusväärsete optimeeritud mudelite kureeritud komplektile.",
-  "provider.connect.devcodeZen.line2":
-    "Ühe klahviga API pääsete juurde sellistele mudelitele nagu Claude, GPT, Gemini, GLM ja palju muud.",
-  "provider.connect.devcodeZen.visit.prefix": "Külastage ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " API võtme kättesaamiseks.",
   "provider.connect.oauth.code.visit.prefix": "Külastage ",
   "provider.connect.oauth.code.visit.link": "see link",
   "provider.connect.oauth.code.visit.suffix":

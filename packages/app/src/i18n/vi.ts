@@ -204,11 +204,7 @@ export const dict = {
   "dialog.provider.group.other": "Khác",
   "dialog.provider.custom.label": "Nhà cung cấp tương thích OpenAI tùy chỉnh",
   "dialog.provider.tag.recommended": "Đề xuất",
-  "dialog.provider.devcode.note": "Các mô hình được tuyển chọn, gồm Claude, GPT, Gemini và nhiều mô hình khác",
-  "dialog.provider.devcode.tagline": "Các mô hình tối ưu hóa đáng tin cậy",
-  "dialog.provider.devcodeGo.tagline": "Đăng ký chi phí thấp cho mọi người",
   "dialog.provider.anthropic.note": "Truy cập trực tiếp các mô hình Claude, bao gồm Pro và Max",
-  "dialog.provider.copilot.note": "Các mô hình AI hỗ trợ lập trình qua GitHub Copilot",
   "dialog.provider.openai.note": "Các mô hình GPT nhanh và mạnh mẽ cho tác vụ AI đa dụng",
   "dialog.provider.google.note": "Các mô hình Gemini cho phản hồi nhanh, có cấu trúc",
   "dialog.provider.openrouter.note": "Truy cập tất cả các mô hình được hỗ trợ từ một nhà cung cấp",
@@ -237,13 +233,6 @@ export const dict = {
   "provider.connect.apiKey.label": "Khóa API {{provider}}",
   "provider.connect.apiKey.placeholder": "khóa API",
   "provider.connect.apiKey.required": "Cần có khóa API",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen cho phép bạn truy cập một bộ mô hình được tuyển chọn, tối ưu hóa và đáng tin cậy dành cho tác nhân lập trình.",
-  "provider.connect.devcodeZen.line2":
-    "Chỉ với một khóa API, bạn sẽ có quyền truy cập vào các mô hình như Claude, GPT, Gemini, GLM và hơn thế nữa.",
-  "provider.connect.devcodeZen.visit.prefix": "Truy cập ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " để lấy khóa API của bạn.",
   "provider.connect.oauth.code.visit.prefix": "Truy cập ",
   "provider.connect.oauth.code.visit.link": "liên kết này",
   "provider.connect.oauth.code.visit.suffix":

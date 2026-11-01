@@ -40,8 +40,6 @@ export function DialogModel(props: { providerID?: string }) {
             title: model.name ?? item.modelID,
             description: provider.name,
             category,
-            disabled: provider.id === "devcode" && model.id.includes("-nano"),
-            footer: model.cost?.input === 0 && provider.id === "devcode" ? "Free" : undefined,
             onSelect: () => {
               onSelect(provider.id, model.id)
             },
@@ -78,8 +76,6 @@ export function DialogModel(props: { providerID?: string }) {
               ? "(Favorite)"
               : undefined,
             category: connected() ? provider.name : undefined,
-            disabled: provider.id === "devcode" && model.includes("-nano"),
-            footer: info.cost?.input === 0 && provider.id === "devcode" ? "Free" : undefined,
             onSelect() {
               onSelect(provider.id, model)
             },

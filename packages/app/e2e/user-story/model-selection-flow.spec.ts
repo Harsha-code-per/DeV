@@ -4,7 +4,7 @@ import { expectAppVisible } from "../utils/waits"
 
 const directory = "C:/DeV/NewProject"
 
-test("creates a session in a new project, connects DeV Go, and selects its model", async ({ page }) => {
+test("creates a session in a new project, connects Groq, and selects its model", async ({ page }) => {
   let connectedGo = false
   let pendingGo = false
   const connections: Array<{ integrationID: string; body: unknown }> = []
@@ -34,8 +34,8 @@ test("creates a session in a new project, connects DeV Go, and selects its model
           },
         },
         {
-          id: "devcode-go",
-          name: "DeV Go",
+          id: "groq",
+          name: "Groq",
           models: {
             "go-model-1": {
               id: "go-model-1",
@@ -46,13 +46,13 @@ test("creates a session in a new project, connects DeV Go, and selects its model
           },
         },
       ],
-      connected: connectedGo ? ["opencode", "opencode-go"] : ["devcode"],
+      connected: connectedGo ? ["groq"] : ["devcode"],
       default: { providerID: "devcode", modelID: "free-model" },
     }),
-    integrationMethods: { "devcode-go": [{ type: "api", label: "API key" }] },
+    integrationMethods: { "groq": [{ type: "api", label: "API key" }] },
     onConnectKey: (input) => {
       connections.push(input)
-      if (input.integrationID === "devcode-go") pendingGo = true
+      if (input.integrationID === "groq") pendingGo = true
     },
     onInstanceDispose: () => {
       if (pendingGo) connectedGo = true
@@ -81,15 +81,15 @@ test("creates a session in a new project, connects DeV Go, and selects its model
   await modelControl.click()
   await expect(page.locator('[data-section="free-models"]')).toContainText("Free models provided by DeV")
 
-  await page.locator('[data-provider-id="devcode-go"]').click()
+  await page.locator('[data-provider-id="groq"]').click()
   await page.locator('[data-input="provider-api-key"]').fill("mock-go-api-key")
   await page.locator('[data-action="provider-connect-submit"]').click()
   await expect(page.locator('[data-component="dialog-v2"]')).toHaveCount(0)
-  expect(connections).toEqual([{ integrationID: "devcode-go", body: { type: "api", key: "mock-go-api-key" } }])
+  expect(connections).toEqual([{ integrationID: "groq", body: { type: "api", key: "mock-go-api-key" } }])
 
   await expect(modelControl).toHaveAttribute("data-control-type", "popover")
   await modelControl.click()
-  const goModel = page.locator('[data-option-key="devcode-go:go-model-1"]')
+  const goModel = page.locator('[data-option-key="groq:go-model-1"]')
   await expect(goModel).toBeVisible()
   await goModel.click()
 

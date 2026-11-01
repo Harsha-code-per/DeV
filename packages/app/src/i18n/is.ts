@@ -200,11 +200,7 @@ export const dict = {
   "dialog.provider.group.other": "Annað",
   "dialog.provider.custom.label": "Sérsniðin OpenAI-samhæfður veitandi",
   "dialog.provider.tag.recommended": "Mælt er með",
-  "dialog.provider.devcode.note": "Sýndar gerðir þar á meðal Claude, GPT, Gemini og fleira",
-  "dialog.provider.devcode.tagline": "Áreiðanleg bjartsýni módel",
-  "dialog.provider.devcodeGo.tagline": "Lággjaldaáskrift fyrir alla",
   "dialog.provider.anthropic.note": "Beinn aðgangur að Claude gerðum, þar á meðal Pro og Max",
-  "dialog.provider.copilot.note": "AI módel fyrir kóðaaðstoð í gegnum GitHub Copilot",
   "dialog.provider.openai.note": "GPT gerðir fyrir hröð, fær almenn gervigreind verkefni",
   "dialog.provider.google.note": "Gemini módel fyrir hröð, skipulögð viðbrögð",
   "dialog.provider.openrouter.note": "Fáðu aðgang að öllum studdum gerðum frá einum þjónustuaðila",
@@ -233,13 +229,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API lykill",
   "provider.connect.apiKey.placeholder": "API lykill",
   "provider.connect.apiKey.required": "API lykill er nauðsynlegur",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen veitir þér aðgang að safni af áreiðanlegum og fínstilltum gerðum fyrir kóðunarmiðla.",
-  "provider.connect.devcodeZen.line2":
-    "Með einum API lykli færðu aðgang að gerðum eins og Claude, GPT, Gemini, GLM og fleira.",
-  "provider.connect.devcodeZen.visit.prefix": "Heimsókn",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": "til að safna API lykilnum þínum.",
   "provider.connect.oauth.code.visit.prefix": "Heimsókn",
   "provider.connect.oauth.code.visit.link": "þennan hlekk",
   "provider.connect.oauth.code.visit.suffix":

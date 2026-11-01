@@ -203,11 +203,7 @@ export const dict = {
   "dialog.provider.group.other": "آخر",
   "dialog.provider.custom.label": "موفر مخصص متوافق مع OpenAI",
   "dialog.provider.tag.recommended": "موصى به",
-  "dialog.provider.devcode.note": "نماذج مختارة تتضمن Claude و GPT و Gemini والمزيد",
-  "dialog.provider.devcode.tagline": "نماذج موثوقة ومحسنة",
-  "dialog.provider.devcodeGo.tagline": "اشتراك منخفض التكلفة للجميع",
   "dialog.provider.anthropic.note": "وصول مباشر إلى نماذج Claude، بما فيها Pro و Max",
-  "dialog.provider.copilot.note": "نماذج ذكاء اصطناعي للمساعدة في البرمجة عبر GitHub Copilot",
   "dialog.provider.openai.note": "نماذج GPT لمهام الذكاء الاصطناعي العامة السريعة والمتقدمة",
   "dialog.provider.google.note": "نماذج Gemini لاستجابات سريعة ومنظمة",
   "dialog.provider.openrouter.note": "الوصول إلى جميع النماذج المدعومة من موفر واحد",
@@ -236,13 +232,6 @@ export const dict = {
   "provider.connect.apiKey.label": "مفتاح API لـ {{provider}}",
   "provider.connect.apiKey.placeholder": "مفتاح API",
   "provider.connect.apiKey.required": "مفتاح API مطلوب",
-  "provider.connect.devcodeZen.line1":
-    "يمنحك DeV Zen الوصول إلى مجموعة مختارة من النماذج الموثوقة والمحسنة لوكلاء البرمجة.",
-  "provider.connect.devcodeZen.line2":
-    "باستخدام مفتاح API واحد، ستحصل على إمكانية الوصول إلى نماذج مثل Claude و GPT و Gemini و GLM والمزيد.",
-  "provider.connect.devcodeZen.visit.prefix": "قم بزيارة ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " للحصول على مفتاح API الخاص بك.",
   "provider.connect.oauth.code.visit.prefix": "قم بزيارة ",
   "provider.connect.oauth.code.visit.link": "هذا الرابط",
   "provider.connect.oauth.code.visit.suffix":

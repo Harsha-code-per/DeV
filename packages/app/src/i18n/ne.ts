@@ -197,11 +197,7 @@ export const dict: Record<string, string> = {
   "dialog.provider.group.other": "अन्य",
   "dialog.provider.custom.label": "आफू अनुकूल OpenAI-कम्प्याटिबल प्रदायक",
   "dialog.provider.tag.recommended": "सिफारिस गर्नुभयो",
-  "dialog.provider.devcode.note": "Claude, GPT, Gemini र थप सहित क्युरेट गरिएका मोडेलहरू",
-  "dialog.provider.devcode.tagline": "भरपर्दो अनुकूलित मोडेलहरू",
-  "dialog.provider.devcodeGo.tagline": "सबैको लागि कम लागत सदस्यता",
   "dialog.provider.anthropic.note": "प्रो र म्याक्स सहित Claude मोडेलहरूमा प्रत्यक्ष पहुँच",
-  "dialog.provider.copilot.note": "GitHub Copilot मार्फत कोडिङ सहायताका लागि AI मोडेलहरू",
   "dialog.provider.openai.note": "छिटो, सक्षम सामान्य AI कार्यहरूको लागि GPT मोडेलहरू",
   "dialog.provider.google.note": "छिटो, संरचित प्रतिक्रियाहरूको लागि Gemini मोडेलहरू",
   "dialog.provider.openrouter.note": "एक प्रदायकबाट सबै समर्थित मोडेलहरू पहुँच गर्नुहोस्",
@@ -230,13 +226,6 @@ export const dict: Record<string, string> = {
   "provider.connect.apiKey.label": "{{provider}} API कुञ्जी",
   "provider.connect.apiKey.placeholder": "API कुञ्जी",
   "provider.connect.apiKey.required": "API कुञ्जी आवश्यक छ",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen ले तपाईंलाई कोडिङ एजेन्टहरूका लागि भरपर्दो अनुकूलित मोडेलहरूको क्युरेट गरिएको सेटमा पहुँच दिन्छ।",
-  "provider.connect.devcodeZen.line2":
-    "एकल API कुञ्जीको साथ तपाईंले Claude, GPT, Gemini, GLM र थप जस्ता मोडेलहरूमा पहुँच प्राप्त गर्नुहुनेछ।",
-  "provider.connect.devcodeZen.visit.prefix": "भ्रमण गर्नुहोस्",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": "तपाईँको API कुञ्जी सङ्कलन गर्न।",
   "provider.connect.oauth.code.visit.prefix": "भ्रमण गर्नुहोस्",
   "provider.connect.oauth.code.visit.link": "यो लिङ्क",
   "provider.connect.oauth.code.visit.suffix":

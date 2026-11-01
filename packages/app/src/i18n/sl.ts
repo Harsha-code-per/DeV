@@ -196,11 +196,7 @@ export const dict = {
   "dialog.provider.group.other": "drugo",
   "dialog.provider.custom.label": "Ponudnik po meri, združljiv z OpenAI",
   "dialog.provider.tag.recommended": "Priporočeno",
-  "dialog.provider.devcode.note": "Izbrani modeli, vključno z Claude, GPT, Gemini in drugimi",
-  "dialog.provider.devcode.tagline": "Zanesljivi optimizirani modeli",
-  "dialog.provider.devcodeGo.tagline": "Poceni naročnina za vsakogar",
   "dialog.provider.anthropic.note": "Neposreden dostop do modelov Claude, vključno s Pro in Max",
-  "dialog.provider.copilot.note": "Modeli AI za pomoč pri kodiranju prek GitHub Copilot",
   "dialog.provider.openai.note": "Modeli GPT za hitre in zmogljive splošne naloge z umetno inteligenco",
   "dialog.provider.google.note": "Modeli Gemini za hitre, strukturirane odzive",
   "dialog.provider.openrouter.note": "Dostop do vseh podprtih modelov pri enem ponudniku",
@@ -229,13 +225,6 @@ export const dict = {
   "provider.connect.apiKey.label": "Ključ {{provider}} API",
   "provider.connect.apiKey.placeholder": "Ključ API",
   "provider.connect.apiKey.required": "Potreben je ključ API",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen vam omogoča dostop do izbranega nabora zanesljivih optimiziranih modelov za agente za kodiranje.",
-  "provider.connect.devcodeZen.line2":
-    "Z enim samim ključem API boste dobili dostop do modelov, kot so Claude, GPT, Gemini, GLM in več.",
-  "provider.connect.devcodeZen.visit.prefix": "Obisk ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " za prevzem ključa API.",
   "provider.connect.oauth.code.visit.prefix": "Obisk ",
   "provider.connect.oauth.code.visit.link": "ta povezava",
   "provider.connect.oauth.code.visit.suffix":

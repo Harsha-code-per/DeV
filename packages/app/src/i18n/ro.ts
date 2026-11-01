@@ -196,11 +196,7 @@ export const dict = {
   "dialog.provider.group.other": "Altele",
   "dialog.provider.custom.label": "Furnizor compatibil OpenAI personalizat",
   "dialog.provider.tag.recommended": "Recomandat",
-  "dialog.provider.devcode.note": "Modele selectate, inclusiv Claude, GPT, Gemini și altele",
-  "dialog.provider.devcode.tagline": "Modele optimizate, fiabile",
-  "dialog.provider.devcodeGo.tagline": "Abonament accesibil pentru toți",
   "dialog.provider.anthropic.note": "Acces direct la modelele Claude, inclusiv Pro și Max",
-  "dialog.provider.copilot.note": "Modele AI pentru asistență la programare prin GitHub Copilot",
   "dialog.provider.openai.note": "Modele GPT pentru sarcini AI generale rapide și performante",
   "dialog.provider.google.note": "Modele Gemini pentru răspunsuri rapide și structurate",
   "dialog.provider.openrouter.note": "Accesează toate modelele suportate de la un singur furnizor",
@@ -229,13 +225,6 @@ export const dict = {
   "provider.connect.apiKey.label": "Cheie API {{provider}}",
   "provider.connect.apiKey.placeholder": "Cheie API",
   "provider.connect.apiKey.required": "Cheia API este obligatorie",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen îți oferă acces la un set selectat de modele optimizate și fiabile pentru agenți de programare.",
-  "provider.connect.devcodeZen.line2":
-    "Cu o singură cheie API ai acces la modele precum Claude, GPT, Gemini, GLM și altele.",
-  "provider.connect.devcodeZen.visit.prefix": "Vizitează",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": "pentru a obține cheia ta API.",
   "provider.connect.oauth.code.visit.prefix": "Vizitează",
   "provider.connect.oauth.code.visit.link": "acest link",
   "provider.connect.oauth.code.visit.suffix":

@@ -196,11 +196,7 @@ export const dict = {
   "dialog.provider.group.other": "Annað",
   "dialog.provider.custom.label": "Sersniðgivin OpenAI-samsvarandi veitari",
   "dialog.provider.tag.recommended": "Viðmælt",
-  "dialog.provider.devcode.note": "Kuraterað modell íroknað Claude, GPT, Gemini og fleiri",
-  "dialog.provider.devcode.tagline": "Álítandi optimerað modell",
-  "dialog.provider.devcodeGo.tagline": "Lágkostnaðarhald fyri øll",
   "dialog.provider.anthropic.note": "Beinleiðis atgongd til Claude modellir, eisini Pro og Max .",
-  "dialog.provider.copilot.note": "AI modellir til koduhjálp umvegis GitHub Copilot",
   "dialog.provider.openai.note": "GPT modellir til skjótar, førar almennar AI uppgávur",
   "dialog.provider.google.note": "Gemini modellir til skjót, strukturerað svar",
   "dialog.provider.openrouter.note": "Fá atgongd til øll stuðlað modell frá einum veitara",
@@ -229,13 +225,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API lykil",
   "provider.connect.apiKey.placeholder": "API lykil",
   "provider.connect.apiKey.required": "API lykilin er kravdur",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen gevur tær atgongd til eitt kuraterað sett av álítandi optimeraðum modellum til kodingaragentar.",
-  "provider.connect.devcodeZen.line2":
-    "Við einum API lykli fært tú atgongd til modellir sum Claude, GPT, Gemini, GLM og fleiri.",
-  "provider.connect.devcodeZen.visit.prefix": "Vitja ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " fyri at savna tín API lykil.",
   "provider.connect.oauth.code.visit.prefix": "Vitja ",
   "provider.connect.oauth.code.visit.link": "hesa leinkjuna",
   "provider.connect.oauth.code.visit.suffix":

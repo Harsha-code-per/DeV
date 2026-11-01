@@ -197,11 +197,7 @@ export const dict = {
   "dialog.provider.group.other": "Друго",
   "dialog.provider.custom.label": "Прилагођени добављач компатибилан са OpenAI",
   "dialog.provider.tag.recommended": "Препоручено",
-  "dialog.provider.devcode.note": "одабрани модели укључујући Claude, GPT, Gemini и више",
-  "dialog.provider.devcode.tagline": "Поуздани оптимизовани модели",
-  "dialog.provider.devcodeGo.tagline": "Ниска цена претплате за све",
   "dialog.provider.anthropic.note": "Директан приступ Claude моделима, укључујући Про и Мак",
-  "dialog.provider.copilot.note": "АИ модели за помоћ код кодирања преко GitHub Copilot",
   "dialog.provider.openai.note": "GPT модела за брзе, способне опште задатке вештачке интелигенције",
   "dialog.provider.google.note": "Gemini модела за брзе, структуриране одговоре",
   "dialog.provider.openrouter.note": "Приступите свим подржаним моделима од једног провајдера",
@@ -230,13 +226,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API кључ",
   "provider.connect.apiKey.placeholder": "API кључ",
   "provider.connect.apiKey.required": "API кључ је неопходан",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen вам даје приступ одабраном скупу поузданих оптимизованих модела за агенте за кодирање.",
-  "provider.connect.devcodeZen.line2":
-    "Са једним тастером API добићете приступ моделима као што су Claude, GPT, Gemini, GLM и други.",
-  "provider.connect.devcodeZen.visit.prefix": "Посетите",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": "да бисте прикупили ваш API кључ.",
   "provider.connect.oauth.code.visit.prefix": "Посетите",
   "provider.connect.oauth.code.visit.link": "ова веза",
   "provider.connect.oauth.code.visit.suffix":

@@ -197,11 +197,7 @@ export const dict = {
   "dialog.provider.group.other": "Beýlekiler",
   "dialog.provider.custom.label": "Xörite OpenAI gabat gelýän üpjün ediji",
   "dialog.provider.tag.recommended": "Maslahat berilýär",
-  "dialog.provider.devcode.note": "Claude, GPT, Gemini we ş.m.",
-  "dialog.provider.devcode.tagline": "Ygtybarly optimal modeller",
-  "dialog.provider.devcodeGo.tagline": "Hemmeler üçin arzan bahaly abuna",
   "dialog.provider.anthropic.note": "Pro we Max ýaly Claude modellerine göni giriş",
-  "dialog.provider.copilot.note": "GitHub Copilot arkaly kodlaşdyrmak üçin AI modelleri",
   "dialog.provider.openai.note": "Çalt, başarnykly umumy AI meseleleri üçin GPT modelleri",
   "dialog.provider.google.note": "Çalt, gurluşly jogaplar üçin Gemini modelleri",
   "dialog.provider.openrouter.note": "Bir üpjün edijiden ähli goldanýan modellere giriň",
@@ -230,13 +226,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API açary",
   "provider.connect.apiKey.placeholder": "API açary",
   "provider.connect.apiKey.required": "API açary talap edilýär",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen kodlaşdyrmak serişdeleri üçin ygtybarly optimallaşdyrylan modelleriň toplumyna girmäge mümkinçilik berýär.",
-  "provider.connect.devcodeZen.line2":
-    "Zekeje API açary bilen Claude, GPT, Gemini, GLM we başgalar ýaly modellere girip bilersiňiz.",
-  "provider.connect.devcodeZen.visit.prefix": "Sapar ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " API açaryňyzy ýygnamak.",
   "provider.connect.oauth.code.visit.prefix": "Sapar ",
   "provider.connect.oauth.code.visit.link": "Bu baglanyşyk",
   "provider.connect.oauth.code.visit.suffix":

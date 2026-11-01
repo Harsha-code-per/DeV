@@ -200,11 +200,7 @@ export const dict = {
   "dialog.provider.group.other": "Kita",
   "dialog.provider.custom.label": "Pasirinktinis su OpenAI suderinamas tiekėjas",
   "dialog.provider.tag.recommended": "Rekomenduojama",
-  "dialog.provider.devcode.note": "Kuruojami modeliai, įskaitant Claude, GPT, Gemini ir kt.",
-  "dialog.provider.devcode.tagline": "Patikimi optimizuoti modeliai",
-  "dialog.provider.devcodeGo.tagline": "Mažos kainos abonementas visiems",
   "dialog.provider.anthropic.note": "Tiesioginė prieiga prie Claude modelių, įskaitant Pro ir Max",
-  "dialog.provider.copilot.note": "AI modeliai, skirti kodavimo pagalbai per GitHub Copilot",
   "dialog.provider.openai.note": "GPT modeliai, skirti greitoms, bendroms AI užduotims atlikti",
   "dialog.provider.google.note": "Gemini modeliai greitiems, struktūriniams atsakymams",
   "dialog.provider.openrouter.note": "Pasiekite visus palaikomus modelius iš vieno tiekėjo",
@@ -233,13 +229,6 @@ export const dict = {
   "provider.connect.apiKey.label": "{{provider}} API raktas",
   "provider.connect.apiKey.placeholder": "API raktas",
   "provider.connect.apiKey.required": "Reikalingas API raktas",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen suteikia prieigą prie kuruojamo patikimų optimizuotų kodavimo agentų modelių rinkinio.",
-  "provider.connect.devcodeZen.line2":
-    "Su vienu API raktu galėsite pasiekti tokius modelius kaip Claude, GPT, Gemini, GLM ir kt.",
-  "provider.connect.devcodeZen.visit.prefix": "Aplankykite",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": "norėdami pasiimti savo API raktą.",
   "provider.connect.oauth.code.visit.prefix": "Aplankykite",
   "provider.connect.oauth.code.visit.link": "šią nuorodą",
   "provider.connect.oauth.code.visit.suffix":

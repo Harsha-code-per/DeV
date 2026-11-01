@@ -198,11 +198,7 @@ export const dict = {
   "dialog.provider.group.other": "Altres",
   "dialog.provider.custom.label": "Proveïdor personalitzat compatible amb OpenAI.",
   "dialog.provider.tag.recommended": "Recomanat",
-  "dialog.provider.devcode.note": "Models seleccionats que inclouen Claude, GPT, Gemini i més",
-  "dialog.provider.devcode.tagline": "Models optimitzats fiables",
-  "dialog.provider.devcodeGo.tagline": "Subscripció de baix cost per a tothom",
   "dialog.provider.anthropic.note": "Accés directe a Claude models, inclosos Pro i Max",
-  "dialog.provider.copilot.note": "Models d'IA per a l'assistència de codificació mitjançant GitHub Copilot",
   "dialog.provider.openai.note": "GPT models per a tasques d'IA generals ràpides i capaces",
   "dialog.provider.google.note": "Gemini models per a respostes ràpides i estructurades",
   "dialog.provider.openrouter.note": "Accediu a tots els models compatibles des d'un proveïdor",
@@ -231,13 +227,6 @@ export const dict = {
   "provider.connect.apiKey.label": "Tecla {{provider}} API.",
   "provider.connect.apiKey.placeholder": "tecla API.",
   "provider.connect.apiKey.required": "La clau API és necessària",
-  "provider.connect.devcodeZen.line1":
-    "DeV Zen us ofereix accés a un conjunt seleccionat de models optimitzats fiables per a agents de codificació.",
-  "provider.connect.devcodeZen.line2":
-    "Amb una sola tecla API tindreu accés a models com ara Claude, GPT, Gemini, GLM i més.",
-  "provider.connect.devcodeZen.visit.prefix": "Visita ",
-  "provider.connect.devcodeZen.visit.link": "devcode.ai/zen",
-  "provider.connect.devcodeZen.visit.suffix": " per recollir la teva clau API.",
   "provider.connect.oauth.code.visit.prefix": "Visita ",
   "provider.connect.oauth.code.visit.link": "aquest enllaç",
   "provider.connect.oauth.code.visit.suffix":
