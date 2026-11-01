@@ -6,7 +6,7 @@ DeV brings premium AI to anyone, with nothing to pay. This page shows what we're
 
 | Product | What it is | How you get it | Status |
 |---|---|---|---|
-| **DeV Code** | A coding agent for your terminal | `curl`, npm, pnpm or bun | Release candidate |
+| **DeV Code** | A coding agent for your terminal | `curl`, npm, pnpm or bun | 1.0 |
 | **DeV** | An assistant for Windows, macOS and Linux that runs in the background, wakes to your voice and works across your computer | Installers (`.exe`, `.dmg`, Linux packages) | In development |
 | **DeV for Chrome** | A browser extension that helps you debug and get things done on any page | Browser extension | In development |
 | **DeV for Web** | A chat site for free AI models, with nothing to install | Your browser | Planned |

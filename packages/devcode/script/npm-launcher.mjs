@@ -62,16 +62,6 @@ async function download(name) {
     fail(`Couldn't download DeV Code: ${error.message}`)
   })
   if (response.ok) return response.arrayBuffer()
-  // ponytail: releases 404 while the repo is private, so its owner downloads through their gh login.
-  // Remove this at the public launch.
-  const owner = process.env.DEVCODE_RELEASE_URL
-    ? undefined
-    : childProcess.spawnSync(
-        "gh",
-        ["release", "download", `v${version}`, "-R", "Harsha-code-per/DeV", "-p", name, "-O", "-"],
-        { maxBuffer: 512 * 1024 * 1024, windowsHide: true },
-      )
-  if (owner?.status === 0) return owner.stdout
   fail(`Couldn't download ${name}: the server answered ${response.status}.`)
 }
 

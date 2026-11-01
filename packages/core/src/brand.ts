@@ -1,3 +1,4 @@
+import { InstallationLocal, InstallationVersion } from "./installation/version"
 import path from "path"
 
 // DeV naming for config files and project folders.
@@ -21,9 +22,9 @@ export const MDNS_DOMAIN = "dev-ai.local"
  * npm package installed into config folders so local plugins get typings. Our own plugin SDK isn't
  * on npm yet (roadmap M0.4); until then this is DeV's published SDK, which has the same API.
  */
-export const PLUGIN_SDK_PACKAGE = "@opencode-ai/plugin"
-// DeV's package has its own versions; this is the one DeV forked from, not DeV's version.
-export const PLUGIN_SDK_VERSION = "1.19.4"
+export const PLUGIN_SDK_PACKAGE = "@devcodeagent/plugin"
+// Published with each stable release; source checkouts and pre-releases use the newest one.
+export const PLUGIN_SDK_VERSION = InstallationLocal || InstallationVersion.includes("-") ? "latest" : InstallationVersion
 
 /** `name.json` and `name.jsonc` for every config name, preferred first. */
 export function configFiles(dir: string) {

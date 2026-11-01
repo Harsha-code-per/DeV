@@ -2,7 +2,7 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## Unreleased (toward v1.0)
+## 1.0.0 (2026-11-01)
 
 ### A terminal app of its own
 - Finished tasks fold into a receipt: how it ended, files, checks, time and cost, with the answer below. `/steps` or a click opens the steps.
