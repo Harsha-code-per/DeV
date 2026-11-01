@@ -12,6 +12,7 @@ const CAPPED = path.join(DEV, "scripts/capped")
 const args = parseArgs({
   options: {
     agents: { type: "string", default: "devcode" },
+    "claude-budget": { type: "string", default: "0.4" },
     tasks: { type: "string" },
     model: { type: "string" },
     timeout: { type: "string", default: "10" },
@@ -63,6 +64,8 @@ const agents: Record<string, { cmd: (prompt: string) => string[]; parse: (stdout
   claude: {
     cmd: (prompt) => [
       ...["claude", "-p", "--dangerously-skip-permissions", "--output-format", "json"],
+      // No MCP servers or user plugins, and a hard spending limit per task.
+      ...["--strict-mcp-config", "--setting-sources", "project", "--max-budget-usd", args["claude-budget"]],
       ...(args.model ? ["--model", args.model] : []),
       prompt,
     ],
@@ -86,6 +89,7 @@ const agents: Record<string, { cmd: (prompt: string) => string[]; parse: (stdout
   codex: {
     cmd: (prompt) => [
       ...["codex", "exec", "--json", "--sandbox", "workspace-write"],
+      ...["-c", "mcp_servers={}", "-c", "model_reasoning_effort=medium"],
       ...(args.model ? ["--model", args.model] : []),
       prompt,
     ],
