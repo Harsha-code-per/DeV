@@ -29,6 +29,7 @@ DeV's motto is accessibility: anyone can develop without paying, and they get th
 - [ ] The owner has used the release candidate for real work and signs off on the design and reliability.
 - [ ] Remove comparisons with named products from `docs/ROADMAP.md`, `docs/GAP_MATRIX.md`, `docs/ECOSYSTEM.md`, `SECURITY.md` and the prompts where they aren't legally required.
 - [x] npm name: `devcode` was refused as too similar to `dev-code`, so the package is `@devcodeagent/cli` (reserved at 0.0.1). A small launcher downloads the verified release, so one package serves npm, pnpm, bun and yarn.
+- [ ] At launch, remove the `gh` fallback from `script/npm-launcher.mjs` (owner-only, while the repo is private).
 - [ ] After the repo is public, add the one Trusted Publisher on npm (workflow `release.yml`).
 - [ ] The owner sets up GitHub Sponsors so the Sponsor links work.
 
