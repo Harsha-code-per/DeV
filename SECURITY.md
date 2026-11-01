@@ -80,4 +80,4 @@ Include the DeV version, your OS, the steps to reproduce, and what an attacker g
 
 We will acknowledge your report, keep you informed while we work on a fix, and credit you in the advisory unless you ask us not to.
 
-DeV also watches OpenCode's security advisories and ports relevant fixes.
+DeV also watches DeV's security advisories and ports relevant fixes.

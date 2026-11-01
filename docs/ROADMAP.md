@@ -47,7 +47,7 @@ DeV brings premium AI to anyone, with nothing to pay. This page shows what we're
 
 ### DeV Code
 
-- [ ] Sign in with a ChatGPT plan through OpenAI's open-source route
+- [ ] Use a paid AI plan you already have, where its provider allows open-source tools
 - [ ] Windows sandbox, and sandboxing for local MCP servers
 - [ ] Memory across projects, with privacy controls
 - [ ] Benchmark regressions blocking merges in CI
