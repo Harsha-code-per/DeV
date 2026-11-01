@@ -15,7 +15,13 @@
 <pre><code>curl -fsSL https://harsha-code-per.github.io/DeV/install | sh</code></pre>
 <p>On Windows, in PowerShell:</p>
 <pre><code>irm https://harsha-code-per.github.io/DeV/install.ps1 | iex</code></pre>
-<p>The installers check the download against the release's SHA-256 checksums before installing anything. Update later with <code>devcode upgrade</code>.</p>
+<p>With npm:</p>
+<pre><code>npm i -g @devcodeagent/cli</code></pre>
+<p>With pnpm:</p>
+<pre><code>pnpm add -g @devcodeagent/cli</code></pre>
+<p>With bun:</p>
+<pre><code>bun add -g @devcodeagent/cli</code></pre>
+<p>Every method checks the download against the release's SHA-256 checksums before installing anything. To update, run <code>devcode upgrade</code>, or your package manager's install command again.</p>
 
 <h2 id="connect">Connect a model</h2>
 <p>Start <code>devcode</code> in a project folder and type <code>/connect</code>. Pick a provider, paste its key, and you're ready. DeV saves the key in its own private store, so you don't need env variables or a <code>.env</code> file.</p>

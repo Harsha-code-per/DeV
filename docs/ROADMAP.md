@@ -28,7 +28,9 @@ DeV's motto is accessibility: anyone can develop without paying, and they get th
 
 - [ ] The owner has used the release candidate for real work and signs off on the design and reliability.
 - [ ] Remove comparisons with named products from `docs/ROADMAP.md`, `docs/GAP_MATRIX.md`, `docs/ECOSYSTEM.md`, `SECURITY.md` and the prompts where they aren't legally required.
-- [ ] The owner logs in to npm so `npm i -g devcode` can be published; add it back to the site and README.
+- [x] npm name: `devcode` was refused as too similar to `dev-code`, so the package is `@devcodeagent/cli` (reserved at 0.0.1). A small launcher downloads the verified release, so one package serves npm, pnpm, bun and yarn.
+- [ ] After the repo is public, add the one Trusted Publisher on npm (workflow `release.yml`).
+- [ ] The owner sets up GitHub Sponsors so the Sponsor links work.
 
 ## What DeV is
 
@@ -36,9 +38,10 @@ DeV is a **product family**, built as one open-source project (MIT), free to use
 
 | Product | What it is | Install name |
 |---|---|---|
-| **DeV Code** | The coding agent. It aims to match, then beat, Claude Code at autonomous and reliable development, including on free and open models. | npm `devcode`; commands `devcode` and `dev` |
-| **DeV** (app) | Desktop app for Windows, macOS and Linux. Chat and coding in one, growing into an always-on assistant that wakes on its name and can operate the machine. | `dev-ai` |
-| **DeV for Chrome** | Browser extension that works with the app and DeV Code. | `dev-ai` |
+| **DeV** | The main product: an assistant for Windows, macOS and Linux that runs in the background, wakes to your voice and operates the machine. | Installers (`.exe`, `.dmg`, Linux packages) from GitHub Releases |
+| **DeV Code** | The coding agent for the terminal, for creating projects and building software. | `curl`, or npm `@devcodeagent/cli`; commands `devcode` and `dev` |
+| **DeV for Chrome** | Browser extension that debugs and works on any page. | Browser extension |
+| **DeV for Web** | A chat site for talking to free models with nothing to install. | Browser |
 
 DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine. It is now an independent project: we ship our own fixes and releases and don't track upstream. The only exception is that we watch OpenCode's security advisories and port relevant security fixes by hand.
 
@@ -234,6 +237,11 @@ All surfaces share **one engine and one set of sessions**: start in the app, con
 - [x] Connects to the local engine through native messaging (no open port).
 - [ ] Per-site permissions; confirmation for purchases, sending and credentials; page content treated as untrusted.
 - [ ] Distributed through GitHub Releases plus the Firefox and Edge add-on stores (free). The Chrome Web Store comes in M7.
+
+## M5.5 — DeV for Web
+
+- [ ] A chat site for free models, with no paid server. First version: static hosting, and each user adds their own free key, which stays in their browser.
+- [ ] Shared free access needs a budget: free tiers don't allow one key to serve the public. Revisit with sponsorship.
 
 ## M6 — Personal and for everyone
 

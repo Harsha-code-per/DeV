@@ -4,11 +4,11 @@
 
 # DeV
 
-**Pro coding for everyone.**
+**Premium AI for everyone.**
 
-DeV gives every developer the premium features of an AI assistant, with nothing to pay. DeV Code, the coding agent for your terminal, is available now.
+DeV brings premium AI to anyone, with nothing to pay: an assistant on your computer, a coding agent in your terminal, and help in your browser. DeV Code, the coding agent, comes first.
 
-[Website](https://harsha-code-per.github.io/DeV) · [Docs](https://harsha-code-per.github.io/DeV/docs.html) · [Roadmap](docs/ROADMAP.md) · [Report a bug](https://github.com/Harsha-code-per/DeV/issues/new/choose)
+[Website](https://harsha-code-per.github.io/DeV) · [Docs](https://harsha-code-per.github.io/DeV/docs.html) · [Roadmap](docs/ROADMAP.md) · [Report a bug](https://github.com/Harsha-code-per/DeV/issues/new/choose) · [Sponsor](#support-dev)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-F2A516)](LICENSE) [![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-121317)](#install) [![Cost](https://img.shields.io/badge/cost-free-F2A516)](#why-dev)
 
@@ -22,13 +22,16 @@ Great tools shouldn't depend on what you can pay. A student, a freelancer and a 
 
 DeV includes the features that usually sit behind a paid plan, for everyone. There's no subscription and no card to add. It's open source under the MIT licence, so you can use it in your commercial work.
 
-| Product | What it is | Status |
-|---|---|---|
-| **DeV Code** | The coding agent for your terminal | Available now |
-| **DeV** (app) | A desktop app for Windows, macOS and Linux | Coming |
-| **DeV for Chrome** | A browser extension that works with DeV Code and the app | Coming |
+## The DeV family
 
-## Install
+| Product | What it is | Get it | Status |
+|---|---|---|---|
+| **DeV Code** | A coding agent for your terminal. Create projects and build software. | `curl`, npm, pnpm or bun | Available now |
+| **DeV** | An assistant for Windows, macOS and Linux that runs in the background, wakes to your voice and works across your computer. | Installers: `.exe`, `.dmg` and Linux packages | In development |
+| **DeV for Chrome** | A browser extension that helps you debug and get things done on any page. | Browser extension | In development |
+| **DeV for Web** | A chat site where anyone can talk to free AI models, with nothing to install. | Your browser | Planned |
+
+## Install DeV Code
 
 **Linux and macOS**
 
@@ -42,7 +45,25 @@ curl -fsSL https://harsha-code-per.github.io/DeV/install | sh
 irm https://harsha-code-per.github.io/DeV/install.ps1 | iex
 ```
 
-The installers check the download against the release's SHA-256 checksums before installing anything.
+**npm**
+
+```sh
+npm i -g @devcodeagent/cli
+```
+
+**pnpm**
+
+```sh
+pnpm add -g @devcodeagent/cli
+```
+
+**bun**
+
+```sh
+bun add -g @devcodeagent/cli
+```
+
+Every method checks the download against the release's SHA-256 checksums before installing anything.
 
 ## Quick start
 
@@ -121,13 +142,13 @@ The [docs](https://harsha-code-per.github.io/DeV/docs.html) cover configuration,
 
 Model providers set their own free limits and terms. Windows doesn't have a sandbox yet.
 
-## What's next
+## Support DeV
 
-- **DeV for desktop:** chat and coding in one app for Windows, macOS and Linux.
-- **DeV for Chrome:** an assistant in your browser that works with your other DeV apps.
-- **One optional account:** your settings and connected models follow you across devices, end-to-end encrypted.
+DeV is built without funding, on free tools and free tiers. If you'd like to see it grow faster, please [sponsor the project](https://github.com/sponsors/Harsha-code-per). Every sponsorship goes into building DeV, and DeV stays free for everyone.
 
-See the full [roadmap](docs/ROADMAP.md).
+You can also help by starring the repo, reporting bugs and telling other developers.
+
+See where we're heading on the [roadmap](docs/ROADMAP.md).
 
 ## Contributing
 

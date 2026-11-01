@@ -94,7 +94,7 @@ async function download(url: string, file?: string) {
 
 function packageManager(binary: string, version: string) {
   const parts = binary.split(path.sep)
-  if (parts.includes("node_modules")) return `npm install -g devcode@${version}`
+  if (parts.includes("node_modules") || parts.includes("npm")) return `npm install -g @devcodeagent/cli@${version}`
   if (parts.includes("Cellar")) return "brew upgrade devcode"
   if (parts.includes("scoop")) return version === "latest" ? "scoop update devcode" : `scoop install devcode@${version}`
 }

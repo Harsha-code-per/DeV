@@ -20,7 +20,6 @@ jobs:
       id-token: write # npm provenance
     env:
       GH_TOKEN: ${{ github.token }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -44,12 +43,11 @@ jobs:
           gh release create "$GITHUB_REF_NAME" dist/release/* --repo "$GITHUB_REPOSITORY" \
             --title "$GITHUB_REF_NAME" --generate-notes --verify-tag $prerelease
 
-      # npm: one package per target ("devcode-linux-x64", ...) plus the "devcode" wrapper whose
-      # postinstall links the right binary. Skipped until the NPM_TOKEN secret exists. npm only
-      # signs provenance for public repositories, so this waits for the v1.0 public launch.
+      # npm: one small launcher package. npm signs in through trusted publishing, so no token is stored;
+      # that and its provenance need a public repository. Pre-releases stay on GitHub only.
       - name: npm publish
-        if: env.NPM_TOKEN != ''
+        if: ${{ !github.event.repository.private && !contains(github.ref_name, '-') }}
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          npm install -g npm@11
           bun script/publish.ts
         working-directory: packages/devcode

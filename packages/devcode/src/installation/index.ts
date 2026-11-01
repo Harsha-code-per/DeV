@@ -83,7 +83,8 @@ const layer = Layer.succeed(
 function installMethod(): Method {
   if (InstallationLocal || SourceInstall.checkout()) return "unknown"
   const parts = fs.realpathSync(process.execPath).split(path.sep)
-  if (parts.includes("node_modules")) return "npm"
+  // The npm launcher keeps the program in ~/.devcode/npm/<version>.
+  if (parts.includes("node_modules") || parts.includes("npm")) return "npm"
   if (parts.includes("Cellar")) return "brew"
   if (parts.includes("scoop")) return "scoop"
   return "curl"
@@ -91,7 +92,7 @@ function installMethod(): Method {
 
 function upgradeCommand(method: Method, target: string) {
   if (method === "curl") return [process.execPath, "upgrade", target]
-  if (method === "npm") return ["npm", "install", "-g", `devcode@${target}`]
+  if (method === "npm") return ["npm", "install", "-g", `@devcodeagent/cli@${target}`]
   if (method === "brew") return ["brew", "upgrade", "devcode"]
   if (method === "scoop") return ["scoop", "install", `devcode@${target}`]
 }
