@@ -1,3 +1,6 @@
+import path from "path"
+import os from "os"
+import { mkdtempSync } from "fs"
 import { describe, expect, test } from "bun:test"
 import { AccountTransportError } from "../../src/account/schema"
 import { FormatError } from "../../src/cli/error"
@@ -92,4 +95,19 @@ describe("cli.error", () => {
   test("formats cancelled UI errors as empty output", () => {
     expect(FormatError(new UI.CancelledError())).toBe("")
   })
+})
+
+test("a deleted working folder gives one clear line, not a crash", async () => {
+  const gone = mkdtempSync(path.join(os.tmpdir(), "dev-gone-"))
+  const entry = path.resolve(import.meta.dir, "../../src/index.ts")
+  // The shell enters the folder, deletes it, then starts DeV from nowhere.
+  const child = Bun.spawn(["sh", "-c", `cd ${gone} && rmdir ${gone} && exec bun ${entry} --version`], {
+    cwd: path.resolve(import.meta.dir, "../.."),
+    stderr: "pipe",
+    stdout: "pipe",
+  })
+  const stderr = await new Response(child.stderr).text()
+  expect(await child.exited).toBe(1)
+  expect(stderr).toContain("this folder no longer exists")
+  expect(stderr.split("\n").length).toBeLessThan(4)
 })
