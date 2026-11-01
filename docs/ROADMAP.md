@@ -152,12 +152,12 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] A GitHub Action for DeV Code (`github/action.yml`: `uses: Harsha-code-per/DeV/github@main`). Usable once the repo is public and has a release.
 - [x] **Status line:** `status_line: { command, interval }` in tui.json, as in Claude Code (JSON on stdin, first line shown under the prompt). `@` file mentions with fuzzy search already exist.
 - [x] Output styles (`output_style` in dev.json).
-- [ ] **Reliability:**
+- [x] **Reliability:**
   - [x] a plan → do → verify loop (run tests and builds before saying "done"), asked of every model in the system prompt;
   - [x] no silent stops: a fresh reply that only announces its next step, or is empty, gets a "go ahead" (at most twice per message). Took 3 of the 6 failed benchmark tasks to passing;
-  - automatic retries;
-  - long sessions that survive compaction;
-  - never hangs (watchdogs on every external call).
+  - [x] automatic retries, with a visible wait;
+  - [x] long sessions survive compaction: a real multi-file task on a forced 25K context compacted four times and kept working without an error;
+  - [x] no silent hang on a stuck model: first-response and between-chunk timeouts, and `dev run` exits at once on SIGTERM.
   - [x] a malformed tool call rejected by the provider (Groq) is retried instead of ending the session.
 
 ### Beyond Claude Code
