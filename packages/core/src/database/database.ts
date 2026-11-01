@@ -5,6 +5,7 @@ import { layer as sqliteLayer } from "#sqlite"
 import { Context, Effect, Layer } from "effect"
 import { Global } from "../global"
 import { Flag } from "../flag/flag"
+import { existsSync, renameSync } from "fs"
 import { isAbsolute, join } from "path"
 import { DatabaseMigration } from "./migration"
 import { InstallationChannel } from "../installation/version"
@@ -50,8 +51,20 @@ export function path() {
     process.env.DEV_DISABLE_CHANNEL_DB === "1" ||
     process.env.DEV_DISABLE_CHANNEL_DB === "true"
   )
-    return join(Global.Path.data, "opencode.db")
-  return join(Global.Path.data, `opencode-${InstallationChannel.replace(/[^a-zA-Z0-9._-]/g, "-")}.db`)
+    return adopt(Global.Path.data, "dev.db", "opencode.db")
+  const channel = InstallationChannel.replace(/[^a-zA-Z0-9._-]/g, "-")
+  return adopt(Global.Path.data, `dev-${channel}.db`, `opencode-${channel}.db`)
+}
+
+// Sessions saved under the old name move over the first time the new one is needed.
+export function adopt(dir: string, name: string, legacy: string) {
+  const file = join(dir, name)
+  const old = join(dir, legacy)
+  if (existsSync(file) || !existsSync(old)) return file
+  ;["", "-wal", "-shm"]
+    .filter((suffix) => existsSync(old + suffix))
+    .forEach((suffix) => renameSync(old + suffix, file + suffix))
+  return file
 }
 
 // Resolved when the layer is built, not at import, so a changed Flag.DEV_DB (embedded hosts, tests) takes effect.

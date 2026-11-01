@@ -62,7 +62,7 @@ function forkStderrDrain(stream: ReadableStream<Uint8Array>, into: string[]) {
 
 // A timed-out process loses its output, so its log file is the only record of what it was doing.
 function logTail(home: string) {
-  const file = path.join(home, ".local/share/dev/log/opencode.log")
+  const file = path.join(home, ".local/share/dev/log/dev.log")
   return existsSync(file) ? readFileSync(file, "utf8").slice(-6000) : ""
 }
 
@@ -70,6 +70,9 @@ function isolatedEnv(home: string, configJson: string): Record<string, string> {
   return {
     DEV_TEST_HOME: home,
     HOME: home,
+    // `dev run` trusts PWD for its directory. Inherited, it points at this repo, so every test process
+    // snapshots the whole repo: quick with a warm cache, over the timeout on a cold CI runner.
+    PWD: home,
     XDG_CONFIG_HOME: path.join(home, ".config"),
     XDG_DATA_HOME: path.join(home, ".local/share"),
     XDG_STATE_HOME: path.join(home, ".local/state"),

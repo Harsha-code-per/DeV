@@ -1,0 +1,82 @@
+name: install-test
+
+# Installs a published release on clean machines. The repo is private until v1.0, so this downloads
+# with gh; `curl | sh` and `npm i -g devcode` can only be tested once it is public.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, such as v0.9.0-rc.1
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  GH_REPO: ${{ github.repository }}
+  TAG: ${{ inputs.tag || github.event.release.tag_name }}
+
+jobs:
+  unix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, asset: devcode-linux-x64 }
+          - { os: ubuntu-24.04-arm, asset: devcode-linux-arm64 }
+          - { os: macos-latest, asset: devcode-darwin-arm64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: gh release download "$TAG" -p "${{ matrix.asset }}.tar.gz" -p SHA256SUMS
+      - name: Checksum matches
+        run: grep " ${{ matrix.asset }}.tar.gz$" SHA256SUMS | shasum -a 256 -c -
+      - name: A tampered archive is rejected
+        run: |
+          cp "${{ matrix.asset }}.tar.gz" good.bin
+          echo x >> "${{ matrix.asset }}.tar.gz"
+          ! grep " ${{ matrix.asset }}.tar.gz$" SHA256SUMS | shasum -a 256 -c -
+          mv good.bin "${{ matrix.asset }}.tar.gz"
+      - name: Runs on a clean machine
+        run: |
+          mkdir -p "$HOME/.dev-test/bin"
+          tar -xzf "${{ matrix.asset }}.tar.gz" -C "$HOME/.dev-test/bin"
+          ln -s devcode "$HOME/.dev-test/bin/dev"
+          export PATH="$HOME/.dev-test/bin:$PATH"
+          test "$(dev --version)" = "${TAG#v}"
+          dev --help > /dev/null
+          dev models < /dev/null
+
+  alpine:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh release download "$TAG" -p devcode-linux-x64-musl.tar.gz -p SHA256SUMS
+      - run: grep " devcode-linux-x64-musl.tar.gz$" SHA256SUMS | sha256sum -c -
+      - name: Runs on Alpine
+        run: |
+          mkdir bin && tar -xzf devcode-linux-x64-musl.tar.gz -C bin
+          docker run --rm -v "$PWD/bin:/d:ro" alpine:3.20 sh -c \
+            'apk add --no-cache libstdc++ libgcc >/dev/null && /d/devcode --version' | tee version.txt
+          test "$(tail -1 version.txt)" = "${TAG#v}"
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - run: gh release download $env:TAG -p devcode-windows-x64.zip -p SHA256SUMS
+      - name: Checksum matches
+        run: |
+          $expected = (Select-String ' devcode-windows-x64.zip$' SHA256SUMS).Line.Split(' ')[0]
+          $actual = (Get-FileHash devcode-windows-x64.zip -Algorithm SHA256).Hash.ToLower()
+          if ($actual -ne $expected) { throw "checksum mismatch" }
+      - name: Runs on a clean machine
+        run: |
+          Expand-Archive devcode-windows-x64.zip -DestinationPath bin
+          $version = (& .\bin\devcode.exe --version).Trim()
+          if ($version -ne $env:TAG.TrimStart('v')) { throw "got $version" }
+          & .\bin\devcode.exe --help | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "help failed" }

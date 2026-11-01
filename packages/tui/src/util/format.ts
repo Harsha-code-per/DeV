@@ -18,3 +18,8 @@ export function formatDuration(secs: number) {
   const weeks = Math.floor(secs / 604800)
   return weeks === 1 ? "~1 week" : `~${weeks} weeks`
 }
+
+/** A diff that only adds lines, such as a new file: split view would leave its left side empty. */
+export function addsOnly(diff: string) {
+  return !diff.split("\n").some((line) => line.startsWith("-") && !line.startsWith("---"))
+}

@@ -10,7 +10,7 @@ export function publish(port: number, domain?: string) {
 
   try {
     const host = domain ?? Brand.MDNS_DOMAIN
-    const name = `opencode-${port}`
+    const name = `dev-${port}`
     bonjour = new Bonjour()
     const service = bonjour.publish({
       name,

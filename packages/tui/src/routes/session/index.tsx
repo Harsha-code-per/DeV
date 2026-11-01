@@ -37,6 +37,7 @@ import type {
   SessionStatus,
 } from "@dev-ai/sdk/v2"
 import { useLocal } from "../../context/local"
+import { addsOnly } from "../../util/format"
 import { Locale } from "../../util/locale"
 import { webSearchProviderLabel } from "../../util/tool-display"
 import { Dynamic, useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
@@ -2337,16 +2338,16 @@ function Edit(props: ToolProps) {
   const { theme, syntax } = useTheme()
   const pathFormatter = usePathFormatter()
 
-  const view = createMemo(() => {
-    const diffStyle = ctx.tui.diff_style
-    if (diffStyle === "stacked") return "unified"
-    // Default to "auto" behavior
-    return ctx.width > 120 ? "split" : "unified"
-  })
-
   const ft = createMemo(() => filetype(stringValue(props.input.filePath)))
 
   const diffContent = createMemo(() => stringValue(props.metadata.diff) ?? "")
+
+  const view = createMemo(() => {
+    const diffStyle = ctx.tui.diff_style
+    if (diffStyle === "stacked" || addsOnly(diffContent())) return "unified"
+    // Default to "auto" behavior
+    return ctx.width > 120 ? "split" : "unified"
+  })
 
   return (
     <Switch>
@@ -2403,7 +2404,7 @@ function ApplyPatch(props: ToolProps) {
       <box paddingLeft={1}>
         <diff
           diff={p.diff}
-          view={view()}
+          view={addsOnly(p.diff) ? "unified" : view()}
           filetype={filetype(p.filePath)}
           syntaxStyle={syntax()}
           showLineNumbers={true}

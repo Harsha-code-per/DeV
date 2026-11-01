@@ -1,5 +1,6 @@
 import { createStore } from "solid-js/store"
 import { dirname } from "node:path"
+import { addsOnly } from "../../util/format"
 import { createMemo, For, Match, Show, Switch } from "solid-js"
 import { Portal, useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
 import { TextAttributes, type TextareaRenderable } from "@opentui/core"
@@ -37,7 +38,7 @@ function EditBody(props: { request: PermissionRequest }) {
 
   const view = createMemo(() => {
     const diffStyle = config.diff_style
-    if (diffStyle === "stacked") return "unified"
+    if (diffStyle === "stacked" || addsOnly(diff())) return "unified"
     return dimensions().width > 120 ? "split" : "unified"
   })
 
