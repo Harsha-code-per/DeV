@@ -1,36 +1,30 @@
-import { logo } from "../logo"
+import { Locale } from "./locale"
+import type { Receipt } from "../routes/session/turn"
 
 const reset = "\x1b[0m"
 const bold = "\x1b[1m"
 const dim = "\x1b[90m"
-// DeV's signature saffron (#F2A516) as a 24-bit terminal colour.
-const saffron = "\x1b[38;2;242;165;22m"
 
-function wordmark(pad = "") {
-  const draw = (line: string, fg: string, shadow: string, bg: string) =>
-    [...line]
-      .map((char) => {
-        if (char === "_") return `${bg} ${reset}`
-        if (char === "^") return `${fg}${bg}▀${reset}`
-        if (char === "~") return `${shadow}▀${reset}`
-        if (char === " ") return " "
-        return `${fg}${char}${reset}`
-      })
-      .join("")
+// Ink on saffron, the band that opens every DeV screen.
+const band = "\x1b[48;2;242;165;22m\x1b[38;2;18;19;23m"
 
-  return logo.left.map((line, index) => {
-    const left = draw(line, dim, "\x1b[38;5;235m", "\x1b[48;5;235m")
-    const right = draw(logo.right[index] ?? "", saffron, "\x1b[38;5;238m", "\x1b[48;5;238m")
-    return `${pad}${left} ${right}`
-  })
-}
-
-export function sessionEpilogue(input: { title: string; sessionID?: string }) {
+export function sessionEpilogue(input: { title: string; sessionID?: string; receipt?: Receipt }) {
   const weak = (text: string) => `${dim}${text.padEnd(10, " ")}${reset}`
+  const receipt = input.receipt
+  const changed = receipt?.files
+    ? [`  ${weak("Files")}${receipt.files} changed  +${receipt.added} −${receipt.removed}`]
+    : []
+  const checks = receipt?.checks ? [`  ${weak("Checks")}${receipt.checks}`] : []
+  const spent = receipt?.duration
+    ? [`  ${weak("Time")}${Locale.duration(receipt.duration)}`, `  ${weak("Cost")}$${receipt.cost.toFixed(2)}`]
+    : []
   return [
-    ...wordmark("  "),
+    `${band}${bold} DeV ${reset}${band} session receipt ${" ".repeat(38)}${reset}`,
     "",
     `  ${weak("Session")}${bold}${input.title}${reset}`,
+    ...changed,
+    ...checks,
+    ...spent,
     `  ${weak("Continue")}${bold}dev -s ${input.sessionID}${reset}`,
     "",
   ].join("\n")

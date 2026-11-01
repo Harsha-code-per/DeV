@@ -222,6 +222,10 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           }
         }
 
+        // The free router skips models that can't answer; the first model of a provider may not even chat.
+        const auto = { providerID: "auto", modelID: "free" }
+        if (isModelValid(auto)) return auto
+
         const provider = sync.data.provider[0]
         if (!provider) return undefined
         const defaultModel = sync.data.provider_default[provider.id]

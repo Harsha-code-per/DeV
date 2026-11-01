@@ -1,19 +1,19 @@
 import { Prompt, type PromptRef } from "../component/prompt"
-import { createEffect, createMemo, createSignal, onMount, Show } from "solid-js"
-import { Logo } from "../component/logo"
+import { TextAttributes } from "@opentui/core"
+import { createEffect, createMemo, createSignal, For, onMount, Show } from "solid-js"
 import { useSync } from "../context/sync"
 import { Toast } from "../ui/toast"
 import { useArgs } from "../context/args"
-import { useRouteData } from "../context/route"
+import { useRoute, useRouteData } from "../context/route"
 import { usePromptRef } from "../context/prompt"
 import { useLocal } from "../context/local"
 import { usePluginRuntime } from "../plugin/runtime"
 import { useEditorContext } from "../context/editor"
-import { useTerminalDimensions } from "@opentui/solid"
-import { useTuiConfig } from "../config"
 import { HomeSessionDestinationProvider } from "./home/session-destination"
 import { useUpdateNotification } from "../context/update-notification"
-import { useTheme } from "../context/theme"
+import { selectedForeground, useTheme } from "../context/theme"
+import { useDirectory } from "../context/directory"
+import { Locale } from "../util/locale"
 import { useExit } from "../context/exit"
 
 let once = false
@@ -31,14 +31,6 @@ export function Home() {
   const args = useArgs()
   const local = useLocal()
   const editor = useEditorContext()
-  const dimensions = useTerminalDimensions()
-  const tuiConfig = useTuiConfig()
-  const [logoWidth, setLogoWidth] = createSignal(0)
-  const promptMaxWidth = createMemo(() => {
-    const configured = tuiConfig.prompt?.max_width
-    if (configured === "auto") return Math.max(75, Math.floor(dimensions().width * 0.7))
-    return configured ?? 75
-  })
   let sent = false
 
   onMount(() => {
@@ -73,23 +65,15 @@ export function Home() {
 
   return (
     <HomeSessionDestinationProvider>
-      <box flexGrow={1} alignItems="center" paddingLeft={2} paddingRight={2}>
-        <box flexGrow={1} minHeight={0} />
-        <box height={4} minHeight={0} flexShrink={1} />
-        <box
-          flexShrink={0}
-          onSizeChange={function () {
-            setLogoWidth(this.width)
-          }}
-        >
-          <pluginRuntime.Slot name="home_logo" mode="replace">
-            <Logo />
-          </pluginRuntime.Slot>
-        </box>
+      <pluginRuntime.Slot name="home_logo" mode="replace">
+        <HomeBand />
+      </pluginRuntime.Slot>
+      <box flexGrow={1} paddingLeft={2} paddingRight={2}>
         <box height={1} minHeight={0} flexShrink={1} />
         <Greeting />
-        <UpdateNotification width={logoWidth()} />
-        <box width="100%" maxWidth={promptMaxWidth()} zIndex={1000} paddingTop={1} flexShrink={0}>
+        <Earlier />
+        <UpdateNotification />
+        <box width="100%" zIndex={1000} paddingTop={1} flexShrink={0}>
           <pluginRuntime.Slot name="home_prompt" mode="replace" ref={bind}>
             <Prompt ref={bind} right={<pluginRuntime.Slot name="home_prompt_right" />} placeholders={placeholder} />
           </pluginRuntime.Slot>
@@ -102,6 +86,51 @@ export function Home() {
         <pluginRuntime.Slot name="home_footer" mode="single_winner" />
       </box>
     </HomeSessionDestinationProvider>
+  )
+}
+
+// DeV's screens open with a saffron band instead of a centred logo.
+function HomeBand() {
+  const { theme } = useTheme()
+  const directory = useDirectory()
+  const ink = () => selectedForeground(theme, theme.primary)
+  return (
+    <box flexShrink={0} backgroundColor={theme.primary} paddingLeft={2} paddingTop={1} paddingBottom={1}>
+      <text fg={ink()} attributes={TextAttributes.BOLD}>
+        D e V
+      </text>
+      <text fg={ink()}>{directory()}</text>
+    </box>
+  )
+}
+
+// Your last tasks here, so home shows where you left off.
+function Earlier() {
+  const { theme } = useTheme()
+  const sync = useSync()
+  const route = useRoute()
+  const sessions = createMemo(() =>
+    sync.data.session
+      .filter((session) => !session.parentID)
+      .toSorted((a, b) => b.time.updated - a.time.updated)
+      .slice(0, 3),
+  )
+  return (
+    <Show when={sessions().length > 0}>
+      <box flexShrink={0} paddingTop={1}>
+        <text fg={theme.textMuted}>Earlier</text>
+        <For each={sessions()}>
+          {(session) => (
+            <box onMouseUp={() => route.navigate({ type: "session", sessionID: session.id })}>
+              <text fg={theme.text} wrapMode="none">
+                <span style={{ fg: theme.primary }}>▸</span> {Locale.truncate(session.title, 60)}{" "}
+                <span style={{ fg: theme.textMuted }}>{Locale.todayTimeOrDateTime(session.time.updated)}</span>
+              </text>
+            </box>
+          )}
+        </For>
+      </box>
+    </Show>
   )
 }
 
@@ -119,7 +148,7 @@ function Greeting() {
   )
 }
 
-function UpdateNotification(props: { width: number }) {
+function UpdateNotification() {
   const update = useUpdateNotification()
   const exit = useExit()
   const { theme } = useTheme()
@@ -135,9 +164,6 @@ function UpdateNotification(props: { width: number }) {
         <box
           flexShrink={0}
           flexDirection="row"
-          justifyContent="center"
-          width={props.width}
-          maxWidth="100%"
           gap={1}
           backgroundColor={hovered() ? theme.backgroundElement : undefined}
           onMouseOver={() => setHovered(true)}

@@ -20,7 +20,7 @@ import { useRoute, useRouteData } from "../../context/route"
 import { useProject } from "../../context/project"
 import { useSync } from "../../context/sync"
 import { useEvent } from "../../context/event"
-import { SplitBorder } from "../../ui/border"
+import { SpineBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
 import { Spinner } from "../../component/spinner"
 import { createSyntaxStyleMemo, generateSubtleSyntax, selectedForeground, useTheme } from "../../context/theme"
@@ -68,8 +68,11 @@ import { PermissionPrompt } from "./permission"
 import { QuestionPrompt } from "./question"
 import { DialogExportOptions } from "../../ui/dialog-export-options"
 import * as Model from "../../util/model"
+import { createStore } from "solid-js/store"
 import { formatTranscript } from "../../util/transcript"
 import { sessionEpilogue } from "../../util/presentation"
+import { NowBar, PhaseNode, PhasesAhead, ReceiptLine, receiptIcon } from "./receipt"
+import { nowText, phaseStarts, receipt, roots, type Phase, type Receipt } from "./turn"
 import { setPreLayoutSiblingMargin } from "../../util/layout"
 import { useTuiConfig } from "../../config"
 import { useClipboard } from "../../context/clipboard"
@@ -161,11 +164,24 @@ const context = createContext<{
   showTimestamps: () => boolean
   showDetails: () => boolean
   showGenericToolOutput: () => boolean
+  turn: (messageID: string) => TurnView
   diffWrapMode: () => "word" | "none"
   providers: () => ReadonlyMap<string, Provider>
   sync: ReturnType<typeof useSync>
   tui: ReturnType<typeof useTuiConfig>
 }>()
+
+// How one message's turn should draw: live on the spine, or folded into a receipt until opened.
+type TurnView = {
+  root: string
+  live: boolean
+  open: boolean
+  toggle: () => void
+  receipt: () => Receipt
+  model: () => string
+  answer: () => string | undefined
+  phases: () => Map<string, Phase>
+}
 
 function use() {
   const ctx = useContext(context)
@@ -199,7 +215,19 @@ export function Session() {
 
   createEffect(() => {
     const title = Locale.truncate(session()?.title ?? "", 50)
-    setEpilogue(sessionEpilogue({ title, sessionID: session()?.id }))
+    const started = messages().find((message) => message.role === "user")?.time.created ?? 0
+    const assistants = messages().flatMap((message) => (message.role === "assistant" ? [message] : []))
+    setEpilogue(
+      sessionEpilogue({
+        title,
+        sessionID: session()?.id,
+        receipt: receipt(
+          started,
+          assistants,
+          messages().flatMap((message) => partsOf(message.id)),
+        ),
+      }),
+    )
   })
   onCleanup(() => setEpilogue())
   const children = createMemo(() => {
@@ -209,6 +237,7 @@ export function Session() {
       .toSorted((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
   })
   const messages = createMemo(() => sync.data.message[route.sessionID] ?? [])
+  const partsOf = (id: string) => sync.data.part[id] ?? []
   const messagesBeforeRevert = () => {
     const messageID = session()?.revert?.messageID
     if (!messageID) return messages()
@@ -247,12 +276,65 @@ export function Session() {
     return pending === -1 ? undefined : pending
   })
 
+  const turnRoots = createMemo(() => roots(messages(), partsOf))
+  const status = createMemo(() => sync.data.session_status?.[route.sessionID])
+  // With a prompt queued behind a running turn, the turn on the spine is the one still replying.
+  const liveRoot = createMemo(() => {
+    if ((status()?.type ?? "idle") === "idle") return undefined
+    const working = messages().findLast((message) => message.role === "assistant" && !message.time.completed)
+    return turnRoots().get((working ?? messages().at(-1))?.id ?? "")
+  })
+  const [opened, setOpened] = createStore<Record<string, boolean>>({})
+  const [allOpen, setAllOpen] = createSignal(false)
+  const turnMessages = (root: string) => messages().filter((message) => turnRoots().get(message.id) === root)
+  const turnParts = (root: string) => turnMessages(root).flatMap((message) => partsOf(message.id))
+  const turnAssistants = (root: string) =>
+    turnMessages(root).flatMap((message) => (message.role === "assistant" ? [message] : []))
+  const turnView = (messageID: string): TurnView => {
+    const root = turnRoots().get(messageID) ?? messageID
+    return {
+      root,
+      get live() {
+        return liveRoot() === root
+      },
+      get open() {
+        return allOpen() || (opened[root] ?? false)
+      },
+      toggle: () => setOpened(root, !opened[root]),
+      receipt: () =>
+        receipt(messages().find((m) => m.id === root)?.time.created ?? 0, turnAssistants(root), turnParts(root)),
+      model: () => {
+        const last = turnAssistants(root).at(-1)
+        return last ? Model.name(providers(), last.providerID, last.modelID) : ""
+      },
+      answer: () =>
+        turnParts(root).findLast((part) => part.type === "text" && !part.synthetic && part.text.trim() !== "")?.id,
+      phases: () => phaseStarts(turnParts(root)),
+    }
+  }
+  // The running step, or the routing message while a model is being reached.
+  const now = createMemo(() => {
+    const root = liveRoot()
+    if (!root) return undefined
+    const current = status()
+    if (current?.type === "retry") return current.message
+    const tools = turnParts(root).flatMap((part) => (part.type === "tool" ? [part] : []))
+    return nowText(tools.findLast((part) => part.state.status === "running"))
+  })
+  const [tick, setTick] = createSignal(Date.now())
+  const ticking = setInterval(() => setTick(Date.now()), 1000)
+  onCleanup(() => clearInterval(ticking))
+  const nowSeconds = createMemo(() => {
+    const started = messages().find((message) => message.id === liveRoot())?.time.created ?? tick()
+    return Math.max(0, Math.round((tick() - started) / 1000))
+  })
+
   const lastAssistant = createMemo(() => {
     return messages().findLast((x) => x.role === "assistant")
   })
 
   const dimensions = useTerminalDimensions()
-  const [sidebar, setSidebar] = kv.signal<"auto" | "hide">("sidebar", "auto")
+  const [sidebar, setSidebar] = kv.signal<"auto" | "hide">("sidebar", "hide")
   const [sidebarOpen, setSidebarOpen] = createSignal(false)
   const [conceal, setConceal] = createSignal(true)
   const thinking = useThinkingMode()
@@ -604,6 +686,16 @@ export function Session() {
           sessionID: route.sessionID,
           messageID: message.id,
         })
+      },
+    },
+    {
+      title: allOpen() ? "Fold finished steps" : "Open finished steps",
+      value: "session.steps.toggle",
+      category: "Session",
+      slash: { name: "steps" },
+      run: () => {
+        setAllOpen((value) => !value)
+        dialog.clear()
       },
     },
     {
@@ -1105,6 +1197,7 @@ export function Session() {
           showTimestamps,
           showDetails,
           showGenericToolOutput,
+          turn: turnView,
           diffWrapMode,
           providers,
           sync,
@@ -1114,6 +1207,16 @@ export function Session() {
         <box flexDirection="row" flexGrow={1} minHeight={0}>
           <box flexGrow={1} minHeight={0} paddingBottom={1} paddingLeft={2} paddingRight={2} gap={1}>
             <Show when={session()}>
+              <Show when={now()}>
+                {(text) => (
+                  <NowBar
+                    text={text()}
+                    model={turnView(liveRoot() ?? "").model() || (local.model.parsed().model ?? "")}
+                    seconds={nowSeconds()}
+                    waiting={permissions().length > 0 || questions().length > 0}
+                  />
+                )}
+              </Show>
               <scrollbox
                 ref={(r) => (scroll = r)}
                 viewportOptions={{
@@ -1327,6 +1430,8 @@ function UserMessage(props: {
   const metadataVisible = createMemo(() => queued() || ctx.showTimestamps())
 
   const compaction = createMemo(() => props.parts.find((x) => x.type === "compaction"))
+  const turn = createMemo(() => ctx.turn(props.message.id))
+  const finished = createMemo(() => !turn().live && !queued() && turn().model() !== "")
 
   return (
     <>
@@ -1337,9 +1442,21 @@ function UserMessage(props: {
           marginTop={props.index === 0 ? 0 : 1}
           flexDirection="row"
         >
-          {/* DeV: your messages carry a saffron chevron instead of OpenCode's coloured bar and panel. */}
+          {/* DeV: a finished task leads with how it ended; the live one opens the spine. */}
           <box flexShrink={0} paddingTop={1} paddingLeft={1}>
-            <text fg={color()}>›</text>
+            <Show when={finished()} fallback={<text fg={color()}>◆</text>}>
+              <text
+                fg={
+                  turn().receipt().ended === "done"
+                    ? theme.success
+                    : turn().receipt().ended === "failed"
+                      ? theme.error
+                      : theme.textMuted
+                }
+              >
+                {receiptIcon(turn().receipt().ended)}
+              </text>
+            </Show>
           </box>
           <box
             onMouseOver={() => {
@@ -1350,7 +1467,6 @@ function UserMessage(props: {
             }}
             onMouseUp={props.onMouseUp}
             paddingTop={1}
-            paddingBottom={1}
             paddingLeft={1}
             paddingRight={1}
             backgroundColor={hover() ? theme.backgroundElement : undefined}
@@ -1396,6 +1512,14 @@ function UserMessage(props: {
           </box>
         </box>
       </Show>
+      <Show when={text() && finished()}>
+        <ReceiptLine
+          receipt={turn().receipt()}
+          model={turn().model()}
+          open={turn().open}
+          onToggle={() => turn().toggle()}
+        />
+      </Show>
       <Show when={compaction()}>
         <box
           marginTop={1}
@@ -1417,28 +1541,33 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
   const messages = createMemo(() => sync.data.message[props.message.sessionID] ?? [])
   const model = createMemo(() => Model.name(ctx.providers(), props.message.providerID, props.message.modelID))
 
-  const final = createMemo(() => {
-    return props.message.finish && !["tool-calls", "unknown"].includes(props.message.finish)
-  })
-
-  const duration = createMemo(() => {
-    if (!final()) return 0
-    if (!props.message.time.completed) return 0
-    const user = messages().find((x) => x.role === "user" && x.id === props.message.parentID)
-    if (!user || !user.time) return 0
-    return props.message.time.completed - user.time.created
-  })
+  const turn = createMemo(() => ctx.turn(props.message.id))
+  // A folded turn shows only its final answer: the answer must never hide behind a receipt.
+  const shown = createMemo(() =>
+    turn().live || turn().open ? props.parts : props.parts.filter((part) => part.id === turn().answer()),
+  )
+  const lastPhase = createMemo(() => [...turn().phases().values()].at(-1))
 
   const childShortcut = useCommandShortcut("session.child.first")
   const backgroundShortcut = useCommandShortcut("session.background")
 
   return (
-    <>
-      <For each={props.parts}>
+    <box
+      flexShrink={0}
+      marginLeft={turn().live ? 1 : 0}
+      border={turn().live ? ["left"] : false}
+      customBorderChars={SpineBorder.customBorderChars}
+      borderColor={theme.primary}
+    >
+      <For each={shown()}>
         {(part, index) => {
           const component = createMemo(() => PART_MAPPING[part.type as keyof typeof PART_MAPPING])
+          const opens = createMemo(() => (turn().live || turn().open ? turn().phases().get(part.id) : undefined))
           return (
             <Show when={component()}>
+              <Show when={opens()}>
+                {(phase) => <PhaseNode phase={phase()} current={turn().live && phase() === lastPhase()} />}
+              </Show>
               <Dynamic
                 last={index() === props.parts.length - 1}
                 component={component()}
@@ -1488,33 +1617,10 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
           <text fg={theme.textMuted}>{errorMessage(props.message.error)}</text>
         </box>
       </Show>
-      <Switch>
-        <Match when={props.last || final() || props.message.error?.name === "MessageAbortedError"}>
-          <box ref={(el: BoxRenderable) => alwaysSeparate.add(el)} paddingLeft={3}>
-            <text marginTop={1}>
-              <span
-                style={{
-                  fg:
-                    props.message.error?.name === "MessageAbortedError"
-                      ? theme.textMuted
-                      : local.agent.color(props.message.agent),
-                }}
-              >
-                ◆{" "}
-              </span>{" "}
-              <span style={{ fg: theme.text }}>{Locale.titlecase(props.message.mode)}</span>
-              <span style={{ fg: theme.textMuted }}> · {model()}</span>
-              <Show when={duration()}>
-                <span style={{ fg: theme.textMuted }}> · {Locale.duration(duration())}</span>
-              </Show>
-              <Show when={props.message.error?.name === "MessageAbortedError"}>
-                <span style={{ fg: theme.textMuted }}> · interrupted</span>
-              </Show>
-            </text>
-          </box>
-        </Match>
-      </Switch>
-    </>
+      <Show when={turn().live && props.last}>
+        <PhasesAhead after={lastPhase()} />
+      </Show>
+    </box>
   )
 }
 

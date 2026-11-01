@@ -35,8 +35,10 @@ def xterm256(n):
 
 lines = open(src, encoding="utf-8", errors="replace").read().split("\n")
 cells = []
+# tmux doesn't repeat colours at each line start, and a line's unset tail keeps the current background.
+fg, bg, is_bold = default_fg, None, False
 for line in lines:
-    fg, bg, is_bold, row = default_fg, None, False, []
+    row = []
     for token in re.split(r"(\x1b\[[0-9;:]*m)", line):
         if token.startswith("\x1b["):
             codes = [int(c) if c else 0 for c in re.split("[;:]", token[2:-1])] or [0]
@@ -74,9 +76,10 @@ for line in lines:
             continue
         for char in token:
             row.append((char, fg, bg, is_bold))
-    cells.append(row)
+    cells.append((row, bg))
 
-width = max((len(r) for r in cells), default=1)
+width = max((len(r) for r, _ in cells), default=1)
+cells = [r + [(" ", default_fg, tail, False)] * (width - len(r)) for r, tail in cells]
 img = Image.new("RGB", (width * cw + 16, len(cells) * ch + 16), default_bg)
 draw = ImageDraw.Draw(img)
 for y, row in enumerate(cells):

@@ -1441,9 +1441,12 @@ export function Prompt(props: PromptProps) {
   return (
     <>
       <box ref={(r: BoxRenderable) => (anchor = r)} visible={props.visible !== false} width="100%">
-        {/* DeV: a rounded frame in the signature colour (OpenCode used a left bar and a shadow row). */}
-        <box width="100%" border borderStyle="rounded" borderColor={frameColor()}>
-          <box paddingLeft={1} paddingRight={1} flexShrink={0} flexGrow={1} width="100%">
+        {/* DeV: no frame, just the prompt mark. Every other agent draws a box here. */}
+        <box width="100%" flexDirection="row" paddingTop={1}>
+          <box flexShrink={0} paddingLeft={1}>
+            <text fg={frameColor()}>❯</text>
+          </box>
+          <box paddingLeft={1} paddingRight={1} flexShrink={1} flexGrow={1} minWidth={0}>
             <textarea
               width="100%"
               placeholder={placeholderText()}

@@ -19,3 +19,12 @@ export const SplitBorder = {
     vertical: "┃",
   },
 }
+
+// DeV's spine: one thin line down the live task.
+export const SpineBorder = {
+  border: ["left" as const],
+  customBorderChars: {
+    ...EmptyBorder,
+    vertical: "│",
+  },
+}

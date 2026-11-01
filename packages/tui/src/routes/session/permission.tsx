@@ -401,13 +401,12 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
 
           const header = () => (
             <box flexDirection="column" gap={0}>
-              <box flexDirection="row" gap={1} flexShrink={0}>
-                <text fg={theme.primary}>{"◆"}</text>
-                <text fg={theme.text} attributes={TextAttributes.BOLD}>
-                  Permission required
+              <box flexDirection="row" flexShrink={0} backgroundColor={theme.primary}>
+                <text fg={selectedForeground(theme, theme.primary)} attributes={TextAttributes.BOLD}>
+                  {" ? DeV needs your OK "}
                 </text>
               </box>
-              <box flexDirection="row" gap={1} paddingLeft={2} flexShrink={0}>
+              <box flexDirection="row" gap={1} paddingLeft={1} paddingTop={1} flexShrink={0}>
                 <text fg={theme.textMuted} flexShrink={0}>
                   {current.icon}
                 </text>

@@ -182,7 +182,7 @@ Not urgent, but it must be done before v1.0.
 - [x] Default TUI theme `dev` in the signature colour.
 - [x] **TUI restyle** (colours and frames only; the layout is still OpenCode's): rounded saffron prompt and permission frames; your messages marked with a saffron chevron instead of a bar on a panel; saffron reply marker, main agent, sidebar titles and footer mark; a time-of-day greeting on the home screen; hint row teaches shift+tab modes and # memory.
 - [x] TUI restyle, tool output: a thin rounded frame with a saffron marker; light theme checked on screen (deep saffron stays readable); `/goal` status row. (`script/ansi-to-png.py` turns tmux captures into images.)
-- [ ] **Real TUI redesign, unlike any other agent:** three directions (Mission Spine, Ledger, Receipts) are at https://claude.ai/artifact/1gv9vCTzipdatdqVLeDgWC. Waiting for the owner to pick, then the layout is rebuilt to match.
+- [x] **Real TUI redesign, unlike any other agent:** the owner chose Receipts for finished work plus the live Mission Spine. A saffron band opens home, a NOW bar says what is happening, the current task runs on a Plan/Do/Verify spine, finished tasks fold into a receipt (`/steps` or a click opens them), the prompt has no frame, the sidebar is off by default, and exit prints a session receipt. Checked in the compiled binary, in dark and light, down to 76 columns.
 - [x] Rename the visible `opencode.log` and `opencode-*.db` files to `dev.log` and `dev*.db`; existing sessions move over on first run.
 - [x] The diff view's empty left column for new files: a diff that only adds lines uses the unified view.
 - [x] Replace OpenCode's SVG wordmark and mark in `packages/ui`.
