@@ -12,15 +12,22 @@ const outside = path.join(os.homedir(), `.dev-sandbox-test-${process.pid}`)
 
 afterAll(() => fs.rm(outside, { force: true }))
 
-async function sh(command: string, root: string) {
+async function sh(command: string, root: string, env?: Record<string, string>) {
   process.env["DEV_DISABLE_SANDBOX"] = "false"
   const wrapped = await Sandbox.wrap(command, [root], "/bin/bash").finally(() => {
     process.env["DEV_DISABLE_SANDBOX"] = "true"
   })
   expect(wrapped).toBeDefined()
   // Async spawn: the sandbox's network proxy runs in this process.
-  const proc = Bun.spawn(["/bin/bash", "-c", wrapped!], { cwd: root, stdout: "pipe", stderr: "pipe" })
-  return { code: await proc.exited, out: await new Response(proc.stdout).text() }
+  const proc = Bun.spawn(["/bin/bash", "-c", wrapped!], {
+    cwd: root,
+    stdout: "pipe",
+    stderr: "pipe",
+    env: { ...process.env, ...env },
+  })
+  const result = { code: await proc.exited, out: await new Response(proc.stdout).text() }
+  await Sandbox.cleanup()
+  return result
 }
 
 describe.skipIf(!available)("shell sandbox", () => {
@@ -30,6 +37,22 @@ describe.skipIf(!available)("shell sandbox", () => {
     expect((await sh(`echo bad > ${outside}`, dir.path)).code).not.toBe(0)
     expect(await Bun.file(outside).exists()).toBe(false)
     expect((await sh("echo secret > .env", dir.path)).code).not.toBe(0)
+  })
+
+  test("leaves no placeholder files in the project", async () => {
+    await using dir = await tmpdir()
+    await sh("true", dir.path)
+    expect(await fs.readdir(dir.path, { recursive: true })).toEqual(
+      (await fs.readdir(dir.path, { recursive: true })).filter((file) => !file.startsWith(".bash") && file !== ".env"),
+    )
+  })
+
+  test("git add -A works, and adds real files but no placeholders", async () => {
+    await using dir = await tmpdir({ git: true })
+    await Bun.write(path.join(dir.path, "real.txt"), "real")
+    const result = await sh("git add -A && git diff --cached --name-only", dir.path, await Sandbox.env())
+    expect(result.code).toBe(0)
+    expect(result.out.trim()).toBe("real.txt")
   })
 
   test("cannot read DeV's key store", async () => {

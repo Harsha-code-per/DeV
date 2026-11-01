@@ -118,8 +118,11 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
 - [x] A free tier with a small per-minute budget (Groq: 8,000 tokens) rejected every request, because a full request is ~17K tokens. The rejection was also misread as a context overflow, which compacted a new session and printed the summary as the answer. Such models now get a lean request; the limit is remembered per model.
 - [x] freellmapi: `/connect` takes its key and it joins `auto/free`. Verified in the compiled binary against the real FreeLLMAPI container (models listed, reply through it with all tools). Honest wording: large free capacity, not unlimited.
 - [x] `auto/free` must only use models confirmed free (`anyapi/openai/gpt-5.4` qualified on a listed price of 0).
-- [ ] DeV picks the mode (build, plan, goal) by itself, tells you, and you can override it.
-- [ ] Release versions still come from OpenCode's npm package in `packages/script/src/index.ts`; use DeV's own. `release.yml` has never run, and no release has ever been installed.
+- [x] DeV picks the mode (build, plan, goal) by itself, tells you, and you can override it. Measured in the compiled TUI on free models: right mode 8 of 10 times (small 3/3, large 3/4, "keep going" 2/3); a miss just stays in Build.
+- [x] Sandbox on Linux: placeholder files were left in the project and `git add -A` failed inside it in every project. Both fixed and verified in the compiled binary.
+- [x] A model that kept announcing work was nudged forever, because each nudge reset the count. Now two per prompt.
+- [x] Release versions come from DeV's own git tags.
+- [ ] `release.yml` has never run, and no release has ever been installed.
 - [x] Shell API keys no longer connect silently; `/connect` offers them. `scripts/install-local` builds and links a checkout, with the commit in the version.
 
 ## M1 — DeV Code: match, then beat, Claude Code
@@ -154,6 +157,7 @@ DeV started as a fork of OpenCode (MIT), so we didn't have to rebuild the engine
   - automatic retries;
   - long sessions that survive compaction;
   - never hangs (watchdogs on every external call).
+  - [x] a malformed tool call rejected by the provider (Groq) is retried instead of ending the session.
 
 ### Beyond Claude Code
 

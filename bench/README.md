@@ -30,13 +30,13 @@ Options: `--agents` (`devcode`, `claude`, `codex`, `none`), `--tasks`, `--model`
 
 Each agent run is memory-capped with `scripts/capped 3G` and killed at the timeout. Results go to `results/<run-id>.json` (pass or fail, seconds, exit code, tokens, cost, the agent's last message and the test output) and a summary table is printed. Result files are not committed.
 
-**Running `claude` or `codex` uses your own Claude Code or Codex account and its quota or credit.** DeV Code reads provider keys from the repo's `.env`, only inside its own process.
+**Running `claude` or `codex` uses your own Claude Code or Codex account and its quota or credit.** DeV Code uses whatever `dev` has stored from `/connect`; set `XDG_DATA_HOME` to run the benchmark from a separate login.
 
 ## How each agent is run
 
 | Agent | Command |
 |---|---|
-| `devcode` | `dev run --format json --permission-mode auto --model auto/free <task>` |
+| `devcode` | The installed `dev`: `dev run --format json --permission-mode auto --model auto/free <task>` |
 | `claude` | `claude -p --dangerously-skip-permissions --output-format json <task>` |
 | `codex` | `codex exec --json --sandbox workspace-write <task>` (Codex reports tokens, not cost) |
 

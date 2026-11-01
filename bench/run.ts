@@ -41,11 +41,10 @@ type ClaudeResult = {
 type CodexEvent = { type: string; usage?: { input_tokens: number; output_tokens: number }; item?: { type: string; text?: string } }
 
 const agents: Record<string, { cmd: (prompt: string) => string[]; parse: (stdout: string) => Report }> = {
-  // Loads DeV's .env into this process only, so the keys never reach the harness or the other agents.
+  // The installed binary with a stored login, exactly what a user runs. Never source or .env.
   devcode: {
     cmd: (prompt) => [
-      ...["sh", "-c", 'set -a; [ -f "$0" ] && . "$0"; set +a; exec "$@"', path.join(DEV, ".env")],
-      ...["bun", path.join(DEV, "packages/devcode/src/index.ts"), "run", "--format", "json"],
+      ...["dev", "run", "--format", "json"],
       ...["--permission-mode", "auto", "--model", args.model ?? "auto/free", prompt],
     ],
     parse: (stdout) => {

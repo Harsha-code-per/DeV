@@ -645,10 +645,14 @@ export const ShellTool = Tool.define(
                   const wrapped =
                     ps || params.dangerouslyDisableSandbox
                       ? undefined
-                      : yield* Effect.promise(() => Sandbox.wrap(params.command, [root, ...scan.dirs], shell, cfg.sandbox))
+                      : yield* Effect.promise(() =>
+                          Sandbox.wrap(params.command, [root, ...scan.dirs], shell, cfg.sandbox),
+                        )
                   const escape = params.dangerouslyDisableSandbox && Sandbox.supported() && !ps
                   if (escape) scan.patterns.add(params.command)
-                  yield* ask(ctx, scan, params, wrapped ? "confined" : escape ? "escape" : undefined)
+                  yield* ask(ctx, scan, params, wrapped ? "confined" : escape ? "escape" : undefined).pipe(
+                    Effect.onError(() => (wrapped ? Effect.promise(() => Sandbox.cleanup()) : Effect.void)),
+                  )
                   return wrapped
                 }),
               )
@@ -659,11 +663,14 @@ export const ShellTool = Tool.define(
                   command: params.command,
                   sandboxed,
                   cwd,
-                  env: yield* shellEnv(ctx, cwd),
+                  env: {
+                    ...(yield* shellEnv(ctx, cwd)),
+                    ...(sandboxed ? yield* Effect.promise(() => Sandbox.env()) : {}),
+                  },
                   timeout,
                 },
                 ctx,
-              )
+              ).pipe(Effect.ensuring(sandboxed ? Effect.promise(() => Sandbox.cleanup()) : Effect.void))
             }),
         }
       })

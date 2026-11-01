@@ -1,9 +1,14 @@
+import { execFile } from "child_process"
+import fs from "fs/promises"
 import os from "os"
 import path from "path"
+import { promisify } from "util"
 import { Flag } from "@dev-ai/core/flag/flag"
 import { Global } from "@dev-ai/core/global"
 import type { SandboxRuntimeConfig } from "@anthropic-ai/sandbox-runtime"
 import type { ConfigSandboxV1 } from "@dev-ai/core/v1/config/sandbox"
+
+const execFileAsync = promisify(execFile)
 
 // DeV runs every shell command inside Anthropic's sandbox-runtime (Apache-2.0), the OS-level sandbox
 // Claude Code uses: bubblewrap on Linux, Seatbelt on macOS. A command can write only to the project,
@@ -106,6 +111,57 @@ export async function wrap(command: string, writable: string[], shell?: string, 
   // The network proxy reads the allowlist from the manager's config, so keep it in step with dev.json.
   SandboxManager.updateConfig(config(writable, settings))
   return SandboxManager.wrapWithSandbox(command, shell, config(writable, settings))
+}
+
+// Paths the sandbox write-protects, which appear as device files inside it when they don't exist.
+const PLACEHOLDERS = [
+  ".env",
+  ".gitconfig",
+  ".gitmodules",
+  ".bashrc",
+  ".bash_profile",
+  ".zshrc",
+  ".zprofile",
+  ".profile",
+  ".ripgreprc",
+  ".mcp.json",
+  ".vscode",
+  ".idea",
+  ".claude/commands",
+  ".claude/agents",
+]
+
+let excludes: Promise<string> | undefined
+
+/**
+ * Environment for a wrapped command. git refuses device files, so `git add -A` fails in any project
+ * unless the placeholders are ignored. A sandboxed command can't write those paths, so ignoring them
+ * there hides nothing it made. Git allows one global ignore file, so the user's own is copied in.
+ */
+export async function env() {
+  excludes ??= (async () => {
+    const configured = await execFileAsync("git", ["config", "--global", "--path", "core.excludesFile"]).then(
+      (result) => result.stdout.trim(),
+      () => "",
+    )
+    const own = await fs
+      .readFile(configured || path.join(Global.Path.home, ".config/git/ignore"), "utf8")
+      .catch(() => "")
+    const file = path.join(Global.Path.state, "sandbox-gitignore")
+    await fs.mkdir(path.dirname(file), { recursive: true })
+    await fs.writeFile(file, [own, ...PLACEHOLDERS].join("\n"))
+    return file
+  })()
+  return { GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "core.excludesFile", GIT_CONFIG_VALUE_0: await excludes }
+}
+
+/**
+ * On Linux the sandbox leaves empty read-only files (.bashrc, .env, .gitconfig…) in the project as mount
+ * points for paths it protects. Call after each wrapped command, or they show up in the user's repo.
+ */
+export async function cleanup() {
+  const { SandboxManager } = await import("@anthropic-ai/sandbox-runtime")
+  SandboxManager.cleanupAfterCommand()
 }
 
 function expand(entry: string) {
