@@ -29,6 +29,7 @@ fail() {
   exit 1
 }
 # Shows a path under the home folder as ~/...
+# shellcheck disable=SC2088 # the ~ is for display
 pretty() { case "$1" in "$HOME"/*) echo "~/${1#"$HOME"/}" ;; *) echo "$1" ;; esac; }
 
 # fetch URL FILE [bar]: "bar" shows a progress bar when there is a terminal to draw it on.
