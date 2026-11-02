@@ -2,8 +2,10 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## 1.0.5 (unreleased)
+## 1.0.5 (2026-11-02)
 
+- DeV asks before it guesses. When a request leaves out something only you know (where, when, budget, who it is for, which style), it asks with options, the recommended one first, checkboxes when several apply, and room for your own answer. Open-ended requests such as "find hackathons I can attend" or "plan a weekend trip for me" always start by asking or by saying there is enough to go on: on DeV's free models, 10 of 10 such requests now ask, against 1 of 5 before, and clear requests still get a straight answer.
+- Typing quickly no longer starts voice recording: only a held Space does.
 - A waiting update stays in view beside the model name on every screen, not only at startup.
 - Update checks and `devcode upgrade` use GitHub's release links instead of its API, which allows 60 requests an hour per address. A check that fails now says so instead of reporting "no updates".
 

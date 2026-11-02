@@ -142,7 +142,15 @@ export function usePromptVoice(input: () => TextareaRenderable | undefined) {
       cancel()
       return true
     }
-    if (event.name !== "space" || event.ctrl || event.meta || event.option || event.shift) return false
+    if (event.name !== "space" || event.ctrl || event.meta || event.option || event.shift) {
+      // A held Space is spaces and nothing else; any other key means the person is typing.
+      if (event.eventType !== "release") {
+        streak = 0
+        typed = 0
+        last = 0
+      }
+      return false
+    }
     const now = performance.now()
     if (current === "listening") {
       event.preventDefault()

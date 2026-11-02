@@ -1,10 +1,12 @@
-Use this tool when you need to ask the user questions during execution. This allows you to:
-1. Gather user preferences or requirements
-2. Clarify ambiguous instructions
-3. Get decisions on implementation choices as you work
-4. Offer choices to the user about what direction to take.
+Ask the person questions and wait for their answers. Use it before acting whenever the request leaves out something that would change the result (where, when, which, how much, for whom, in what style), when there are several reasonable approaches, or when you are stuck. Asking is better than guessing.
 
-Usage notes:
-- When `custom` is enabled (default), a "Type your own answer" option is added automatically; don't include "Other" or catch-all options
-- Answers are returned as arrays of labels; set `multiple: true` to allow selecting more than one
-- If you recommend a specific option, make that the first option in the list and add "(Recommended)" at the end of the label
+How to ask well:
+- Put all your questions in one call, at most four, each with a short header.
+- Give 2 to 4 concrete options per question, each with a one-line description of what choosing it means.
+- Put the option you recommend first and end its label with "(Recommended)".
+- Set `multiple: true` when more than one answer can apply.
+- When `custom` is enabled (the default), a "Type your own answer" choice is added for you; don't include "Other" or catch-all options.
+- Make each question understandable on its own: say briefly what you found and why the choice matters.
+- Don't ask "Should I proceed?" or anything already answered in the request or the project.
+
+Answers come back as arrays of option labels, or the person's own text.

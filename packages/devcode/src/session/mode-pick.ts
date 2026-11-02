@@ -27,4 +27,24 @@ export function pick(text: string) {
   return big ? "plan_enter" : undefined
 }
 
+// Open-ended requests about the person ("plan a weekend trip for me", "find me a job"): their result
+// depends on things only the person knows, and free models skipped asking 4 times in 10 even with the
+// rules and a reminder. For these the first step must either ask or say it has enough.
+// ponytail: wording rules again; anything else keeps the model's own judgement.
+const OPEN_VERB =
+  /^(?:(?:please|can you|could you|help me)\s+)?(?:find|suggest|recommend|plan|organi[sz]e|write|design|build|make|create|add|set up|choose|pick|book|research|compare|search|look for|get me|give me|draft|come up with)\b/i
+const ABOUT_THEM = /\b(?:me|my|mine|i|i'm|our|us|we)\b/i
+const MAX_OPEN_WORDS = 14
+
+export function open(text: string) {
+  const prompt = text.trim()
+  return (
+    prompt.split(/\s+/).length <= MAX_OPEN_WORDS &&
+    OPEN_VERB.test(prompt) &&
+    ABOUT_THEM.test(prompt) &&
+    !NAMES_A_FILE.test(prompt) &&
+    !/https?:\/\/|["“]/.test(prompt)
+  )
+}
+
 export * as ModePick from "./mode-pick"

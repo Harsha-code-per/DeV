@@ -1327,6 +1327,10 @@ const layer = Layer.effect(
 
             // Read before plugins run: they add their own text to the message.
             const wanted = pickMode(msgs, agent.name)
+            // DeV: an open-ended request about the person starts with a choice between asking and saying
+            // there is enough to go on (ModePick.open). Free models skip asking otherwise.
+            const decide =
+              !wanted && !!tools["question"] && agent.mode !== "subagent" && isOpenRequest(msgs, agent.name)
 
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
@@ -1363,9 +1367,13 @@ const layer = Layer.effect(
               ],
               // DeV: the mode is decided from your prompt; on that first step the one tool that switches
               // to it is the only choice. It is absent where it isn't allowed, such as `dev run` and plan_enter.
-              tools: picked ? { [picked]: tools[picked] } : tools,
+              tools: picked
+                ? { [picked]: tools[picked] }
+                : decide && format.type !== "json_schema"
+                  ? { question: tools["question"], proceed: PROCEED_TOOL }
+                  : tools,
               model,
-              toolChoice: picked || format.type === "json_schema" ? "required" : undefined,
+              toolChoice: picked || decide || format.type === "json_schema" ? "required" : undefined,
             })
 
             if (structured !== undefined) {
@@ -1709,6 +1717,28 @@ export const node = LayerNode.make({
     RuntimeFlags.node,
     Database.node,
   ],
+})
+
+function isOpenRequest(messages: SessionV1.WithParts[], agent: string) {
+  const last = messages.at(-1)
+  if (agent !== "build" || last?.info.role !== "user") return false
+  return ModePick.open(
+    last.parts.flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : [])).join("\n"),
+  )
+}
+
+// The other choice on the first step of an open-ended request: the request, the project or earlier
+// messages already say enough, so the model starts without asking.
+const PROCEED_TOOL = tool({
+  description:
+    "Call this when the request, the project or earlier messages already tell you everything that would change the result, so you can start without asking. If anything the person knows would change it, call the question tool instead.",
+  inputSchema: jsonSchema({ type: "object", properties: {}, additionalProperties: false }),
+  async execute() {
+    return { output: "Go ahead with the request.", title: "Enough to start", metadata: {} }
+  },
+  toModelOutput({ output }) {
+    return { type: "text", value: output.output }
+  },
 })
 
 function pickMode(messages: SessionV1.WithParts[], agent: string) {

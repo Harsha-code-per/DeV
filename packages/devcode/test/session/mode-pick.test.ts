@@ -41,3 +41,24 @@ test("questions and small jobs go straight to work", () => {
 test("you can always say no plan", () => {
   expect(ModePick.pick("build a REST API for this shop with products, without planning")).toBeUndefined()
 })
+
+test("open-ended requests about the person must ask or say they have enough", () => {
+  for (const text of [
+    "find hackathons between November 2 and November 10 that I can attend",
+    "suggest a name for my new app",
+    "plan a weekend trip for me",
+    "organise a birthday party for my friend",
+    "find me a job",
+    "recommend a laptop I should buy",
+  ])
+    expect(ModePick.open(text)).toBe(true)
+  for (const text of [
+    "what is the capital of France?",
+    "create a file named hello.txt containing the text hello world",
+    "fix my failing test",
+    "add a dark mode toggle",
+    "explain what a closure is in JavaScript",
+    "find the bug in src/server.ts for me",
+  ])
+    expect(ModePick.open(text)).toBe(false)
+})

@@ -5,6 +5,7 @@ import { InstanceState } from "@/effect/instance-state"
 
 import PROMPT_ANTHROPIC from "./prompt/anthropic.txt"
 import PROMPT_DEFAULT from "./prompt/default.txt"
+import PROMPT_DEV from "./prompt/dev.txt"
 import PROMPT_BEAST from "./prompt/beast.txt"
 import PROMPT_GEMINI from "./prompt/gemini.txt"
 import PROMPT_GPT from "./prompt/gpt.txt"
@@ -26,7 +27,12 @@ import { MCP } from "@/mcp"
 import { PermissionV1 } from "@dev-ai/core/v1/permission"
 import { Untrusted } from "@/util/untrusted"
 
+/** The model family's prompt, then DeV's own rules for working with people, which every model gets. */
 export function provider(model: Provider.Model) {
+  return [...family(model), PROMPT_DEV]
+}
+
+function family(model: Provider.Model) {
   if (model.api.id.includes("muse")) {
     const name = model.api.id.includes("muse-glimmer") ? "Muse Glimmer" : "Muse Spark"
     return [PROMPT_META.replaceAll("{{MODEL_NAME}}", name)]
