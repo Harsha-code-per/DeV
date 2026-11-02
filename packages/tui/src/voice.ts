@@ -391,6 +391,8 @@ self.onmessage = ({ data }) => {
 type Live = { worker: Worker; ready: Promise<void>; next: number; pending: Map<number, (text: string) => void> }
 let live: Live | undefined
 let liveFailed = false
+/** Why live transcription could not start, when it could not. */
+export let liveProblem: string | undefined
 let liveIdle: ReturnType<typeof setTimeout> | undefined
 
 function liveEngine() {
@@ -417,8 +419,9 @@ function liveEngine() {
     tokens: path.join(modelDir, "tokens.txt"),
   })
   const current = { worker, ready, next: 0, pending }
-  ready.catch(() => {
+  ready.catch((error: Error) => {
     liveFailed = true
+    liveProblem = error.message
     worker.terminate()
     if (live === current) live = undefined
   })

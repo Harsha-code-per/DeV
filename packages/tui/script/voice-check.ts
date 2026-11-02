@@ -14,7 +14,7 @@ const tone = Int16Array.from({ length: 16000 }, (_, i) => Math.round(Math.sin(i 
 console.log("engine ran, heard:", JSON.stringify(await Voice.transcribe(tone, "local", [])))
 // Live transcription loads the engine's C library in a worker; undefined means it could not.
 const live = await Voice.partial(tone)
-if (live === undefined) throw new Error("Live transcription could not load the engine library")
+if (live === undefined) throw new Error(`Live transcription could not load the engine library: ${Voice.liveProblem}`)
 console.log("live engine loaded, heard:", JSON.stringify(live))
 
 const result = await (async () => {
