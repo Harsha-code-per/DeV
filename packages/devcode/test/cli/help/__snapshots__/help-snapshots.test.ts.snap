@@ -1,12 +1,7 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev acp --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev acp
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev acp --help 1`] = `
+"devcode acp
 
 start ACP (Agent Client Protocol) server
 
@@ -23,43 +18,31 @@ Options:
       --mdns-domain  custom domain name for mDNS service (default: dev-ai.local)
                                                                   [string] [default: "dev-ai.local"]
       --cors         additional domains to allow for CORS                      [array] [default: []]
-      --cwd          working directory [string] [default: "<HOME>"]
-"
+      --cwd          working directory [string] [default: "<HOME>"]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev mcp --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev mcp
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev mcp --help 1`] = `
+"devcode mcp
 
 manage MCP (Model Context Protocol) servers
 
 Commands:
-  dev mcp add [name]     add an MCP server
-  dev mcp list           list MCP servers and their status                             [aliases: ls]
-  dev mcp auth [name]    authenticate with an OAuth-enabled MCP server
-  dev mcp logout [name]  remove OAuth credentials for an MCP server
-  dev mcp debug <name>   debug OAuth connection for an MCP server
+  devcode mcp add [name]     add an MCP server
+  devcode mcp list           list MCP servers and their status                         [aliases: ls]
+  devcode mcp auth [name]    authenticate with an OAuth-enabled MCP server
+  devcode mcp logout [name]  remove OAuth credentials for an MCP server
+  devcode mcp debug <name>   debug OAuth connection for an MCP server
 
 Options:
   -h, --help        show help                                                              [boolean]
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev attach --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev attach <url>
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev attach --help 1`] = `
+"devcode attach <url>
 
 attach to a running dev server
 
@@ -80,17 +63,11 @@ Options:
   -u, --username      basic auth username (defaults to DEV_SERVER_USERNAME or 'dev')        [string]
       --mini          start the minimal interactive interface             [boolean] [default: false]
       --no-replay     disable mini session history replay on resume and after resize       [boolean]
-      --replay-limit  cap visible mini replay to the newest N messages                      [number]
-"
+      --replay-limit  cap visible mini replay to the newest N messages                      [number]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev run --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev run [message..]
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev run --help 1`] = `
+"devcode run [message..]
 
 run dev with a message
 
@@ -127,98 +104,74 @@ Options:
       --permission-mode  default asks, accept-edits approves file edits, auto approves everything
                          not denied            [string] [choices: "default", "accept-edits", "auto"]
       --auto             auto-approve permissions that are not explicitly denied (dangerous!)
-                                                                          [boolean] [default: false]
-"
+                                                                          [boolean] [default: false]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev debug --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev debug
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev debug --help 1`] = `
+"devcode debug
 
 debugging and troubleshooting tools
 
 Commands:
-  dev debug config        show resolved configuration
-  dev debug lsp           LSP debugging utilities
-  dev debug rg            ripgrep debugging utilities
-  dev debug file          file system debugging utilities
-  dev debug scrap         list all known projects
-  dev debug skill         list all available skills
-  dev debug snapshot      snapshot debugging utilities
-  dev debug startup       print startup timing
-  dev debug agent <name>  show agent configuration details
-  dev debug v2            debug v2 catalog and built-in plugins
-  dev debug info          show debug information
-  dev debug paths         show global paths (data, config, cache, state)
-  dev debug wait          wait indefinitely (for debugging)
+  devcode debug config        show resolved configuration
+  devcode debug lsp           LSP debugging utilities
+  devcode debug rg            ripgrep debugging utilities
+  devcode debug file          file system debugging utilities
+  devcode debug scrap         list all known projects
+  devcode debug skill         list all available skills
+  devcode debug snapshot      snapshot debugging utilities
+  devcode debug startup       print startup timing
+  devcode debug agent <name>  show agent configuration details
+  devcode debug v2            debug v2 catalog and built-in plugins
+  devcode debug info          show debug information
+  devcode debug paths         show global paths (data, config, cache, state)
+  devcode debug wait          wait indefinitely (for debugging)
 
 Options:
   -h, --help        show help                                                              [boolean]
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev providers --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev providers
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev providers --help 1`] = `
+"devcode providers
 
 manage AI providers and credentials
 
 Commands:
-  dev providers list               list providers and credentials                      [aliases: ls]
-  dev providers login [url]        log in to a provider
-  dev providers logout [provider]  log out from a configured provider
+  devcode providers list               list providers and credentials                  [aliases: ls]
+  devcode providers login [url]        log in to a provider
+  devcode providers logout [provider]  log out from a configured provider
 
 Options:
   -h, --help        show help                                                              [boolean]
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev agent --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev agent
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev agent --help 1`] = `
+"devcode agent
 
 manage agents
 
 Commands:
-  dev agent create  create a new agent
-  dev agent list    list all available agents
+  devcode agent create  create a new agent
+  devcode agent list    list all available agents
 
 Options:
   -h, --help        show help                                                              [boolean]
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev upgrade --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev upgrade [target]
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev upgrade --help 1`] = `
+"devcode upgrade [target]
 
 update DeV Code to the latest release
 
@@ -230,17 +183,11 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev uninstall --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev uninstall
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev uninstall --help 1`] = `
+"devcode uninstall
 
 show how to remove DeV Code and its data
 
@@ -249,17 +196,11 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev serve --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev serve
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev serve --help 1`] = `
+"devcode serve
 
 starts a headless dev server
 
@@ -275,17 +216,11 @@ Options:
                                                                           [boolean] [default: false]
       --mdns-domain  custom domain name for mDNS service (default: dev-ai.local)
                                                                   [string] [default: "dev-ai.local"]
-      --cors         additional domains to allow for CORS                      [array] [default: []]
-"
+      --cors         additional domains to allow for CORS                      [array] [default: []]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev web --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev web
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev web --help 1`] = `
+"devcode web
 
 start dev server and open web interface
 
@@ -301,17 +236,11 @@ Options:
                                                                           [boolean] [default: false]
       --mdns-domain  custom domain name for mDNS service (default: dev-ai.local)
                                                                   [string] [default: "dev-ai.local"]
-      --cors         additional domains to allow for CORS                      [array] [default: []]
-"
+      --cors         additional domains to allow for CORS                      [array] [default: []]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev models --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev models [provider]
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev models --help 1`] = `
+"devcode models [provider]
 
 list all available models
 
@@ -325,17 +254,11 @@ Options:
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
       --pure        run without external plugins                                           [boolean]
       --verbose     use more verbose model output (includes metadata like costs)           [boolean]
-      --refresh     refresh the models cache from models.dev                               [boolean]
-"
+      --refresh     refresh the models cache from models.dev                               [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev stats --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev stats
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev stats --help 1`] = `
+"devcode stats
 
 show token usage and cost statistics
 
@@ -349,17 +272,11 @@ Options:
       --tools       number of tools to show (default: all)                                  [number]
       --models      show model statistics (default: hidden). Pass a number to show top N, otherwise
                     shows all
-      --project     filter by project (default: all projects, empty string: current project)[string]
-"
+      --project     filter by project (default: all projects, empty string: current project)[string]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev export --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev export [sessionID]
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev export --help 1`] = `
+"devcode export [sessionID]
 
 export session data as JSON
 
@@ -372,17 +289,11 @@ Options:
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
       --pure        run without external plugins                                           [boolean]
-      --sanitize    redact sensitive transcript and file data                              [boolean]
-"
+      --sanitize    redact sensitive transcript and file data                              [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev import --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev import <file>
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev import --help 1`] = `
+"devcode import <file>
 
 import session data from JSON file
 
@@ -394,40 +305,39 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev github --help 1`] = `
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev github --help 1`] = `
 "⠀              
 █▀▀▄ █▀▀█ █   █
 █  █ █▀▀▀ ▀▄ ▄▀
 ▀▀▀  ▀▀▀▀   ▀
 
 Commands:
-  dev completion                   generate shell completion script
-  dev acp                          start ACP (Agent Client Protocol) server
-  dev mcp                          manage MCP (Model Context Protocol) servers
-  dev catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
-  dev [project]                    start dev tui                                           [default]
-  dev attach <url>                 attach to a running dev server
-  dev run [message..]              run dev with a message
-  dev debug                        debugging and troubleshooting tools
-  dev providers                    manage AI providers and credentials               [aliases: auth]
-  dev agent                        manage agents
-  dev upgrade [target]             update DeV Code to the latest release
-  dev uninstall                    show how to remove DeV Code and its data
-  dev serve                        starts a headless dev server
-  dev web                          start dev server and open web interface
-  dev models [provider]            list all available models
-  dev stats                        show token usage and cost statistics
-  dev export [sessionID]           export session data as JSON
-  dev import <file>                import session data from JSON file
-  dev pr <number>                  fetch and checkout a GitHub PR branch, then run dev
-  dev session                      manage sessions
-  dev plugin <module>              install plugin and update config                  [aliases: plug]
-  dev db                           database tools
-  dev native-host [origin]         native messaging host for DeV for Chrome
+  devcode completion                   generate shell completion script
+  devcode acp                          start ACP (Agent Client Protocol) server
+  devcode mcp                          manage MCP (Model Context Protocol) servers
+  devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
+  devcode [project]                    start dev tui                                       [default]
+  devcode attach <url>                 attach to a running dev server
+  devcode run [message..]              run dev with a message
+  devcode debug                        debugging and troubleshooting tools
+  devcode providers                    manage AI providers and credentials           [aliases: auth]
+  devcode agent                        manage agents
+  devcode upgrade [target]             update DeV Code to the latest release
+  devcode uninstall                    show how to remove DeV Code and its data
+  devcode serve                        starts a headless dev server
+  devcode web                          start dev server and open web interface
+  devcode models [provider]            list all available models
+  devcode stats                        show token usage and cost statistics
+  devcode export [sessionID]           export session data as JSON
+  devcode import <file>                import session data from JSON file
+  devcode pr <number>                  fetch and checkout a GitHub PR branch, then run dev
+  devcode session                      manage sessions
+  devcode plugin <module>              install plugin and update config              [aliases: plug]
+  devcode db                           database tools
+  devcode native-host [origin]         native messaging host for DeV for Chrome
 
 Positionals:
   project  path to start dev in                                                             [string]
@@ -462,13 +372,8 @@ Options:
 "
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev pr --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev pr <number>
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev pr --help 1`] = `
+"devcode pr <number>
 
 fetch and checkout a GitHub PR branch, then run dev
 
@@ -480,40 +385,28 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev session --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev session
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev session --help 1`] = `
+"devcode session
 
 manage sessions
 
 Commands:
-  dev session list                list sessions
-  dev session delete <sessionID>  delete a session
+  devcode session list                list sessions
+  devcode session delete <sessionID>  delete a session
 
 Options:
   -h, --help        show help                                                              [boolean]
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev plugin --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev plugin <module>
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev plugin --help 1`] = `
+"devcode plugin <module>
 
 install plugin and update config
 
@@ -527,23 +420,17 @@ Options:
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
       --pure        run without external plugins                                           [boolean]
   -g, --global      install in global config                              [boolean] [default: false]
-  -f, --force       replace existing plugin version                       [boolean] [default: false]
-"
+  -f, --force       replace existing plugin version                       [boolean] [default: false]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev db --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev db
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev db --help 1`] = `
+"devcode db
 
 database tools
 
 Commands:
-  dev db [query]     open an interactive sqlite3 shell or run a query                      [default]
-  dev db path        print the database path
+  devcode db [query]     open an interactive sqlite3 shell or run a query                  [default]
+  devcode db path        print the database path
 
 Positionals:
   query  SQL query to execute                                                               [string]
@@ -554,17 +441,11 @@ Options:
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
       --pure        run without external plugins                                           [boolean]
-      --format      Output format                 [string] [choices: "json", "tsv"] [default: "tsv"]
-"
+      --format      Output format                 [string] [choices: "json", "tsv"] [default: "tsv"]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev mcp list --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev mcp list
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev mcp list --help 1`] = `
+"devcode mcp list
 
 list MCP servers and their status
 
@@ -573,17 +454,11 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev mcp add --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev mcp add [name]
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev mcp add --help 1`] = `
+"devcode mcp add [name]
 
 add an MCP server
 
@@ -598,22 +473,16 @@ Options:
       --pure        run without external plugins                                           [boolean]
       --url         URL for a remote MCP server                                             [string]
       --env         environment variable for a local MCP server (KEY=VALUE)                  [array]
-      --header      HTTP header for a remote MCP server (KEY=VALUE)                          [array]
-"
+      --header      HTTP header for a remote MCP server (KEY=VALUE)                          [array]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev mcp auth --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev mcp auth [name]
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev mcp auth --help 1`] = `
+"devcode mcp auth [name]
 
 authenticate with an OAuth-enabled MCP server
 
 Commands:
-  dev mcp auth list  list OAuth-capable MCP servers and their auth status              [aliases: ls]
+  devcode mcp auth list  list OAuth-capable MCP servers and their auth status          [aliases: ls]
 
 Positionals:
   name  name of the MCP server                                                              [string]
@@ -623,17 +492,11 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev mcp logout --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev mcp logout [name]
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev mcp logout --help 1`] = `
+"devcode mcp logout [name]
 
 remove OAuth credentials for an MCP server
 
@@ -645,17 +508,11 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev providers list --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev providers list
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev providers list --help 1`] = `
+"devcode providers list
 
 list providers and credentials
 
@@ -664,17 +521,11 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev providers login --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev providers login [url]
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev providers login --help 1`] = `
+"devcode providers login [url]
 
 log in to a provider
 
@@ -688,17 +539,11 @@ Options:
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
       --pure        run without external plugins                                           [boolean]
   -p, --provider    provider id or name to log in to (skips provider selection)             [string]
-  -m, --method      login method label (skips method selection)                             [string]
-"
+  -m, --method      login method label (skips method selection)                             [string]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev providers logout --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev providers logout [provider]
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev providers logout --help 1`] = `
+"devcode providers logout [provider]
 
 log out from a configured provider
 
@@ -710,17 +555,11 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev agent create --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev agent create
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev agent create --help 1`] = `
+"devcode agent create
 
 create a new agent
 
@@ -736,17 +575,11 @@ Options:
       --permissions, --tools  comma-separated list of permissions to allow (default: all).
                               Available: "bash, read, edit, glob, grep, webfetch, task, todowrite,
                               websearch, lsp, skill"                                        [string]
-  -m, --model                 model to use in the format of provider/model                  [string]
-"
+  -m, --model                 model to use in the format of provider/model                  [string]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev agent list --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev agent list
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev agent list --help 1`] = `
+"devcode agent list
 
 list all available agents
 
@@ -755,17 +588,11 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev session list --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev session list
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev session list --help 1`] = `
+"devcode session list
 
 list sessions
 
@@ -776,17 +603,11 @@ Options:
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
       --pure        run without external plugins                                           [boolean]
   -n, --max-count   limit to N most recent sessions                                         [number]
-      --format      output format             [string] [choices: "table", "json"] [default: "table"]
-"
+      --format      output format             [string] [choices: "table", "json"] [default: "table"]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev session delete --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev session delete <sessionID>
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev session delete --help 1`] = `
+"devcode session delete <sessionID>
 
 delete a session
 
@@ -798,40 +619,39 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev github install --help 1`] = `
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev github install --help 1`] = `
 "⠀              
 █▀▀▄ █▀▀█ █   █
 █  █ █▀▀▀ ▀▄ ▄▀
 ▀▀▀  ▀▀▀▀   ▀
 
 Commands:
-  dev completion                   generate shell completion script
-  dev acp                          start ACP (Agent Client Protocol) server
-  dev mcp                          manage MCP (Model Context Protocol) servers
-  dev catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
-  dev [project]                    start dev tui                                           [default]
-  dev attach <url>                 attach to a running dev server
-  dev run [message..]              run dev with a message
-  dev debug                        debugging and troubleshooting tools
-  dev providers                    manage AI providers and credentials               [aliases: auth]
-  dev agent                        manage agents
-  dev upgrade [target]             update DeV Code to the latest release
-  dev uninstall                    show how to remove DeV Code and its data
-  dev serve                        starts a headless dev server
-  dev web                          start dev server and open web interface
-  dev models [provider]            list all available models
-  dev stats                        show token usage and cost statistics
-  dev export [sessionID]           export session data as JSON
-  dev import <file>                import session data from JSON file
-  dev pr <number>                  fetch and checkout a GitHub PR branch, then run dev
-  dev session                      manage sessions
-  dev plugin <module>              install plugin and update config                  [aliases: plug]
-  dev db                           database tools
-  dev native-host [origin]         native messaging host for DeV for Chrome
+  devcode completion                   generate shell completion script
+  devcode acp                          start ACP (Agent Client Protocol) server
+  devcode mcp                          manage MCP (Model Context Protocol) servers
+  devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
+  devcode [project]                    start dev tui                                       [default]
+  devcode attach <url>                 attach to a running dev server
+  devcode run [message..]              run dev with a message
+  devcode debug                        debugging and troubleshooting tools
+  devcode providers                    manage AI providers and credentials           [aliases: auth]
+  devcode agent                        manage agents
+  devcode upgrade [target]             update DeV Code to the latest release
+  devcode uninstall                    show how to remove DeV Code and its data
+  devcode serve                        starts a headless dev server
+  devcode web                          start dev server and open web interface
+  devcode models [provider]            list all available models
+  devcode stats                        show token usage and cost statistics
+  devcode export [sessionID]           export session data as JSON
+  devcode import <file>                import session data from JSON file
+  devcode pr <number>                  fetch and checkout a GitHub PR branch, then run dev
+  devcode session                      manage sessions
+  devcode plugin <module>              install plugin and update config              [aliases: plug]
+  devcode db                           database tools
+  devcode native-host [origin]         native messaging host for DeV for Chrome
 
 Positionals:
   project  path to start dev in                                                             [string]
@@ -866,36 +686,36 @@ Options:
 "
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev github run --help 1`] = `
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev github run --help 1`] = `
 "⠀              
 █▀▀▄ █▀▀█ █   █
 █  █ █▀▀▀ ▀▄ ▄▀
 ▀▀▀  ▀▀▀▀   ▀
 
 Commands:
-  dev completion                   generate shell completion script
-  dev acp                          start ACP (Agent Client Protocol) server
-  dev mcp                          manage MCP (Model Context Protocol) servers
-  dev catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
-  dev [project]                    start dev tui                                           [default]
-  dev attach <url>                 attach to a running dev server
-  dev run [message..]              run dev with a message
-  dev debug                        debugging and troubleshooting tools
-  dev providers                    manage AI providers and credentials               [aliases: auth]
-  dev agent                        manage agents
-  dev upgrade [target]             update DeV Code to the latest release
-  dev uninstall                    show how to remove DeV Code and its data
-  dev serve                        starts a headless dev server
-  dev web                          start dev server and open web interface
-  dev models [provider]            list all available models
-  dev stats                        show token usage and cost statistics
-  dev export [sessionID]           export session data as JSON
-  dev import <file>                import session data from JSON file
-  dev pr <number>                  fetch and checkout a GitHub PR branch, then run dev
-  dev session                      manage sessions
-  dev plugin <module>              install plugin and update config                  [aliases: plug]
-  dev db                           database tools
-  dev native-host [origin]         native messaging host for DeV for Chrome
+  devcode completion                   generate shell completion script
+  devcode acp                          start ACP (Agent Client Protocol) server
+  devcode mcp                          manage MCP (Model Context Protocol) servers
+  devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
+  devcode [project]                    start dev tui                                       [default]
+  devcode attach <url>                 attach to a running dev server
+  devcode run [message..]              run dev with a message
+  devcode debug                        debugging and troubleshooting tools
+  devcode providers                    manage AI providers and credentials           [aliases: auth]
+  devcode agent                        manage agents
+  devcode upgrade [target]             update DeV Code to the latest release
+  devcode uninstall                    show how to remove DeV Code and its data
+  devcode serve                        starts a headless dev server
+  devcode web                          start dev server and open web interface
+  devcode models [provider]            list all available models
+  devcode stats                        show token usage and cost statistics
+  devcode export [sessionID]           export session data as JSON
+  devcode import <file>                import session data from JSON file
+  devcode pr <number>                  fetch and checkout a GitHub PR branch, then run dev
+  devcode session                      manage sessions
+  devcode plugin <module>              install plugin and update config              [aliases: plug]
+  devcode db                           database tools
+  devcode native-host [origin]         native messaging host for DeV for Chrome
 
 Positionals:
   project  path to start dev in                                                             [string]
@@ -930,13 +750,8 @@ Options:
 "
 `;
 
-exports[`dev CLI help-text snapshots every documented command emits stable help text: dev db path --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
-
-dev db path
+exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev db path --help 1`] = `
+"devcode db path
 
 print the database path
 
@@ -945,6 +760,5 @@ Options:
   -v, --version     show version number                                                    [boolean]
       --print-logs  print logs to stderr                                                   [boolean]
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure        run without external plugins                                           [boolean]
-"
+      --pure        run without external plugins                                           [boolean]"
 `;
