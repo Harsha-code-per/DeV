@@ -1,5 +1,6 @@
 // Voice dictation: record the microphone, then turn speech into text, either on this computer
 // with sherpa-onnx (free, private, offline) or with a connected provider's speech-to-text.
+import { existsSync } from "fs"
 import fs from "fs/promises"
 import path from "path"
 import { Global } from "@dev-ai/core/global"
@@ -150,6 +151,8 @@ async function installArchive(input: {
 }
 
 export type Recording = {
+  /** True once audio is arriving, so "listening" is only shown when it really is. */
+  ready(): boolean
   /** Loudness of the latest audio, 0 to 1, for the level meter. */
   level(): number
   /** Stops and returns 16 kHz mono 16-bit samples. */
@@ -172,6 +175,7 @@ export function record(): Recording {
     }
   })()
   return {
+    ready: () => chunks.length > 0,
     level: () => level,
     async stop() {
       proc.kill("SIGTERM")
@@ -240,7 +244,14 @@ public static class DevMic {
   }
 }`
 
-function windowsRecorder() {
+/** Gets the recorder ready ahead of the first use; on Windows that compiles it, which takes seconds. */
+export async function prepare() {
+  if (process.platform !== "win32") return
+  const proc = Bun.spawn(windowsRecorder(false), { stdout: "ignore", stderr: "pipe", stdin: "ignore" })
+  if ((await proc.exited) !== 0) throw new Error(microphoneError((await new Response(proc.stderr).text()).trim()))
+}
+
+function windowsRecorder(run = true) {
   const dll = path.join(root, "devmic-1.dll")
   // Errors go out as plain text: with stderr redirected, PowerShell would otherwise serialise them.
   const script = [
@@ -249,7 +260,7 @@ function windowsRecorder() {
     `$dll = '${dll.replaceAll("'", "''")}'`,
     `if (-not (Test-Path $dll)) { New-Item -ItemType Directory -Force -Path (Split-Path $dll) | Out-Null; Add-Type -TypeDefinition @'\n${WINDOWS_MIC}\n'@ -OutputAssembly $dll }`,
     `Add-Type -Path $dll`,
-    `exit [DevMic]::Run()`,
+    run ? `exit [DevMic]::Run()` : `exit 0`,
     `} catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }`,
   ].join("\n")
   const shell = Bun.which("powershell.exe") ?? Bun.which("pwsh.exe") ?? "powershell.exe"
@@ -274,6 +285,8 @@ function recordMac(): Recording {
   const proc = Bun.spawn(["osascript", "-l", "JavaScript", "-e", MAC_MIC, out], { stdout: "ignore", stderr: "pipe" })
   const started = Date.now()
   return {
+    // AVAudioRecorder creates the file when recording starts.
+    ready: () => existsSync(out),
     // No live samples here, so the meter breathes while recording instead.
     level: () => 0.3 + 0.2 * Math.sin((Date.now() - started) / 150),
     async stop() {

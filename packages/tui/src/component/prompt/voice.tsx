@@ -23,6 +23,7 @@ export function usePromptVoice(input: () => TextareaRenderable | undefined) {
   const toast = useToast()
   const [state, setState] = createSignal<State>("idle")
   const [level, setLevel] = createSignal(0)
+  const [ready, setReady] = createSignal(false)
   const [progress, setProgress] = createSignal("")
   const engine = () => kv.get("voice", "off") as "off" | Voice.Engine
 
@@ -53,9 +54,11 @@ export function usePromptVoice(input: () => TextareaRenderable | undefined) {
       fail(error)
       return
     }
+    setReady(false)
     setState("listening")
     started = performance.now()
     timer = setInterval(() => {
+      setReady(recording?.ready() ?? false)
       setLevel(recording?.level() ?? 0)
       const now = performance.now()
       if (now - last > RELEASE_MS || now - started > MAX_MS) void finish()
@@ -154,6 +157,7 @@ export function usePromptVoice(input: () => TextareaRenderable | undefined) {
         return
       }
     }
+    await Voice.prepare().catch(() => {})
     if (choice === "local" && !(await Voice.localInstalled())) {
       setState("installing")
       try {
@@ -210,6 +214,7 @@ export function usePromptVoice(input: () => TextareaRenderable | undefined) {
     if (current === "warmup") return "keep holding…"
     if (current === "transcribing") return "transcribing…"
     if (current !== "listening") return
+    if (!ready()) return "starting the microphone…"
     const bars = "▁▂▃▄▅▆▇█"
     const meter = [0.6, 1, 0.8]
       .map((weight) => bars[Math.min(bars.length - 1, Math.floor(level() * weight * bars.length))])

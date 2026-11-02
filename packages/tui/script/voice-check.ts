@@ -14,8 +14,9 @@ const tone = Int16Array.from({ length: 16000 }, (_, i) => Math.round(Math.sin(i 
 console.log("engine ran, heard:", JSON.stringify(await Voice.transcribe(tone, "local", [])))
 
 const result = await (async () => {
+  await Voice.prepare()
   const recording = Voice.record()
-  await Bun.sleep(1500)
+  await Bun.sleep(4000)
   return `recorded ${(await recording.stop()).length} samples`
 })().catch((error: Error) => error.message)
 console.log("recorder:", result)
