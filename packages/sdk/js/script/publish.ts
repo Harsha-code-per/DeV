@@ -16,6 +16,7 @@ const pkg = JSON.parse(originalText) as {
   name: string
   version: string
   exports: Record<string, unknown>
+  repository?: unknown
 }
 function transformExports(exports: Record<string, unknown>) {
   return Object.fromEntries(
@@ -35,6 +36,8 @@ function transformExports(exports: Record<string, unknown>) {
 const pack = process.argv.includes("--pack")
 pkg.name = "@devcodeagent/sdk"
 pkg.version = Script.version
+// npm's provenance check requires the repository the publishing workflow runs in.
+pkg.repository = { type: "git", url: "git+https://github.com/Harsha-code-per/DeV.git", directory: "packages/sdk/js" }
 if (!pack && (await published(pkg.name, pkg.version))) {
   console.log(`already published ${pkg.name}@${pkg.version}`)
 } else {
