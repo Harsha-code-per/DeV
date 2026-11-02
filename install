@@ -2,28 +2,49 @@
 # DeV Code installer for Linux and macOS.
 #   curl -fsSL https://harsha-code-per.github.io/DeV/install | sh
 #   curl -fsSL https://harsha-code-per.github.io/DeV/install | sh -s -- 1.2.3   (a given version)
-# Installs to ~/.devcode/bin, or $DEVCODE_INSTALL_DIR. Every download is checked against the
-# release's SHA256SUMS before anything is installed.
+# Installs to ~/.devcode/bin, or $DEVCODE_INSTALL_DIR, and adds that folder to PATH in your shell's
+# startup file. Every download is checked against the release's SHA256SUMS before anything is
+# installed.
 set -eu
 
 repo="Harsha-code-per/DeV"
 dir="${DEVCODE_INSTALL_DIR:-$HOME/.devcode/bin}"
 version="${1:-${DEVCODE_VERSION:-latest}}"
 
+# Colours only on a terminal, and never when NO_COLOR is set (https://no-color.org).
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  saffron=$(printf '\033[38;2;242;165;22m')
+  green=$(printf '\033[32m')
+  red=$(printf '\033[31m')
+  dim=$(printf '\033[2m')
+  bold=$(printf '\033[1m')
+  reset=$(printf '\033[0m')
+else
+  saffron="" green="" red="" dim="" bold="" reset=""
+fi
+
+step() { printf '  %s✓%s %s\n' "$green" "$reset" "$*"; }
 fail() {
-  echo "error: $*" >&2
+  printf '  %s✗ %s%s\n' "$red" "$*" "$reset" >&2
   exit 1
 }
+# Shows a path under the home folder as ~/...
+pretty() { case "$1" in "$HOME"/*) echo "~/${1#"$HOME"/}" ;; *) echo "$1" ;; esac; }
 
+# fetch URL FILE [bar]: "bar" shows a progress bar when there is a terminal to draw it on.
 fetch() {
+  bar=""
+  if [ "${3:-}" = bar ] && [ -t 2 ]; then bar=1; fi
   if command -v curl >/dev/null 2>&1; then
-    curl -fsSL -o "$2" "$1"
+    if [ -n "$bar" ]; then curl -fL --progress-bar -o "$2" "$1"; else curl -fsSL -o "$2" "$1"; fi
   elif command -v wget >/dev/null 2>&1; then
-    wget -q -O "$2" "$1"
+    if [ -n "$bar" ]; then wget -q --show-progress -O "$2" "$1"; else wget -q -O "$2" "$1"; fi
   else
     fail "curl or wget is required"
   fi
 }
+
+printf '\n  %s%sD e V%s  %sCode installer%s\n\n' "$bold" "$saffron" "$reset" "$dim" "$reset"
 
 case "$(uname -s)" in
   Linux) os=linux ;;
@@ -59,14 +80,26 @@ if [ "$version" = latest ]; then
 else
   base="https://github.com/$repo/releases/download/v${version#v}"
 fi
+step "This computer: $os $arch$variant$libc"
+
+# The musl build links the C++ runtime, which a bare Alpine system leaves out.
+if [ -n "$libc" ] && [ ! -e /usr/lib/libstdc++.so.6 ] && command -v apk >/dev/null 2>&1; then
+  if [ "$(id -u)" = 0 ]; then
+    apk add -q libstdc++ >/dev/null || fail "could not install libstdc++. Run: apk add libstdc++"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo apk add -q libstdc++ >/dev/null || fail "could not install libstdc++. Run: sudo apk add libstdc++"
+  else
+    fail "DeV Code needs libstdc++. Run as root: apk add libstdc++"
+  fi
+  step "Installed libstdc++"
+fi
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-echo "Downloading $asset ($version)"
-if ! { fetch "$base/SHA256SUMS" "$tmp/SHA256SUMS" && fetch "$base/$asset" "$tmp/$asset"; }; then
-  fail "download from $base failed. The release may not exist, or the repository is still private (until v1.0)."
-fi
+printf '  %s↓%s Downloading DeV Code %s(%s)%s\n' "$saffron" "$reset" "$dim" "$version" "$reset"
+fetch "$base/SHA256SUMS" "$tmp/SHA256SUMS" || fail "download from $base failed. Check your connection, or that version $version exists."
+fetch "$base/$asset" "$tmp/$asset" bar || fail "download of $asset failed. Check your connection and try again."
 
 expected=$(awk -v file="$asset" '$2 == file || $2 == "*" file { print $1 }' "$tmp/SHA256SUMS")
 [ -n "$expected" ] || fail "SHA256SUMS has no entry for $asset"
@@ -76,6 +109,7 @@ else
   actual=$(shasum -a 256 "$tmp/$asset" | cut -d' ' -f1)
 fi
 [ "$actual" = "$expected" ] || fail "checksum mismatch for $asset (expected $expected, got $actual)"
+step "Checksum verified"
 
 mkdir -p "$tmp/extract" "$dir"
 tar -xzf "$tmp/$asset" -C "$tmp/extract"
@@ -87,14 +121,38 @@ cp "$tmp/devcode" "$dir/.devcode.new"
 chmod 755 "$dir/.devcode.new"
 mv -f "$dir/.devcode.new" "$dir/devcode"
 ln -sf devcode "$dir/dev"
+installed=$("$dir/devcode" --version 2>/dev/null || echo "$version")
+step "Installed DeV Code $installed to $(pretty "$dir")"
 
-echo "Installed DeV Code $("$dir/devcode" --version 2>/dev/null || echo "$version") to $dir"
+# PATH: the startup file of your shell, plus those of any other shell you have set up, so devcode
+# works in every new terminal. Files that already mention the folder are left alone.
+shell=$(basename "${SHELL:-sh}")
+config="${XDG_CONFIG_HOME:-$HOME/.config}"
+changed=""
+add_path() {
+  [ -f "$1" ] && grep -qF "$dir" "$1" && return 0
+  mkdir -p "$(dirname "$1")"
+  printf '\n# DeV Code\n%s\n' "$2" >>"$1"
+  changed="$changed, $(pretty "$1")"
+}
+posix="export PATH=\"$dir:\$PATH\""
+if [ "$shell" = fish ] || [ -d "$config/fish" ]; then
+  # A conf.d file of its own, in syntax every fish version understands.
+  add_path "$config/fish/conf.d/devcode.fish" "contains -- \"$dir\" \$PATH; or set -gx PATH \"$dir\" \$PATH"
+fi
+if [ "$shell" = zsh ] || [ -f "${ZDOTDIR:-$HOME}/.zshrc" ]; then add_path "${ZDOTDIR:-$HOME}/.zshrc" "$posix"; fi
+if [ "$shell" = bash ] || [ -f "$HOME/.bashrc" ]; then add_path "$HOME/.bashrc" "$posix"; fi
+# macOS opens bash as a login shell, which reads ~/.bash_profile and not ~/.bashrc.
+if [ "$os" = darwin ] && [ "$shell" = bash ]; then add_path "$HOME/.bash_profile" "$posix"; fi
+case "$shell" in fish | zsh | bash) ;; *) add_path "$HOME/.profile" "$posix" ;; esac
+if [ -n "$changed" ]; then step "Added to PATH in ${changed#, }"; fi
+
+printf '\n  %s%sDeV Code is ready.%s\n\n' "$bold" "$saffron" "$reset"
 case ":$PATH:" in
-  *":$dir:"*) echo "Run: devcode (or dev)" ;;
+  *":$dir:"*) printf '  Start with:  %sdevcode%s  %s(or dev)%s\n\n' "$bold" "$reset" "$dim" "$reset" ;;
   *)
-    echo
-    echo "Add DeV Code to your PATH, for example in ~/.bashrc, ~/.zshrc or ~/.profile:"
-    echo "  export PATH=\"$dir:\$PATH\""
-    echo "For fish: fish_add_path $dir"
+    # A piped script cannot change the PATH of the terminal that started it.
+    printf '  Open a new terminal, or run  %sexec %s%s  to use it in this one.\n' "$bold" "$shell" "$reset"
+    printf '  Then start with:  %sdevcode%s  %s(or dev)%s\n\n' "$bold" "$reset" "$dim" "$reset"
     ;;
 esac

@@ -1,15 +1,17 @@
 name: install-test
 
-# Installs a published release on clean machines. The repo is private until v1.0, so this downloads
-# with gh; `curl | sh` and `npm i -g devcode` can only be tested once it is public.
+# Runs the real installers on clean machines, the way a user does, then opens a new shell and runs
+# devcode from PATH. Also runs when an installer changes, against the latest release.
 on:
   release:
     types: [published]
+  push:
+    branches: [main]
+    paths: [install, install.ps1, .github/workflows/install-test.yml]
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag, such as v0.9.0-rc.1
-        required: true
+        description: Release tag, such as v1.0.0 (the latest release when empty)
 
 permissions:
   contents: read
@@ -30,36 +32,50 @@ jobs:
           - { os: macos-latest, asset: devcode-darwin-arm64 }
     runs-on: ${{ matrix.os }}
     steps:
-      - run: gh release download "$TAG" -p "${{ matrix.asset }}.tar.gz" -p SHA256SUMS
-      - name: Checksum matches
-        run: grep " ${{ matrix.asset }}.tar.gz$" SHA256SUMS | shasum -a 256 -c -
-      - name: A tampered archive is rejected
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Release to test
+        run: echo "TAG=${TAG:-$(gh release view --json tagName -q .tagName)}" >> "$GITHUB_ENV"
+      - name: Install zsh and fish, so every startup file is written
         run: |
-          cp "${{ matrix.asset }}.tar.gz" good.bin
+          if command -v apt-get >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y -qq zsh fish >/dev/null; else brew install -q fish; fi
+          touch ~/.zshrc ~/.bashrc
+      - name: Install
+        run: sh ./install "$TAG"
+      - name: devcode works in a new bash, zsh and fish
+        run: |
+          for shell in bash zsh fish; do
+            got=$($shell -ic 'devcode --version' 2>/dev/null | tail -1)
+            echo "$shell: $got"
+            test "$got" = "${TAG#v}"
+            test "$($shell -ic 'dev --version' 2>/dev/null | tail -1)" = "${TAG#v}"
+          done
+      - name: Installing again changes no startup file
+        run: |
+          cat ~/.bashrc ~/.zshrc ~/.config/fish/conf.d/devcode.fish > before
+          sh ./install "$TAG" > /dev/null
+          cat ~/.bashrc ~/.zshrc ~/.config/fish/conf.d/devcode.fish | diff before -
+      - name: Runs
+        run: |
+          export PATH="$HOME/.devcode/bin:$PATH"
+          devcode --help > /dev/null
+          devcode models < /dev/null > /dev/null
+      - name: A tampered archive fails the checksum
+        run: |
+          gh release download "$TAG" -p "${{ matrix.asset }}.tar.gz" -p SHA256SUMS
           echo x >> "${{ matrix.asset }}.tar.gz"
           ! grep " ${{ matrix.asset }}.tar.gz$" SHA256SUMS | shasum -a 256 -c -
-          mv good.bin "${{ matrix.asset }}.tar.gz"
-      - name: Runs on a clean machine
-        run: |
-          mkdir -p "$HOME/.dev-test/bin"
-          tar -xzf "${{ matrix.asset }}.tar.gz" -C "$HOME/.dev-test/bin"
-          ln -s devcode "$HOME/.dev-test/bin/dev"
-          export PATH="$HOME/.dev-test/bin:$PATH"
-          test "$(dev --version)" = "${TAG#v}"
-          dev --help > /dev/null
-          dev models < /dev/null
 
   alpine:
     runs-on: ubuntu-latest
     steps:
-      - run: gh release download "$TAG" -p devcode-linux-x64-musl.tar.gz -p SHA256SUMS
-      - run: grep " devcode-linux-x64-musl.tar.gz$" SHA256SUMS | sha256sum -c -
-      - name: Runs on Alpine
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Release to test
+        run: echo "TAG=${TAG:-$(gh release view --json tagName -q .tagName)}" >> "$GITHUB_ENV"
+      - name: Installs and runs on a bare Alpine
         run: |
-          mkdir bin && tar -xzf devcode-linux-x64-musl.tar.gz -C bin
-          docker run --rm -v "$PWD/bin:/d:ro" alpine:3.20 sh -c \
-            'apk add --no-cache libstdc++ libgcc >/dev/null && /d/devcode --version' | tee version.txt
-          test "$(tail -1 version.txt)" = "${TAG#v}"
+          docker run --rm -e TAG -v "$PWD/install:/install:ro" alpine:3.20 sh -c \
+            'apk add -q curl && sh /install "$TAG" && sh -lc "devcode --version"' | tee out.txt
+          test "$(tail -1 out.txt)" = "${TAG#v}"
 
   windows:
     runs-on: windows-latest
@@ -67,16 +83,21 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - run: gh release download $env:TAG -p devcode-windows-x64.zip -p SHA256SUMS
-      - name: Checksum matches
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Release to test
         run: |
-          $expected = (Select-String ' devcode-windows-x64.zip$' SHA256SUMS).Line.Split(' ')[0]
-          $actual = (Get-FileHash devcode-windows-x64.zip -Algorithm SHA256).Hash.ToLower()
-          if ($actual -ne $expected) { throw "checksum mismatch" }
-      - name: Runs on a clean machine
+          $tag = if ($env:TAG) { $env:TAG } else { gh release view --json tagName -q .tagName }
+          "TAG=$tag" >> $env:GITHUB_ENV
+      - name: Install, and run in the same window
         run: |
-          Expand-Archive devcode-windows-x64.zip -DestinationPath bin
-          $version = (& .\bin\devcode.exe --version).Trim()
+          ./install.ps1 $env:TAG
+          $version = (devcode --version).Trim()
           if ($version -ne $env:TAG.TrimStart('v')) { throw "got $version" }
-          & .\bin\devcode.exe --help | Out-Null
+          if ((dev --version).Trim() -ne $version) { throw "dev failed" }
+          devcode --help | Out-Null
           if ($LASTEXITCODE -ne 0) { throw "help failed" }
+      - name: devcode is on the PATH of new windows
+        run: |
+          $dir = Join-Path $HOME ".devcode\bin"
+          $path = [Environment]::GetEnvironmentVariable("Path", "User")
+          if (($path -split ';') -notcontains $dir) { throw "PATH has no $dir" }
