@@ -125,7 +125,12 @@ export async function run(cmd: string[], opts: RunOptions = {}): Promise<Result>
     stdout: "pipe",
     stderr: "pipe",
   })
-  if (opts.input !== undefined) proc.stdin?.end(opts.input)
+  if (opts.input !== undefined) {
+    // A command may exit without reading its input (a hook that only checks its exit code); the
+    // write then fails with EPIPE, which is not an error of the command.
+    proc.stdin?.on("error", () => {})
+    proc.stdin?.end(opts.input)
+  }
 
   if (!proc.stdout || !proc.stderr) throw new Error("Process output not available")
 
