@@ -46,11 +46,11 @@ async function release(name: string, sums?: (text: string) => string) {
   return serve
 }
 
-async function install(serve: string, args: string[] = []) {
-  const home = await mkdtemp(path.join(root, "home-"))
+async function install(serve: string, args: string[] = [], home?: string) {
+  home ??= await mkdtemp(path.join(root, "home-"))
   const log = path.join(home, "curl.log")
   const proc = Bun.spawn(["sh", script, ...args], {
-    env: { PATH: `${bin}:/usr/bin:/bin`, HOME: home, TMPDIR: home, CURL_LOG: log, SERVE: serve },
+    env: { PATH: `${bin}:/usr/bin:/bin`, SHELL: "/bin/sh", HOME: home, TMPDIR: home, CURL_LOG: log, SERVE: serve },
     stdout: "pipe",
     stderr: "pipe",
   })
@@ -61,6 +61,7 @@ async function install(serve: string, args: string[] = []) {
   ])
   const dir = path.join(home, ".devcode", "bin")
   return {
+    home,
     code,
     output: stdout + stderr,
     urls: (await Bun.file(log).text()).trim().split("\n"),
@@ -78,7 +79,10 @@ describe.skipIf(process.platform === "win32")("install script", () => {
     ).toBe(true)
     expect(await $`${path.join(result.dir, "dev")}`.text()).toBe("9.9.9\n")
     expect(result.output).toContain("Installed DeV Code 9.9.9")
-    expect(result.output).toContain(`export PATH="${result.dir}:$PATH"`)
+    // SHELL is plain sh here, so the POSIX startup file gets the PATH line, once even after a reinstall.
+    await install(await release("again"), [], result.home)
+    const profile = await Bun.file(path.join(result.home, ".profile")).text()
+    expect(profile.split(`export PATH="${result.dir}:$PATH"`).length - 1).toBe(1)
   })
 
   test("installs a given version", async () => {
@@ -97,7 +101,7 @@ describe.skipIf(process.platform === "win32")("install script", () => {
   test("explains a missing release", async () => {
     const result = await install(path.join(root, "nothing"))
     expect(result.code).toBe(1)
-    expect(result.output).toContain("still private")
+    expect(result.output).toContain("Check your connection")
     expect(result.installed).toBe(false)
   })
 })
