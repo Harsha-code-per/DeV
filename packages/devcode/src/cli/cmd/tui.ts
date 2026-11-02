@@ -53,7 +53,10 @@ function createEventSource(client: RpcClient): EventSource {
 
 // Mirrors the V2 CLI updater: the TUI process checks every 10 minutes and installs on this machine,
 // but only when the user picks an option in the /update dialog.
-function createUpdater(latest: () => Promise<UpdateNotice | undefined>): UpdateSource {
+function createUpdater(
+  latest: () => Promise<UpdateNotice | undefined>,
+  restart: (sessionID?: string) => void,
+): UpdateSource {
   const listeners = new Set<(notice: UpdateNotice) => void>()
   let current: UpdateNotice | undefined
   const check = () =>
@@ -84,6 +87,7 @@ function createUpdater(latest: () => Promise<UpdateNotice | undefined>): UpdateS
       if (method === "unknown") throw new Error("DeV Code is running from source; update it with git pull")
       return Installation.upgrade(method, target.version)
     },
+    restart,
   }
 }
 
@@ -311,7 +315,11 @@ export const TuiThreadCommand = cmd({
         return
       }
 
-      const updater = createUpdater(async () => await client.call("checkUpgrade", { directory: cwd }))
+      let relaunch: { sessionID?: string } | undefined
+      const updater = createUpdater(
+        async () => await client.call("checkUpgrade", { directory: cwd }),
+        (sessionID) => (relaunch = { sessionID }),
+      )
 
       try {
         const { Effect } = await import("effect")
@@ -346,6 +354,16 @@ export const TuiThreadCommand = cmd({
         )
       } finally {
         await stop()
+      }
+      // After /update the new version starts in this terminal, back in the same session. npm keeps
+      // each version in its own folder, so the command on PATH is the one that points at it.
+      if (relaunch) {
+        const command = Bun.which("devcode") ?? process.execPath
+        const child = Bun.spawn([command, ...(relaunch.sessionID ? ["--session", relaunch.sessionID] : [])], {
+          cwd,
+          stdio: ["inherit", "inherit", "inherit"],
+        })
+        process.exitCode = await child.exited
       }
     } finally {
       try {

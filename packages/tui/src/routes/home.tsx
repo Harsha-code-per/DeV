@@ -14,7 +14,6 @@ import { useUpdateNotification } from "../context/update-notification"
 import { selectedForeground, useTheme } from "../context/theme"
 import { useDirectory } from "../context/directory"
 import { Locale } from "../util/locale"
-import { useExit } from "../context/exit"
 
 let once = false
 const placeholder = {
@@ -150,7 +149,6 @@ function Greeting() {
 
 function UpdateNotification() {
   const update = useUpdateNotification()
-  const exit = useExit()
   const { theme } = useTheme()
   const [hovered, setHovered] = createSignal(false)
   createEffect(() => {
@@ -169,13 +167,13 @@ function UpdateNotification() {
           onMouseOver={() => setHovered(true)}
           onMouseOut={() => setHovered(false)}
           onMouseUp={() => {
-            if (state.type === "installed") return exit()
+            if (state.type === "installed") return update.restart()
             update.open?.()
           }}
         >
           <text fg={theme.textMuted}>
-            <span style={{ fg: theme.primary }}>{state.type === "installed" ? "/exit" : "/update"}</span>
-            {state.type === "available" ? ` to install v${state.version}` : ` restart to use v${state.target.version}`}
+            <span style={{ fg: theme.primary }}>{state.type === "installed" ? "restart" : "/update"}</span>
+            {state.type === "available" ? ` to install v${state.version}` : ` to use v${state.target.version}`}
           </text>
         </box>
       )}

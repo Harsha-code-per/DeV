@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { updateTarget } from "../../src/component/dialog-update"
-import { isVersionGreater, visibleNotice } from "../../src/context/update-notification"
+import { changesSince, isVersionGreater, visibleNotice } from "../../src/context/update-notification"
 
 describe("dialog update", () => {
   test("offers any newer DeV Code release", () => {
@@ -29,5 +29,32 @@ describe("dialog update", () => {
     expect(isVersionGreater("1.4.3", "1.4.2")).toBe(true)
     expect(isVersionGreater("1.5.0", "1.10.0")).toBe(false)
     expect(isVersionGreater("1.4.2", "1.4.2-beta.1")).toBe(true)
+  })
+})
+
+describe("changesSince", () => {
+  const changelog = `# Changelog
+
+## 1.0.3 (2026-11-03)
+
+- \`/voice\`: hold **Space** to talk.
+
+## 1.0.2 (2026-11-02)
+
+- \`devcode\` is the only command.
+
+## 1.0.1 (2026-11-02)
+
+- Installers set up PATH.
+`
+
+  test("lists the versions after the one the user had, newest first, as plain text", () => {
+    expect(changesSince("1.0.1", "1.0.3", changelog)).toBe(
+      "1.0.3\n• /voice: hold Space to talk.\n\n1.0.2\n• devcode is the only command.",
+    )
+  })
+
+  test("is empty when nothing changed in between", () => {
+    expect(changesSince("1.0.3", "1.0.3", changelog)).toBe("")
   })
 })

@@ -2,9 +2,13 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## 1.0.2 (unreleased)
+## 1.0.3 (2026-11-02)
 
 - `/voice`: hold Space to talk, release to put the words in the prompt, Esc to cancel. Speech is turned into text on your computer, free and offline (sherpa-onnx with NVIDIA's Parakeet English model, a one-time 130 MB download), or by Groq or OpenAI if you pick cloud voice.
+- DeV Code tells you when a new version is out, in a notice wherever you are. `/update` installs it, Restart reopens DeV Code on the new version in the same session, and the first start shows what's new.
+
+## 1.0.2 (2026-11-02)
+
 - `devcode` is DeV Code's only command. `dev` belongs to the DeV desktop app, so DeV Code no longer installs it, and removes the `dev` link that 1.0.0 and 1.0.1 added.
 
 ## 1.0.1 (2026-11-02)

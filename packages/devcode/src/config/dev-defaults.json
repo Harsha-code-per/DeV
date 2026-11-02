@@ -1,5 +1,5 @@
 {
-  "autoupdate": false,
+  "autoupdate": "notify",
   "share": "disabled",
   "permission": {
     "edit": "ask",
