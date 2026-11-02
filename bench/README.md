@@ -30,13 +30,13 @@ Options: `--agents` (`devcode`, `none`), `--tasks`, `--model`, `--timeout` (minu
 
 Each agent run is memory-capped with `scripts/capped 3G` and killed at the timeout. Results go to `results/<run-id>.json` (pass or fail, seconds, exit code, tokens, cost, the agent's last message and the test output) and a summary table is printed. Result files are not committed.
 
-DeV Code uses whatever `dev` has stored from `/connect`; set `XDG_DATA_HOME` to run the benchmark from a separate login.
+DeV Code uses whatever `devcode` has stored from `/connect`; set `XDG_DATA_HOME` to run the benchmark from a separate login.
 
 ## How each agent is run
 
 | Agent | Command |
 |---|---|
-| `devcode` | The installed `dev`: `dev run --format json --permission-mode auto --model auto/free <task>` |
+| `devcode` | The installed `devcode`: `devcode run --format json --permission-mode auto --model auto/free <task>` |
 
 ## Results
 

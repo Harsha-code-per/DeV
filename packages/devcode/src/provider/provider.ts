@@ -1206,7 +1206,7 @@ export class NoProvidersError extends Schema.TaggedErrorClass<NoProvidersError>(
   override get message() {
     return [
       "No AI model is connected yet. Two free ways to start:",
-      "  1. Connect a free-tier provider: run `dev providers login` (or /connect in the TUI) and pick",
+      "  1. Connect a free-tier provider: run `devcode providers login` (or /connect in the TUI) and pick",
       "     Groq, Google Gemini, OpenRouter, Cerebras, NVIDIA or Mistral. Their free keys take a minute to create.",
       "  2. Run a model locally: install Ollama (https://ollama.com), then `ollama pull qwen2.5-coder:7b`",
       "     (needs ~8 GB RAM or a 6 GB GPU; use qwen2.5-coder:1.5b on smaller machines). DeV finds it automatically.",

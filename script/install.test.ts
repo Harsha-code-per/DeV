@@ -71,13 +71,14 @@ async function install(serve: string, args: string[] = [], home?: string) {
 }
 
 describe.skipIf(process.platform === "win32")("install script", () => {
-  test("installs the latest release as devcode and dev", async () => {
+  test("installs the latest release as devcode", async () => {
     const result = await install(await release("latest"))
     expect(result.code).toBe(0)
     expect(
       result.urls.every((url) => url.startsWith("https://github.com/Harsha-code-per/DeV/releases/latest/download/")),
     ).toBe(true)
-    expect(await $`${path.join(result.dir, "dev")}`.text()).toBe("9.9.9\n")
+    expect(await $`${path.join(result.dir, "devcode")}`.text()).toBe("9.9.9\n")
+    expect(await Bun.file(path.join(result.dir, "dev")).exists()).toBe(false)
     expect(result.output).toContain("Installed DeV Code 9.9.9")
     // SHELL is plain sh here, so the POSIX startup file gets the PATH line, once even after a reinstall.
     await install(await release("again"), [], result.home)

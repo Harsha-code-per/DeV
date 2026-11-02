@@ -16,8 +16,7 @@
     "dev:temporary": "bun run ./src/temporary.ts"
   },
   "bin": {
-    "devcode": "./bin/devcode",
-    "dev": "./bin/devcode"
+    "devcode": "./bin/devcode"
   },
   "exports": {
     "./*": "./src/*.ts"

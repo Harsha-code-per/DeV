@@ -120,7 +120,7 @@ export const McpListCommand = effectCmd({
 
     if (servers.length === 0) {
       prompts.log.warn("No MCP servers configured")
-      prompts.outro("Add servers with: dev mcp add")
+      prompts.outro("Add servers with: devcode mcp add")
       return
     }
 

@@ -73,8 +73,6 @@ Every method checks the download against the release's SHA-256 checksums before 
 devcode
 ```
 
-`dev` is a shorter name for the same command.
-
 **2. Connect a model.** Type this inside DeV Code. Providers with a free tier are listed first.
 
 ```text

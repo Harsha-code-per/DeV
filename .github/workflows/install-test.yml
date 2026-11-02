@@ -47,7 +47,6 @@ jobs:
             got=$($shell -ic 'devcode --version' 2>/dev/null | tail -1)
             echo "$shell: $got"
             test "$got" = "${TAG#v}"
-            test "$($shell -ic 'dev --version' 2>/dev/null | tail -1)" = "${TAG#v}"
           done
       - name: Installing again changes no startup file
         run: |
@@ -93,7 +92,6 @@ jobs:
           ./install.ps1 $env:TAG
           $version = (devcode --version).Trim()
           if ($version -ne $env:TAG.TrimStart('v')) { throw "got $version" }
-          if ((dev --version).Trim() -ne $version) { throw "dev failed" }
           devcode --help | Out-Null
           if ($LASTEXITCODE -ne 0) { throw "help failed" }
       - name: devcode is on the PATH of new windows

@@ -121,7 +121,8 @@ cp -R "$tmp/extract/." "$dir/"
 cp "$tmp/devcode" "$dir/.devcode.new"
 chmod 755 "$dir/.devcode.new"
 mv -f "$dir/.devcode.new" "$dir/devcode"
-ln -sf devcode "$dir/dev"
+# 1.0.x also installed a `dev` link; that name belongs to the DeV desktop app.
+if [ -L "$dir/dev" ]; then rm -f "$dir/dev"; fi
 installed=$("$dir/devcode" --version 2>/dev/null || echo "$version")
 step "Installed DeV Code $installed to $(pretty "$dir")"
 
@@ -151,10 +152,10 @@ if [ -n "$changed" ]; then step "Added to PATH in ${changed#, }"; fi
 
 printf '\n  %s%sDeV Code is ready.%s\n\n' "$bold" "$saffron" "$reset"
 case ":$PATH:" in
-  *":$dir:"*) printf '  Start with:  %sdevcode%s  %s(or dev)%s\n\n' "$bold" "$reset" "$dim" "$reset" ;;
+  *":$dir:"*) printf '  Start with:  %sdevcode%s\n\n' "$bold" "$reset" ;;
   *)
     # A piped script cannot change the PATH of the terminal that started it.
     printf '  Open a new terminal, or run  %sexec %s%s  to use it in this one.\n' "$bold" "$shell" "$reset"
-    printf '  Then start with:  %sdevcode%s  %s(or dev)%s\n\n' "$bold" "$reset" "$dim" "$reset"
+    printf '  Then start with:  %sdevcode%s\n\n' "$bold" "$reset"
     ;;
 esac

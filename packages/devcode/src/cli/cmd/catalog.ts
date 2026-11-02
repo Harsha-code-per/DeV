@@ -41,7 +41,7 @@ export const CatalogCommand = cmd({
 
     const entry = Catalog.get(target)
     if (!entry) {
-      UI.error(`Unknown catalog id "${target}". Run \`dev catalog list\`.`)
+      UI.error(`Unknown catalog id "${target}". Run \`devcode catalog list\`.`)
       process.exitCode = 1
       return
     }

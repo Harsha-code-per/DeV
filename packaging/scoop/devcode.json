@@ -13,7 +13,7 @@
       "hash": "@SHA256:devcode-windows-arm64.zip@"
     }
   },
-  "bin": ["devcode.exe", ["devcode.exe", "dev"]],
+  "bin": ["devcode.exe"],
   "checkver": "github",
   "autoupdate": {
     "architecture": {

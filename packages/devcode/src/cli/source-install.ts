@@ -30,7 +30,7 @@ export function uninstall() {
       ? path.join(process.env.HOME ?? "~", ".local/bin")
       : path.dirname(fs.realpathSync(process.execPath))
   UI.println(UI.Style.TEXT_NORMAL_BOLD + "To remove DeV Code:" + UI.Style.TEXT_NORMAL)
-  UI.println(`  rm ${path.join(bin, "dev")} ${path.join(bin, "devcode")}`)
+  UI.println(`  rm ${path.join(bin, "devcode")}`)
   UI.println(`  rm -r ${Global.Path.data} ${Global.Path.config} ${Global.Path.cache} ${Global.Path.state}`)
   UI.println("The first line removes the commands; the second also deletes sessions, settings and keys.")
 }

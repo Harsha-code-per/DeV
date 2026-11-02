@@ -33,7 +33,7 @@ const agents: Record<string, { cmd: (prompt: string) => string[]; parse: (stdout
   // The installed binary with a stored login, exactly what a user runs. Never source or .env.
   devcode: {
     cmd: (prompt) => [
-      ...["dev", "run", "--format", "json"],
+      ...["devcode", "run", "--format", "json"],
       ...["--permission-mode", "auto", "--model", args.model ?? "auto/free", prompt],
     ],
     parse: (stdout) => {

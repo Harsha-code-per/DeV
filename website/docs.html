@@ -8,7 +8,7 @@
 <nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#connect">Connect a model</a><a href="#free">Free models</a><a href="#modes">Modes</a><a href="#commands">Commands</a><a href="#config">Configuration</a><a href="#security">Security</a><a href="#bench">Benchmarks</a><a href="#faq">FAQ</a></nav>
 <main class="doc">
 <h1>DeV Code docs</h1>
-<p>DeV Code is a coding agent for your terminal. Start it with <code>devcode</code>, or the shorter <code>dev</code>. Both run the same program.</p>
+<p>DeV Code is a coding agent for your terminal. Start it with <code>devcode</code> in your project folder.</p>
 
 <h2 id="install">Install</h2>
 <p>On Linux or macOS:</p>
@@ -26,7 +26,7 @@
 <h2 id="connect">Connect a model</h2>
 <p>Start <code>devcode</code> in a project folder and type <code>/connect</code>. Pick a provider, paste its key, and you're ready. DeV saves the key in its own private store, so you don't need env variables or a <code>.env</code> file.</p>
 <p>If a provider's key is already in your shell, <code>/connect</code> offers to use it. It's never picked up silently.</p>
-<p>Scripts and CI have nobody to answer that question, so <code>dev run</code> does read keys from the environment.</p>
+<p>Scripts and CI have nobody to answer that question, so <code>devcode run</code> does read keys from the environment.</p>
 
 <h2 id="free">Free models</h2>
 <p>DeV Code costs nothing, and you can run it on free models. The list in <code>/connect</code> puts providers with a free tier first, with the best starting point at the top. Local models on your machine are found automatically.</p>

@@ -2,6 +2,10 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.2 (unreleased)
+
+- `devcode` is DeV Code's only command. `dev` belongs to the DeV desktop app, so DeV Code no longer installs it, and removes the `dev` link that 1.0.0 and 1.0.1 added.
+
 ## 1.0.1 (2026-11-02)
 
 - The installers add DeV Code to your PATH themselves: fish, zsh, bash or `~/.profile` on Linux and macOS, and the user PATH on Windows, so `devcode` works in every new terminal.

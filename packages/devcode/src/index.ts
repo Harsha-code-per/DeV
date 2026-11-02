@@ -22,6 +22,8 @@ import { AttachCommand } from "./cli/cmd/attach"
 import { TuiThreadCommand } from "./cli/cmd/tui"
 import { AcpCommand } from "./cli/cmd/acp"
 import { EOL } from "os"
+import fs from "fs"
+import path from "path"
 import { WebCommand } from "./cli/cmd/web"
 import { PrCommand } from "./cli/cmd/pr"
 import { SessionCommand } from "./cli/cmd/session"
@@ -31,7 +33,7 @@ import { PluginCommand } from "./cli/cmd/plug"
 import { NativeHostCommand } from "./cli/cmd/native-host"
 import { Heap } from "./cli/heap"
 
-// As in Claude Code, `dev -p "prompt"` (or --print) runs headless: it is `dev run`, with
+// As in Claude Code, `devcode -p "prompt"` (or --print) runs headless: it is `devcode run`, with
 // `--output-format json|stream-json` meaning `--format json` (JSON events, one per line).
 const args = ((argv) => {
   if (argv[0] !== "-p" && argv[0] !== "--print") return argv
@@ -63,9 +65,18 @@ process.env.DEV_EXPERIMENTAL_CODE_MODE ??= "true"
 // DeV: subagents can run in the background (task tool `background: true`), as in Claude Code.
 process.env.DEV_EXPERIMENTAL_BACKGROUND_SUBAGENTS ??= "true"
 
+// 1.0.x installed DeV Code a second time as `dev`, the DeV desktop app's name. An upgrade is run by
+// the old binary, so the new one removes that leftover beside itself.
+const leftover = path.join(path.dirname(process.execPath), process.platform === "win32" ? "dev.cmd" : "dev")
+const ours =
+  process.platform === "win32"
+    ? fs.existsSync(leftover) && fs.readFileSync(leftover, "utf8").includes("devcode.exe")
+    : fs.lstatSync(leftover, { throwIfNoEntry: false })?.isSymbolicLink() && fs.readlinkSync(leftover) === "devcode"
+if (ours) fs.rmSync(leftover, { force: true })
+
 const cli = yargs(args)
   .parserConfiguration({ "populate--": true })
-  .scriptName("dev")
+  .scriptName("devcode")
   .wrap(100)
   .help("help", "show help")
   .alias("help", "h")

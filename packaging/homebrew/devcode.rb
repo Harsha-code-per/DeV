@@ -30,7 +30,6 @@ class Devcode < Formula
     # Keep the files that ship beside the binary (such as vendor/) next to it.
     libexec.install Dir["*"]
     bin.install_symlink libexec/"devcode"
-    bin.install_symlink libexec/"devcode" => "dev"
   end
 
   test do

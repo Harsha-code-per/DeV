@@ -30,7 +30,7 @@ await Bun.write(
       // Must match the repository the workflow runs in, or npm rejects trusted publishing.
       repository: { type: "git", url: "git+https://github.com/Harsha-code-per/DeV.git" },
       type: "module",
-      bin: { devcode: "./bin/devcode.mjs", dev: "./bin/devcode.mjs" },
+      bin: { devcode: "./bin/devcode.mjs" },
       engines: { node: ">=18" },
     },
     null,

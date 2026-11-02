@@ -57,8 +57,8 @@ try {
   Remove-Item "$target.old" -Force -ErrorAction SilentlyContinue
   if (Test-Path $target) { Move-Item $target "$target.old" -Force }
   Move-Item "$target.new" $target
-  # "dev" is a shim so upgrades only ever replace devcode.exe.
-  Set-Content -Path (Join-Path $dir "dev.cmd") -Value "@`"%~dp0devcode.exe`" %*" -Encoding ASCII
+  # 1.0.x also installed a dev.cmd shim; that name belongs to the DeV desktop app.
+  Remove-Item (Join-Path $dir "dev.cmd") -Force -ErrorAction SilentlyContinue
 } finally {
   Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
 }
@@ -76,5 +76,5 @@ if (($env:Path -split ';') -notcontains $dir) { $env:Path = "$dir;$env:Path" }
 Write-Host ""
 Write-Host "  $(Paint '1;38;2;242;165;22' 'DeV Code is ready.')"
 Write-Host ""
-Write-Host "  Start with:  $(Paint 1 'devcode')  $(Paint 2 '(or dev)')"
+Write-Host "  Start with:  $(Paint 1 'devcode')"
 Write-Host ""
