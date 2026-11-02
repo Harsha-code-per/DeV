@@ -62,3 +62,15 @@ test("open-ended requests about the person must ask or say they have enough", ()
   ])
     expect(ModePick.open(text)).toBe(false)
 })
+
+test("lasting instructions and preferences are saved first", () => {
+  for (const text of [
+    "From now on in this project, always use pnpm instead of npm.",
+    "Please remember that the API key lives in Vault",
+    "I prefer tabs over spaces",
+    "never commit directly to main",
+  ])
+    expect(ModePick.remembers(text)).toBe(true)
+  for (const text of ["fix the failing test", "what does this function do?", "add a login page"])
+    expect(ModePick.remembers(text)).toBe(false)
+})

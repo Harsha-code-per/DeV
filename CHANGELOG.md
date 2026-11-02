@@ -2,6 +2,14 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.8 (2026-11-02)
+
+- DeV remembers what you teach it. Say "from now on use pnpm" or "remember that…" and it saves a note to a private memory for the project, read at the start of every session; it also saves corrections and preferences it notices. Deny the `remember` permission to turn this off.
+- Memory files can pull in others with `@path` lines, and rules in `.dev/rules/` (or `.claude/rules/`) load every session, or only for matching files when they set `paths:`.
+- `/output-style` switches between default, concise, explanatory, learning and the new proactive style.
+- Auto mode still asks about risky actions: deleting whole folders, force pushes, `sudo`, piping a download into a shell, publishing packages, destroying infrastructure, leaving the sandbox, and touching secrets files.
+- Seven more hook events (Notification, SubagentStop, PostToolUseFailure, PreCompact, PostCompact, SessionEnd, FileChanged), and hooks can be HTTP endpoints as well as commands.
+
 ## 1.0.7 (2026-11-02)
 
 - Long-running commands can run in the background: dev servers, watchers and long builds start, DeV checks their output when it needs to, and stops them, including everything they started. They stop when DeV exits.

@@ -1,12 +1,15 @@
 import { createStore } from "solid-js/store"
 import { useArgs } from "./args"
 import { createSimpleContext } from "./helper"
+import type { PermissionRequest } from "@dev-ai/sdk/v2"
+import { riskOf } from "./auto-risk"
 
 // Permission modes, as in Claude Code:
 // - normal: ask before acting
 // - edits:  approve file edits automatically, ask for everything else
-// - auto:   approve every request (only reachable after --auto/--yolo/--dangerously-skip-permissions
-//           or an explicit opt-in, so a stray Shift+Tab can't switch it on)
+// - auto:   approve requests without asking, except risky ones (see auto-risk.ts), which still ask;
+//           only reachable after --auto/--yolo/--dangerously-skip-permissions or an explicit opt-in,
+//           so a stray Shift+Tab can't switch it on
 // Explicitly denied actions never reach the user, so no mode can override a deny rule.
 export type PermissionMode = "normal" | "edits" | "auto"
 
@@ -41,9 +44,9 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
         this.set(store.mode === "auto" ? "normal" : "auto")
       },
       /** Whether a permission request is answered without asking in the current mode. */
-      approves(permission: string) {
-        if (store.mode === "auto") return true
-        return store.mode === "edits" && permission === "edit"
+      approves(request: Pick<PermissionRequest, "permission" | "patterns" | "metadata">) {
+        if (store.mode === "auto") return riskOf(request) === undefined
+        return store.mode === "edits" && request.permission === "edit"
       },
     }
   },

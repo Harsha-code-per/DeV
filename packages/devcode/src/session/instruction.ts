@@ -13,6 +13,7 @@ import { withTransientReadRetry } from "@/util/effect-http-client"
 import { Global } from "@dev-ai/core/global"
 import type { MessageV2 } from "./message-v2"
 import type { MessageID } from "./schema"
+import { MemoryFiles } from "./memory-files"
 
 function extract(messages: SessionV1.WithParts[]) {
   const paths = new Set<string>()
@@ -92,7 +93,8 @@ const layer: Layer.Layer<
     })
 
     const read = Effect.fnUntraced(function* (filepath: string) {
-      return yield* fs.readFileString(filepath).pipe(Effect.catch(() => Effect.succeed("")))
+      const content = yield* fs.readFileString(filepath).pipe(Effect.catch(() => Effect.succeed("")))
+      return content ? MemoryFiles.expandImports(content, filepath, global.home) : content
     })
 
     const fetch = Effect.fnUntraced(function* (url: string) {
@@ -165,8 +167,18 @@ const layer: Layer.Layer<
       const files = yield* Effect.forEach(Array.from(paths), read, { concurrency: 8 })
       const remote = yield* Effect.forEach(urls, fetch, { concurrency: 4 })
 
+      const ctx = yield* InstanceState.context
+      const project = ctx.worktree === "/" ? ctx.directory : ctx.worktree
+      const always = MemoryFiles.rules(project).filter((rule) => !rule.paths)
+      const auto = MemoryFiles.autoMemory(MemoryFiles.autoFile(global.data, project))
       return [
+        ...(auto
+          ? [
+              `Auto memory: notes you saved in earlier sessions of this project with the remember tool. Follow them, and remove any that turn out wrong.\n${auto}`,
+            ]
+          : []),
         ...Array.from(paths).flatMap((item, i) => (files[i] ? [`Instructions from: ${item}\n${files[i]}`] : [])),
+        ...always.map((rule) => `Rules from: ${rule.file}\n${MemoryFiles.expandImports(rule.body, rule.file, global.home)}`),
         ...urls.flatMap((item, i) => (remote[i] ? [`Instructions from: ${item}\n${remote[i]}`] : [])),
       ]
     })
@@ -218,6 +230,24 @@ const layer: Layer.Layer<
         }
 
         current = path.dirname(current)
+      }
+
+      // Rules scoped to paths: once per message, when the file being read matches.
+      const ctx = yield* InstanceState.context
+      const project = ctx.worktree === "/" ? ctx.directory : ctx.worktree
+      for (const rule of MemoryFiles.rules(project)) {
+        if (!rule.paths || already.has(rule.file) || !MemoryFiles.applies(rule, path.relative(project, target))) continue
+        let set = s.claims.get(messageID)
+        if (!set) {
+          set = new Set()
+          s.claims.set(messageID, set)
+        }
+        if (set.has(rule.file)) continue
+        set.add(rule.file)
+        results.push({
+          filepath: rule.file,
+          content: `Rules from: ${rule.file} (for ${rule.paths.join(", ")})\n${MemoryFiles.expandImports(rule.body, rule.file, global.home)}`,
+        })
       }
 
       return results

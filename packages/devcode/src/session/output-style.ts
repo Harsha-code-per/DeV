@@ -18,6 +18,12 @@ const BUILT_IN: Record<string, string> = {
     "clearly marked `TODO(human)` with what to write and a hint, and ask the user to fill it in instead of writing it yourself.",
     "Do the boilerplate and the risky parts yourself. Explain concepts briefly as they come up.",
   ].join("\n"),
+  proactive: [
+    "Output style: proactive.",
+    "Take the obvious next steps without being asked: when you finish a change, run the checks that cover it, fix what they",
+    "find, and mention related problems you noticed with a one-line suggestion each. Still ask before anything large,",
+    "costly or hard to undo, and before work the person did not ask for that would change behaviour.",
+  ].join("\n"),
   concise: [
     "Output style: concise.",
     "Keep replies as short as possible: lead with the result, skip preamble and recaps, and use bullets only when they help.",

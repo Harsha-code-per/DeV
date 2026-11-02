@@ -17,6 +17,7 @@ import { WebFetchTool } from "./webfetch"
 import { WriteTool } from "./write"
 import { InvalidTool } from "./invalid"
 import { ShellJobTool } from "./shell-job"
+import { RememberTool } from "./remember"
 import { SkillTool } from "./skill"
 import { CatalogTool } from "./catalog"
 import * as Tool from "./tool"
@@ -95,6 +96,7 @@ const layer = Layer.effect(
 
     const invalid = yield* InvalidTool
     const shellJob = yield* ShellJobTool
+    const remember = yield* RememberTool
     const task = yield* TaskTool
     const read = yield* ReadTool
     const question = yield* QuestionTool
@@ -209,6 +211,7 @@ const layer = Layer.effect(
         const tool = yield* Effect.all({
           invalid: Tool.init(invalid),
           shellJob: Tool.init(shellJob),
+          remember: Tool.init(remember),
           shell: Tool.init(shell),
           read: Tool.init(read),
           glob: Tool.init(globtool),
@@ -236,6 +239,7 @@ const layer = Layer.effect(
           builtin: [
             tool.invalid,
             tool.shellJob,
+            tool.remember,
             ...(questionEnabled ? [tool.question] : []),
             tool.shell,
             tool.read,

@@ -2050,58 +2050,327 @@ export type Config = {
   hooks?: {
     PreToolUse?: Array<{
       matcher?: string
-      hooks: Array<{
-        type: "command"
-        command: string
-        /**
-         * Seconds before the hook is stopped (default 60)
-         */
-        timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-      }>
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
     }>
     PostToolUse?: Array<{
       matcher?: string
-      hooks: Array<{
-        type: "command"
-        command: string
-        /**
-         * Seconds before the hook is stopped (default 60)
-         */
-        timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-      }>
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
     }>
     UserPromptSubmit?: Array<{
       matcher?: string
-      hooks: Array<{
-        type: "command"
-        command: string
-        /**
-         * Seconds before the hook is stopped (default 60)
-         */
-        timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-      }>
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
     }>
     Stop?: Array<{
       matcher?: string
-      hooks: Array<{
-        type: "command"
-        command: string
-        /**
-         * Seconds before the hook is stopped (default 60)
-         */
-        timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-      }>
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
     }>
     SessionStart?: Array<{
       matcher?: string
-      hooks: Array<{
-        type: "command"
-        command: string
-        /**
-         * Seconds before the hook is stopped (default 60)
-         */
-        timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-      }>
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+    }>
+    SessionEnd?: Array<{
+      matcher?: string
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+    }>
+    Notification?: Array<{
+      matcher?: string
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+    }>
+    SubagentStop?: Array<{
+      matcher?: string
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+    }>
+    PostToolUseFailure?: Array<{
+      matcher?: string
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+    }>
+    PreCompact?: Array<{
+      matcher?: string
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+    }>
+    PostCompact?: Array<{
+      matcher?: string
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+    }>
+    FileChanged?: Array<{
+      matcher?: string
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
     }>
   }
   layout?: LayoutConfig

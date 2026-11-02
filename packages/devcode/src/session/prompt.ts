@@ -1329,8 +1329,10 @@ const layer = Layer.effect(
             const wanted = pickMode(msgs, agent.name)
             // DeV: an open-ended request about the person starts with a choice between asking and saying
             // there is enough to go on (ModePick.open). Free models skip asking otherwise.
+            const firstText = firstStepText(msgs, agent.name)
+            const save = !wanted && !!tools["remember"] && agent.mode !== "subagent" && ModePick.remembers(firstText)
             const decide =
-              !wanted && !!tools["question"] && agent.mode !== "subagent" && isOpenRequest(msgs, agent.name)
+              !wanted && !save && !!tools["question"] && agent.mode !== "subagent" && ModePick.open(firstText)
 
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
@@ -1369,11 +1371,13 @@ const layer = Layer.effect(
               // to it is the only choice. It is absent where it isn't allowed, such as `dev run` and plan_enter.
               tools: picked
                 ? { [picked]: tools[picked] }
-                : decide && format.type !== "json_schema"
-                  ? { question: tools["question"], proceed: PROCEED_TOOL }
-                  : tools,
+                : save && format.type !== "json_schema"
+                  ? { remember: tools["remember"], proceed: PROCEED_TOOL }
+                  : decide && format.type !== "json_schema"
+                    ? { question: tools["question"], proceed: PROCEED_TOOL }
+                    : tools,
               model,
-              toolChoice: picked || decide || format.type === "json_schema" ? "required" : undefined,
+              toolChoice: picked || save || decide || format.type === "json_schema" ? "required" : undefined,
             })
 
             if (structured !== undefined) {
@@ -1719,19 +1723,18 @@ export const node = LayerNode.make({
   ],
 })
 
-function isOpenRequest(messages: SessionV1.WithParts[], agent: string) {
+// The person's own words, on the first step of a request in the build agent; "" otherwise.
+function firstStepText(messages: SessionV1.WithParts[], agent: string) {
   const last = messages.at(-1)
-  if (agent !== "build" || last?.info.role !== "user") return false
-  return ModePick.open(
-    last.parts.flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : [])).join("\n"),
-  )
+  if (agent !== "build" || last?.info.role !== "user") return ""
+  return last.parts.flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : [])).join("\n")
 }
 
-// The other choice on the first step of an open-ended request: the request, the project or earlier
-// messages already say enough, so the model starts without asking.
+// The other choice on a forced first step (ask, or save to memory): there is nothing to ask or save,
+// so the model starts on the request.
 const PROCEED_TOOL = tool({
   description:
-    "Call this when the request, the project or earlier messages already tell you everything that would change the result, so you can start without asking. If anything the person knows would change it, call the question tool instead.",
+    "Call this when the other tool offered here is not needed: nothing about the request needs asking, or nothing new needs saving to memory, so you can start on the request. Otherwise call the other tool.",
   inputSchema: jsonSchema({ type: "object", properties: {}, additionalProperties: false }),
   async execute() {
     return { output: "Go ahead with the request.", title: "Enough to start", metadata: {} }

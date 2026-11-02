@@ -80,3 +80,42 @@ test("SessionStart stdout is added to the session's first prompt", async () => {
   await plugin["chat.message"]!({ sessionID: "s1" }, { message: { id: "m2", sessionID: "s1" }, parts: second } as never)
   expect(second).toHaveLength(1)
 })
+
+test("an http hook gets the event as a JSON POST and can block like exit 2", async () => {
+  await using dir = await tmpdir()
+  const received: unknown[] = []
+  using server = Bun.serve({
+    port: 0,
+    async fetch(request) {
+      received.push(await request.json())
+      return Response.json({ decision: "block", reason: "not on Fridays" })
+    },
+  })
+  const plugin = await load(dir.path, {
+    PreToolUse: [{ hooks: [{ type: "http", url: server.url.href, headers: { "X-Team": "dev" } }] }],
+  })
+  const call = plugin["tool.execute.before"]!({ tool: "bash", sessionID: "s1", callID: "c1" }, { args: { command: "deploy" } })
+  expect(call).rejects.toThrow("Blocked by a PreToolUse hook: not on Fridays")
+  await call.catch(() => {})
+  expect(received[0]).toMatchObject({ hook_event_name: "PreToolUse", tool_name: "bash", tool_input: { command: "deploy" } })
+})
+
+test("PreCompact stdout joins the compaction instructions; FileChanged and Notification inform", async () => {
+  await using dir = await tmpdir()
+  const log = path.join(dir.path, "events.jsonl")
+  const plugin = await load(dir.path, {
+    PreCompact: [{ hooks: [{ type: "command", command: "echo 'keep the migration plan'" }] }],
+    FileChanged: [{ hooks: [{ type: "command", command: `cat >> ${log}; echo >> ${log}` }] }],
+    Notification: [{ hooks: [{ type: "command", command: `cat >> ${log}; echo >> ${log}` }] }],
+  })
+  const output = { context: [] as string[] }
+  await plugin["experimental.session.compacting"]!({ sessionID: "s1" }, output)
+  expect(output.context).toEqual(["keep the migration plan"])
+  await plugin.event!({ event: { type: "file.edited", properties: { file: "/p/a.ts" } } as never })
+  await plugin.event!({ event: { type: "permission.updated", properties: { sessionID: "s1", title: "bash: rm x" } } as never })
+  const events = (await Bun.file(log).text()).trim().split("\n").map((line) => JSON.parse(line))
+  expect(events).toMatchObject([
+    { hook_event_name: "FileChanged", file_path: "/p/a.ts" },
+    { hook_event_name: "Notification", message: "DeV needs your permission: bash: rm x", notification_type: "permission_prompt" },
+  ])
+})

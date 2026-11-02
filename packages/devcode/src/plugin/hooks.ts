@@ -9,6 +9,9 @@ import { Process } from "@/util/process"
 // logged and ignored. UserPromptSubmit and SessionStart stdout is added to the (first) prompt as context.
 // Exit code 2 on Stop keeps the agent working, with stderr as its next instruction; the hook then sees
 // stop_hook_active: true and should let it stop, and DeV stops after MAX_CONTINUES in a row regardless.
+// PreCompact stdout is added to the compaction instructions. Notification, SubagentStop,
+// PostToolUseFailure, PostCompact, SessionEnd and FileChanged only inform. An http hook receives the
+// same JSON as a POST; its 2xx body counts as stdout, and {"decision":"block","reason":…} as exit 2.
 const MAX_CONTINUES = 3
 
 export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
@@ -84,8 +87,51 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
       current.continues++
       output.continue = `Stop hook: ${reason}`
     },
+    "experimental.session.compacting": async (info, output) => {
+      if (!state.hooks?.PreCompact) return
+      output.context.push(...stdout(await run("PreCompact", { session_id: info.sessionID, trigger: "auto" })))
+    },
     event: async ({ event }) => {
-      const props = event.properties as { sessionID?: string; info?: { id?: string; parentID?: string } } | undefined
+      const props = event.properties as
+        | {
+            sessionID?: string
+            info?: { id?: string; parentID?: string }
+            part?: { type?: string; tool?: string; state?: { status?: string; input?: unknown; error?: string } }
+            title?: string
+            file?: string
+          }
+        | undefined
+      const notify = (message: string, type: string) =>
+        run("Notification", { session_id: props?.sessionID, message, notification_type: type })
+      if (event.type === "permission.updated" && state.hooks?.Notification)
+        await notify(`DeV needs your permission: ${props?.title ?? "a tool"}`, "permission_prompt")
+      if (event.type === "session.compacted" && state.hooks?.PostCompact)
+        await run("PostCompact", { session_id: props?.sessionID })
+      if (event.type === "session.deleted" && state.hooks?.SessionEnd && props?.info?.id && !props.info.parentID)
+        await run("SessionEnd", { session_id: props.info.id, reason: "deleted" })
+      if (event.type === "file.edited" && state.hooks?.FileChanged && props?.file)
+        await run("FileChanged", { file_path: props.file })
+      if (
+        event.type === "message.part.updated" &&
+        state.hooks?.PostToolUseFailure &&
+        props?.part?.type === "tool" &&
+        props.part.state?.status === "error"
+      )
+        await run(
+          "PostToolUseFailure",
+          {
+            session_id: props.sessionID,
+            tool_name: props.part.tool,
+            tool_input: props.part.state.input,
+            error: props.part.state.error,
+          },
+          props.part.tool,
+        )
+      if (event.type === "session.idle" && state.hooks?.SubagentStop && props?.sessionID) {
+        const info = await input.client.session.get({ path: { id: props.sessionID } }).catch(() => undefined)
+        if (info?.data?.parentID)
+          await run("SubagentStop", { session_id: props.sessionID, parent_session_id: info.data.parentID })
+      }
       if (event.type === "session.created" && state.hooks?.SessionStart && props?.info?.id && !props.info.parentID) {
         const context = run("SessionStart", { session_id: props.info.id, source: "startup" }).then(
           (results) => stdout(results).join("\n\n") || undefined,
@@ -112,6 +158,7 @@ async function runHooks(
     .flatMap((entry) => entry.hooks)
   return Promise.all(
     commands.map(async (hook) => {
+      if (hook.type === "http") return post(hook, payload)
       const shell = process.platform === "win32" ? ["cmd", "/c"] : ["sh", "-c"]
       const result = await Process.run([...shell, hook.command], {
         cwd,
@@ -122,4 +169,28 @@ async function runHooks(
       return { code: result.code, stdout: result.stdout.toString(), stderr: result.stderr.toString() }
     }),
   )
+}
+
+async function post(hook: typeof ConfigHooksV1.Http.Type, payload: Record<string, unknown>) {
+  const response = await fetch(hook.url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...hook.headers },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout((hook.timeout ?? 60) * 1000),
+  }).catch((error: Error) => error)
+  if (response instanceof Error) return { code: 1, stdout: "", stderr: response.message }
+  const body = await response.text().catch(() => "")
+  if (!response.ok) return { code: 1, stdout: "", stderr: `HTTP ${response.status}` }
+  const decision = parseDecision(body)
+  if (decision?.decision === "block") return { code: 2, stdout: "", stderr: decision.reason ?? "blocked" }
+  return { code: 0, stdout: body, stderr: "" }
+}
+
+function parseDecision(body: string) {
+  try {
+    const value = JSON.parse(body) as { decision?: string; reason?: string }
+    return typeof value === "object" && value ? value : undefined
+  } catch {
+    return undefined
+  }
 }

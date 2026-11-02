@@ -47,4 +47,14 @@ export function open(text: string) {
   )
 }
 
+// A lasting instruction or preference ("from now on use pnpm", "remember that…"): the first step must
+// either save it with the remember tool or say there is nothing new to save. Models otherwise reply
+// "Noted" and forget it with the session.
+const REMEMBER =
+  /\b(remember (that|this|to)|please remember|from now on|going forward|in (the )?future|next time|always (use|run|write|prefer|ask|keep)|never (use|run|write|commit|push)|i (always )?prefer|my preference)\b/i
+
+export function remembers(text: string) {
+  return REMEMBER.test(text.trim())
+}
+
 export * as ModePick from "./mode-pick"

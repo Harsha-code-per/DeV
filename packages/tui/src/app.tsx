@@ -574,6 +574,42 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         },
       },
       {
+        name: "output_style.switch",
+        title: "Output style",
+        desc: "How DeV writes: default, concise, explanatory, learning or proactive",
+        category: "Agent",
+        slashName: "output-style",
+        run: () => {
+          const current = sync.data.config.output_style ?? "default"
+          const styles = [
+            ["default", "Default", "DeV's normal way of working"],
+            ["concise", "Concise", "Shortest replies: the result first, no recaps"],
+            ["explanatory", "Explanatory", "Explains the choices it makes as it works"],
+            ["learning", "Learning", "Leaves small pieces for you to write, with hints"],
+            ["proactive", "Proactive", "Runs the checks and fixes what they find without being asked"],
+          ] as const
+          dialog.replace(() => (
+            <DialogSelect<string>
+              title="Output style"
+              current={current}
+              flat={true}
+              options={styles.map(([value, title, description]) => ({
+                value,
+                title,
+                description,
+                onSelect: async () => {
+                  dialog.clear()
+                  await sdk.client.global.config.update({ config: { output_style: value } }, { throwOnError: true }).then(
+                    () => toast.show({ variant: "success", message: `Output style: ${title}, from your next message`, duration: 4000 }),
+                    (error: unknown) => toast.error(error),
+                  )
+                },
+              }))}
+            />
+          ))
+        },
+      },
+      {
         name: "memory.edit",
         title: "Edit project memory (DEV.md)",
         category: "Session",
