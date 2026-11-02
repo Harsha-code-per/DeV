@@ -46,6 +46,10 @@ import { useEditorContext } from "../../context/editor"
 import { openEditor } from "../../editor"
 import { useDialog } from "../../ui/dialog"
 import { DialogAlert } from "../../ui/dialog-alert"
+import { contextBreakdown, formatBreakdown } from "./context"
+import { askAside } from "./btw"
+import { describeEvery, parseLoop } from "./loop"
+import { DialogPrompt } from "../../ui/dialog-prompt"
 import { TodoItem } from "../../component/todo-item"
 import { DialogMessage } from "./dialog-message"
 import type { PromptInfo } from "../../component/prompt/history"
@@ -397,6 +401,32 @@ export function Session() {
   let seeded = false
   let scroll: ScrollBoxRenderable
   let prompt: PromptRef | undefined
+
+  // /loop: sends a prompt every few minutes, but only while the session is idle and the prompt is
+  // empty, so it never cuts into running work or a draft. It ends with /loop or when you leave.
+  const [looping, setLooping] = createSignal<{ every: number; text: string }>()
+  let loopTimer: ReturnType<typeof setInterval> | undefined
+  function startLoop(every: number, text: string) {
+    stopLoop()
+    let due = Date.now()
+    setLooping({ every, text })
+    loopTimer = setInterval(() => {
+      const idle = (sync.data.session_status?.[route.sessionID]?.type ?? "idle") === "idle"
+      if (Date.now() < due || !idle || !prompt || prompt.current.input) return
+      due = Date.now() + every
+      prompt.set({ input: text, parts: [] })
+      prompt.submit()
+    }, 1000)
+    toast.show({ variant: "info", message: `Repeating every ${describeEvery(every)}: ${text}. Run /loop to stop.`, duration: 6000 })
+  }
+  function stopLoop() {
+    clearInterval(loopTimer)
+    loopTimer = undefined
+    if (!looping()) return
+    setLooping(undefined)
+    toast.show({ variant: "info", message: "Loop stopped", duration: 3000 })
+  }
+  onCleanup(() => clearInterval(loopTimer))
   const bind = (r: PromptRef | undefined) => {
     prompt = r
     promptRef.set(r)
@@ -639,6 +669,63 @@ export function Session() {
           sessionID: route.sessionID,
           messageID: message.id,
         })
+      },
+    },
+    {
+      title: looping() ? "Stop the loop" : "Repeat a prompt",
+      desc: "Send a prompt every few minutes, e.g. 5m check the deploy",
+      value: "session.loop",
+      category: "Session",
+      slash: { name: "loop" },
+      run: async () => {
+        if (looping()) return stopLoop()
+        const answer = await DialogPrompt.show(dialog, "Repeat a prompt", {
+          placeholder: "Every how long, and what? e.g. 5m check whether the deploy finished",
+        })
+        dialog.clear()
+        if (!answer?.trim()) return
+        const loop = parseLoop(answer)
+        if (!loop) {
+          toast.show({ variant: "warning", message: "Start with an interval of 30s or more, e.g. 5m check the deploy", duration: 6000 })
+          return
+        }
+        startLoop(loop.every, loop.text)
+      },
+    },
+    {
+      title: "Side question",
+      desc: "Ask something without interrupting the task",
+      value: "session.btw",
+      category: "Session",
+      slash: { name: "btw" },
+      run: async () => {
+        const question = await DialogPrompt.show(dialog, "Side question", {
+          placeholder: "Ask without interrupting, e.g. which file has the login form?",
+        })
+        dialog.clear()
+        if (!question?.trim()) return
+        toast.show({ variant: "info", message: "Answering your side question…", duration: 30_000 })
+        const answer = await askAside(sdk.client, route.sessionID, question.trim()).catch(
+          (error: unknown) => `Couldn't answer: ${error instanceof Error ? error.message : String(error)}`,
+        )
+        dialog.replace(() => <DialogAlert title={`btw: ${Locale.truncate(question.trim(), 60)}`} message={answer || "No answer."} />)
+      },
+    },
+    {
+      title: "Context usage",
+      value: "session.context",
+      category: "Session",
+      slash: { name: "context" },
+      run: () => {
+        const breakdown = contextBreakdown(messages(), partsOf, (message) =>
+          sync.data.provider.find((item) => item.id === message.providerID)?.models[message.modelID]?.limit.context,
+        )
+        dialog.replace(() => (
+          <DialogAlert
+            title="What fills the context"
+            message={breakdown ? formatBreakdown(breakdown, Locale.number) : "Nothing yet: send a message first."}
+          />
+        ))
       },
     },
     {

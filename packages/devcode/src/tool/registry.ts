@@ -16,6 +16,7 @@ import { TodoWriteTool } from "./todo"
 import { WebFetchTool } from "./webfetch"
 import { WriteTool } from "./write"
 import { InvalidTool } from "./invalid"
+import { ShellJobTool } from "./shell-job"
 import { SkillTool } from "./skill"
 import { CatalogTool } from "./catalog"
 import * as Tool from "./tool"
@@ -93,6 +94,7 @@ const layer = Layer.effect(
     const mcp = yield* MCP.Service
 
     const invalid = yield* InvalidTool
+    const shellJob = yield* ShellJobTool
     const task = yield* TaskTool
     const read = yield* ReadTool
     const question = yield* QuestionTool
@@ -206,6 +208,7 @@ const layer = Layer.effect(
 
         const tool = yield* Effect.all({
           invalid: Tool.init(invalid),
+          shellJob: Tool.init(shellJob),
           shell: Tool.init(shell),
           read: Tool.init(read),
           glob: Tool.init(globtool),
@@ -232,6 +235,7 @@ const layer = Layer.effect(
           custom,
           builtin: [
             tool.invalid,
+            tool.shellJob,
             ...(questionEnabled ? [tool.question] : []),
             tool.shell,
             tool.read,

@@ -49,6 +49,7 @@ import { useToast } from "../../ui/toast"
 import { useKV } from "../../context/kv"
 import { createFadeIn } from "../../util/signal"
 import { DialogSkill } from "../dialog-skill"
+import { DialogSelect } from "../../ui/dialog-select"
 import { DialogWorkspaceUnavailable } from "../dialog-workspace-unavailable"
 import { useArgs } from "../../context/args"
 import { DEV_BASE_MODE, useBindings, useCommandShortcut, useLeaderActive, useDevcodeKeymap } from "../../keymap"
@@ -561,6 +562,34 @@ export function Prompt(props: PromptProps) {
         },
       },
       {
+        title: "Search prompt history",
+        desc: "Find an earlier prompt and use it again",
+        name: "prompt.history.search",
+        category: "Prompt",
+        run: () => {
+          const items = history.list().slice().reverse()
+          if (items.length === 0) {
+            toast.show({ variant: "info", message: "No earlier prompts yet", duration: 3000 })
+            return
+          }
+          dialog.replace(() => (
+            <DialogSelect<number>
+              title="Prompt history"
+              placeholder="Type to search earlier prompts"
+              options={items.map((item, index) => ({
+                value: index,
+                title: item.input.split("\n")[0]!.slice(0, 120),
+                onSelect: () => {
+                  dialog.clear()
+                  ref.set(structuredClone(unwrap(item)))
+                  input.focus()
+                },
+              }))}
+            />
+          ))
+        },
+      },
+      {
         title: "Voice",
         desc: "Talk instead of typing: hold Space",
         name: "prompt.voice",
@@ -629,6 +658,7 @@ export function Prompt(props: PromptProps) {
       "prompt.stash.pop",
       "prompt.stash.list",
       "prompt.skills",
+      "prompt.history.search",
       "session.interrupt",
       "workspace.set",
       "session.move",

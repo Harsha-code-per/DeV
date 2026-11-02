@@ -2,6 +2,15 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.7 (2026-11-02)
+
+- Long-running commands can run in the background: dev servers, watchers and long builds start, DeV checks their output when it needs to, and stops them, including everything they started. They stop when DeV exits.
+- `/context` shows what fills the context window: your messages, DeV's replies, each tool's output and the fixed overhead, with suggestions once it fills up.
+- `/btw` asks a side question about the conversation without interrupting the task or adding to it.
+- `/loop` repeats a prompt on an interval, such as "5m check whether the deploy finished", while the session is idle; run it again to stop.
+- Ctrl+R searches your earlier prompts. Renaming a session is now `/rename` only. History keeps 200 prompts.
+- `/security-review`, `/simplify` and `/pr-comments` join `/review`.
+
 ## 1.0.6 (2026-11-02)
 
 - Web search works. It had been switched off since the rename, so DeV could only fetch pages it already knew the address of. It now uses Exa or Parallel, both free with no key, and falls back to the other when one fails.

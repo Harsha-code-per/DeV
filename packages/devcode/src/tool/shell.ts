@@ -23,6 +23,7 @@ import { ShellPrompt, type Parameters } from "./shell/prompt"
 import { BashArity } from "@/permission/arity"
 import { PermissionV1 } from "@dev-ai/core/v1/permission"
 import { Sandbox } from "@/sandbox"
+import { ShellJobs } from "./shell/jobs"
 
 export { Parameters } from "./shell/prompt"
 
@@ -657,16 +658,33 @@ export const ShellTool = Tool.define(
                 }),
               )
 
+              const env = {
+                ...(yield* shellEnv(ctx, cwd)),
+                ...(sandboxed ? yield* Effect.promise(() => Sandbox.env()) : {}),
+              }
+              if (params.background) {
+                const job = ShellJobs.start({
+                  shell,
+                  command: sandboxed ?? params.command,
+                  label: params.command,
+                  cwd,
+                  env,
+                  // The sandbox's temporary files stay until the command they confine has ended.
+                  onExit: sandboxed ? () => void Sandbox.cleanup() : undefined,
+                })
+                return {
+                  title: params.command,
+                  metadata: { output: `Running in the background as ${job.id}`, exit: null, truncated: false },
+                  output: `Started in the background as ${job.id} (process ${job.pid}). Check what it prints with shell_job { id: "${job.id}", action: "output" }, and stop it with action "stop" when you are done. It stops when DeV exits.`,
+                }
+              }
               return yield* run(
                 {
                   shell,
                   command: params.command,
                   sandboxed,
                   cwd,
-                  env: {
-                    ...(yield* shellEnv(ctx, cwd)),
-                    ...(sandboxed ? yield* Effect.promise(() => Sandbox.env()) : {}),
-                  },
+                  env,
                   timeout,
                 },
                 ctx,

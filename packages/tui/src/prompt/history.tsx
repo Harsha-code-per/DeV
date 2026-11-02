@@ -24,7 +24,7 @@ export type PromptInfo = {
   )[]
 }
 
-export const MAX_HISTORY_ENTRIES = 50
+export const MAX_HISTORY_ENTRIES = 200
 
 export function parsePromptHistory(text: string) {
   return text
@@ -66,6 +66,10 @@ export const { use: usePromptHistory, provider: PromptHistoryProvider } = create
     })
 
     return {
+      /** Every saved prompt, oldest first. */
+      list() {
+        return store.history
+      },
       move(direction: 1 | -1, input: string) {
         if (!store.history.length) return undefined
         const current = store.history.at(store.index)
