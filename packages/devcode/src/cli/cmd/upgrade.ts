@@ -1,7 +1,6 @@
 import fs from "fs"
 import path from "path"
 import { $ } from "bun"
-import { Schema } from "effect"
 import { InstallationLocal, InstallationVersion } from "@dev-ai/core/installation/version"
 import { errorMessage } from "@/util/error"
 import { SourceInstall } from "../source-install"
@@ -10,12 +9,7 @@ import { cmd } from "./cmd"
 
 declare const DEV_LIBC: string | undefined
 
-const Release = Schema.Struct({
-  tag_name: Schema.String,
-  assets: Schema.Array(Schema.Struct({ name: Schema.String, browser_download_url: Schema.String })),
-})
-
-const headers = { "User-Agent": `devcode/${InstallationVersion}`, Accept: "application/vnd.github+json" }
+const headers = { "User-Agent": `devcode/${InstallationVersion}` }
 
 export const UpgradeCommand = cmd({
   command: "upgrade [target]",
@@ -34,19 +28,11 @@ export const UpgradeCommand = cmd({
   },
 })
 
+// github.com's release links, not the API: the API allows 60 requests an hour per address.
+const releases = "https://github.com/Harsha-code-per/DeV/releases"
+
 async function upgrade(binary: string, target: string | undefined) {
-  const response = await fetch(
-    `https://api.github.com/repos/Harsha-code-per/DeV/releases/${target ? `tags/v${target.replace(/^v/, "")}` : "latest"}`,
-    { headers },
-  )
-  if (response.status === 404)
-    throw new Error(
-      `${target ? `DeV Code ${target}` : "A DeV Code release"} was not found on GitHub. ` +
-        "The repository is private until v1.0, so releases can't be downloaded without access yet.",
-    )
-  if (!response.ok) throw new Error(`GitHub answered ${response.status} ${response.statusText}`)
-  const release = Schema.decodeUnknownSync(Release)(await response.json())
-  const version = release.tag_name.replace(/^v/, "")
+  const version = target?.replace(/^v/, "") ?? (await latestVersion())
   if (!target && version === InstallationVersion)
     return UI.println(`DeV Code ${version} is already the latest version.`)
 
@@ -56,17 +42,14 @@ async function upgrade(binary: string, target: string | undefined) {
     musl: typeof DEV_LIBC !== "undefined" && DEV_LIBC === "musl",
     avx2: avx2(),
   })
-  const asset = release.assets.find((item) => item.name === name)
-  const sums = release.assets.find((item) => item.name === "SHA256SUMS")
-  if (!asset || !sums) throw new Error(`Release ${release.tag_name} has no ${asset ? "SHA256SUMS" : name}`)
-
+  const base = `${releases}/download/v${version}`
   UI.println(`Downloading DeV Code ${version} (${name})`)
   // Work next to the binary so the final rename stays on one filesystem and is atomic.
   const dir = fs.mkdtempSync(path.join(path.dirname(binary), ".devcode-upgrade-"))
   try {
     const archive = path.join(dir, name)
-    await download(asset.browser_download_url, archive)
-    await verify(archive, await (await download(sums.browser_download_url)).text(), name)
+    await download(`${base}/${name}`, archive)
+    await verify(archive, await (await download(`${base}/SHA256SUMS`)).text(), name)
     const files = path.join(dir, "files")
     fs.mkdirSync(files)
     // tar reads both .tar.gz and, on Windows (bsdtar), .zip.
@@ -85,8 +68,17 @@ async function upgrade(binary: string, target: string | undefined) {
   UI.println(`Updated DeV Code ${InstallationVersion} → ${version}`)
 }
 
+// The "latest" link redirects to the newest release's tag.
+async function latestVersion() {
+  const response = await fetch(`${releases}/latest`, { headers, redirect: "manual" })
+  const tag = response.headers.get("location")?.match(/\/releases\/tag\/v?([^/?#]+)$/)?.[1]
+  if (!tag) throw new Error(`Couldn't find the latest DeV Code release (GitHub answered ${response.status}).`)
+  return tag
+}
+
 async function download(url: string, file?: string) {
   const response = await fetch(url, { headers: { "User-Agent": headers["User-Agent"] } })
+  if (response.status === 404) throw new Error(`Not found on GitHub: ${url}. Check the version number.`)
   if (!response.ok) throw new Error(`Download failed: ${response.status} ${response.statusText} (${url})`)
   if (file) await Bun.write(file, response)
   return response

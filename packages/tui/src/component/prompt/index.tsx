@@ -56,6 +56,7 @@ import { useTuiConfig } from "../../config"
 import { usePromptWorkspace } from "./workspace"
 import { usePromptMove } from "./move"
 import { usePromptVoice } from "./voice"
+import { useUpdateNotification } from "../../context/update-notification"
 import { readLocalAttachment } from "./local-attachment"
 import { useLocation } from "../../context/location"
 
@@ -211,6 +212,7 @@ export function Prompt(props: PromptProps) {
   const workspace = usePromptWorkspace(props.sessionID)
   const move = usePromptMove({ projectID: project.project, sessionID: () => props.sessionID })
   const voice = usePromptVoice(() => input)
+  const update = useUpdateNotification()
   const [cursorVersion, setCursorVersion] = createSignal(0)
   const currentProviderLabel = createMemo(() => local.model.parsed().provider)
   const hasRightContent = createMemo(() => Boolean(props.right))
@@ -1572,6 +1574,20 @@ export function Prompt(props: PromptProps) {
                   )}
                 </Show>
               </box>
+              {/* Wherever the user is, a waiting update stays in view until they take it. */}
+              <Show when={update.notification()}>
+                {(notice) => (
+                  <text flexShrink={0} fg={theme.textMuted} onMouseUp={() => update.open?.()}>
+                    <span style={{ fg: theme.primary }}>
+                      {(() => {
+                        const current = notice()
+                        return current.type === "available" ? `↑ ${current.version}` : `${current.target.version} ready`
+                      })()}
+                    </span>{" "}
+                    {notice().type === "available" ? "/update" : "/update to restart"}
+                  </text>
+                )}
+              </Show>
               <Show when={hasRightContent()}>
                 <box flexDirection="row" gap={1} alignItems="center">
                   {props.right}

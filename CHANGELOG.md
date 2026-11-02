@@ -2,6 +2,11 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.5 (unreleased)
+
+- A waiting update stays in view beside the model name on every screen, not only at startup.
+- Update checks and `devcode upgrade` use GitHub's release links instead of its API, which allows 60 requests an hour per address. A check that fails now says so instead of reporting "no updates".
+
 ## 1.0.4 (2026-11-02)
 
 - `/voice` writes as you speak: your words appear in the prompt while you hold Space, and the final text replaces them when you let go. The speech model stays loaded while you use voice, so each update takes about a tenth of a second, and it is freed after ten idle minutes.

@@ -38,12 +38,12 @@ export function isUpdate(current: string, latest: string) {
   return semver.gt(latest, current)
 }
 
-const Release = Schema.Struct({ tag_name: Schema.String })
 
 export interface Interface {
   readonly info: () => Effect.Effect<Info>
   readonly method: () => Effect.Effect<Method>
-  readonly latest: (method?: Method) => Effect.Effect<string>
+  /** The newer version if there is one, the installed version if not, and undefined if the check failed. */
+  readonly latest: (method?: Method) => Effect.Effect<string | undefined>
   readonly upgrade: (method: Method, target: string) => Effect.Effect<void, UpgradeFailedError>
 }
 
@@ -55,7 +55,7 @@ const layer = Layer.succeed(
   Service,
   Service.of({
     info: Effect.fn("Installation.info")(function* () {
-      return { version: InstallationVersion, latest: yield* latestRelease() }
+      return { version: InstallationVersion, latest: (yield* latestRelease()) ?? InstallationVersion }
     }),
     method: Effect.fn("Installation.method")(function* () {
       return installMethod()
@@ -97,16 +97,21 @@ function upgradeCommand(method: Method, target: string) {
   if (method === "scoop") return ["scoop", "install", `devcode@${target}`]
 }
 
-// The installed version when the check fails or nothing newer is published, so callers show no update.
+// github.com's own "latest release" link redirects to the newest tag. Unlike the API, which allows 60
+// requests an hour per address and then fails (shared offices and colleges hit that), it has no hourly
+// limit. A failed check is undefined, so nobody is told "up to date" when the check never happened.
 const latestRelease = Effect.fnUntraced(function* () {
   const found = yield* Effect.tryPromise(async () => {
-    const response = await fetch("https://api.github.com/repos/Harsha-code-per/DeV/releases/latest", {
-      headers: { "User-Agent": `devcode/${InstallationVersion}`, Accept: "application/vnd.github+json" },
+    const response = await fetch("https://github.com/Harsha-code-per/DeV/releases/latest", {
+      headers: { "User-Agent": `devcode/${InstallationVersion}` },
+      redirect: "manual",
       signal: AbortSignal.timeout(10_000),
     })
-    if (!response.ok) return InstallationVersion
-    return Schema.decodeUnknownSync(Release)(await response.json()).tag_name.replace(/^v/, "")
-  }).pipe(Effect.orElseSucceed(() => InstallationVersion))
+    const tag = response.headers.get("location")?.match(/\/releases\/tag\/v?([^/?#]+)$/)?.[1]
+    if (!tag) throw new Error(`GitHub answered ${response.status} without a release`)
+    return tag
+  }).pipe(Effect.orElseSucceed(() => undefined))
+  if (!found) return undefined
   return isUpdate(InstallationVersion, found) ? found : InstallationVersion
 })
 
