@@ -1,6 +1,6 @@
 // Voice dictation: record the microphone, then turn speech into text, either on this computer
 // with sherpa-onnx (free, private, offline) or with a connected provider's speech-to-text.
-import { existsSync } from "fs"
+import { existsSync, readFileSync } from "fs"
 import fs from "fs/promises"
 import path from "path"
 import { Global } from "@dev-ai/core/global"
@@ -46,6 +46,11 @@ const root = path.join(Global.Path.cache, "voice")
 const engineDir = path.join(root, `sherpa-onnx-${ENGINE_VERSION}`)
 const modelDir = path.join(root, MODEL.name)
 const exe = path.join(engineDir, "bin", process.platform === "win32" ? "sherpa-onnx-offline.exe" : "sherpa-onnx-offline")
+// The engine's C library, which live transcription loads once and keeps in memory.
+const library =
+  process.platform === "win32"
+    ? path.join(engineDir, "bin", "sherpa-onnx-c-api.dll")
+    : path.join(engineDir, "lib", process.platform === "darwin" ? "libsherpa-onnx-c-api.dylib" : "libsherpa-onnx-c-api.so")
 
 /** The local engine's build for this computer, if sherpa-onnx publishes one. */
 export function localSupported() {
@@ -53,14 +58,16 @@ export function localSupported() {
 }
 
 export async function localInstalled() {
-  return (await Bun.file(path.join(engineDir, ".ready")).exists()) && Bun.file(path.join(modelDir, ".ready")).exists()
+  const files = [path.join(engineDir, ".ready"), path.join(modelDir, ".ready"), library]
+  return (await Promise.all(files.map((file) => Bun.file(file).exists()))).every(Boolean)
 }
 
 /** Downloads the engine (~25 MB) and the English model (~100 MB) once, checking each archive's SHA-256. */
 export async function installLocal(progress: (text: string) => void) {
   const engine = ENGINES[`${process.platform}-${process.arch}`]
   if (!engine) throw new Error("The local voice engine has no build for this computer. Use cloud voice instead.")
-  if (!(await Bun.file(path.join(engineDir, ".ready")).exists())) {
+  // 1.0.3 installs had no C library on Windows; a missing library installs the engine again.
+  if (!(await Bun.file(path.join(engineDir, ".ready")).exists()) || !(await Bun.file(library).exists())) {
     const name = `sherpa-onnx-v${ENGINE_VERSION}-${engine.asset}`
     await installArchive({
       url: `https://github.com/k2-fsa/sherpa-onnx/releases/download/v${ENGINE_VERSION}/${name}.tar.bz2`,
@@ -77,6 +84,9 @@ export async function installLocal(progress: (text: string) => void) {
             .filter((file) => file === path.basename(exe) || file.endsWith(".dll"))
             .map((file) => fs.copyFile(path.join(bin, file), path.join(target, "bin", file))),
         )
+        // Beside onnxruntime.dll, which Windows looks for in the folder of the library loading it.
+        if (process.platform === "win32")
+          await fs.copyFile(path.join(extracted, name, "lib", "sherpa-onnx-c-api.dll"), library)
         if (process.platform !== "win32") {
           await fs.cp(path.join(extracted, name, "lib"), path.join(target, "lib"), { recursive: true })
           await fs.chmod(path.join(target, "bin", path.basename(exe)), 0o755)
@@ -151,6 +161,8 @@ async function installArchive(input: {
 }
 
 export type Recording = {
+  /** The audio so far, for live transcription. */
+  samples(): Int16Array
   /** True once audio is arriving, so "listening" is only shown when it really is. */
   ready(): boolean
   /** Loudness of the latest audio, 0 to 1, for the level meter. */
@@ -175,6 +187,10 @@ export function record(): Recording {
     }
   })()
   return {
+    samples: () => {
+      const bytes = Buffer.concat(chunks)
+      return new Int16Array(bytes.subarray(0, bytes.byteLength & ~1).slice().buffer)
+    },
     ready: () => chunks.length > 0,
     level: () => level,
     async stop() {
@@ -285,6 +301,8 @@ function recordMac(): Recording {
   const proc = Bun.spawn(["osascript", "-l", "JavaScript", "-e", MAC_MIC, out], { stdout: "ignore", stderr: "pipe" })
   const started = Date.now()
   return {
+    // AVAudioRecorder writes as it records; a WAV without its final sizes still reads to the end.
+    samples: () => (existsSync(out) ? pcm(new Uint8Array(readFileSync(out))) : new Int16Array()),
     // AVAudioRecorder creates the file when recording starts.
     ready: () => existsSync(out),
     // No live samples here, so the meter breathes while recording instead.
@@ -318,10 +336,129 @@ function microphoneError(detail: string) {
 /** Speech to text. Local runs sherpa-onnx here; cloud uses a connected provider. */
 export async function transcribe(samples: Int16Array, engine: Engine, hints: string[]) {
   if (samples.length < RATE / 4) return ""
-  return engine === "cloud" ? transcribeCloud(samples, hints) : transcribeLocal(samples)
+  if (engine === "cloud") return transcribeCloud(samples, hints)
+  return (await partial(samples)) ?? transcribeOnce(samples)
 }
 
-async function transcribeLocal(samples: Int16Array) {
+// Live transcription runs the engine's C library in a worker, so the model loads once (~0.7 s) and
+// each pass over the audio so far takes about 0.1 s without holding up the screen. The offsets are
+// fields of SherpaOnnxOfflineRecognizerConfig in sherpa-onnx 2.0.1's c-api.h, the same on every
+// 64-bit platform: feat_config.sample_rate 0, feature_dim 4, model_config.nemo_ctc.model 40,
+// tokens 104, num_threads 112, provider 120, decoding_method 528, size 624.
+const LIVE_WORKER = `import { CString, dlopen, FFIType, ptr, read } from "bun:ffi"
+let api, recognizer
+const keep = []
+const text = (value) => { const bytes = new TextEncoder().encode(value + "\\0"); keep.push(bytes); return BigInt(ptr(bytes)) }
+self.onmessage = ({ data }) => {
+  if (data.type === "load") {
+    try {
+      if (data.preload) dlopen(data.preload, {})
+      api = dlopen(data.library, {
+        SherpaOnnxCreateOfflineRecognizer: { args: [FFIType.ptr], returns: FFIType.ptr },
+        SherpaOnnxCreateOfflineStream: { args: [FFIType.ptr], returns: FFIType.ptr },
+        SherpaOnnxDestroyOfflineStream: { args: [FFIType.ptr], returns: FFIType.void },
+        SherpaOnnxAcceptWaveformOffline: { args: [FFIType.ptr, FFIType.i32, FFIType.ptr, FFIType.i32], returns: FFIType.void },
+        SherpaOnnxDecodeOfflineStream: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.void },
+        SherpaOnnxGetOfflineStreamResult: { args: [FFIType.ptr], returns: FFIType.ptr },
+        SherpaOnnxDestroyOfflineRecognizerResult: { args: [FFIType.ptr], returns: FFIType.void },
+      }).symbols
+      const config = new DataView(new ArrayBuffer(624))
+      config.setInt32(0, ${RATE}, true)
+      config.setInt32(4, 80, true)
+      config.setBigUint64(40, text(data.model), true)
+      config.setBigUint64(104, text(data.tokens), true)
+      config.setInt32(112, 2, true)
+      config.setBigUint64(120, text("cpu"), true)
+      config.setBigUint64(528, text("greedy_search"), true)
+      recognizer = api.SherpaOnnxCreateOfflineRecognizer(ptr(new Uint8Array(config.buffer)))
+      if (!recognizer) throw new Error("the speech model did not load")
+      postMessage({ type: "ready" })
+    } catch (error) {
+      postMessage({ type: "error", message: String(error && error.message || error) })
+    }
+    return
+  }
+  const stream = api.SherpaOnnxCreateOfflineStream(recognizer)
+  api.SherpaOnnxAcceptWaveformOffline(stream, ${RATE}, ptr(data.samples), data.samples.length)
+  api.SherpaOnnxDecodeOfflineStream(recognizer, stream)
+  const result = api.SherpaOnnxGetOfflineStreamResult(stream)
+  const value = new CString(read.ptr(result, 0)).toString()
+  api.SherpaOnnxDestroyOfflineRecognizerResult(result)
+  api.SherpaOnnxDestroyOfflineStream(stream)
+  postMessage({ type: "text", id: data.id, text: value.trim() })
+}`
+
+type Live = { worker: Worker; ready: Promise<void>; next: number; pending: Map<number, (text: string) => void> }
+let live: Live | undefined
+let liveFailed = false
+let liveIdle: ReturnType<typeof setTimeout> | undefined
+
+function liveEngine() {
+  if (live) return live
+  const worker = new Worker(URL.createObjectURL(new Blob([LIVE_WORKER], { type: "application/javascript" })))
+  // Bun's own addition: the worker does not keep DeV running at exit.
+  ;(worker as Worker & { unref(): void }).unref()
+  const pending = new Map<number, (text: string) => void>()
+  const ready = new Promise<void>((resolve, reject) => {
+    worker.onmessage = (event: MessageEvent<{ type: string; id?: number; text?: string; message?: string }>) => {
+      if (event.data.type === "ready") return resolve()
+      if (event.data.type === "error") return reject(new Error(event.data.message))
+      pending.get(event.data.id!)?.(event.data.text ?? "")
+      pending.delete(event.data.id!)
+    }
+    worker.onerror = (event) => reject(new Error(event.message))
+  })
+  worker.postMessage({
+    type: "load",
+    library,
+    // Windows finds a library's dependencies by name only once they are loaded.
+    preload: process.platform === "win32" ? path.join(engineDir, "bin", "onnxruntime.dll") : undefined,
+    model: path.join(modelDir, "model.int8.onnx"),
+    tokens: path.join(modelDir, "tokens.txt"),
+  })
+  const current = { worker, ready, next: 0, pending }
+  ready.catch(() => {
+    liveFailed = true
+    worker.terminate()
+    if (live === current) live = undefined
+  })
+  live = current
+  return current
+}
+
+/**
+ * The words in the audio so far, from the model kept loaded in memory, or undefined when the
+ * library cannot load here (the caller then transcribes once at the end). The model is freed
+ * after ten idle minutes.
+ */
+export async function partial(samples: Int16Array) {
+  if (liveFailed || samples.length === 0 || !(await Bun.file(library).exists())) return
+  const engine = liveEngine()
+  const loaded = await engine.ready.then(
+    () => true,
+    () => false,
+  )
+  if (!loaded) return
+  clearTimeout(liveIdle)
+  liveIdle = setTimeout(() => {
+    engine.worker.terminate()
+    if (live === engine) live = undefined
+  }, 10 * 60_000)
+  liveIdle.unref?.()
+  const floats = Float32Array.from(samples, (value) => value / 32768)
+  const id = engine.next++
+  return new Promise<string>((resolve) => {
+    engine.pending.set(id, resolve)
+    engine.worker.postMessage({ type: "decode", id, samples: floats }, [floats.buffer])
+  })
+}
+
+/** Starts the engine ahead of the first recording, so live text appears from the first word. */
+export function warm() {
+  void partial(new Int16Array(RATE / 10))
+}
+
+async function transcribeOnce(samples: Int16Array) {
   const file = path.join(Global.Path.tmp, `voice-${process.pid}-${Date.now()}.wav`)
   await Bun.write(file, wav(samples))
   try {

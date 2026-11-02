@@ -33,6 +33,10 @@ export function usePromptVoice(input: () => TextareaRenderable | undefined) {
   let typed = 0
   let started = 0
   let run = 0
+  // Live text sits in the prompt at `anchor`; `shown` is what is there now, replaced as words arrive.
+  let anchor = 0
+  let shown = ""
+  let decoding = false
   let timer: ReturnType<typeof setInterval> | undefined
   let warmup: ReturnType<typeof setTimeout> | undefined
 
@@ -48,6 +52,9 @@ export function usePromptVoice(input: () => TextareaRenderable | undefined) {
     const before = target.plainText.slice(0, target.cursorOffset)
     const spaces = Math.min(typed, before.length - before.trimEnd().length)
     for (let i = 0; i < spaces; i++) target.deleteCharBackward()
+    anchor = target.cursorOffset
+    shown = ""
+    decoding = false
     try {
       recording = Voice.record()
     } catch (error) {
@@ -57,11 +64,21 @@ export function usePromptVoice(input: () => TextareaRenderable | undefined) {
     setReady(false)
     setState("listening")
     started = performance.now()
+    const id = run
+    let lastPass = 0
     timer = setInterval(() => {
       setReady(recording?.ready() ?? false)
       setLevel(recording?.level() ?? 0)
       const now = performance.now()
-      if (now - last > RELEASE_MS || now - started > MAX_MS) void finish()
+      if (now - last > RELEASE_MS || now - started > MAX_MS) return void finish()
+      // One pass at a time over the audio so far, about twice a second.
+      if (decoding || !recording || now - lastPass < 450) return
+      decoding = true
+      lastPass = now
+      void Voice.partial(recording.samples()).then((text) => {
+        decoding = false
+        if (text !== undefined && id === run && state() === "listening") show(text)
+      })
     }, 50)
   }
 
@@ -78,22 +95,34 @@ export function usePromptVoice(input: () => TextareaRenderable | undefined) {
       ])
       if (id !== run) return
       setState("idle")
-      if (!text) {
-        toast.show({ variant: "info", message: "No speech heard. Hold Space while you talk.", duration: 3000 })
-        return
-      }
-      const target = input()
-      if (!target) return
-      const before = target.plainText.slice(0, target.cursorOffset)
-      target.insertText((before && !/\s$/.test(before) ? " " : "") + text)
+      show(text)
+      // The final words belong to the prompt now.
+      shown = ""
+      if (!text) toast.show({ variant: "info", message: "No speech heard. Hold Space while you talk.", duration: 3000 })
     } catch (error) {
-      if (id === run) fail(error)
+      if (id === run) {
+        show("")
+        fail(error)
+      }
+      shown = ""
     }
+  }
+
+  /** Replaces the live text in the prompt with `text`, spaced from what comes before it. */
+  function show(text: string) {
+    const target = input()
+    if (!target) return
+    target.cursorOffset = anchor + shown.length
+    for (let i = 0; i < shown.length; i++) target.deleteCharBackward()
+    const before = target.plainText.slice(0, anchor)
+    shown = text ? (before && !/\s$/.test(before) ? " " : "") + text : ""
+    target.insertText(shown)
   }
 
   function cancel() {
     clearInterval(timer)
     run++
+    show("")
     recording?.cancel()
     recording = undefined
     setState("idle")
@@ -127,7 +156,11 @@ export function usePromptVoice(input: () => TextareaRenderable | undefined) {
     last = now
     clearTimeout(warmup)
     if (streak < 3) {
-      if (streak === 2) setState("warmup")
+      if (streak === 2) {
+        setState("warmup")
+        // The model loads while the hold is being recognised.
+        Voice.warm()
+      }
       // A quick double tap is just two spaces.
       warmup = setTimeout(() => state() === "warmup" && setState("idle"), REPEAT_MS * 2)
       return false

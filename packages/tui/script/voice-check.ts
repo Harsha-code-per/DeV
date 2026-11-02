@@ -12,6 +12,10 @@ if (!(await Voice.localInstalled())) throw new Error("The local engine did not i
 // A second of a quiet tone: the engine must run and answer, even if it hears no words.
 const tone = Int16Array.from({ length: 16000 }, (_, i) => Math.round(Math.sin(i / 8) * 3000))
 console.log("engine ran, heard:", JSON.stringify(await Voice.transcribe(tone, "local", [])))
+// Live transcription loads the engine's C library in a worker; undefined means it could not.
+const live = await Voice.partial(tone)
+if (live === undefined) throw new Error("Live transcription could not load the engine library")
+console.log("live engine loaded, heard:", JSON.stringify(live))
 
 const result = await (async () => {
   await Voice.prepare()

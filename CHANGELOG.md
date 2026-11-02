@@ -2,6 +2,11 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.4 (2026-11-02)
+
+- `/voice` writes as you speak: your words appear in the prompt while you hold Space, and the final text replaces them when you let go. The speech model stays loaded while you use voice, so each update takes about a tenth of a second, and it is freed after ten idle minutes.
+- The npm packages publish again: `npm i -g @devcodeagent/cli` installs the current version.
+
 ## 1.0.3 (2026-11-02)
 
 - `/voice`: hold Space to talk, release to put the words in the prompt, Esc to cancel. Speech is turned into text on your computer, free and offline (sherpa-onnx with NVIDIA's Parakeet English model, a one-time 130 MB download), or by Groq or OpenAI if you pick cloud voice.
