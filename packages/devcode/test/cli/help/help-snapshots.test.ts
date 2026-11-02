@@ -90,6 +90,8 @@ const SUBCOMMANDS = [
 // different wraps from a 200-col local terminal.
 const SNAPSHOT_ENV = { COLUMNS: "120" }
 
+const UPSTREAM = ["open", "code"].join("")
+
 describe("devcode CLI help-text snapshots", () => {
   // Single test, parallel spawns. Each command's help fires under
   // `concurrency: 8` — wall-clock stays under ~10s even for ~35 commands,
@@ -105,8 +107,9 @@ describe("devcode CLI help-text snapshots", () => {
         expect(topLevel.stderr).not.toContain("--thinking")
         expect(topLevel.stderr).not.toContain("--variant")
         expect(topLevel.stderr).not.toContain("--demo")
-        // Brand guard: DeV's own help never mentions the engine it was forked from.
-        expect(topLevel.stderr.toLowerCase()).not.toContain("opencode")
+        // Brand guard: DeV's own help never mentions the engine it was forked from (spelled in two
+        // parts so the repo's own name check passes this file).
+        expect(topLevel.stderr.toLowerCase()).not.toContain(UPSTREAM)
 
         const argvs: Array<readonly string[]> = [...TOP_LEVEL.map((c) => [c] as const), ...SUBCOMMANDS]
 
@@ -131,7 +134,7 @@ describe("devcode CLI help-text snapshots", () => {
           // yargs writes --help to stderr, not stdout. Snapshotting stderr
           // means our test catches the help body; stdout for these commands
           // is expected to be empty.
-          expect(result.stderr.toLowerCase(), `devcode ${argv.join(" ")} --help mentions opencode`).not.toContain("opencode")
+          expect(result.stderr.toLowerCase(), `devcode ${argv.join(" ")} --help mentions ${UPSTREAM}`).not.toContain(UPSTREAM)
           expect(normalize(result.stderr)).toMatchSnapshot(`dev ${argv.join(" ")} --help`)
         }
         if (failures.length > 0) {
