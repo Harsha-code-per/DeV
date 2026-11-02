@@ -352,7 +352,7 @@ const text = (value) => { const bytes = new TextEncoder().encode(value + "\\0");
 self.onmessage = ({ data }) => {
   if (data.type === "load") {
     try {
-      if (data.preload) dlopen(data.preload, {})
+      if (data.preload) dlopen(data.preload, { OrtGetApiBase: { args: [], returns: FFIType.ptr } })
       api = dlopen(data.library, {
         SherpaOnnxCreateOfflineRecognizer: { args: [FFIType.ptr], returns: FFIType.ptr },
         SherpaOnnxCreateOfflineStream: { args: [FFIType.ptr], returns: FFIType.ptr },
