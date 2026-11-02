@@ -3,6 +3,12 @@ name: release
 on:
   push:
     tags: ["v*"]
+  # Publishes an existing release to npm, for a tag whose npm step failed.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish to npm, such as v1.0.3
+        required: true
 
 permissions:
   contents: read
@@ -12,13 +18,13 @@ concurrency:
 
 jobs:
   release:
+    if: github.event_name == 'push'
     # One macOS runner cross-compiles every target (script/build.ts), and it is the only place
     # the darwin binaries can be re-signed after embedding, which macOS requires.
     runs-on: macos-latest
     permissions:
       contents: write
       actions: write # starts install-test on the new release
-      id-token: write # npm provenance
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -48,14 +54,34 @@ jobs:
       - name: Test the install on clean machines
         run: gh workflow run install-test.yml --repo "$GITHUB_REPOSITORY" -f tag="$GITHUB_REF_NAME"
 
-      # npm: the SDK and plugin SDK for plugin authors, then one small launcher package. npm signs in through trusted publishing, so no token is stored;
-      # that and its provenance need a public repository. Pre-releases stay on GitHub only.
-      - name: npm publish
-        # Set the repository variable NPM_PUBLISH to true once npm trusts this workflow.
-        if: ${{ !github.event.repository.private && !contains(github.ref_name, '-') && vars.NPM_PUBLISH == 'true' }}
-        run: |
-          npm install -g npm@11
-          (cd ../sdk/js && bun script/build.ts && bun script/publish.ts)
-          (cd ../plugin && bun script/publish.ts)
-          bun script/publish.ts
+  # npm: the SDK and plugin SDK for plugin authors, then one small launcher package that downloads
+  # the GitHub release. npm signs in through trusted publishing (no stored token), which with its
+  # provenance needs a public repository. Pre-releases stay on GitHub only.
+  npm:
+    needs: release
+    if: >-
+      ${{ !cancelled() && (needs.release.result == 'success' || github.event_name == 'workflow_dispatch')
+      && !github.event.repository.private && vars.NPM_PUBLISH == 'true'
+      && !contains(inputs.tag || github.ref_name, '-') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.TAG }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Publish
         working-directory: packages/devcode
+        run: |
+          export DEV_VERSION="${TAG#v}"
+          npm install -g npm@11
+          # Skips what is already published, so a failed run can simply be repeated.
+          published() { [ "$(npm view "@devcodeagent/$1@$DEV_VERSION" version 2>/dev/null)" = "$DEV_VERSION" ]; }
+          published sdk || (cd ../sdk/js && bun script/build.ts && bun script/publish.ts)
+          published plugin || (cd ../plugin && bun script/publish.ts)
+          published cli || bun script/publish.ts
