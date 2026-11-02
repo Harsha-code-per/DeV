@@ -55,6 +55,7 @@ import { DEV_BASE_MODE, useBindings, useCommandShortcut, useLeaderActive, useDev
 import { useTuiConfig } from "../../config"
 import { usePromptWorkspace } from "./workspace"
 import { usePromptMove } from "./move"
+import { usePromptVoice } from "./voice"
 import { readLocalAttachment } from "./local-attachment"
 import { useLocation } from "../../context/location"
 
@@ -209,6 +210,7 @@ export function Prompt(props: PromptProps) {
   const [auto, setAuto] = createSignal<AutocompleteRef>()
   const workspace = usePromptWorkspace(props.sessionID)
   const move = usePromptMove({ projectID: project.project, sessionID: () => props.sessionID })
+  const voice = usePromptVoice(() => input)
   const [cursorVersion, setCursorVersion] = createSignal(0)
   const currentProviderLabel = createMemo(() => local.model.parsed().provider)
   const hasRightContent = createMemo(() => Boolean(props.right))
@@ -555,6 +557,14 @@ export function Prompt(props: PromptProps) {
           restoreExtmarksFromParts(updatedNonTextParts)
           input.cursorOffset = Bun.stringWidth(normalized)
         },
+      },
+      {
+        title: "Voice",
+        desc: "Talk instead of typing: hold Space",
+        name: "prompt.voice",
+        category: "Prompt",
+        slashName: "voice",
+        run: () => voice.open(),
       },
       {
         title: "Skills",
@@ -1408,6 +1418,7 @@ export function Prompt(props: PromptProps) {
       const example = shell()[store.placeholder % shell().length]
       return `Run a command… "${example}"`
     }
+    if (voice.enabled()) return "Hold Space to talk, or type…"
     if (!list().length) return undefined
     return `Ask anything… "${list()[store.placeholder % list().length]}"`
   })
@@ -1463,7 +1474,8 @@ export function Prompt(props: PromptProps) {
                 setCursorVersion((value) => value + 1)
               }}
               onCursorChange={() => setCursorVersion((value) => value + 1)}
-              onKeyDown={(e: { preventDefault(): void }) => {
+              onKeyDown={(e: KeyEvent) => {
+                if (voice.onKey(e)) return
                 if (props.disabled) {
                   e.preventDefault()
                   return
@@ -1568,6 +1580,15 @@ export function Prompt(props: PromptProps) {
             </box>
           </box>
         </box>
+        <Show when={voice.status()}>
+          {(line) => (
+            <box width="100%" paddingLeft={3}>
+              <text fg={voice.listening() ? theme.primary : theme.textMuted} wrapMode="none">
+                {line()}
+              </text>
+            </box>
+          )}
+        </Show>
         <Show when={goal()}>
           {(current) => (
             <box width="100%" paddingLeft={1}>

@@ -1,0 +1,29 @@
+name: voice
+
+# Installs the local voice engine and starts the recorder on each OS. It downloads about 130 MB,
+# so it runs only when voice changes.
+on:
+  push:
+    branches: [main]
+    paths: [packages/tui/src/voice.ts, packages/tui/script/voice-check.ts, .github/workflows/voice.yml]
+  pull_request:
+    paths: [packages/tui/src/voice.ts, packages/tui/script/voice-check.ts, .github/workflows/voice.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - run: bun script/voice-check.ts
+        working-directory: packages/tui
