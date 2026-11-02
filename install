@@ -124,7 +124,7 @@ ln -sf devcode "$dir/dev"
 installed=$("$dir/devcode" --version 2>/dev/null || echo "$version")
 step "Installed DeV Code $installed to $(pretty "$dir")"
 
-# PATH: the startup file of your shell, plus those of any other shell you have set up, so devcode
+# PATH: the startup file of your shell, plus those of the other shells installed here, so devcode
 # works in every new terminal. Files that already mention the folder are left alone.
 shell=$(basename "${SHELL:-sh}")
 config="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -136,11 +136,12 @@ add_path() {
   changed="$changed, $(pretty "$1")"
 }
 posix="export PATH=\"$dir:\$PATH\""
-if [ "$shell" = fish ] || [ -d "$config/fish" ]; then
+installed_shell() { [ "$shell" = "$1" ] || command -v "$1" >/dev/null 2>&1; }
+if installed_shell fish; then
   # A conf.d file of its own, in syntax every fish version understands.
   add_path "$config/fish/conf.d/devcode.fish" "contains -- \"$dir\" \$PATH; or set -gx PATH \"$dir\" \$PATH"
 fi
-if [ "$shell" = zsh ] || [ -f "${ZDOTDIR:-$HOME}/.zshrc" ]; then add_path "${ZDOTDIR:-$HOME}/.zshrc" "$posix"; fi
+if installed_shell zsh || [ -f "${ZDOTDIR:-$HOME}/.zshrc" ]; then add_path "${ZDOTDIR:-$HOME}/.zshrc" "$posix"; fi
 if [ "$shell" = bash ] || [ -f "$HOME/.bashrc" ]; then add_path "$HOME/.bashrc" "$posix"; fi
 # macOS opens bash as a login shell, which reads ~/.bash_profile and not ~/.bashrc.
 if [ "$os" = darwin ] && [ "$shell" = bash ]; then add_path "$HOME/.bash_profile" "$posix"; fi
