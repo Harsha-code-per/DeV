@@ -133,11 +133,48 @@ export const WebFetchTool = Tool.define(
               : params.format === "text"
                 ? extractTextFromHTML(content)
                 : content
-          return { output: Untrusted.wrap(params.url, output), title, metadata: {} }
+          // Sites built as JavaScript apps (Unstop, Hack2skill, many listings) send a shell with almost
+          // no text; a reader that loads the page in a browser gets what a person would see.
+          const rendered =
+            contentType.includes("text/html") && params.format !== "html" && needsBrowser(params.url, content)
+              ? yield* renderInBrowser(httpOk, params.url)
+              : undefined
+          return {
+            output: Untrusted.wrap(params.url, rendered ?? output),
+            title: rendered ? `${params.url} (rendered in a browser)` : title,
+            metadata: {},
+          }
         }).pipe(Effect.orDie),
     }
   }),
 )
+
+const MIN_WORDS = 150
+const wordCount = (text: string) => text.split(/\s+/).filter(Boolean).length
+
+// A JavaScript app's shell: little text but scripts that would draw the page. The reader cannot reach
+// this computer or a private network, so those addresses keep the plain fetch.
+function needsBrowser(url: string, html: string) {
+  const host = URL.parse(url)?.hostname ?? ""
+  if (/^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$)|\.local$/.test(host)) return false
+  return /<script\b/i.test(html) && wordCount(extractTextFromHTML(html)) < MIN_WORDS
+}
+
+// r.jina.ai renders a public page in a browser and returns it as Markdown; free without a key. Only the
+// page address is sent. Undefined when it fails or finds no more than the plain fetch did.
+const renderInBrowser = (http: HttpClient.HttpClient, url: string) =>
+  Effect.gen(function* () {
+    const response = yield* http.execute(
+      HttpClientRequest.get(`https://r.jina.ai/${url}`).pipe(
+        HttpClientRequest.setHeaders({ "X-Return-Format": "markdown", "User-Agent": "devcode" }),
+      ),
+    )
+    const text = yield* response.text
+    return wordCount(text) > MIN_WORDS ? text : undefined
+  }).pipe(
+    Effect.timeoutOrElse({ duration: "25 seconds", orElse: () => Effect.succeed(undefined) }),
+    Effect.orElseSucceed(() => undefined),
+  )
 
 function extractTextFromHTML(html: string) {
   let text = ""

@@ -117,3 +117,20 @@ describe("tool.webfetch", () => {
     ),
   )
 })
+
+describe("tool.webfetch javascript apps", () => {
+  it.instance("keeps a local page as fetched, since the browser reader cannot reach it", () =>
+    withFetch(
+      () =>
+        new Response('<html><body><div id="root"></div><script src="/app.js"></script></body></html>', {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        }),
+      (url) =>
+        Effect.gen(function* () {
+          const result = yield* exec({ url: new URL("/", url).toString(), format: "markdown" })
+          expect(result.title).not.toContain("rendered in a browser")
+        }),
+    ),
+  )
+})

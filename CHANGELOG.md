@@ -2,6 +2,13 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.6 (2026-11-02)
+
+- Web search works. It had been switched off since the rename, so DeV could only fetch pages it already knew the address of. It now uses Exa or Parallel, both free with no key, and falls back to the other when one fails.
+- Research is thorough: DeV searches several times and site by site, reads the pages that matter, and answers with a table of direct links and a list of what it could not confirm. On "hackathons in Hyderabad or online, 2 to 10 November" it went from no answer in seven minutes to twelve searches across eight sites with sources.
+- Pages built as JavaScript apps, such as Unstop and Hack2skill, are read through a browser-rendering reader when a plain fetch finds no text.
+- Skills written for Claude Code can start its `general-purpose` and `Explore` subagents.
+
 ## 1.0.5 (2026-11-02)
 
 - DeV asks before it guesses. When a request leaves out something only you know (where, when, budget, who it is for, which style), it asks with options, the recommended one first, checkboxes when several apply, and room for your own answer. Open-ended requests such as "find hackathons I can attend" or "plan a weekend trip for me" always start by asking or by saying there is enough to go on: on DeV's free models, 10 of 10 such requests now ask, against 1 of 5 before, and clear requests still get a straight answer.

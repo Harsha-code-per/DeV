@@ -131,7 +131,12 @@ export const WebSearchTool = Tool.define(
             },
           })
 
-          const result = yield* callProvider(http, provider, params, ctx)
+          // Both providers are free without a key; when one fails or finds nothing, try the other.
+          const other = provider === "exa" ? "parallel" : "exa"
+          const result = yield* callProvider(http, provider, params, ctx).pipe(
+            Effect.catch(() => Effect.succeed(undefined)),
+            Effect.flatMap((found) => (found ? Effect.succeed(found) : callProvider(http, other, params, ctx))),
+          )
 
           return {
             output: result

@@ -284,6 +284,28 @@ describe("tool.task", () => {
     }),
   )
 
+  it.instance("execute accepts Claude Code's subagent names", () =>
+    Effect.gen(function* () {
+      const { chat, assistant } = yield* seed()
+      const tool = yield* TaskTool
+      const def = yield* tool.init()
+      const result = yield* def.execute(
+        { description: "look around", prompt: "summarise the repo", subagent_type: "general-purpose" },
+        {
+          sessionID: chat.id,
+          messageID: assistant.id,
+          agent: "build",
+          abort: new AbortController().signal,
+          extra: { promptOps: stubOps({ text: "done" }) },
+          messages: [],
+          metadata: () => Effect.void,
+          ask: () => Effect.void,
+        },
+      )
+      expect(result.output).toContain('state="completed"')
+    }),
+  )
+
   it.instance("execute surfaces child errors with a resumable task_id", () =>
     Effect.gen(function* () {
       const sessions = yield* Session.Service

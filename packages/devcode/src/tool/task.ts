@@ -53,6 +53,8 @@ const BaseParameterFields = {
 
 const BaseParameters = Schema.Struct(BaseParameterFields)
 
+const CLAUDE_CODE_AGENTS: Record<string, string> = { "general-purpose": "general", Explore: "explore" }
+
 export const Parameters = Schema.Struct({
   ...BaseParameterFields,
   background: Schema.optional(Schema.Boolean).annotate({
@@ -116,21 +118,26 @@ export const TaskTool = Tool.define(
         )
       }
 
+      // Skills written for Claude Code name its subagents; they are the same jobs here.
+      const type = CLAUDE_CODE_AGENTS[params.subagent_type] ?? params.subagent_type
       if (!ctx.extra?.bypassAgentCheck) {
         yield* ctx.ask({
           permission: id,
-          patterns: [params.subagent_type],
+          patterns: [type],
           always: ["*"],
           metadata: {
             description: params.description,
-            subagent_type: params.subagent_type,
+            subagent_type: type,
           },
         })
       }
 
-      const next = yield* agent.get(params.subagent_type)
+      const next = yield* agent.get(type)
       if (!next) {
-        return yield* Effect.fail(new Error(`Unknown agent type: ${params.subagent_type} is not a valid agent type`))
+        const valid = (yield* agent.list()).filter((item) => item.mode !== "primary").map((item) => item.name)
+        return yield* Effect.fail(
+          new Error(`Unknown agent type: ${params.subagent_type}. Use one of: ${valid.join(", ")}`),
+        )
       }
 
       const session = params.task_id

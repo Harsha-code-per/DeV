@@ -85,6 +85,7 @@
 <li>Leaving the sandbox always asks you, unless you turned on Auto.</li>
 <li>File edits and web fetches ask by default. Deny rules win in every mode.</li>
 <li>Web pages and MCP results reach the model marked as untrusted.</li>
+<li>Web search goes to Exa or Parallel, free services that need no key, and only the search words are sent. A page that only shows its content after JavaScript runs is read through Jina Reader, which receives just the page address. Deny <code>websearch</code> or <code>webfetch</code> in your settings to turn either off.</li>
 </ul>
 <p><b>Limits:</b> Windows has no sandbox yet, PowerShell commands are never sandboxed, and local MCP servers run outside the sandbox. Read the full <a href="https://github.com/Harsha-code-per/DeV/blob/main/SECURITY.md">security policy</a>.</p>
 
