@@ -1,5 +1,5 @@
 {
-  "$schema": "https://harsha-code-per.github.io/DeV/schema/theme.json",
+  "$schema": "https://trydev.work/schema/theme.json",
   "defs": {
     "darkBg": "#263238",
     "darkBgAlt": "#1e272c",

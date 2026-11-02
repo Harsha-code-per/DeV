@@ -1,6 +1,6 @@
 # DeV Code installer for Windows.
-#   irm https://harsha-code-per.github.io/DeV/install.ps1 | iex
-#   & ([scriptblock]::Create((irm https://harsha-code-per.github.io/DeV/install.ps1))) 1.2.3   (a given version)
+#   irm https://trydev.work/install.ps1 | iex
+#   & ([scriptblock]::Create((irm https://trydev.work/install.ps1))) 1.2.3   (a given version)
 # Installs to ~\.devcode\bin, or $env:DEVCODE_INSTALL_DIR, and adds that folder to your PATH. The
 # download is checked against the release's SHA256SUMS before anything is installed.
 param([string]$Version = $(if ($env:DEVCODE_VERSION) { $env:DEVCODE_VERSION } else { "latest" }))

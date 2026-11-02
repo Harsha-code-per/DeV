@@ -38,7 +38,7 @@ describe("inlineCodeKind", () => {
   })
 
   test("detects urls", () => {
-    expect(inlineCodeKind(`https://harsha-code-per.github.io/DeV/docs`)).toBe("url")
+    expect(inlineCodeKind(`https://trydev.work/docs`)).toBe("url")
     expect(inlineCodeKind(`http://localhost:4444`)).toBe("url")
     expect(inlineCodeKind(`file:///tmp/devcode`)).toBeUndefined()
     expect(inlineCodeKind(`ftp://devcode.ai/docs`)).toBeUndefined()

@@ -399,7 +399,7 @@ describe("workspace HttpApi", () => {
             "content-type": "application/json",
             "x-dev-workspace": "internal",
           },
-          body: JSON.stringify({ $schema: "https://harsha-code-per.github.io/DeV/schema/config.json" }),
+          body: JSON.stringify({ $schema: "https://trydev.work/schema/config.json" }),
         })
 
         const responseBody = yield* response.text
@@ -416,7 +416,7 @@ describe("workspace HttpApi", () => {
               "content-type": "application/json",
               "x-target-auth": "secret",
             }),
-            body: JSON.stringify({ $schema: "https://harsha-code-per.github.io/DeV/schema/config.json" }),
+            body: JSON.stringify({ $schema: "https://trydev.work/schema/config.json" }),
           },
         ])
         expect(forwarded[0]?.headers).not.toHaveProperty("x-dev-directory")

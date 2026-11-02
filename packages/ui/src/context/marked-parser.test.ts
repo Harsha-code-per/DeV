@@ -4,8 +4,8 @@ import { createMarkdownParser } from "./marked-parser"
 const parser = createMarkdownParser((code, language) => `<pre data-language="${language}">${code}</pre>`)
 
 test("renders links with application attributes", async () => {
-  expect(await parser.parse("[DeV](https://harsha-code-per.github.io/DeV)")).toBe(
-    '<p><a href="https://harsha-code-per.github.io/DeV" class="external-link" target="_blank" rel="noopener noreferrer">DeV</a></p>\n',
+  expect(await parser.parse("[DeV](https://trydev.work)")).toBe(
+    '<p><a href="https://trydev.work" class="external-link" target="_blank" rel="noopener noreferrer">DeV</a></p>\n',
   )
 })
 

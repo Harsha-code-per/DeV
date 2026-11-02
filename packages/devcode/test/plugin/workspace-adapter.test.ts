@@ -74,7 +74,7 @@ describe("plugin.workspace", () => {
           path.join(dir, "dev.json"),
           JSON.stringify(
             {
-              $schema: "https://harsha-code-per.github.io/DeV/schema/config.json",
+              $schema: "https://trydev.work/schema/config.json",
               plugin: [pathToFileURL(file).href],
             },
             null,

@@ -96,7 +96,7 @@ export async function tmpdir<T>(options?: TmpDirOptions<T>) {
     await Bun.write(
       path.join(dirpath, "dev.json"),
       JSON.stringify({
-        $schema: "https://harsha-code-per.github.io/DeV/schema/config.json",
+        $schema: "https://trydev.work/schema/config.json",
         ...options.config,
       }),
     )
@@ -154,7 +154,7 @@ export function tmpdirScoped<E = never, R = never>(options?: {
       yield* Effect.promise(() =>
         fs.writeFile(
           path.join(dir, "dev.json"),
-          JSON.stringify({ $schema: "https://harsha-code-per.github.io/DeV/schema/config.json", ...resolved }),
+          JSON.stringify({ $schema: "https://trydev.work/schema/config.json", ...resolved }),
         ),
       )
     }

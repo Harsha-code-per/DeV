@@ -59,7 +59,7 @@ function model(input: {
     providerID: "devcode",
     api: {
       id: "devcode",
-      url: "https://harsha-code-per.github.io/DeV",
+      url: "https://trydev.work",
       npm: "@ai-sdk/openai-compatible",
     },
     name: input.name,

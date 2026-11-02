@@ -268,7 +268,7 @@ const writeConfig = (directory: string, scenario: RecordedScenario, model: Model
   Effect.promise(() =>
     Bun.write(
       path.join(directory, "dev.json"),
-      JSON.stringify({ $schema: "https://harsha-code-per.github.io/DeV/schema/config.json", ...scenario.config(model) }),
+      JSON.stringify({ $schema: "https://trydev.work/schema/config.json", ...scenario.config(model) }),
     ),
   )
 

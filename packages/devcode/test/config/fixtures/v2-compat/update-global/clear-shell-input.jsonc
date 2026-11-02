@@ -1,5 +1,5 @@
 {
-  "$schema": "https://harsha-code-per.github.io/DeV/schema/config.json",
+  "$schema": "https://trydev.work/schema/config.json",
   // Empty shell in a global update removes the setting.
   "shell": "bash",
   "model": { "providerID": "example", "model": "demo" },

@@ -9,7 +9,7 @@
 
 ## Local Dev
 
-- `devcode dev web` proxies `https://harsha-code-per.github.io/DeV`, so local UI/CSS changes will not show there.
+- `devcode dev web` proxies `https://trydev.work`, so local UI/CSS changes will not show there.
 - For local UI changes, run the backend and app dev servers separately.
 - Backend (from `packages/devcode`): `bun run ./src/index.ts serve --port 4096`
 - App (from `packages/app`): `bun dev -- --port 4444`

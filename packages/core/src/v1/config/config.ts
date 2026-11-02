@@ -41,7 +41,7 @@ export const Info = Schema.Struct({
     description: "Server configuration for dev serve and web commands",
   }),
   command: Schema.optional(Schema.Record(Schema.String, ConfigCommandV1.Info)).annotate({
-    description: "Command configuration, see https://harsha-code-per.github.io/DeV/docs/commands",
+    description: "Command configuration, see https://trydev.work/docs/commands",
   }),
   skills: Schema.optional(ConfigSkillsV1.Info).annotate({ description: "Additional skill folder paths" }),
   references: Schema.optional(ConfigReference.Info).annotate({
@@ -108,7 +108,7 @@ export const Info = Schema.Struct({
       }),
       [Schema.Record(Schema.String, ConfigAgentV1.Info)],
     ),
-  ).annotate({ description: "Agent configuration, see https://harsha-code-per.github.io/DeV/docs/agents" }),
+  ).annotate({ description: "Agent configuration, see https://trydev.work/docs/agents" }),
   provider: Schema.optional(Schema.Record(Schema.String, ConfigProviderV1.Info)).annotate({
     description: "Custom provider configurations and model overrides",
   }),

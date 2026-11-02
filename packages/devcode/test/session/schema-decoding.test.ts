@@ -240,7 +240,7 @@ describe("SessionStatus.Info", () => {
         title: "Free limit reached",
         message: "Subscribe to DeV Go.",
         label: "subscribe",
-        link: "https://harsha-code-per.github.io/DeV/go",
+        link: "https://trydev.work/go",
       },
       next: 500,
     }

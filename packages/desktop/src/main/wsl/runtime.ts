@@ -268,7 +268,7 @@ export async function installWslDevcode(version: string, distro: string, opts?: 
   return runInteractiveCommand(
     resolveSystem32Command("wsl.exe"),
     wslArgs(
-      ["bash", "-lc", `curl -fsSL https://harsha-code-per.github.io/DeV/install | sh -s -- ${shellEscape(version)}`],
+      ["bash", "-lc", `curl -fsSL https://trydev.work/install | sh -s -- ${shellEscape(version)}`],
       distro,
     ),
     withTimeout(opts, DEFAULT_WSL_INSTALL_TIMEOUT_MS),

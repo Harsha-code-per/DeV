@@ -1209,7 +1209,7 @@ export type Config = {
     diff_style?: "auto" | "stacked"
   }
   /**
-   * Command configuration, see https://harsha-code-per.github.io/DeV/docs/commands
+   * Command configuration, see https://trydev.work/docs/commands
    */
   command?: {
     [key: string]: {
@@ -1266,7 +1266,7 @@ export type Config = {
     [key: string]: AgentConfig | undefined
   }
   /**
-   * Agent configuration, see https://harsha-code-per.github.io/DeV/docs/agent
+   * Agent configuration, see https://trydev.work/docs/agent
    */
   agent?: {
     plan?: AgentConfig

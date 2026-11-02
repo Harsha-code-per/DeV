@@ -8,7 +8,7 @@
 
 DeV brings premium AI to anyone, with nothing to pay: an assistant on your computer, a coding agent in your terminal, and help in your browser. DeV Code, the coding agent, comes first.
 
-[Website](https://harsha-code-per.github.io/DeV) · [Docs](https://harsha-code-per.github.io/DeV/docs.html) · [Roadmap](docs/ROADMAP.md) · [Report a bug](https://github.com/Harsha-code-per/DeV/issues/new/choose) · [Sponsor](#support-dev)
+[Website](https://trydev.work) · [Docs](https://trydev.work/docs.html) · [Roadmap](docs/ROADMAP.md) · [Report a bug](https://github.com/Harsha-code-per/DeV/issues/new/choose) · [Sponsor](#support-dev)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-F2A516)](LICENSE) [![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-121317)](#install) [![Cost](https://img.shields.io/badge/cost-free-F2A516)](#why-dev)
 
@@ -36,13 +36,13 @@ DeV includes the features that usually sit behind a paid plan, for everyone. The
 **Linux and macOS**
 
 ```sh
-curl -fsSL https://harsha-code-per.github.io/DeV/install | sh
+curl -fsSL https://trydev.work/install | sh
 ```
 
 **Windows (PowerShell)**
 
 ```powershell
-irm https://harsha-code-per.github.io/DeV/install.ps1 | iex
+irm https://trydev.work/install.ps1 | iex
 ```
 
 **npm**
@@ -130,7 +130,7 @@ Get the result as JSON:
 devcode -p "fix the failing test" --output-format json
 ```
 
-The [docs](https://harsha-code-per.github.io/DeV/docs.html) cover configuration, free models and security.
+The [docs](https://trydev.work/docs.html) cover configuration, free models and security.
 
 ## How we build it
 

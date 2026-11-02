@@ -196,7 +196,7 @@ export function modelVariants(output: string, model: string) {
 
 export function translationConfig(agent: string, model: string, targets: string[]) {
   return {
-    $schema: "https://harsha-code-per.github.io/DeV/schema/config.json",
+    $schema: "https://trydev.work/schema/config.json",
     model,
     default_agent: agent,
     share: "disabled" as const,

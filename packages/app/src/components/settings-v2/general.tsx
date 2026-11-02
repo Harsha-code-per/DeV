@@ -150,7 +150,7 @@ const AppearanceSection: Component<{ controller: AppearanceSettingsController }>
           description={
             <>
               {language.t("settings.general.row.theme.description")}{" "}
-              <ExternalLink class="settings-v2-link" href="https://harsha-code-per.github.io/DeV/docs/themes/">
+              <ExternalLink class="settings-v2-link" href="https://trydev.work/docs/themes/">
                 {language.t("common.learnMore")}
               </ExternalLink>
             </>

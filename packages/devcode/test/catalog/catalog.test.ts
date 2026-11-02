@@ -35,7 +35,7 @@ describe("Catalog", () => {
     const root = await tmp()
     const where = await Catalog.paths("project", root)
     await fs.mkdir(path.dirname(where.config), { recursive: true })
-    await Bun.write(where.config, '{\n  // keep me\n  "$schema": "https://harsha-code-per.github.io/DeV/schema/config.json"\n}\n')
+    await Bun.write(where.config, '{\n  // keep me\n  "$schema": "https://trydev.work/schema/config.json"\n}\n')
     const entry = Catalog.get("playwright")!
 
     expect(await Catalog.status(entry, "project", root)).toBe("available")

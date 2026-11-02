@@ -1,5 +1,5 @@
 {
-  "$schema": "https://harsha-code-per.github.io/DeV/schema/theme.json",
+  "$schema": "https://trydev.work/schema/theme.json",
   "defs": {
     "lightRosewater": "#dc8a78",
     "lightFlamingo": "#dd7878",

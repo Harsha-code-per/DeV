@@ -1,6 +1,6 @@
 name: pages
 
-# Serves the website, plus the installers at https://harsha-code-per.github.io/DeV/install and /install.ps1.
+# Serves the website, plus the installers at https://trydev.work/install and /install.ps1.
 on:
   push:
     branches: [main]

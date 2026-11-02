@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://harsha-code-per.github.io/DeV/schema/desktop-theme.json",
+  "$id": "https://trydev.work/schema/desktop-theme.json",
   "title": "DeV Desktop Theme",
   "description": "A theme definition for the DeV desktop application",
   "type": "object",

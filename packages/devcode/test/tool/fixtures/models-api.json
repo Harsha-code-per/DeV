@@ -33607,9 +33607,9 @@
     "id": "devcode-go",
     "env": ["DEV_API_KEY"],
     "npm": "@ai-sdk/openai-compatible",
-    "api": "https://harsha-code-per.github.io/DeV/zen/go/v1",
+    "api": "https://trydev.work/zen/go/v1",
     "name": "DeV Go",
-    "doc": "https://harsha-code-per.github.io/DeV/docs/zen",
+    "doc": "https://trydev.work/docs/zen",
     "models": {
       "deepseek-v4-flash": {
         "id": "deepseek-v4-flash",
@@ -90323,9 +90323,9 @@
     "id": "devcode",
     "env": ["DEV_API_KEY"],
     "npm": "@ai-sdk/openai-compatible",
-    "api": "https://harsha-code-per.github.io/DeV/zen/v1",
+    "api": "https://trydev.work/zen/v1",
     "name": "DeV Zen",
-    "doc": "https://harsha-code-per.github.io/DeV/docs/zen",
+    "doc": "https://trydev.work/docs/zen",
     "models": {
       "ring-2.6-1t-free": {
         "id": "ring-2.6-1t-free",

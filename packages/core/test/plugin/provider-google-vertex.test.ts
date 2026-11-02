@@ -95,7 +95,7 @@ describe("GoogleVertexPlugin", () => {
           provider.api = {
             type: "aisdk",
             package: "@ai-sdk/openai-compatible",
-            url: "https://harsha-code-per.github.io/DeV/zen/v1",
+            url: "https://trydev.work/zen/v1",
           }
         }),
       )

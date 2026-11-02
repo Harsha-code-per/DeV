@@ -7,7 +7,7 @@ import { useSettings } from "@/context/settings"
 import { persisted } from "@/utils/persist"
 import { DialogReleaseNotes, type Highlight } from "@/components/dialog-release-notes"
 
-const CHANGELOG_URL = "https://harsha-code-per.github.io/DeV/changelog.json"
+const CHANGELOG_URL = "https://trydev.work/changelog.json"
 
 type Store = {
   version?: string

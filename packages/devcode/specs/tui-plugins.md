@@ -18,7 +18,7 @@ Example:
 
 ```json
 {
-  "$schema": "https://harsha-code-per.github.io/DeV/schema/tui.json",
+  "$schema": "https://trydev.work/schema/tui.json",
   "theme": "smoke-theme",
   "leader_timeout": 2000,
   "keybinds": {
