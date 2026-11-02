@@ -9,6 +9,9 @@ import { MCP } from "../mcp"
 import { Skill } from "../skill"
 import PROMPT_INITIALIZE from "./template/initialize.txt"
 import PROMPT_REVIEW from "./template/review.txt"
+import PROMPT_SECURITY_REVIEW from "./template/security-review.txt"
+import PROMPT_SIMPLIFY from "./template/simplify.txt"
+import PROMPT_PR_COMMENTS from "./template/pr-comments.txt"
 import { LegacyEvent } from "@dev-ai/schema/legacy-event"
 
 type State = {
@@ -46,6 +49,9 @@ export function hints(template: string) {
 export const Default = {
   INIT: "init",
   REVIEW: "review",
+  SECURITY_REVIEW: "security-review",
+  SIMPLIFY: "simplify",
+  PR_COMMENTS: "pr-comments",
 } as const
 
 export interface Interface {
@@ -85,6 +91,28 @@ const layer = Layer.effect(
         },
         subtask: true,
         hints: hints(PROMPT_REVIEW),
+      }
+      commands[Default.SECURITY_REVIEW] = {
+        name: Default.SECURITY_REVIEW,
+        description: "find exploitable vulnerabilities in changes [commit|branch|pr]",
+        source: "command",
+        template: PROMPT_SECURITY_REVIEW,
+        subtask: true,
+        hints: hints(PROMPT_SECURITY_REVIEW),
+      }
+      commands[Default.SIMPLIFY] = {
+        name: Default.SIMPLIFY,
+        description: "simplify changed code without changing what it does",
+        source: "command",
+        template: PROMPT_SIMPLIFY,
+        hints: hints(PROMPT_SIMPLIFY),
+      }
+      commands[Default.PR_COMMENTS] = {
+        name: Default.PR_COMMENTS,
+        description: "address review comments on a pull request [number|url]",
+        source: "command",
+        template: PROMPT_PR_COMMENTS,
+        hints: hints(PROMPT_PR_COMMENTS),
       }
 
       for (const [name, command] of Object.entries(cfg.command ?? {})) {

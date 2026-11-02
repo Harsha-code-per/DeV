@@ -1,0 +1,13 @@
+Address the review comments on a pull request.
+
+---
+
+Input: $ARGUMENTS
+
+---
+
+1. Find the pull request: the number or URL in the input, or the one for the current branch (`gh pr view --json number,url,title,headRefName`). If there is none, say so and stop.
+2. Read every comment: `gh pr view <pr> --comments` for the conversation, and `gh api repos/{owner}/{repo}/pulls/<number>/comments` for comments on lines of code (with path, line and body). Skip comments that are resolved or already answered by a later commit.
+3. Group them: changes to make, questions to answer, and suggestions you disagree with.
+4. Make the requested changes in the code, keeping each one as small as the comment asks. Run the project's checks afterwards.
+5. Do not push, reply on GitHub or resolve threads yourself. Finish with a list: each comment (who, where, what), what you changed or why not, and a suggested reply the person can post.

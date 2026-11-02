@@ -1,0 +1,17 @@
+Simplify the changed code without changing what it does. Look for code that can be deleted, reused or made plainer, then make those changes.
+
+---
+
+Input: $ARGUMENTS
+
+---
+
+1. Find the changes: with no arguments, all uncommitted changes (`git diff`, `git diff --cached`, `git status --short`); with a commit, branch or pull request, its diff as in a review.
+2. For each change, look for:
+   - code that duplicates something that already exists in this project (search for it), the standard library or a dependency already installed;
+   - abstractions with a single use, options nobody passes, and code written "for later";
+   - long functions that read better as a clear happy path with small named helpers, and nesting that early returns would flatten;
+   - dead code, unused imports and variables, and comments that only repeat the code.
+3. Make the changes that keep behaviour identical. Leave anything that would change behaviour, public interfaces or error handling, and mention it instead.
+4. Run the project's checks (type checking, tests or build, whichever exists) and fix what you broke.
+5. Finish with a short list of what you simplified and anything you left alone on purpose.
