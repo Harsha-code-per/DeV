@@ -244,6 +244,7 @@ function windowsRecorder() {
   const dll = path.join(root, "devmic-1.dll")
   // Errors go out as plain text: with stderr redirected, PowerShell would otherwise serialise them.
   const script = [
+    `$ProgressPreference = 'SilentlyContinue'`,
     `try {`,
     `$dll = '${dll.replaceAll("'", "''")}'`,
     `if (-not (Test-Path $dll)) { New-Item -ItemType Directory -Force -Path (Split-Path $dll) | Out-Null; Add-Type -TypeDefinition @'\n${WINDOWS_MIC}\n'@ -OutputAssembly $dll }`,
