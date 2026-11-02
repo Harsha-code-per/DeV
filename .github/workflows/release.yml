@@ -17,6 +17,7 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: write
+      actions: write # starts install-test on the new release
       id-token: write # npm provenance
     env:
       GH_TOKEN: ${{ github.token }}
@@ -42,6 +43,10 @@ jobs:
           case "$DEV_VERSION" in *-*) prerelease="--prerelease" ;; esac
           gh release create "$GITHUB_REF_NAME" dist/release/* --repo "$GITHUB_REPOSITORY" \
             --title "$GITHUB_REF_NAME" --generate-notes --verify-tag $prerelease
+
+      # A release made with the workflow token starts no other workflow by itself.
+      - name: Test the install on clean machines
+        run: gh workflow run install-test.yml --repo "$GITHUB_REPOSITORY" -f tag="$GITHUB_REF_NAME"
 
       # npm: the SDK and plugin SDK for plugin authors, then one small launcher package. npm signs in through trusted publishing, so no token is stored;
       # that and its provenance need a public repository. Pre-releases stay on GitHub only.
