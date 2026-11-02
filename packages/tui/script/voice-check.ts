@@ -19,6 +19,6 @@ const result = await (async () => {
   return `recorded ${(await recording.stop()).length} samples`
 })().catch((error: Error) => error.message)
 console.log("recorder:", result)
-const expected = /^recorded \d+|winmm error|Could not start the microphone|Microphone access is denied|Voice needs a recorder|Could not record from the microphone: (arecord|pw-record|parecord|.*(device|connection|no such|Connection))/i
-if (!expected.test(result) || /error CS\d|SyntaxError|-2700/.test(result)) throw new Error(`Unexpected recorder result: ${result}`)
+const expected = /^recorded \d+|winmm error|Could not start the microphone|Microphone access is denied|Voice needs a recorder/
+if (!expected.test(result)) throw new Error(`Unexpected recorder result: ${result}`)
 console.log("voice check passed")

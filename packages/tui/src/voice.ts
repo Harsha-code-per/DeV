@@ -242,11 +242,14 @@ public static class DevMic {
 
 function windowsRecorder() {
   const dll = path.join(root, "devmic-1.dll")
+  // Errors go out as plain text: with stderr redirected, PowerShell would otherwise serialise them.
   const script = [
+    `try {`,
     `$dll = '${dll.replaceAll("'", "''")}'`,
     `if (-not (Test-Path $dll)) { New-Item -ItemType Directory -Force -Path (Split-Path $dll) | Out-Null; Add-Type -TypeDefinition @'\n${WINDOWS_MIC}\n'@ -OutputAssembly $dll }`,
     `Add-Type -Path $dll`,
     `exit [DevMic]::Run()`,
+    `} catch { [Console]::Error.WriteLine($_.Exception.Message); exit 1 }`,
   ].join("\n")
   const shell = Bun.which("powershell.exe") ?? Bun.which("pwsh.exe") ?? "powershell.exe"
   return [shell, "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", Buffer.from(script, "utf16le").toString("base64")]
