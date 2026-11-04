@@ -44,7 +44,7 @@ Options:
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev attach --help 1`] = `
 "devcode attach <url>
 
-attach to a running dev server
+attach to a running DeV Code server
 
 Positionals:
   url  http://localhost:4096                                                     [string] [required]
@@ -91,7 +91,7 @@ Options:
                                           [string] [choices: "default", "json"] [default: "default"]
   -f, --file             file(s) to attach to message                                        [array]
       --title            title for the session (uses truncated prompt if no value provided) [string]
-      --attach           attach to a running dev server (e.g., http://localhost:4096)       [string]
+      --attach           attach to a running DeV Code server (e.g., http://localhost:4096)  [string]
   -p, --password         basic auth password (defaults to DEV_SERVER_PASSWORD)              [string]
   -u, --username         basic auth username (defaults to DEV_SERVER_USERNAME or 'dev')     [string]
       --dir              directory to run in, path on remote server if attaching            [string]
@@ -202,7 +202,7 @@ Options:
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev serve --help 1`] = `
 "devcode serve
 
-starts a headless dev server
+starts a headless DeV Code server
 
 Options:
   -h, --help         show help                                                             [boolean]
@@ -222,7 +222,7 @@ Options:
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev web --help 1`] = `
 "devcode web
 
-start dev server and open web interface
+start a DeV Code server and open the web interface
 
 Options:
   -h, --help         show help                                                             [boolean]
@@ -320,15 +320,15 @@ Commands:
   devcode mcp                          manage MCP (Model Context Protocol) servers
   devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
   devcode [project]                    start dev tui                                       [default]
-  devcode attach <url>                 attach to a running dev server
+  devcode attach <url>                 attach to a running DeV Code server
   devcode run [message..]              run dev with a message
   devcode debug                        debugging and troubleshooting tools
   devcode providers                    manage AI providers and credentials           [aliases: auth]
   devcode agent                        manage agents
   devcode upgrade [target]             update DeV Code to the latest release
   devcode uninstall                    show how to remove DeV Code and its data
-  devcode serve                        starts a headless dev server
-  devcode web                          start dev server and open web interface
+  devcode serve                        starts a headless DeV Code server
+  devcode web                          start a DeV Code server and open the web interface
   devcode models [provider]            list all available models
   devcode stats                        show token usage and cost statistics
   devcode export [sessionID]           export session data as JSON
@@ -362,9 +362,11 @@ Options:
                                                                                            [boolean]
       --prompt           prompt to use                                                      [string]
       --agent            agent to use                                                       [string]
-      --permission-mode  default asks, accept-edits approves file edits, auto approves everything
-                         not denied            [string] [choices: "default", "accept-edits", "auto"]
-      --auto             auto-approve permissions that are not explicitly denied (dangerous!)
+      --permission-mode  manual (or default) asks, accept-edits approves file edits, plan researches
+                         read-only first, auto never asks, goal is auto that keeps going until your
+                         first message is verified done
+                     [string] [choices: "manual", "default", "accept-edits", "plan", "auto", "goal"]
+      --auto             start in auto mode: DeV never asks, and refuses risky actions itself
                                                                           [boolean] [default: false]
       --mini             start the minimal interactive interface          [boolean] [default: false]
       --no-replay        disable mini session history replay on resume and after resize    [boolean]
@@ -634,15 +636,15 @@ Commands:
   devcode mcp                          manage MCP (Model Context Protocol) servers
   devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
   devcode [project]                    start dev tui                                       [default]
-  devcode attach <url>                 attach to a running dev server
+  devcode attach <url>                 attach to a running DeV Code server
   devcode run [message..]              run dev with a message
   devcode debug                        debugging and troubleshooting tools
   devcode providers                    manage AI providers and credentials           [aliases: auth]
   devcode agent                        manage agents
   devcode upgrade [target]             update DeV Code to the latest release
   devcode uninstall                    show how to remove DeV Code and its data
-  devcode serve                        starts a headless dev server
-  devcode web                          start dev server and open web interface
+  devcode serve                        starts a headless DeV Code server
+  devcode web                          start a DeV Code server and open the web interface
   devcode models [provider]            list all available models
   devcode stats                        show token usage and cost statistics
   devcode export [sessionID]           export session data as JSON
@@ -676,9 +678,11 @@ Options:
                                                                                            [boolean]
       --prompt           prompt to use                                                      [string]
       --agent            agent to use                                                       [string]
-      --permission-mode  default asks, accept-edits approves file edits, auto approves everything
-                         not denied            [string] [choices: "default", "accept-edits", "auto"]
-      --auto             auto-approve permissions that are not explicitly denied (dangerous!)
+      --permission-mode  manual (or default) asks, accept-edits approves file edits, plan researches
+                         read-only first, auto never asks, goal is auto that keeps going until your
+                         first message is verified done
+                     [string] [choices: "manual", "default", "accept-edits", "plan", "auto", "goal"]
+      --auto             start in auto mode: DeV never asks, and refuses risky actions itself
                                                                           [boolean] [default: false]
       --mini             start the minimal interactive interface          [boolean] [default: false]
       --no-replay        disable mini session history replay on resume and after resize    [boolean]
@@ -698,15 +702,15 @@ Commands:
   devcode mcp                          manage MCP (Model Context Protocol) servers
   devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
   devcode [project]                    start dev tui                                       [default]
-  devcode attach <url>                 attach to a running dev server
+  devcode attach <url>                 attach to a running DeV Code server
   devcode run [message..]              run dev with a message
   devcode debug                        debugging and troubleshooting tools
   devcode providers                    manage AI providers and credentials           [aliases: auth]
   devcode agent                        manage agents
   devcode upgrade [target]             update DeV Code to the latest release
   devcode uninstall                    show how to remove DeV Code and its data
-  devcode serve                        starts a headless dev server
-  devcode web                          start dev server and open web interface
+  devcode serve                        starts a headless DeV Code server
+  devcode web                          start a DeV Code server and open the web interface
   devcode models [provider]            list all available models
   devcode stats                        show token usage and cost statistics
   devcode export [sessionID]           export session data as JSON
@@ -740,9 +744,11 @@ Options:
                                                                                            [boolean]
       --prompt           prompt to use                                                      [string]
       --agent            agent to use                                                       [string]
-      --permission-mode  default asks, accept-edits approves file edits, auto approves everything
-                         not denied            [string] [choices: "default", "accept-edits", "auto"]
-      --auto             auto-approve permissions that are not explicitly denied (dangerous!)
+      --permission-mode  manual (or default) asks, accept-edits approves file edits, plan researches
+                         read-only first, auto never asks, goal is auto that keeps going until your
+                         first message is verified done
+                     [string] [choices: "manual", "default", "accept-edits", "plan", "auto", "goal"]
+      --auto             start in auto mode: DeV never asks, and refuses risky actions itself
                                                                           [boolean] [default: false]
       --mini             start the minimal interactive interface          [boolean] [default: false]
       --no-replay        disable mini session history replay on resume and after resize    [boolean]
