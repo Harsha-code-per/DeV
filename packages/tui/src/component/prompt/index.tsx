@@ -1172,7 +1172,9 @@ export function Prompt(props: PromptProps) {
         : null
     const goalArg = goalCommand?.[1]?.trim() ?? ""
     if (goalCommand) {
-      const action = ["pause", "resume", "clear"].includes(goalArg) ? goalArg : goalArg ? "set" : undefined
+      // Claude Code's aliases for clear work too.
+      const named = ["stop", "off", "reset", "none", "cancel"].includes(goalArg) ? "clear" : goalArg
+      const action = ["pause", "resume", "clear"].includes(named) ? named : goalArg ? "set" : undefined
       const res = action
         ? await sdk.client.session.goal.update({
             sessionID,

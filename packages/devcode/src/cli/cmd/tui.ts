@@ -149,9 +149,9 @@ export const TuiThreadCommand = cmd({
       })
       .option("permission-mode", {
         type: "string",
-        choices: ["default", "accept-edits", "plan", "auto", "goal"],
+        choices: ["manual", "default", "accept-edits", "plan", "auto", "goal"],
         describe:
-          "default asks, accept-edits approves file edits, plan researches read-only first, auto never asks, goal is auto that keeps going until your first message is verified done",
+          "manual (or default) asks, accept-edits approves file edits, plan researches read-only first, auto never asks, goal is auto that keeps going until your first message is verified done",
       })
       .option("auto", {
         type: "boolean",

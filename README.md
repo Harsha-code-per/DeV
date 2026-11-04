@@ -100,13 +100,13 @@ devcode
 
 | Mode | What happens |
 |---|---|
-| **Default** | DeV asks before it edits files or does anything risky. Commands in its sandbox run without asking. |
+| **Manual** | DeV asks before it edits files or does anything risky. Commands in its sandbox run without asking. |
 | **Accept edits** | File edits go ahead, and everything else asks as usual. |
 | **Plan** | DeV writes a plan and changes nothing until you approve it. |
-| **Auto** | DeV never asks. Risky actions (deleting folders, force pushes, publishing, `sudo`, leaving the sandbox, secrets files) are refused and DeV finds another way; after three refusals in a row it asks you. |
+| **Auto** | DeV never asks. Risky actions (deleting folders, force pushes, publishing, `sudo`, leaving the sandbox, secrets files) are refused and DeV finds another way; after three refusals in a row, or twenty in a session, it asks you. |
 | **Goal** | Auto, and DeV keeps working on your next message until it is true and a separate reviewer confirms it. Also `/goal <objective>`. |
 
-Shift+Tab cycles them in that order. Start in one with `--permission-mode default|accept-edits|plan|auto|goal`, or `--auto`.
+Shift+Tab cycles them in that order. Start in one with `--permission-mode manual|accept-edits|plan|auto|goal`, or `--auto`.
 
 ## Commands
 

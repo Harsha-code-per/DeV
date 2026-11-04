@@ -76,6 +76,19 @@ describe("permission modes", () => {
     app.renderer.destroy()
   })
 
+  test("auto asks after 20 refusals in a session even with approvals between them", async () => {
+    const { app, permission } = await mount(true)
+    const push = ask("bash", "git push --force")
+    const replies = Array.from({ length: 20 }, (_, i) => {
+      const reply = permission.decide(push)?.reply
+      if (i % 2 === 1) permission.decide(ask("bash", "ls"))
+      return reply
+    })
+    expect(replies.every((reply) => reply === "reject")).toBe(true)
+    expect(permission.decide(push)).toBeUndefined()
+    app.renderer.destroy()
+  })
+
   test("goal mode approves like auto and starts from the launch flag", async () => {
     const { app, permission } = await mount(false, true)
     expect(permission.mode).toBe("goal")

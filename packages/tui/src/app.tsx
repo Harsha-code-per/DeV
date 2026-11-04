@@ -147,7 +147,7 @@ const appBindingCommands = [
 
 
 const MODE_NOTE = {
-  normal: "Default mode: DeV asks before edits and commands.",
+  normal: "Manual mode: DeV asks before edits and risky commands.",
   edits: "Accept edits: file edits go ahead; other actions still ask.",
   plan: "Plan mode: DeV researches read-only and proposes a plan before changing anything.",
   auto: "Auto mode: DeV never asks. Risky actions (deleting folders, force pushes, secrets) are refused and it finds another way.",
@@ -803,6 +803,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         title: "Connect provider",
         suggested: !connected(),
         slashName: "connect",
+        slashAliases: ["login"],
         run: () => {
           dialog.replace(() => <DialogProviderList />)
         },
@@ -838,6 +839,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
               name: "devcode.update",
               title: "Update DeV",
               slashName: "update",
+              slashAliases: ["upgrade"],
               run: () => update.open?.(),
               category: "System",
             },
@@ -857,6 +859,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         name: "theme.switch",
         title: "Switch theme",
         slashName: "themes",
+        slashAliases: ["theme"],
         run: () => {
           dialog.replace(() => <DialogThemeList />)
         },
@@ -1025,7 +1028,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         slashName: "permissions",
         run: () => {
           const modes = [
-            { value: "normal" as const, title: "Default", description: MODE_NOTE.normal },
+            { value: "normal" as const, title: "Manual", description: MODE_NOTE.normal },
             { value: "edits" as const, title: "Accept edits", description: MODE_NOTE.edits },
             { value: "auto" as const, title: "Auto", description: MODE_NOTE.auto },
             { value: "goal" as const, title: "Goal", description: MODE_NOTE.goal },
@@ -1044,6 +1047,20 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
               }}
             />
           ))
+        },
+      },
+      {
+        name: "plan.mode",
+        title: "Plan mode: research read-only, then propose a plan",
+        category: "Agent",
+        slashName: "plan",
+        enabled: () => local.agent.list().some((agent) => agent.name === "plan"),
+        run: () => {
+          if (local.agent.current()?.name !== "plan") local.permission.setPlanFrom(local.agent.current()?.name)
+          local.permission.set("normal")
+          local.agent.set("plan")
+          dialog.clear()
+          toast.show({ variant: "info", message: MODE_NOTE.plan, duration: 4000 })
         },
       },
       {
@@ -1112,6 +1129,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         title: "Report a bug",
         category: "System",
         slashName: "bug",
+        slashAliases: ["feedback"],
         run: () => {
           openUrl("https://github.com/Harsha-code-per/DeV/issues/new?template=bug_report.yml").catch(() => {})
           dialog.clear()
@@ -1119,7 +1137,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
       },
       {
         name: "permission.mode.cycle",
-        title: "Cycle mode (default, accept edits, plan, auto, goal)",
+        title: "Cycle mode (manual, accept edits, plan, auto, goal)",
         category: "Agent",
         hidden: true,
         run: () => {

@@ -567,6 +567,7 @@ export function Session() {
       category: "Session",
       slash: {
         name: "fork",
+        aliases: ["branch"],
       },
       run: () => {
         dialog.replace(() => (
