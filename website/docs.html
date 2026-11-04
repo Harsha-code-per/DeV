@@ -35,16 +35,16 @@
 <p>Some free tiers allow only a small amount per minute. DeV sends those a smaller request, so they suit short tasks. <code>/connect</code> marks them.</p>
 
 <h2 id="modes">Modes</h2>
-<p>DeV chooses how to work and shows you in the prompt. Press Shift+Tab to change it yourself.</p>
+<p>DeV chooses how to work and shows you in the prompt. Press Shift+Tab to cycle the modes yourself, or start in one with <code>--permission-mode</code>.</p>
 <div class="tw"><table>
 <tr><th>Mode</th><th>What happens</th></tr>
-<tr><td>Build</td><td>The default. DeV edits files, and asks before anything risky.</td></tr>
+<tr><td>Default</td><td>DeV asks before it edits files or does anything risky. Commands in its sandbox run without asking.</td></tr>
+<tr><td>Accept edits</td><td>File edits go ahead; everything else asks as usual.</td></tr>
 <tr><td>Plan</td><td>For larger or unclear work. DeV reads the code and writes a plan, and changes nothing until you approve it.</td></tr>
-<tr><td>Goal</td><td>For "keep going until the tests pass". DeV checks the goal each time it stops, and a separate reviewer confirms it. Control it with <code>/goal pause</code>, <code>/goal resume</code> and <code>/goal clear</code>.</td></tr>
-<tr><td>Accept edits</td><td>File edits are approved; everything else asks as usual.</td></tr>
-<tr><td>Auto</td><td>Everything that isn't denied is approved, including leaving the sandbox. Turn it on with <code>--auto</code>.</td></tr>
+<tr><td>Auto</td><td>DeV never asks. Risky actions (deleting folders, force pushes, publishing, <code>sudo</code>, leaving the sandbox, secrets files) are refused and DeV finds another way; after three refusals in a row it asks you.</td></tr>
+<tr><td>Goal</td><td>Auto, and DeV keeps working on your next message until it is true, such as "the tests pass", and a separate reviewer confirms it. Also <code>/goal &lt;objective&gt;</code>; control it with <code>/goal pause</code>, <code>/goal resume</code> and <code>/goal clear</code>.</td></tr>
 </table></div>
-<p>DeV decides from how you word the request, so unusual wording may just start in Build. You can switch at any time, or say "without planning" to skip a plan. Plan approval still asks you in Auto, because it is your decision and not a permission.</p>
+<p>DeV decides from how you word the request, so unusual wording may just start in Default. You can switch at any time, or say "without planning" to skip a plan. Plan approval still asks you in Auto, because it is your decision and not a permission.</p>
 
 <h2 id="commands">Commands</h2>
 <div class="tw"><table>

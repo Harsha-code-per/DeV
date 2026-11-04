@@ -35,7 +35,7 @@ The bundled defaults ([`packages/devcode/src/config/dev-defaults.json`](packages
 - file edits ask;
 - web fetches ask;
 - shell commands ask, except a read-only set (`ls`, `pwd`, `git status`, `git diff`, `git log`, `git show`, `git branch`, `rg`, `grep`, `cat`, `head`, `tail`, `wc`, `which`, `echo`); anything with a redirect (`>`), `--output` or `--pre` asks even then;
-- sandboxed shell commands run without asking; unsandboxed ones and directories outside the project still ask.
+- sandboxed shell commands run without asking, except risky ones (force pushes, publishing a package, `sudo`, deleting a whole folder tree and similar), which always ask; unsandboxed commands and directories outside the project ask too.
 
 **Deny rules always win**, in every mode.
 
@@ -45,10 +45,11 @@ Permission modes, cycled with Shift+Tab or set with `--permission-mode`:
 |---|---|
 | `default` | Asks as described above. |
 | `accept-edits` | Approves file edits; everything else as in default. |
-| plan | Plans without making changes (Shift+Tab only). |
-| `auto` | Approves everything that is not denied, including leaving the sandbox. |
+| `plan` | Plans without making changes. |
+| `auto` | Never asks. Risky actions and leaving the sandbox are refused, and the agent is told why; after three refusals in a row it asks you. Everything else is approved. |
+| `goal` | Auto, and the agent keeps working until your objective is met and a reviewer confirms it. |
 
-Auto mode joins the Shift+Tab cycle only after you start with `--auto`, `--yolo`, `--dangerously-skip-permissions` or `--permission-mode auto`, or opt in from the command palette (with a warning). Use it only in a project you are willing to lose.
+Shift+Tab cycles default, accept-edits, plan, auto and goal. `--auto` (also `--yolo` and `--dangerously-skip-permissions`) starts in auto. Auto's risk rules are fixed patterns, not a model, so they miss risky commands they don't recognise: use auto and goal only in projects you can restore, such as a clean git checkout.
 
 ### Local server
 

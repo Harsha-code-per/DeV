@@ -25,7 +25,7 @@ export function sessionEpilogue(input: { title: string; sessionID?: string; rece
     ...changed,
     ...checks,
     ...spent,
-    `  ${weak("Continue")}${bold}dev -s ${input.sessionID}${reset}`,
+    `  ${weak("Continue")}${bold}devcode -s ${input.sessionID}${reset}`,
     "",
   ].join("\n")
 }

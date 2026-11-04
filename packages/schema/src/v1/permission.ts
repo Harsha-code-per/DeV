@@ -54,8 +54,9 @@ export const AskInput = Schema.Struct({
   ruleset: Ruleset,
   // "confined": the action runs inside the OS sandbox, so "ask" rules pass without asking.
   // "escape": the action leaves the sandbox, so it asks unless the user approved it ("always"); config
-  // "allow" rules don't cover it. "deny" rules deny either way.
-  sandbox: Schema.optional(Schema.Literals(["confined", "escape"])),
+  // "allow" rules don't cover it. "risky": a destructive or irreversible command (see core command-risk);
+  // it may run in the sandbox but asks the same way as "escape". "deny" rules deny either way.
+  sandbox: Schema.optional(Schema.Literals(["confined", "escape", "risky"])),
 }).annotate({
   identifier: "PermissionAskInput",
 })

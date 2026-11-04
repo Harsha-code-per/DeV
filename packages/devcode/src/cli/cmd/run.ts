@@ -190,7 +190,7 @@ export const RunCommand = effectCmd({
       })
       .option("attach", {
         type: "string",
-        describe: "attach to a running dev server (e.g., http://localhost:4096)",
+        describe: "attach to a running DeV Code server (e.g., http://localhost:4096)",
       })
       .option("password", {
         alias: ["p"],

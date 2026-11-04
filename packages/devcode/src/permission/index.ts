@@ -78,7 +78,7 @@ const layer = Layer.effect(
           })
         }
         if (input.sandbox === "confined") continue
-        if (input.sandbox === "escape" && evaluate(request.permission, pattern, approved).action !== "allow") {
+        if ((input.sandbox === "escape" || input.sandbox === "risky") && evaluate(request.permission, pattern, approved).action !== "allow") {
           needsAsk = true
           continue
         }

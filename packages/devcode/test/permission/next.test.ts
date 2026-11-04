@@ -631,6 +631,26 @@ it.instance(
 )
 
 it.instance(
+  "ask - risky commands ask even when allowed and sandboxed",
+  () =>
+    Effect.gen(function* () {
+      const fiber = yield* ask({
+        sessionID: SessionID.make("session_test"),
+        permission: "bash",
+        patterns: ["git push --force origin main"],
+        metadata: {},
+        always: [],
+        sandbox: "risky" as const,
+        ruleset: Permission.fromConfig({ bash: { "*": "allow" } }),
+      }).pipe(Effect.forkScoped)
+      expect(yield* waitForPending(1)).toHaveLength(1)
+      yield* rejectAll()
+      yield* Fiber.await(fiber)
+    }),
+  { git: true },
+)
+
+it.instance(
   "ask - stays pending when action is ask",
   () =>
     Effect.gen(function* () {

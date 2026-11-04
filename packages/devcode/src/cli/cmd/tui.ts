@@ -149,12 +149,13 @@ export const TuiThreadCommand = cmd({
       })
       .option("permission-mode", {
         type: "string",
-        choices: ["default", "accept-edits", "auto"],
-        describe: "default asks, accept-edits approves file edits, auto approves everything not denied",
+        choices: ["default", "accept-edits", "plan", "auto", "goal"],
+        describe:
+          "default asks, accept-edits approves file edits, plan researches read-only first, auto never asks, goal is auto that keeps going until your first message is verified done",
       })
       .option("auto", {
         type: "boolean",
-        describe: "auto-approve permissions that are not explicitly denied (dangerous!)",
+        describe: "start in auto mode: DeV never asks, and refuses risky actions itself",
         default: false,
       })
       .option("yolo", {
@@ -343,12 +344,13 @@ export const TuiThreadCommand = cmd({
             args: {
               continue: args.continue,
               sessionID: args.session,
-              agent: args.agent,
+              agent: args["permission-mode"] === "plan" ? "plan" : args.agent,
               model: args.model,
               prompt,
               fork: args.fork,
               auto: args.auto || args.yolo || args["dangerously-skip-permissions"] || args["permission-mode"] === "auto",
               acceptEdits: args["permission-mode"] === "accept-edits",
+              goal: args["permission-mode"] === "goal",
             },
           }),
         )

@@ -1,3 +1,4 @@
+import { commandRisk } from "@dev-ai/core/command-risk"
 import { Effect, Stream } from "effect"
 import os from "os"
 import { createWriteStream } from "node:fs"
@@ -650,8 +651,10 @@ export const ShellTool = Tool.define(
                           Sandbox.wrap(params.command, [root, ...scan.dirs], shell, cfg.sandbox),
                         )
                   const escape = params.dangerouslyDisableSandbox && Sandbox.supported() && !ps
-                  if (escape) scan.patterns.add(params.command)
-                  yield* ask(ctx, scan, params, wrapped ? "confined" : escape ? "escape" : undefined).pipe(
+                  // The sandbox still reaches git hosts and registries, so a force push or publish asks first.
+                  const risky = commandRisk(params.command) !== undefined
+                  if (escape || risky) scan.patterns.add(params.command)
+                  yield* ask(ctx, scan, params, escape ? "escape" : risky ? "risky" : wrapped ? "confined" : undefined).pipe(
                     Effect.onError(() => (wrapped ? Effect.promise(() => Sandbox.cleanup()) : Effect.void)),
                   )
                   return wrapped

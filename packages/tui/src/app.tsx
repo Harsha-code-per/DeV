@@ -145,6 +145,15 @@ const appBindingCommands = [
   "app.toggle.session_directory_filter",
 ] as const
 
+
+const MODE_NOTE = {
+  normal: "Default mode: DeV asks before edits and commands.",
+  edits: "Accept edits: file edits go ahead; other actions still ask.",
+  plan: "Plan mode: DeV researches read-only and proposes a plan before changing anything.",
+  auto: "Auto mode: DeV never asks. Risky actions (deleting folders, force pushes, secrets) are refused and it finds another way.",
+  goal: "Goal mode: tell DeV what should be true when it's done. It works without asking until a reviewer confirms it.",
+}
+
 export type TuiInput = {
   url: string
   args: Args
@@ -1016,34 +1025,37 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         slashName: "permissions",
         run: () => {
           const modes = [
-            {
-              value: "normal" as const,
-              title: "Default",
-              description: "Ask before edits, web fetches and unsandboxed commands",
-            },
-            { value: "edits" as const, title: "Accept edits", description: "Approve file edits, ask for the rest" },
-            { value: "auto" as const, title: "Auto", description: "Approve everything that isn't explicitly denied" },
+            { value: "normal" as const, title: "Default", description: MODE_NOTE.normal },
+            { value: "edits" as const, title: "Accept edits", description: MODE_NOTE.edits },
+            { value: "auto" as const, title: "Auto", description: MODE_NOTE.auto },
+            { value: "goal" as const, title: "Goal", description: MODE_NOTE.goal },
           ]
           dialog.replace(() => (
             <DialogSelect
-              title="Permission mode (Shift+Tab cycles, including plan)"
+              title="Mode (Shift+Tab cycles, including plan)"
               options={modes.map((mode) => ({
                 ...mode,
                 title: mode.value === local.permission.mode ? `${mode.title} (current)` : mode.title,
               }))}
               onSelect={(option) => {
+                if (local.agent.current()?.name === "plan") local.agent.set(local.permission.planFrom ?? "build")
                 local.permission.set(option.value)
                 dialog.clear()
-                if (option.value === "auto")
-                  toast.show({
-                    variant: "warning",
-                    message:
-                      "Auto mode: DeV approves every action that isn't explicitly denied. Shift+Tab to leave it.",
-                    duration: 5000,
-                  })
               }}
             />
           ))
+        },
+      },
+      {
+        name: "goal.mode",
+        title: "Goal mode: keep working until it's done",
+        category: "Agent",
+        slashName: "goal",
+        run: () => {
+          if (local.agent.current()?.name === "plan") local.agent.set(local.permission.planFrom ?? "build")
+          local.permission.set("goal")
+          dialog.clear()
+          toast.show({ variant: "info", message: MODE_NOTE.goal, duration: 5000 })
         },
       },
       {
@@ -1107,16 +1119,17 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
       },
       {
         name: "permission.mode.cycle",
-        title: "Cycle mode (default, accept edits, plan, auto)",
+        title: "Cycle mode (default, accept edits, plan, auto, goal)",
         category: "Agent",
         hidden: true,
         run: () => {
           const hasPlan = local.agent.list().some((agent) => agent.name === "plan")
-          const order: Array<"normal" | "edits" | "plan" | "auto"> = [
+          const order: Array<"normal" | "edits" | "plan" | "auto" | "goal"> = [
             "normal",
             "edits",
             ...(hasPlan ? (["plan"] as const) : []),
-            ...(local.permission.autoUnlocked ? (["auto"] as const) : []),
+            "auto",
+            "goal",
           ]
           const current = local.agent.current()?.name === "plan" ? "plan" : local.permission.mode
           const next = order[(order.indexOf(current) + 1) % order.length]
@@ -1129,16 +1142,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
             if (current === "plan") local.agent.set(local.permission.planFrom ?? "build")
             local.permission.set(next)
           }
-          toast.show({
-            variant: next === "auto" ? "warning" : "info",
-            message: {
-              normal: "Default mode: DeV asks before acting.",
-              edits: "Accept edits: file edits are approved automatically; other actions still ask.",
-              plan: "Plan mode: DeV researches read-only and proposes a plan before changing anything.",
-              auto: "Auto mode: DeV approves every action that isn't explicitly denied.",
-            }[next],
-            duration: 3000,
-          })
+          toast.show({ variant: "info", message: MODE_NOTE[next], duration: 3000 })
         },
       },
     ].map((command) => ({

@@ -1159,7 +1159,17 @@ export function Prompt(props: PromptProps) {
 
     // /goal <objective> sets a goal the session keeps working toward and sends it as the first instruction;
     // /goal pause|resume|clear control it, and /goal alone shows it.
-    const goalCommand = store.mode === "normal" ? /^\/goal(?:\s+([\s\S]*))?$/.exec(inputText.trim()) : null
+    // In goal mode, a message sent while no goal is active becomes the goal.
+    const goalMode =
+      store.mode === "normal" &&
+      local.permission.mode === "goal" &&
+      goal()?.status !== "active" &&
+      !inputText.trim().startsWith("/")
+    const goalCommand = goalMode
+      ? ["", inputText]
+      : store.mode === "normal"
+        ? /^\/goal(?:\s+([\s\S]*))?$/.exec(inputText.trim())
+        : null
     const goalArg = goalCommand?.[1]?.trim() ?? ""
     if (goalCommand) {
       const action = ["pause", "resume", "clear"].includes(goalArg) ? goalArg : goalArg ? "set" : undefined
@@ -1450,6 +1460,8 @@ export function Prompt(props: PromptProps) {
       const example = shell()[store.placeholder % shell().length]
       return `Run a command… "${example}"`
     }
+    if (local.permission.mode === "goal" && goal()?.status !== "active")
+      return `What should be true when it's done? "all tests pass"`
     if (voice.enabled()) return "Hold Space to talk, or type…"
     if (!list().length) return undefined
     return `Ask anything… "${list()[store.placeholder % list().length]}"`
@@ -1578,7 +1590,12 @@ export function Prompt(props: PromptProps) {
                         <text fg={fadeColor(theme.warning, agentMetaAlpha())}>accept edits</text>
                       </Show>
                       <Show when={store.mode === "normal" && local.permission.mode === "auto"}>
-                        <text fg={fadeColor(theme.error, agentMetaAlpha())}>auto · approves everything</text>
+                        <text fg={fadeColor(theme.warning, agentMetaAlpha())}>auto · never asks</text>
+                      </Show>
+                      <Show when={store.mode === "normal" && local.permission.mode === "goal"}>
+                        <text fg={fadeColor(theme.primary, agentMetaAlpha())}>
+                          {goal()?.status === "active" ? "goal · working until it's met" : "goal · say what should be true"}
+                        </text>
                       </Show>
                       <Show when={store.mode === "normal"}>
                         <box flexDirection="row" gap={1}>

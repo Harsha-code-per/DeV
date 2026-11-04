@@ -6,7 +6,7 @@ import { ServerAuth } from "@/server/auth"
 export const ServeCommand = effectCmd({
   command: "serve",
   builder: (yargs) => withNetworkOptions(yargs),
-  describe: "starts a headless dev server",
+  describe: "starts a headless DeV Code server",
   // Server loads instances per-request via x-dev-directory header — no
   // need for an ambient project InstanceContext at startup.
   instance: false,

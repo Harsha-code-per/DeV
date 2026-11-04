@@ -2,6 +2,14 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.9 (2026-11-04)
+
+- Five modes, cycled with Shift+Tab: Default, Accept edits, Plan, Auto and Goal. Start in one with `--permission-mode`.
+- Auto mode never asks. Risky actions are refused and DeV is told why, so it finds a safer way; after three refusals in a row it asks you. It is now part of the Shift+Tab cycle.
+- Goal mode: say what should be true when DeV is done, and it works without asking until a separate reviewer confirms it. `/goal` now shows in the `/` menu.
+- Risky shell commands, such as force pushes and `npm publish`, ask first even inside the sandbox, which can still reach git hosts and package registries. Before, they ran without asking.
+- The exit receipt shows `devcode -s <id>` to continue a session; it used to say `dev -s`, which doesn't work.
+
 ## 1.0.8 (2026-11-02)
 
 - DeV remembers what you teach it. Say "from now on use pnpm" or "remember that…" and it saves a note to a private memory for the project, read at the start of every session; it also saves corrections and preferences it notices. Deny the `remember` permission to turn this off.

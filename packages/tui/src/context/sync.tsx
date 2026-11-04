@@ -195,13 +195,9 @@ export const {
 
         case "permission.asked": {
           const request = event.properties
-          if (permission.approves(request)) {
-            void sdk.client.permission.reply({
-              requestID: request.id,
-              reply: "once",
-              directory,
-              workspace,
-            })
+          const decision = permission.decide(request)
+          if (decision) {
+            void sdk.client.permission.reply({ requestID: request.id, ...decision, directory, workspace })
             break
           }
           const requests = store.permission[request.sessionID]

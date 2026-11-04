@@ -9,6 +9,7 @@ export interface Args {
   fork?: boolean
   auto?: boolean
   acceptEdits?: boolean
+  goal?: boolean
 }
 
 export const { use: useArgs, provider: ArgsProvider } = createSimpleContext({

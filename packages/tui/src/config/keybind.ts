@@ -129,7 +129,7 @@ export const Definitions = {
   agent_list: keybind("<leader>a", "List agents"),
   agent_cycle: keybind("tab", "Next agent"),
   agent_cycle_reverse: keybind("none", "Previous agent"),
-  permission_mode_cycle: keybind("shift+tab", "Cycle mode: default, accept edits, plan, auto"),
+  permission_mode_cycle: keybind("shift+tab", "Cycle mode: default, accept edits, plan, auto, goal"),
   variant_cycle: keybind("ctrl+t", "Cycle model variants"),
   variant_list: keybind("none", "List model variants"),
 
