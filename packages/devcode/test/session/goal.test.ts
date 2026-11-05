@@ -33,3 +33,27 @@ test("paused goals let the session stop; resume and clear work; rounds are cappe
   expect(() => SessionGoal.apply("g2", { action: "pause" })).toThrow("no goal")
   expect(() => SessionGoal.apply("g2", { action: "set", objective: " " })).toThrow("objective")
 })
+
+test("active goals are saved to disk and come back after a restart; cleared and met ones don't", async () => {
+  const fs = await import("node:fs")
+  const path = await import("node:path")
+  const { Global } = await import("@dev-ai/core/global")
+  const file = (id: string) => path.join(Global.Path.state, "goals", `${id}.json`)
+
+  SessionGoal.apply("g-disk", { action: "set", objective: "the build is green" })
+  SessionGoal.next("g-disk", "working on it")
+  // A restart: a new process reads what the last one saved.
+  fs.copyFileSync(file("g-disk"), file("g-restart"))
+  expect(SessionGoal.get("g-restart")).toEqual({ objective: "the build is green", status: "active", rounds: 0 })
+
+  SessionGoal.apply("g-disk", { action: "clear" })
+  expect(fs.existsSync(file("g-disk"))).toBe(false)
+
+  SessionGoal.apply("g-met", { action: "set", objective: "done" })
+  SessionGoal.next("g-met", SessionGoal.MET_MARKER)
+  SessionGoal.reviewed("g-met", "VERDICT: MET")
+  expect(fs.existsSync(file("g-met"))).toBe(false)
+
+  fs.writeFileSync(file("g-bad"), "not json")
+  expect(SessionGoal.get("g-bad")).toBeUndefined()
+})

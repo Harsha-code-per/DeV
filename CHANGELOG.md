@@ -2,6 +2,14 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.10 (2026-11-05)
+
+- An unfinished goal survives restarts: continue the session and it is still there, active or paused.
+- `devcode run "/goal <objective>"` works in scripts, and `--permission-mode goal` treats the message as the goal. Add `--auto` so DeV can make changes.
+- `devcode run --auto` refuses risky actions and tells DeV why, the same as Auto mode in the terminal app. Before, it approved them.
+- A shell command's permission prompt offers "Allow, switch to auto".
+- Ctrl+O in the session list previews a session's last request and reply.
+
 ## 1.0.9 (2026-11-04)
 
 - Five modes, cycled with Shift+Tab: Manual, Accept edits, Plan, Auto and Goal. Start in one with `--permission-mode`.

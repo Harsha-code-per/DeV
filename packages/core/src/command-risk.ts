@@ -22,3 +22,22 @@ const RISKY_COMMANDS: [RegExp, string][] = [
 export function commandRisk(command: string) {
   return RISKY_COMMANDS.find(([pattern]) => pattern.test(command))?.[1]
 }
+
+const SECRET_FILE = /(^|\/)(\.env(\.[\w-]+)?|id_[a-z0-9]+|[\w-]*credentials?[\w.-]*|\.npmrc|\.netrc|\.pypirc)$/i
+
+/**
+ * Why auto mode refuses this permission request, or undefined when it can go ahead: risky commands,
+ * leaving the sandbox, and touching secrets files.
+ */
+export function requestRisk(request: { permission: string; patterns: readonly string[]; metadata?: Record<string, unknown> }) {
+  const command = typeof request.metadata?.command === "string" ? request.metadata.command : undefined
+  if (request.metadata?.sandbox === "escape") return "runs outside the sandbox"
+  const risk = request.permission === "bash" && command ? commandRisk(command) : undefined
+  if (risk) return risk
+  const files = [request.metadata?.filepath, request.metadata?.filePath, ...request.patterns].filter(
+    (item): item is string => typeof item === "string",
+  )
+  if (["edit", "write", "apply_patch", "read"].includes(request.permission) && files.some((file) => SECRET_FILE.test(file)))
+    return "touches a secrets file"
+  return undefined
+}

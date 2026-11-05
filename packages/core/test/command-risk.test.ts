@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { riskOf } from "../src/context/auto-risk"
+import { requestRisk } from "../src/command-risk"
 
 const bash = (command: string, metadata: Record<string, unknown> = {}) => ({
   permission: "bash",
@@ -22,13 +22,13 @@ test("auto mode still asks about destructive, irreversible or secret-touching ac
     "psql -c 'DROP TABLE users'",
     "cat ~/.ssh/id_ed25519",
   ])
-    expect(riskOf(bash(command)), command).toBeDefined()
-  expect(riskOf(bash("npm install", { sandbox: "escape" }))).toBe("runs outside the sandbox")
-  expect(riskOf({ permission: "edit", patterns: ["/p/.env"], metadata: { filepath: "/p/.env" } })).toBe("touches a secrets file")
+    expect(requestRisk(bash(command)), command).toBeDefined()
+  expect(requestRisk(bash("npm install", { sandbox: "escape" }))).toBe("runs outside the sandbox")
+  expect(requestRisk({ permission: "edit", patterns: ["/p/.env"], metadata: { filepath: "/p/.env" } })).toBe("touches a secrets file")
 })
 
 test("everyday commands and edits go ahead", () => {
   for (const command of ["bun test", "rm -rf dist", "git push origin feature", "git status", "npm install", "ls -la ~/projects"])
-    expect(riskOf(bash(command)), command).toBeUndefined()
-  expect(riskOf({ permission: "edit", patterns: ["/p/src/env.ts"], metadata: { filepath: "/p/src/env.ts" } })).toBeUndefined()
+    expect(requestRisk(bash(command)), command).toBeUndefined()
+  expect(requestRisk({ permission: "edit", patterns: ["/p/src/env.ts"], metadata: { filepath: "/p/src/env.ts" } })).toBeUndefined()
 })

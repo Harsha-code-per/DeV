@@ -22,6 +22,7 @@ import { UI } from "../ui"
 import { effectCmd } from "../effect-cmd"
 import { EOL } from "os"
 import { Filesystem } from "@/util/filesystem"
+import { requestRisk } from "@dev-ai/core/command-risk"
 import { createDevcodeClient, type DevcodeClient, type ToolPart } from "@dev-ai/sdk/v2"
 import { FormatError, FormatUnknownError } from "../error"
 import { INTERACTIVE_INPUT_ERROR, resolveInteractiveStdin } from "./run/runtime.stdin"
@@ -242,12 +243,13 @@ export const RunCommand = effectCmd({
       })
       .option("permission-mode", {
         type: "string",
-        choices: ["default", "accept-edits", "auto"],
-        describe: "default asks, accept-edits approves file edits, auto approves everything not denied",
+        choices: ["manual", "default", "accept-edits", "auto", "goal"],
+        describe:
+          "manual (or default) rejects what would ask, accept-edits approves file edits, auto refuses only risky actions, goal is auto that keeps going until the message is verified done",
       })
       .option("auto", {
         type: "boolean",
-        describe: "auto-approve permissions that are not explicitly denied (dangerous!)",
+        describe: "auto mode: approve everything except risky actions, which are refused with the reason",
         default: false,
       })
       .option("yolo", {
@@ -277,7 +279,9 @@ export const RunCommand = effectCmd({
     yield* Effect.promise(async () => {
       const rawMessage = [...args.message, ...(args["--"] || [])].join(" ")
       const interactive = args.mini
-      const auto = args.auto || args.yolo || args["dangerously-skip-permissions"] || args["permission-mode"] === "auto"
+      const goalMode = args["permission-mode"] === "goal"
+      const auto =
+        args.auto || args.yolo || args["dangerously-skip-permissions"] || args["permission-mode"] === "auto" || goalMode
       const acceptEdits = args["permission-mode"] === "accept-edits"
       const thinking = interactive ? (args.thinking ?? true) : (args.thinking ?? false)
       const die = (message: string): never => {
@@ -813,7 +817,20 @@ export const RunCommand = effectCmd({
               const permission = event.properties
               if (!sessions.has(permission.sessionID)) continue
 
-              if (auto || (acceptEdits && permission.permission === "edit")) {
+              // Auto refuses risky actions with the reason, so the agent finds another way. With nobody to
+              // ask, it never falls back to a prompt.
+              const risk = auto ? requestRisk(permission) : undefined
+              if (risk) {
+                UI.println(
+                  UI.Style.TEXT_WARNING_BOLD + "!",
+                  UI.Style.TEXT_NORMAL + `auto mode refused ${permission.permission}: it ${risk}`,
+                )
+                await client.permission.reply({
+                  requestID: permission.id,
+                  reply: "reject",
+                  message: `Auto mode blocked this because it ${risk}. Do the task a safer way.`,
+                })
+              } else if (auto || (acceptEdits && permission.permission === "edit")) {
                 await client.permission.reply({
                   requestID: permission.id,
                   reply: "once",
@@ -871,13 +888,28 @@ export const RunCommand = effectCmd({
             return
           }
 
+          // `devcode run "/goal <objective>"` keeps working until the goal is verified met, as /goal does in the TUI.
+          // Match the arguments as typed: `message` quotes any argument with spaces in it.
+          const typed = [...args.message, ...(args["--"] || [])].join(" ").trim()
+          const goal = goalMode ? typed || message.trim() : /^\/goal\s+([\s\S]+)$/.exec(typed)?.[1]?.trim()
+          if (goal) {
+            const set = await client.session.goal.update({
+              sessionID,
+              sessionGoalAction: { action: "set", objective: goal },
+            })
+            if (set.error) {
+              if (!emit("error", { error: set.error })) UI.error(formatRunError(set.error))
+              process.exitCode = 1
+              return
+            }
+          }
           const model = pick(args.model)
           const result = await client.session.prompt({
             sessionID,
             agent,
             model,
             variant: args.variant,
-            parts: [...files, { type: "text", text: message }],
+            parts: [...files, { type: "text", text: goal ? `Goal: ${goal}` : message }],
           })
           if (result.error) {
             if (!emit("error", { error: result.error })) UI.error(formatRunError(result.error))

@@ -104,9 +104,9 @@ devcode
 | **Accept edits** | File edits go ahead, and everything else asks as usual. |
 | **Plan** | DeV writes a plan and changes nothing until you approve it. |
 | **Auto** | DeV never asks. Risky actions (deleting folders, force pushes, publishing, `sudo`, leaving the sandbox, secrets files) are refused and DeV finds another way; after three refusals in a row, or twenty in a session, it asks you. |
-| **Goal** | Auto, and DeV keeps working on your next message until it is true and a separate reviewer confirms it. Also `/goal <objective>`. |
+| **Goal** | Auto, and DeV keeps working on your next message until it is true and a separate reviewer confirms it. Also `/goal <objective>`, or `devcode run --auto "/goal <objective>"` in scripts. An unfinished goal comes back when you continue the session. |
 
-Shift+Tab cycles them in that order. Start in one with `--permission-mode manual|accept-edits|plan|auto|goal`, or `--auto`.
+Shift+Tab cycles them in that order, and a shell command's permission prompt can approve it and switch to Auto. Start in one with `--permission-mode manual|accept-edits|plan|auto|goal`, or `--auto`.
 
 ## Commands
 

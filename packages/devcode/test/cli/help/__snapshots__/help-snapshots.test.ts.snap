@@ -101,10 +101,12 @@ Options:
                          minimal)                                                           [string]
       --thinking         show thinking blocks                                              [boolean]
   -i, --interactive      run in direct interactive split-footer mode      [boolean] [default: false]
-      --permission-mode  default asks, accept-edits approves file edits, auto approves everything
-                         not denied            [string] [choices: "default", "accept-edits", "auto"]
-      --auto             auto-approve permissions that are not explicitly denied (dangerous!)
-                                                                          [boolean] [default: false]"
+      --permission-mode  manual (or default) rejects what would ask, accept-edits approves file
+                         edits, auto refuses only risky actions, goal is auto that keeps going until
+                         the message is verified done
+                             [string] [choices: "manual", "default", "accept-edits", "auto", "goal"]
+      --auto             auto mode: approve everything except risky actions, which are refused with
+                         the reason                                       [boolean] [default: false]"
 `;
 
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev debug --help 1`] = `

@@ -2,12 +2,12 @@ import { createStore } from "solid-js/store"
 import { useArgs } from "./args"
 import { createSimpleContext } from "./helper"
 import type { PermissionRequest } from "@dev-ai/sdk/v2"
-import { riskOf } from "./auto-risk"
+import { requestRisk } from "@dev-ai/core/command-risk"
 
 // Permission modes, as in Claude Code (Shift+Tab cycles them, with plan between edits and auto):
 // - normal: "Manual", ask before acting
 // - edits:  approve file edits automatically, ask for everything else
-// - auto:   never ask. Risky requests (see auto-risk.ts) are refused and DeV is told why, so it finds a
+// - auto:   never ask. Risky requests (see core command-risk.ts) are refused and DeV is told why, so it finds a
 //           safer way; after 3 refusals in a row or 20 in a session it asks the person instead of looping.
 // - goal:   auto, plus the next message becomes the session's /goal: DeV works until it is verified met.
 // Explicitly denied actions never reach the user, so no mode can override a deny rule.
@@ -46,7 +46,7 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
       decide(request: Pick<PermissionRequest, "sessionID" | "permission" | "patterns" | "metadata">): Decision {
         if (store.mode === "edits") return request.permission === "edit" ? { reply: "once" } : undefined
         if (store.mode !== "auto" && store.mode !== "goal") return undefined
-        const risk = riskOf(request)
+        const risk = requestRisk(request)
         const count = blocked.get(request.sessionID) ?? { row: 0, total: 0 }
         if (!risk) {
           blocked.set(request.sessionID, { row: 0, total: count.total })

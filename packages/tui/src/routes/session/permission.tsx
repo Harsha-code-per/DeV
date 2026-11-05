@@ -10,6 +10,7 @@ import { useSDK } from "../../context/sdk"
 import { SplitBorder } from "../../ui/border"
 import { useSync } from "../../context/sync"
 import { useProject } from "../../context/project"
+import { usePermission } from "../../context/permission"
 import { filetype } from "../../util/filetype"
 import { Locale } from "../../util/locale"
 import { webSearchProviderLabel } from "../../util/tool-display"
@@ -111,6 +112,7 @@ function TextBody(props: { title: string; description?: string; icon?: string })
 
 export function PermissionPrompt(props: { request: PermissionRequest; directory?: string }) {
   const sdk = useSDK()
+  const permission = usePermission()
   const project = useProject()
   const sync = useSync()
   const [store, setStore] = createStore({
@@ -420,7 +422,15 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
               title="Permission required"
               header={header()}
               body={current.body}
-              options={{ once: "Allow once", always: "Allow always", reject: "Reject" }}
+              // As in Claude Code, a shell prompt in Manual or Accept edits offers to approve and switch to auto.
+              options={{
+                once: "Allow once",
+                ...(props.request.permission === "bash" && ["normal", "edits"].includes(permission.mode)
+                  ? { auto: "Allow, switch to auto" }
+                  : {}),
+                always: "Allow always",
+                reject: "Reject",
+              }}
               escapeKey="reject"
               fullscreen
               onSelect={(option) => {
@@ -441,6 +451,7 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
                   })
                   return
                 }
+                if (option === "auto") permission.set("auto")
                 void sdk.client.permission.reply({
                   reply: "once",
                   requestID: props.request.id,

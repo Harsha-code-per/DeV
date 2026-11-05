@@ -10,6 +10,7 @@ import { useTheme } from "../context/theme"
 import { useSDK } from "../context/sdk"
 import { useLocal } from "../context/local"
 import { DialogSessionRename } from "./dialog-session-rename"
+import { DialogAlert } from "../ui/dialog-alert"
 import { createDebouncedSignal } from "../util/signal"
 import { useToast } from "../ui/toast"
 import { openWorkspaceSelect, type WorkspaceSelection, warpWorkspaceSession } from "./dialog-workspace-create"
@@ -342,6 +343,36 @@ export function DialogSessionList() {
               return
             }
             setToDelete(option.value)
+          },
+        },
+        {
+          command: "session.preview",
+          title: "preview",
+          onTrigger: async (option) => {
+            const res = await sdk.client.session.messages({ sessionID: option.value, limit: 30 })
+            const text = (role: string) =>
+              (res.data ?? [])
+                .filter((message) => message.info.role === role)
+                .map((message) =>
+                  message.parts
+                    .flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text.trim()] : []))
+                    .join("\n"),
+                )
+                .findLast((item) => item.length > 0)
+            const session = sessions().find((item) => item.id === option.value)
+            dialog.replace(() => (
+              <DialogAlert
+                title={session?.title ?? "Session"}
+                message={[
+                  `You asked: ${Locale.truncate(text("user") ?? "(nothing yet)", 300)}`,
+                  "",
+                  `DeV replied: ${Locale.truncate(text("assistant") ?? "(no reply yet)", 700)}`,
+                  "",
+                  "Enter goes back to the list.",
+                ].join("\n")}
+                onConfirm={() => setTimeout(() => dialog.replace(() => <DialogSessionList />), 0)}
+              />
+            ))
           },
         },
         {

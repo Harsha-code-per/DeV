@@ -1,10 +1,14 @@
-import { Schema } from "effect"
+import { Option, Schema } from "effect"
+import fs from "node:fs"
+import path from "node:path"
+import { Global } from "@dev-ai/core/global"
 
 // `/goal <objective>`: the session keeps working until the objective is met. Each time the agent would
 // stop, DeV asks it to check the objective against real evidence (tests, builds, the files themselves)
 // and either continue or end its reply with MET_MARKER. A claimed MET goes to an independent reviewer
 // (a separate session that can't edit files), whose verdict decides. Pause, resume and clear control it.
-// ponytail: goals live in memory, so a server restart forgets them.
+// Active and paused goals are also saved to disk, so restarting DeV or `devcode -s` picks them back up
+// (with the round count reset); met, stopped and cleared goals are not restored.
 
 export const MET_MARKER = "GOAL MET"
 export const MAX_ROUNDS = 25
@@ -25,15 +29,17 @@ export const Action = Schema.Struct({
 export type Action = Schema.Schema.Type<typeof Action>
 
 const goals = new Map<string, State>()
+const decode = Schema.decodeUnknownOption(Schema.fromJsonString(State))
 
 export function get(sessionID: string) {
-  return goals.get(sessionID)
+  return goals.get(sessionID) ?? restore(sessionID)
 }
 
 export function apply(sessionID: string, input: Action) {
-  const current = goals.get(sessionID)
+  const current = get(sessionID)
   if (input.action === "clear") {
     goals.delete(sessionID)
+    fs.rmSync(file(sessionID), { force: true })
     return undefined
   }
   if (input.action === "set") {
@@ -52,7 +58,7 @@ export type Next = { type: "continue"; text: string } | { type: "review"; prompt
  * an independent reviewer (`review`), or undefined when it may stop (no active goal, met, or out of rounds).
  */
 export function next(sessionID: string, reply: string): Next | undefined {
-  const current = goals.get(sessionID)
+  const current = get(sessionID)
   if (current?.status !== "active") return undefined
   if (current.rounds >= MAX_ROUNDS) {
     save(sessionID, { ...current, status: "stopped" })
@@ -65,7 +71,7 @@ export function next(sessionID: string, reply: string): Next | undefined {
 
 /** Applies the reviewer's verdict: undefined when the goal is met, else the instruction to keep working. */
 export function reviewed(sessionID: string, review: string) {
-  const current = goals.get(sessionID)
+  const current = get(sessionID)
   if (!current) return undefined
   // The last verdict counts, so a reviewer quoting the instructions doesn't pass by accident.
   const verdict = [...review.matchAll(/VERDICT:\s*(NOT MET|MET)\b/gi)].at(-1)?.[1]?.toUpperCase()
@@ -115,7 +121,24 @@ export function kickoff(objective: string) {
 
 function save(sessionID: string, state: State) {
   goals.set(sessionID, state)
+  if (state.status === "active" || state.status === "paused") {
+    fs.mkdirSync(path.dirname(file(sessionID)), { recursive: true })
+    fs.writeFileSync(file(sessionID), JSON.stringify(state))
+  }
+  if (state.status === "met" || state.status === "stopped") fs.rmSync(file(sessionID), { force: true })
   return state
+}
+
+function restore(sessionID: string) {
+  if (!fs.existsSync(file(sessionID))) return undefined
+  const saved = Option.getOrUndefined(decode(fs.readFileSync(file(sessionID), "utf8")))
+  if (saved?.status !== "active" && saved?.status !== "paused") return undefined
+  goals.set(sessionID, { ...saved, rounds: 0 })
+  return goals.get(sessionID)
+}
+
+function file(sessionID: string) {
+  return path.join(Global.Path.state, "goals", `${path.basename(sessionID)}.json`)
 }
 
 export * as SessionGoal from "./goal"
