@@ -67,6 +67,10 @@ export const SummarizePayload = Schema.Struct({
   providerID: ProviderV2.ID,
   modelID: ModelV2.ID,
   auto: Schema.optional(Schema.Boolean),
+  until: Schema.optional(MessageID).annotate({
+    description: "Summarize only the messages before this one, keeping it and everything after it as they are",
+  }),
+  focus: Schema.optional(Schema.String).annotate({ description: "What the summary should concentrate on" }),
 })
 export const PromptPayload = Schema.Struct(Struct.omit(SessionPrompt.PromptInput.fields, ["sessionID"]))
 export const CommandPayload = Schema.Struct(Struct.omit(SessionPrompt.CommandInput.fields, ["sessionID"]))

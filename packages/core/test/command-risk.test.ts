@@ -32,3 +32,17 @@ test("everyday commands and edits go ahead", () => {
     expect(requestRisk(bash(command)), command).toBeUndefined()
   expect(requestRisk({ permission: "edit", patterns: ["/p/src/env.ts"], metadata: { filepath: "/p/src/env.ts" } })).toBeUndefined()
 })
+
+test("auto mode refuses file writes outside the project and into .git, but not reads outside it", () => {
+  const outside = (write: boolean) => ({
+    permission: "external_directory",
+    patterns: ["/home/me/*"],
+    metadata: { filepath: "/home/me/.zshenv", parentDir: "/home/me", ...(write ? { write: true } : {}) },
+  })
+  expect(requestRisk(outside(true))).toBe("writes outside the project")
+  expect(requestRisk(outside(false))).toBeUndefined()
+  expect(requestRisk({ permission: "edit", patterns: ["/p/.git/hooks/pre-commit"], metadata: { filepath: "/p/.git/hooks/pre-commit" } })).toBe(
+    "changes git internals, where hooks run code",
+  )
+  expect(requestRisk({ permission: "edit", patterns: ["/p/.gitignore"], metadata: { filepath: "/p/.gitignore" } })).toBeUndefined()
+})

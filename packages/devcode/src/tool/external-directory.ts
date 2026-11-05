@@ -10,6 +10,8 @@ type Kind = "file" | "directory"
 type Options = {
   bypass?: boolean
   kind?: Kind
+  /** The tool will change the file. Auto mode refuses writes outside the project (see core command-risk). */
+  write?: boolean
 }
 
 export const assertExternalDirectoryEffect = Effect.fn("Tool.assertExternalDirectory")(function* (
@@ -39,6 +41,7 @@ export const assertExternalDirectoryEffect = Effect.fn("Tool.assertExternalDirec
     metadata: {
       filepath: full,
       parentDir: dir,
+      ...(options?.write ? { write: true } : {}),
     },
   })
   return true

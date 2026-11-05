@@ -1186,7 +1186,9 @@ export function Prompt(props: PromptProps) {
       if (!res.error && action !== "set")
         toast.show({
           variant: "info",
-          message: res.data ? `Goal (${res.data.status}): ${res.data.objective}` : "No goal for this session.",
+          message: res.data
+            ? `Goal (${res.data.status}): ${res.data.objective}${res.data.reason ? `\nWhy: ${res.data.reason}` : ""}`
+            : "No goal for this session.",
         })
       if (res.error || action !== "set") {
         input.extmarks.clear()

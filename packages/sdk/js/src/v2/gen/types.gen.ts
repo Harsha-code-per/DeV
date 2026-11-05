@@ -622,6 +622,7 @@ export type CompactionPart = {
   auto: boolean
   overflow?: boolean
   tail_start_id?: string
+  focus?: string
 }
 
 export type Part =
@@ -2392,6 +2393,7 @@ export type Config = {
     tail_turns?: number
     preserve_recent_tokens?: number
     reserved?: number
+    window?: number
   }
   experimental?: {
     disable_paste_summary?: boolean
@@ -2933,8 +2935,9 @@ export type NotFoundError = {
 
 export type SessionGoal = {
   objective: string
-  status: "active" | "paused" | "met" | "stopped"
+  status: "active" | "paused" | "met" | "impossible" | "stopped"
   rounds: number
+  reason?: string
 }
 
 export type SessionGoalAction = {
@@ -10588,6 +10591,8 @@ export type SessionSummarizeData = {
     providerID: string
     modelID: string
     auto?: boolean
+    until?: string
+    focus?: string
   }
   path: {
     sessionID: string

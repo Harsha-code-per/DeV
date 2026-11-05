@@ -78,6 +78,19 @@ describe("tool.assertExternalDirectory", () => {
     }),
   )
 
+  it.instance("marks writes so auto mode can refuse them", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const { requests, ctx } = makeCtx()
+      const target = path.join(path.dirname(test.directory), "outside", "file.txt")
+
+      yield* assertExternalDirectoryEffect(ctx, target, { write: true })
+      yield* assertExternalDirectoryEffect(ctx, target)
+
+      expect(requests.map((r) => r.metadata.write)).toEqual([true, undefined])
+    }),
+  )
+
   it.instance("uses target directory when kind=directory", () =>
     Effect.gen(function* () {
       const test = yield* TestInstance

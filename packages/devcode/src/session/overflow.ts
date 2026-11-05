@@ -30,5 +30,7 @@ export function isOverflow(input: {
 
   const count =
     input.tokens.total || input.tokens.input + input.tokens.output + input.tokens.cache.read + input.tokens.cache.write
-  return count >= usable(input)
+  // compaction.window (/autocompact) compacts earlier than the model's limit, never later.
+  const window = input.cfg.compaction?.window
+  return count >= (window ? Math.min(window, usable(input)) : usable(input))
 }

@@ -181,6 +181,9 @@ export interface Interface {
     model: { providerID: ProviderV2.ID; modelID: ModelV2.ID }
     auto: boolean
     overflow?: boolean
+    /** "Summarize up to here": keep this message and everything after it. */
+    until?: MessageID
+    focus?: string
   }) => Effect.Effect<void>
 }
 
@@ -364,11 +367,15 @@ const layer = Layer.effect(
       const prior = completedCompactions(history)
       const hidden = new Set(prior.flatMap((item) => [item.userIndex, item.assistantIndex]))
       const previousSummary = prior.at(-1)?.summary
-      const selected = yield* select({
-        messages: history.filter((_, index) => !hidden.has(index)),
-        cfg,
-        model,
-      })
+      const visible = history.filter((_, index) => !hidden.has(index))
+      // A tail chosen by the person ("Summarize up to here") wins over the automatic choice.
+      const chosen = compactionPart?.tail_start_id
+        ? visible.findIndex((message) => message.info.id === compactionPart.tail_start_id)
+        : -1
+      const selected =
+        chosen > 0
+          ? { head: visible.slice(0, chosen), tail_start_id: compactionPart?.tail_start_id }
+          : yield* select({ messages: visible, cfg, model })
       // Allow plugins to inject context or replace compaction prompt.
       const compacting = yield* plugin.trigger(
         "experimental.session.compacting",
@@ -385,6 +392,7 @@ const layer = Layer.effect(
             previousSummary,
             context: [conversation],
           }),
+          ...(compactionPart?.focus ? [`The person asked this summary to focus on: ${compactionPart.focus}`] : []),
           ...compacting.context,
         ]
           .filter(Boolean)
@@ -562,6 +570,8 @@ const layer = Layer.effect(
       model: { providerID: ProviderV2.ID; modelID: ModelV2.ID }
       auto: boolean
       overflow?: boolean
+      until?: MessageID
+      focus?: string
     }) {
       const msg = yield* session.updateMessage({
         id: MessageID.ascending(),
@@ -578,6 +588,8 @@ const layer = Layer.effect(
         type: "compaction",
         auto: input.auto,
         overflow: input.overflow,
+        ...(input.until ? { tail_start_id: input.until } : {}),
+        ...(input.focus?.trim() ? { focus: input.focus.trim() } : {}),
       })
     })
 

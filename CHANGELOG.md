@@ -2,6 +2,14 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.11 (2026-11-05)
+
+- Safety fix: Auto and Goal modes no longer write files outside the project, or into `.git`, without asking. File tools aren't sandboxed, so in 1.0.9 and 1.0.10 auto mode could change files such as shell startup scripts. These writes are now refused, and DeV is told why.
+- Goals are met honestly: DeV and the reviewer treat a result faked by patching tools, environment variables or config as not met.
+- A goal that can never be met ends early: DeV says why, and a separate reviewer has to agree. Before, it used all 25 rounds.
+- "Summarize up to here" in `/rewind` shrinks everything before a message into a summary and keeps that message onward. You can say what the summary should focus on.
+- `/autocompact 100k` makes DeV compact once the conversation reaches that size, sooner than the model's limit; `/autocompact auto` goes back to the limit.
+
 ## 1.0.10 (2026-11-05)
 
 - An unfinished goal survives restarts: continue the session and it is still there, active or paused.

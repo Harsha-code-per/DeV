@@ -192,6 +192,10 @@ export const Info = Schema.Struct({
       reserved: Schema.optional(NonNegativeInt).annotate({
         description: "Token buffer for compaction. Leaves enough window to avoid overflow during compaction.",
       }),
+      window: Schema.optional(NonNegativeInt).annotate({
+        description:
+          "Compact automatically once the conversation reaches this many tokens, never later than the model's limit (set with /autocompact)",
+      }),
     }),
   ),
   experimental: Schema.optional(

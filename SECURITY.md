@@ -46,7 +46,7 @@ Permission modes, cycled with Shift+Tab or set with `--permission-mode`:
 | `manual` (or `default`) | Asks as described above. |
 | `accept-edits` | Approves file edits; everything else as in default. |
 | `plan` | Plans without making changes. |
-| `auto` | Never asks. Risky actions and leaving the sandbox are refused, and the agent is told why; after three refusals in a row, or twenty in a session, it asks you. Everything else is approved. |
+| `auto` | Never asks. Risky actions, leaving the sandbox, and file writes outside the project or into `.git` are refused, and the agent is told why; after three refusals in a row, or twenty in a session, it asks you. Everything else is approved. |
 | `goal` | Auto, and the agent keeps working until your objective is met and a reviewer confirms it. |
 
 Shift+Tab cycles manual, accept-edits, plan, auto and goal. `--auto` (also `--yolo` and `--dangerously-skip-permissions`) starts in auto. Auto's risk rules are fixed patterns, not a model, so they miss risky commands they don't recognise: use auto and goal only in projects you can restore, such as a clean git checkout.

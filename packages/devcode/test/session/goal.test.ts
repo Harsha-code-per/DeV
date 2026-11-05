@@ -57,3 +57,19 @@ test("active goals are saved to disk and come back after a restart; cleared and 
   fs.writeFileSync(file("g-bad"), "not json")
   expect(SessionGoal.get("g-bad")).toBeUndefined()
 })
+
+test("a goal judged impossible by the reviewer ends with the reason; a lazy claim the reviewer rejects does not", () => {
+  SessionGoal.apply("g-imp", { action: "set", objective: "deploy to the production cluster" })
+  const claim = SessionGoal.next("g-imp", `${SessionGoal.IMPOSSIBLE_MARKER}: there are no cluster credentials here`)
+  expect(claim?.type).toBe("review")
+  expect(claim?.type === "review" && claim.prompt).toContain("no cluster credentials")
+
+  // The reviewer disagrees: the agent keeps working.
+  expect(SessionGoal.reviewed("g-imp", "Credentials are in deploy/.kubeconfig.\nVERDICT: NOT MET - try them")).toContain("try them")
+  expect(SessionGoal.get("g-imp")?.status).toBe("active")
+
+  SessionGoal.next("g-imp", `${SessionGoal.IMPOSSIBLE_MARKER}: the kubeconfig is expired`)
+  expect(SessionGoal.reviewed("g-imp", "Checked it.\nVERDICT: IMPOSSIBLE the cluster was deleted")).toBeUndefined()
+  expect(SessionGoal.get("g-imp")).toMatchObject({ status: "impossible", reason: "the cluster was deleted" })
+  expect(SessionGoal.next("g-imp", "anything")).toBeUndefined()
+})

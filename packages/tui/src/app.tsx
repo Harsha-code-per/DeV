@@ -68,6 +68,7 @@ import { ArgsProvider, useArgs, type Args } from "./context/args"
 import { openUrl } from "@dev-ai/core/open"
 import type { AssistantMessage } from "@dev-ai/sdk/v2"
 import { Locale } from "./util/locale"
+import { DialogPrompt } from "./ui/dialog-prompt"
 import { DialogSelect } from "./ui/dialog-select"
 import { PromptRefProvider, usePromptRef } from "./context/prompt"
 import { TuiConfigProvider, useTuiConfig, type TuiConfig } from "./config"
@@ -616,6 +617,36 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
               }))}
             />
           ))
+        },
+      },
+      {
+        name: "compaction.window",
+        title: "Set when DeV compacts automatically",
+        category: "Session",
+        slashName: "autocompact",
+        run: async () => {
+          const current = sync.data.config.compaction?.window
+          const answer = await DialogPrompt.show(dialog, "Compact automatically at", {
+            placeholder: `A size such as 100k, or auto for the model's limit (now: ${current ? Locale.number(current) + " tokens" : "auto"})`,
+          })
+          dialog.clear()
+          if (answer === null) return
+          const value = answer.trim().toLowerCase()
+          const size = /^(\d+(?:\.\d+)?)\s*(k|m)?$/.exec(value)
+          const window = value === "auto" ? 0 : size ? Math.round(Number(size[1]) * { k: 1e3, m: 1e6, "": 1e3 }[size[2] ?? ""]!) : undefined
+          if (window === undefined) {
+            toast.show({ variant: "warning", message: "Give a size like 100k or 1m, or auto", duration: 4000 })
+            return
+          }
+          await sdk.client.global.config.update({ config: { compaction: { window } } }, { throwOnError: true }).then(
+            () =>
+              toast.show({
+                variant: "success",
+                message: window ? `DeV compacts at ${Locale.number(window)} tokens, or the model's limit if lower` : "DeV compacts at the model's limit",
+                duration: 4000,
+              }),
+            (error: unknown) => toast.error(error),
+          )
         },
       },
       {

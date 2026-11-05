@@ -60,6 +60,20 @@ const run = Effect.fn("WriteToolTest.run")(function* (
 
 describe("tool.write", () => {
   describe("new file creation", () => {
+    it.instance("marks a write outside the project, so auto mode refuses it", () =>
+      Effect.gen(function* () {
+        const test = yield* TestInstance
+        const asked: Array<{ permission: string; metadata: Record<string, unknown> }> = []
+        const filepath = path.join(path.dirname(test.directory), `outside-${path.basename(test.directory)}.txt`)
+        yield* run(
+          { filePath: filepath, content: "x" },
+          { ...ctx, ask: (request) => Effect.sync(() => void asked.push(request)) },
+        )
+        expect(asked.find((request) => request.permission === "external_directory")?.metadata.write).toBe(true)
+        yield* Effect.promise(() => fs.rm(filepath, { force: true }))
+      }),
+    )
+
     it.instance("writes content to new file", () =>
       Effect.gen(function* () {
         const test = yield* TestInstance

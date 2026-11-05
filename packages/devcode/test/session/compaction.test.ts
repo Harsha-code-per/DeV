@@ -545,6 +545,21 @@ describe("session.compaction.isOverflow", () => {
   )
 
   it.live(
+    "compacts earlier when compaction.window is set below the model's limit",
+    provideTmpdirInstance(
+      () =>
+        Effect.gen(function* () {
+          const compact = yield* SessionCompaction.Service
+          const model = createModel({ context: 200_000, output: 32_000 })
+          const tokens = { input: 55_000, output: 5_000, reasoning: 0, cache: { read: 0, write: 0 } }
+          expect(yield* compact.isOverflow({ tokens, model })).toBe(true)
+          expect(yield* compact.isOverflow({ tokens: { ...tokens, input: 30_000 }, model })).toBe(false)
+        }),
+      { config: { compaction: { window: 50_000 } } },
+    ),
+  )
+
+  it.live(
     "returns false when compaction.auto is disabled",
     provideTmpdirInstance(
       () =>
@@ -959,6 +974,45 @@ describe("session.compaction.process", () => {
       expect(part?.type).toBe("compaction")
       expect(part?.tail_start_id).toBe(keep.id)
     }).pipe(withCompaction({ config: cfg({ tail_turns: 2, preserve_recent_tokens: 10_000 }) })),
+  )
+
+  itCompaction.instance(
+    "summarize up to here keeps the chosen message onward and uses the focus",
+    () => {
+      const stub = llm()
+      let captured = ""
+      stub.push(reply("summary", (input) => (captured = JSON.stringify(input.messages))))
+      return Effect.gen(function* () {
+        const ssn = yield* SessionNs.Service
+        const session = yield* ssn.create({})
+        yield* createUserMessage(session.id, "early message about the database")
+        const keep = yield* createUserMessage(session.id, "kept message about the API")
+        yield* createUserMessage(session.id, "latest message")
+        yield* SessionCompaction.use.create({
+          sessionID: session.id,
+          agent: "build",
+          model: ref,
+          auto: false,
+          until: keep.id,
+          focus: "the schema decisions",
+        })
+
+        const msgs = yield* ssn.messages({ sessionID: session.id })
+        yield* SessionCompaction.use.process({
+          parentID: msgs.at(-1)!.info.id,
+          messages: msgs,
+          sessionID: session.id,
+          auto: false,
+        })
+
+        const part = yield* readCompactionPart(session.id)
+        expect(part?.tail_start_id).toBe(keep.id)
+        expect(captured).toContain("early message about the database")
+        expect(captured).not.toContain("kept message about the API")
+        expect(captured).toContain("focus on: the schema decisions")
+      }).pipe(withCompaction({ llm: stub.llmLayer, config: cfg({ tail_turns: 1, preserve_recent_tokens: 10_000 }) }))
+    },
+    { git: true },
   )
 
   itCompaction.instance(

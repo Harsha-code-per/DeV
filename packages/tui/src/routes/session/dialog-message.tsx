@@ -6,6 +6,9 @@ import { useRoute } from "../../context/route"
 import { useClipboard } from "../../context/clipboard"
 import type { PromptInfo } from "../../component/prompt/history"
 import { stripPromptPartIDs as strip } from "../../prompt/part"
+import { useLocal } from "../../context/local"
+import { useToast } from "../../ui/toast"
+import { DialogPrompt } from "../../ui/dialog-prompt"
 
 export function DialogMessage(props: {
   messageID: string
@@ -17,6 +20,8 @@ export function DialogMessage(props: {
   const message = createMemo(() => sync.data.message[props.sessionID]?.find((x) => x.id === props.messageID))
   const route = useRoute()
   const clipboard = useClipboard()
+  const local = useLocal()
+  const toast = useToast()
 
   return (
     <DialogSelect
@@ -51,6 +56,30 @@ export function DialogMessage(props: {
             }
 
             dialog.clear()
+          },
+        },
+        {
+          title: "Summarize up to here",
+          value: "session.summarize.until",
+          description: "shrink the earlier messages into a summary, keep this one onward",
+          onSelect: async (dialog) => {
+            const model = local.model.current()
+            if (!model) {
+              toast.show({ variant: "warning", message: "Connect a provider to summarize this session", duration: 3000 })
+              return
+            }
+            const focus = await DialogPrompt.show(dialog, "Summarize up to here", {
+              placeholder: "Optional: what the summary should focus on, then Enter",
+            })
+            dialog.clear()
+            if (focus === null) return
+            void sdk.client.session.summarize({
+              sessionID: props.sessionID,
+              providerID: model.providerID,
+              modelID: model.modelID,
+              until: props.messageID,
+              focus: focus.trim() || undefined,
+            })
           },
         },
         {

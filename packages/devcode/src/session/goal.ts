@@ -5,20 +5,24 @@ import { Global } from "@dev-ai/core/global"
 
 // `/goal <objective>`: the session keeps working until the objective is met. Each time the agent would
 // stop, DeV asks it to check the objective against real evidence (tests, builds, the files themselves)
-// and either continue or end its reply with MET_MARKER. A claimed MET goes to an independent reviewer
-// (a separate session that can't edit files), whose verdict decides. Pause, resume and clear control it.
+// and either continue or end its reply with MET_MARKER, or IMPOSSIBLE_MARKER when it can never be met.
+// Either claim goes to an independent reviewer (a separate session that can't edit files), whose verdict
+// decides, so the agent can't give up just because the work is hard. Pause, resume and clear control it.
 // Active and paused goals are also saved to disk, so restarting DeV or `devcode -s` picks them back up
 // (with the round count reset); met, stopped and cleared goals are not restored.
 
 export const MET_MARKER = "GOAL MET"
+export const IMPOSSIBLE_MARKER = "GOAL IMPOSSIBLE"
 export const MAX_ROUNDS = 25
 
-export const Status = Schema.Literals(["active", "paused", "met", "stopped"])
+export const Status = Schema.Literals(["active", "paused", "met", "impossible", "stopped"])
 
 export const State = Schema.Struct({
   objective: Schema.String,
   status: Status,
   rounds: Schema.Int,
+  /** Why the reviewer judged the goal impossible. */
+  reason: Schema.optional(Schema.String),
 }).annotate({ identifier: "SessionGoal" })
 export type State = Schema.Schema.Type<typeof State>
 
@@ -65,7 +69,9 @@ export function next(sessionID: string, reply: string): Next | undefined {
     return undefined
   }
   save(sessionID, { ...current, rounds: current.rounds + 1 })
-  if (reply.includes(MET_MARKER)) return { type: "review", prompt: reviewPrompt(current.objective) }
+  if (reply.includes(MET_MARKER)) return { type: "review", prompt: reviewPrompt(current.objective, "met") }
+  if (reply.includes(IMPOSSIBLE_MARKER))
+    return { type: "review", prompt: reviewPrompt(current.objective, reply.slice(reply.indexOf(IMPOSSIBLE_MARKER))) }
   return { type: "continue", text: checkPrompt(current) }
 }
 
@@ -74,9 +80,15 @@ export function reviewed(sessionID: string, review: string) {
   const current = get(sessionID)
   if (!current) return undefined
   // The last verdict counts, so a reviewer quoting the instructions doesn't pass by accident.
-  const verdict = [...review.matchAll(/VERDICT:\s*(NOT MET|MET)\b/gi)].at(-1)?.[1]?.toUpperCase()
-  if (verdict === "MET") {
+  const verdict = [...review.matchAll(/VERDICT:\s*(NOT MET|MET|IMPOSSIBLE)\b/gi)].at(-1)
+  const kind = verdict?.[1]?.toUpperCase()
+  if (kind === "MET") {
     save(sessionID, { ...current, status: "met" })
+    return undefined
+  }
+  if (kind === "IMPOSSIBLE") {
+    const reason = review.slice((verdict?.index ?? 0) + (verdict?.[0].length ?? 0)).trim()
+    save(sessionID, { ...current, status: "impossible", reason: reason || undefined })
     return undefined
   }
   return [
@@ -87,14 +99,21 @@ export function reviewed(sessionID: string, review: string) {
   ].join("\n")
 }
 
-function reviewPrompt(objective: string) {
+function reviewPrompt(objective: string, claim: string) {
   return [
-    "You are an independent reviewer. Another agent says this goal is met:",
+    claim === "met"
+      ? "You are an independent reviewer. Another agent says this goal is met:"
+      : "You are an independent reviewer. Another agent says this goal can never be met:",
     objective,
+    ...(claim === "met" ? [] : ["", `Its reason: ${claim}`]),
     "",
     "Check it yourself against real evidence in this project: read the relevant files and run the project's tests,",
     "typecheck or build where they exist. Do not change any files.",
-    "End your reply with exactly one line: VERDICT: MET, or VERDICT: NOT MET followed by what is missing or failing.",
+    "A goal met only by faking it (patching tools, environment variables, shell or system config, special-cased tests)",
+    "is NOT MET.",
+    "End your reply with exactly one line: VERDICT: MET, VERDICT: NOT MET followed by what is missing or failing,",
+    "or VERDICT: IMPOSSIBLE followed by why, only when no amount of work in this project could meet it",
+    "(it contradicts itself, or needs access or resources that are not available here).",
   ].join("\n")
 }
 
@@ -104,8 +123,11 @@ function checkPrompt(current: State) {
     current.objective,
     "",
     "Check it against real evidence: run the project's tests, typecheck or build, and look at the actual files.",
+    "Meet it honestly inside this project: never fake the result (patch tools, special-case tests, change shell or system",
+    "config, or edit anything outside the project) to make it look met. If that is the only way, the goal is impossible.",
     "If something is missing or failing, keep working on it now.",
     `Only when the goal is fully met and verified, end your reply with a line containing exactly: ${MET_MARKER}`,
+    `If it can never be met (it contradicts itself, or needs access you don't have), end with ${IMPOSSIBLE_MARKER}: and the reason.`,
   ].join("\n")
 }
 
@@ -125,7 +147,7 @@ function save(sessionID: string, state: State) {
     fs.mkdirSync(path.dirname(file(sessionID)), { recursive: true })
     fs.writeFileSync(file(sessionID), JSON.stringify(state))
   }
-  if (state.status === "met" || state.status === "stopped") fs.rmSync(file(sessionID), { force: true })
+  if (state.status !== "active" && state.status !== "paused") fs.rmSync(file(sessionID), { force: true })
   return state
 }
 

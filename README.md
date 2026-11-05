@@ -103,7 +103,7 @@ devcode
 | **Manual** | DeV asks before it edits files or does anything risky. Commands in its sandbox run without asking. |
 | **Accept edits** | File edits go ahead, and everything else asks as usual. |
 | **Plan** | DeV writes a plan and changes nothing until you approve it. |
-| **Auto** | DeV never asks. Risky actions (deleting folders, force pushes, publishing, `sudo`, leaving the sandbox, secrets files) are refused and DeV finds another way; after three refusals in a row, or twenty in a session, it asks you. |
+| **Auto** | DeV never asks. Risky actions (deleting folders, force pushes, publishing, `sudo`, leaving the sandbox, writing outside the project, secrets files) are refused and DeV finds another way; after three refusals in a row, or twenty in a session, it asks you. |
 | **Goal** | Auto, and DeV keeps working on your next message until it is true and a separate reviewer confirms it. Also `/goal <objective>`, or `devcode run --auto "/goal <objective>"` in scripts. An unfinished goal comes back when you continue the session. |
 
 Shift+Tab cycles them in that order, and a shell command's permission prompt can approve it and switch to Auto. Start in one with `--permission-mode manual|accept-edits|plan|auto|goal`, or `--auto`.
@@ -117,7 +117,8 @@ Shift+Tab cycles them in that order, and a shell command's permission prompt can
 | `/goal <objective>` | Keep working until something is true |
 | `/steps` | Open or fold the steps of finished tasks |
 | `/init` | Write a `DEV.md` for this project |
-| `/rewind` | Go back to an earlier message |
+| `/rewind` | Go back to an earlier message, or summarize everything before it |
+| `/autocompact` | Set how full the conversation gets before DeV compacts it |
 | `/plugins` | Manage skills, plugins and MCP servers |
 
 Run a single prompt from a script:

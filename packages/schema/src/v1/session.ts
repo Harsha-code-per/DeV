@@ -197,7 +197,10 @@ export const CompactionPart = Schema.Struct({
   type: Schema.Literal("compaction"),
   auto: Schema.Boolean,
   overflow: Schema.optional(Schema.Boolean),
+  // Set before the compaction runs when the person chose "Summarize up to here": it keeps this message
+  // and everything after it word for word. Otherwise compaction picks the tail itself and saves it here.
   tail_start_id: Schema.optional(MessageID),
+  focus: Schema.optional(Schema.String),
 }).annotate({ identifier: "CompactionPart" })
 export type CompactionPart = Types.DeepMutable<Schema.Schema.Type<typeof CompactionPart>>
 
