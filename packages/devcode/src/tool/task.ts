@@ -10,10 +10,13 @@ import { Agent } from "../agent/agent"
 import { deriveSubagentSessionPermission } from "../agent/subagent-permissions"
 import type { SessionPrompt } from "../session/prompt"
 import { Config } from "@/config/config"
-import { Effect, Exit, Schema, Scope } from "effect"
+import { Effect, Exit, Option, Schema, Scope } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@dev-ai/core/database/database"
+import { InstanceStore } from "@/project/instance-store"
+import { InstanceState } from "@/effect/instance-state"
+import { enterWorktree, leaveWorktree } from "@/worktree/local"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
@@ -61,6 +64,10 @@ export const Parameters = Schema.Struct({
     description:
       "Run the agent in the background. You will be notified when it completes. DO NOT sleep, poll, or proactively check on its progress",
   }),
+  isolation: Schema.optional(Schema.Literal("worktree")).annotate({
+    description:
+      "worktree runs the agent in its own git worktree, so its file changes stay out of the user's checkout until merged. Removed afterwards if it changed nothing; otherwise you are told its path and branch",
+  }),
 })
 
 function renderOutput(input: {
@@ -98,9 +105,7 @@ export const TaskTool = Tool.define(
       const cfg = yield* config.get()
       const runInBackground = params.background === true
       if (runInBackground && !flags.experimentalBackgroundSubagents) {
-        return yield* Effect.fail(
-          new Error("Background subagents require DEV_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true"),
-        )
+        return yield* Effect.fail(new Error("Background subagents require DEV_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true"))
       }
 
       const parent = yield* sessions.get(ctx.sessionID)
@@ -204,7 +209,35 @@ export const TaskTool = Tool.define(
       const ops = ctx.extra?.promptOps as TaskPromptOps
       if (!ops) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
 
-      const runTask = Effect.fn("TaskTool.runTask")(function* () {
+      // Worktree isolation, as in Claude Code: asked for on the call or in the agent's frontmatter (`isolation: worktree`).
+      const isolated = params.isolation === "worktree" || next.options?.isolation === "worktree"
+      const here = yield* InstanceState.context
+      const runTask = Effect.fn("TaskTool.runIsolated")(function* () {
+        if (!isolated) return yield* runHere()
+        // Looked up when used rather than declared by the tool registry: InstanceStore's bootstrap is bound only by
+        // the app, and the registry is built in many smaller graphs (tests included) that have no instances.
+        const instances = Option.getOrUndefined(yield* Effect.serviceOption(InstanceStore.Service))
+        if (!instances) return yield* Effect.fail(new Error("Worktree isolation is not available here"))
+        const tree = enterWorktree(here.worktree, `agent-${nextSession.id.slice(-10).toLowerCase()}`)
+        if (tree instanceof Error) return yield* Effect.fail(tree)
+        const text = yield* instances
+          // The main checkout stays the instance's root, so the subagent gets the same config, agents and AGENTS.md
+          // as the conversation that started it (as in Claude Code), even ones not committed yet; its tools work
+          // in the worktree.
+          .provide({ directory: tree.dir, worktree: here.worktree, project: here.project }, runHere())
+          .pipe(
+            Effect.tapCause((cause) => Effect.logError("subagent in worktree failed", { directory: tree.dir, cause })),
+            Effect.onError(() => Effect.sync(() => leaveWorktree(tree))),
+            Effect.ensuring(instances.disposeDirectory(tree.dir)),
+          )
+        if (leaveWorktree(tree)) return text + "\n\n(Ran in its own worktree, which was removed: nothing changed.)"
+        return (
+          text +
+          `\n\nThis agent worked in its own git worktree at ${tree.dir} on branch ${tree.branch}. Its changes are there, not in the user's checkout: review them and merge the branch, or copy what is needed. Commit or discard uncommitted changes before removing it with: git worktree remove ${tree.dir}`
+        )
+      })
+
+      const runHere = Effect.fn("TaskTool.runTask")(function* () {
         const parts = yield* ops.resolvePromptParts(params.prompt)
         const result = yield* ops.prompt({
           messageID: MessageID.ascending(),

@@ -321,6 +321,13 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "description": "A short (3-5 words) description of the task",
       "type": "string",
     },
+    "isolation": {
+      "description": "worktree runs the agent in its own git worktree, so its file changes stay out of the user's checkout until merged. Removed afterwards if it changed nothing; otherwise you are told its path and branch",
+      "enum": [
+        "worktree",
+      ],
+      "type": "string",
+    },
     "prompt": {
       "description": "The task for the agent to perform",
       "type": "string",

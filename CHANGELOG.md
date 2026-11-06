@@ -4,6 +4,8 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 
 ## Unreleased
 
+- Subagents can work in a git worktree of their own, as in Claude Code: put `isolation: worktree` in an agent's file, or DeV asks for it when it hands off a task. The worktree is removed afterwards if the subagent changed nothing; otherwise DeV is told its path and branch, to review and merge. The subagent gets the same settings, agents and AGENTS.md as the conversation that started it, including ones not committed yet.
+- `devcode run` answers permission requests from subagents working in their own worktree.
 - Idle compaction, as in Claude Code: a conversation of 100k tokens or more that you leave for 55 minutes is compacted before the prompt cache expires, so your next message sends a summary instead of the whole conversation. Turn it off with `"compaction": { "idle": false }`; `DEV_IDLE_COMPACT_MINUTES` and `DEV_IDLE_COMPACT_MIN_TOKENS` change when it happens.
 
 ## 1.0.13 (2026-11-06)

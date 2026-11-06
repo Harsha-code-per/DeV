@@ -89,7 +89,7 @@ devcode
 | **Goals it finishes** | Ask it to keep going until the tests pass. An independent reviewer checks the result before the goal ends. |
 | **Work it can prove** | DeV runs your tests or build before saying a task is done. Every finished task ends in a receipt. |
 | **Live status** | A bar at the top always says what DeV is doing, and which step of the plan it's on. |
-| **Subagents** | Focused helpers take on parts of a task, in parallel or in the background. |
+| **Subagents** | Focused helpers take on parts of a task, in parallel or in the background. Add `isolation: worktree` to an agent's file and it works in a git worktree of its own. |
 | **Rewind** | Go back to any earlier message and restore both the conversation and your files. |
 | **Project memory** | DeV keeps what it learns about your project in `DEV.md`, a file you can read and edit. |
 | **OS sandbox** | On Linux and macOS, shell commands can't read your SSH keys or cloud credentials. |

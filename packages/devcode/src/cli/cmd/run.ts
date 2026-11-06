@@ -699,12 +699,15 @@ export const RunCommand = effectCmd({
         // to stdout/UI. `client` is passed explicitly because attach mode may
         // rebind the SDK to the session's directory after the subscription is
         // created, and replies issued from inside the loop must use that client.
-        async function loop(client: DevcodeClient, events: Awaited<ReturnType<typeof sdk.event.subscribe>>) {
+        // Events from every folder, not just this one: a subagent with worktree isolation runs in its own folder,
+        // and its permission requests must be answered there.
+        async function loop(client: DevcodeClient, events: Awaited<ReturnType<typeof sdk.global.event>>) {
           const toggles = new Map<string, boolean>()
           const sessions = new Set([sessionID])
           let error: string | undefined
 
-          for await (const event of events.stream) {
+          for await (const item of events.stream) {
+            const event = item.payload
             if (event.type === "session.created" && event.properties.info.parentID) {
               if (sessions.has(event.properties.info.parentID)) sessions.add(event.properties.info.id)
             }
@@ -829,11 +832,13 @@ export const RunCommand = effectCmd({
                   requestID: permission.id,
                   reply: "reject",
                   message: `Auto mode blocked this because it ${risk}. Do the task a safer way.`,
+                  directory: item.directory,
                 })
               } else if (auto || (acceptEdits && permission.permission === "edit")) {
                 await client.permission.reply({
                   requestID: permission.id,
                   reply: "once",
+                  directory: item.directory,
                 })
               } else {
                 UI.println(
@@ -844,6 +849,7 @@ export const RunCommand = effectCmd({
                 await client.permission.reply({
                   requestID: permission.id,
                   reply: "reject",
+                  directory: item.directory,
                 })
               }
             }
@@ -859,7 +865,7 @@ export const RunCommand = effectCmd({
         await share(client, sessionID)
 
         if (!interactive) {
-          const events = await client.event.subscribe()
+          const events = await client.global.event()
           const completed = loop(client, events).catch((e) => {
             console.error(e)
             process.exitCode = 1
