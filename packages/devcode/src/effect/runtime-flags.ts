@@ -42,7 +42,8 @@ export class Service extends ConfigService.Service<Service>()("@dev-ai/RuntimeFl
   experimentalReferences: enabledByExperimental("DEV_EXPERIMENTAL_REFERENCES"),
   experimentalBackgroundSubagents: enabledByExperimental("DEV_EXPERIMENTAL_BACKGROUND_SUBAGENTS"),
   experimentalLspTy: bool("DEV_EXPERIMENTAL_LSP_TY"),
-  experimentalLspTool: enabledByExperimental("DEV_EXPERIMENTAL_LSP_TOOL"),
+  // Code intelligence is on by default, as in Claude Code; DEV_EXPERIMENTAL_LSP_TOOL=false turns it off.
+  experimentalLspTool: Config.boolean("DEV_EXPERIMENTAL_LSP_TOOL").pipe(Config.withDefault(true)),
   experimentalOxfmt: enabledByExperimental("DEV_EXPERIMENTAL_OXFMT"),
   experimentalPlanMode: Config.boolean("DEV_EXPERIMENTAL_PLAN_MODE").pipe(Config.withDefault(true)),
   experimentalCodeMode: enabledByExperimental("DEV_EXPERIMENTAL_CODE_MODE"),

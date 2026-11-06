@@ -120,6 +120,9 @@ Shift+Tab cycles them in that order, and a shell command's permission prompt can
 | `/rewind` | Go back to an earlier message, or summarize everything before it |
 | `/autocompact` | Set how full the conversation gets before DeV compacts it |
 | `/plugins` | Manage skills, plugins and MCP servers |
+| `/hooks` | See the hooks you have set up |
+| `/keybindings`, `/statusline` | Edit keybindings and the status line in `tui.json` |
+| `/tasks` | See the session's subagents and open one |
 
 Run a single prompt from a script:
 

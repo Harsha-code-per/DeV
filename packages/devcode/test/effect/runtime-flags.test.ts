@@ -18,6 +18,15 @@ describe("RuntimeFlags", () => {
     }),
   )
 
+  it.effect("code intelligence is on by default and can be turned off", () =>
+    Effect.gen(function* () {
+      expect((yield* readFlags.pipe(Effect.provide(fromConfig({})))).experimentalLspTool).toBe(true)
+      expect(
+        (yield* readFlags.pipe(Effect.provide(fromConfig({ DEV_EXPERIMENTAL_LSP_TOOL: "false" })))).experimentalLspTool,
+      ).toBe(false)
+    }),
+  )
+
   it.effect("layer parses plugin flags from the active ConfigProvider", () =>
     Effect.gen(function* () {
       const flags = yield* readFlags.pipe(

@@ -70,6 +70,7 @@ import type { AssistantMessage } from "@dev-ai/sdk/v2"
 import { Locale } from "./util/locale"
 import { DialogPrompt } from "./ui/dialog-prompt"
 import { DialogSelect } from "./ui/dialog-select"
+import { DialogAlert } from "./ui/dialog-alert"
 import { PromptRefProvider, usePromptRef } from "./context/prompt"
 import { TuiConfigProvider, useTuiConfig, type TuiConfig } from "./config"
 import { createTuiApiAdapters } from "./plugin/adapters"
@@ -145,7 +146,6 @@ const appBindingCommands = [
   "app.toggle.paste_summary",
   "app.toggle.session_directory_filter",
 ] as const
-
 
 const MODE_NOTE = {
   normal: "Manual mode: DeV asks before edits and risky commands.",
@@ -609,10 +609,17 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
                 description,
                 onSelect: async () => {
                   dialog.clear()
-                  await sdk.client.global.config.update({ config: { output_style: value } }, { throwOnError: true }).then(
-                    () => toast.show({ variant: "success", message: `Output style: ${title}, from your next message`, duration: 4000 }),
-                    (error: unknown) => toast.error(error),
-                  )
+                  await sdk.client.global.config
+                    .update({ config: { output_style: value } }, { throwOnError: true })
+                    .then(
+                      () =>
+                        toast.show({
+                          variant: "success",
+                          message: `Output style: ${title}, from your next message`,
+                          duration: 4000,
+                        }),
+                      (error: unknown) => toast.error(error),
+                    )
                 },
               }))}
             />
@@ -633,7 +640,12 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
           if (answer === null) return
           const value = answer.trim().toLowerCase()
           const size = /^(\d+(?:\.\d+)?)\s*(k|m)?$/.exec(value)
-          const window = value === "auto" ? 0 : size ? Math.round(Number(size[1]) * { k: 1e3, m: 1e6, "": 1e3 }[size[2] ?? ""]!) : undefined
+          const window =
+            value === "auto"
+              ? 0
+              : size
+                ? Math.round(Number(size[1]) * { k: 1e3, m: 1e6, "": 1e3 }[size[2] ?? ""]!)
+                : undefined
           if (window === undefined) {
             toast.show({ variant: "warning", message: "Give a size like 100k or 1m, or auto", duration: 4000 })
             return
@@ -642,7 +654,9 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
             () =>
               toast.show({
                 variant: "success",
-                message: window ? `DeV compacts at ${Locale.number(window)} tokens, or the model's limit if lower` : "DeV compacts at the model's limit",
+                message: window
+                  ? `DeV compacts at ${Locale.number(window)} tokens, or the model's limit if lower`
+                  : "DeV compacts at the model's limit",
                 duration: 4000,
               }),
             (error: unknown) => toast.error(error),
@@ -1163,6 +1177,103 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         slashAliases: ["feedback"],
         run: () => {
           openUrl("https://github.com/Harsha-code-per/DeV/issues/new?template=bug_report.yml").catch(() => {})
+          dialog.clear()
+        },
+      },
+      {
+        name: "hooks.show",
+        title: "Show configured hooks",
+        category: "System",
+        slashName: "hooks",
+        run: () => {
+          const lines = Object.entries(sync.data.config.hooks ?? {}).flatMap(([event, matchers]) =>
+            (matchers ?? []).flatMap((matcher) =>
+              matcher.hooks.map(
+                (hook) =>
+                  `${event}${matcher.matcher ? ` [${matcher.matcher}]` : ""}: ${hook.type === "command" ? hook.command : `POST ${hook.url}`}`,
+              ),
+            ),
+          )
+          dialog.replace(() => (
+            <DialogAlert
+              title={`Hooks (${lines.length})`}
+              message={
+                lines.length
+                  ? lines.join("\n") + '\n\nEdit them under "hooks" in dev.json (/config).'
+                  : 'No hooks yet. Add them under "hooks" in dev.json (/config), same shape as Claude Code:\n"hooks": { "PostToolUse": [{ "matcher": "edit|write", "hooks": [{ "type": "command", "command": "bun run fmt" }] }] }'
+              }
+            />
+          ))
+        },
+      },
+      {
+        name: "keybindings.edit",
+        title: "Edit keybindings and status line (tui.json)",
+        category: "System",
+        slashName: "keybindings",
+        slashAliases: ["statusline"],
+        run: async () => {
+          dialog.clear()
+          if (!process.env.VISUAL && !process.env.EDITOR) {
+            toast.show({
+              message: 'Set $EDITOR, or add a "keybinds" section to ~/.config/dev/tui.json',
+              variant: "warning",
+            })
+            return
+          }
+          const dir = (await sdk.client.path.get()).data?.config
+          if (!dir) return
+          const file =
+            ["tui.jsonc", "tui.json"].map((name) => path.join(dir, name)).find((item) => existsSync(item)) ??
+            path.join(dir, "tui.json")
+          await openEditor({
+            value: '{\n  "keybinds": {},\n  "status_line": { "command": "git branch --show-current" }\n}\n',
+            renderer,
+            file,
+            cwd: dir,
+          }).catch(toast.error)
+          toast.show({ message: "tui.json saved; restart DeV to apply it", variant: "info" })
+        },
+      },
+      {
+        name: "tasks.list",
+        title: "Background tasks (subagents)",
+        category: "Session",
+        slashName: "tasks",
+        slashAliases: ["bashes"],
+        enabled: () => route.data.type === "session",
+        run: () => {
+          if (route.data.type !== "session") return
+          const root = sync.session.get(route.data.sessionID)?.parentID ?? route.data.sessionID
+          const tasks = sync.data.session.filter((item) => item.parentID === root)
+          if (!tasks.length) {
+            dialog.replace(() => <DialogAlert title="Tasks" message="No subagent tasks in this session yet." />)
+            return
+          }
+          dialog.replace(() => (
+            <DialogSelect
+              title="Tasks (Enter opens one)"
+              options={tasks.map((item) => ({
+                value: item.id,
+                title: item.title,
+                description: sync.data.session_status[item.id]?.type === "busy" ? "running" : "done",
+              }))}
+              onSelect={(option) => {
+                route.navigate({ type: "session", sessionID: option.value })
+                dialog.clear()
+              }}
+            />
+          ))
+        },
+      },
+      {
+        name: "release.notes",
+        title: "Release notes",
+        category: "System",
+        slashName: "release-notes",
+        slashAliases: ["changelog"],
+        run: () => {
+          openUrl("https://github.com/Harsha-code-per/DeV/blob/main/CHANGELOG.md").catch(() => {})
           dialog.clear()
         },
       },

@@ -2,6 +2,14 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.12 (2026-11-06)
+
+- Code intelligence is on by default: DeV can go to a definition, find references and see a symbol's type through the project's language server. Set `DEV_EXPERIMENTAL_LSP_TOOL=false` to turn it off.
+- `/hooks` lists the hooks you have set up, or shows how to add one.
+- `/keybindings` and `/statusline` open `tui.json`, where keybindings and the status line under the prompt live.
+- `/tasks` lists the session's subagents, running or done, and opens one.
+- `/release-notes` opens this changelog.
+
 ## 1.0.11 (2026-11-05)
 
 - Safety fix: Auto and Goal modes no longer write files outside the project, or into `.git`, without asking. File tools aren't sandboxed, so in 1.0.9 and 1.0.10 auto mode could change files such as shell startup scripts. These writes are now refused, and DeV is told why.
