@@ -303,6 +303,7 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
         },
         auto: ctx.payload.auto ?? false,
         until: ctx.payload.until,
+        from: ctx.payload.from,
         focus: ctx.payload.focus,
       })
       yield* promptSvc.loop({ sessionID: ctx.params.sessionID })

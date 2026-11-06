@@ -726,6 +726,9 @@ const layer: Layer.Layer<
           if (p.type === "compaction" && p.tail_start_id) {
             p.tail_start_id = idMap.get(p.tail_start_id)
           }
+          if (p.type === "compaction" && p.from_id) {
+            p.from_id = idMap.get(p.from_id)
+          }
           yield* updatePart(p)
         }
       }

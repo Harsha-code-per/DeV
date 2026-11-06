@@ -9,6 +9,7 @@ import { stripPromptPartIDs as strip } from "../../prompt/part"
 import { useLocal } from "../../context/local"
 import { useToast } from "../../ui/toast"
 import { DialogPrompt } from "../../ui/dialog-prompt"
+import type { DialogContext } from "../../ui/dialog"
 
 export function DialogMessage(props: {
   messageID: string
@@ -58,17 +59,26 @@ export function DialogMessage(props: {
             dialog.clear()
           },
         },
-        {
-          title: "Summarize up to here",
-          value: "session.summarize.until",
-          description: "shrink the earlier messages into a summary, keep this one onward",
-          onSelect: async (dialog) => {
+        ...(
+          [
+            ["until", "Summarize up to here", "shrink the earlier messages into a summary, keep this one onward"],
+            ["from", "Summarize from here", "shrink this message onward into a summary, keep the earlier ones"],
+          ] as const
+        ).map(([key, title, description]) => ({
+          title,
+          value: `session.summarize.${key}`,
+          description,
+          onSelect: async (dialog: DialogContext) => {
             const model = local.model.current()
             if (!model) {
-              toast.show({ variant: "warning", message: "Connect a provider to summarize this session", duration: 3000 })
+              toast.show({
+                variant: "warning",
+                message: "Connect a provider to summarize this session",
+                duration: 3000,
+              })
               return
             }
-            const focus = await DialogPrompt.show(dialog, "Summarize up to here", {
+            const focus = await DialogPrompt.show(dialog, title, {
               placeholder: "Optional: what the summary should focus on, then Enter",
             })
             dialog.clear()
@@ -77,11 +87,11 @@ export function DialogMessage(props: {
               sessionID: props.sessionID,
               providerID: model.providerID,
               modelID: model.modelID,
-              until: props.messageID,
+              [key]: props.messageID,
               focus: focus.trim() || undefined,
             })
           },
-        },
+        })),
         {
           title: "Copy",
           value: "message.copy",

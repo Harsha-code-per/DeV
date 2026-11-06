@@ -1917,3 +1917,38 @@ describe("session.message-v2.latest", () => {
     expect(state.tasks[0]).toMatchObject({ type: "subtask", prompt: "inspect" })
   })
 })
+
+describe("session.message-v2.filterCompacted summarize from here", () => {
+  const text = (id: string, value: string): SessionV1.WithParts => ({
+    info: userInfo(id),
+    parts: [{ ...basePart(id, "p1"), type: "text", text: value }] as SessionV1.Part[],
+  })
+  const reply = (id: string, parent: string): SessionV1.WithParts => ({
+    info: { ...assistantInfo(id, parent), finish: "stop" } as SessionV1.Assistant,
+    parts: [],
+  })
+
+  test("keeps the messages before the chosen one and replaces it onward with the summary", () => {
+    const compaction: SessionV1.WithParts = {
+      info: userInfo("msg_005"),
+      parts: [
+        { ...basePart("msg_005", "p1"), type: "compaction", auto: false, from_id: MessageID.make("msg_003") },
+      ] as SessionV1.Part[],
+    }
+    const summary: SessionV1.WithParts = {
+      info: { ...assistantInfo("msg_006", "msg_005"), summary: true, finish: "stop" } as SessionV1.Assistant,
+      parts: [],
+    }
+    const chronological = [
+      text("msg_001", "set up the project"),
+      reply("msg_002", "msg_001"),
+      text("msg_003", "long debugging tangent"),
+      reply("msg_004", "msg_003"),
+      compaction,
+      summary,
+      text("msg_007", "next task"),
+    ]
+    const ids = MessageV2.filterCompacted(chronological.toReversed()).map((message) => message.info.id)
+    expect(ids).toEqual(["msg_001", "msg_002", "msg_005", "msg_006", "msg_007"].map((id) => MessageID.make(id)))
+  })
+})

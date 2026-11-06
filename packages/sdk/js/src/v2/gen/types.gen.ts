@@ -622,6 +622,7 @@ export type CompactionPart = {
   auto: boolean
   overflow?: boolean
   tail_start_id?: string
+  from_id?: string
   focus?: string
 }
 
@@ -10625,6 +10626,7 @@ export type SessionSummarizeData = {
     modelID: string
     auto?: boolean
     until?: string
+    from?: string
     focus?: string
   }
   path: {

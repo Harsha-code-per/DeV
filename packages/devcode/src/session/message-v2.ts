@@ -535,7 +535,13 @@ export function filterCompacted(msgs: Iterable<WithParts>) {
   const result = [] as WithParts[]
   const completed = new Set<string>()
   let retain: MessageID | undefined
+  // "Summarize from here": drop the summarized messages back to and including from_id, then carry on as usual.
+  let skip: MessageID | undefined
   for (const msg of msgs) {
+    if (skip) {
+      if (msg.info.id === skip) skip = undefined
+      continue
+    }
     result.push(msg)
     if (retain) {
       if (msg.info.id === retain) break
@@ -544,6 +550,10 @@ export function filterCompacted(msgs: Iterable<WithParts>) {
     if (msg.info.role === "user" && completed.has(msg.info.id)) {
       const part = msg.parts.find((item): item is CompactionPart => item.type === "compaction")
       if (!part) continue
+      if (part.from_id) {
+        skip = part.from_id
+        continue
+      }
       if (!part.tail_start_id) break
       retain = part.tail_start_id
       if (msg.info.id === retain) break

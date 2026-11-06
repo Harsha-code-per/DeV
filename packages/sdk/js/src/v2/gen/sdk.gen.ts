@@ -4224,6 +4224,7 @@ export class Session2 extends HeyApiClient {
       modelID?: string
       auto?: boolean
       until?: string
+      from?: string
       focus?: string
     },
     options?: Options<never, ThrowOnError>,
@@ -4240,6 +4241,7 @@ export class Session2 extends HeyApiClient {
             { in: "body", key: "modelID" },
             { in: "body", key: "auto" },
             { in: "body", key: "until" },
+            { in: "body", key: "from" },
             { in: "body", key: "focus" },
           ],
         },

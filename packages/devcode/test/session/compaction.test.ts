@@ -1631,6 +1631,49 @@ describe("session.compaction.process", () => {
     { git: true },
   )
 
+  itCompaction.instance("summarize from here summarizes only that message onward and keeps the earlier ones", () => {
+    const stub = llm()
+    let captured: LLM.StreamInput["messages"] = []
+    stub.push(
+      reply("tangent summary", (input) => {
+        captured = input.messages
+      }),
+    )
+
+    return Effect.gen(function* () {
+      const ssn = yield* SessionNs.Service
+      const session = yield* ssn.create({})
+      const early = yield* createUserMessage(session.id, "keep this setup verbatim")
+      const tangent = yield* createUserMessage(session.id, "long debugging tangent")
+      const marker = yield* ssn.updateMessage({
+        id: MessageID.ascending(),
+        role: "user",
+        model: ref,
+        sessionID: session.id,
+        agent: "build",
+        time: { created: Date.now() },
+      })
+      yield* ssn.updatePart({
+        id: PartID.ascending(),
+        messageID: marker.id,
+        sessionID: session.id,
+        type: "compaction",
+        auto: false,
+        from_id: tangent.id,
+      })
+
+      const msgs = MessageV2.filterCompacted(yield* MessageV2.stream(session.id))
+      yield* SessionCompaction.use.process({ parentID: marker.id, messages: msgs, sessionID: session.id, auto: false })
+
+      expect(JSON.stringify(captured)).toContain("long debugging tangent")
+      expect(JSON.stringify(captured)).not.toContain("keep this setup verbatim")
+      const after = MessageV2.filterCompacted(yield* MessageV2.stream(session.id)).map((message) => message.info.id)
+      expect(after[0]).toBe(early.id)
+      expect(after).not.toContain(tangent.id)
+      expect(after).toContain(marker.id)
+    }).pipe(withCompaction({ llm: stub.llmLayer, config: cfg({ tail_turns: 0 }) }))
+  })
+
   itCompaction.instance("keeps recent pre-compaction turns across repeated compactions", () => {
     const stub = llm()
     stub.push(reply("summary one"))

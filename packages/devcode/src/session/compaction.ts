@@ -183,6 +183,8 @@ export interface Interface {
     overflow?: boolean
     /** "Summarize up to here": keep this message and everything after it. */
     until?: MessageID
+    /** "Summarize from here": keep everything before this message, summarize it onward. */
+    from?: MessageID
     focus?: string
   }) => Effect.Effect<void>
 }
@@ -372,10 +374,21 @@ const layer = Layer.effect(
       const chosen = compactionPart?.tail_start_id
         ? visible.findIndex((message) => message.info.id === compactionPart.tail_start_id)
         : -1
+      // "Summarize from here" summarizes only that message onward; what came before stays as it is, so the
+      // earlier summary (if any) is not repeated. A message the model no longer sees falls back to a normal summary.
+      const from = compactionPart?.from_id
+        ? visible.findIndex((message) => message.info.id === compactionPart.from_id)
+        : -1
+      if (compactionPart?.from_id && from < 0) {
+        delete compactionPart.from_id
+        yield* session.updatePart(compactionPart)
+      }
       const selected =
-        chosen > 0
-          ? { head: visible.slice(0, chosen), tail_start_id: compactionPart?.tail_start_id }
-          : yield* select({ messages: visible, cfg, model })
+        from >= 0
+          ? { head: visible.slice(from), tail_start_id: undefined }
+          : chosen > 0
+            ? { head: visible.slice(0, chosen), tail_start_id: compactionPart?.tail_start_id }
+            : yield* select({ messages: visible, cfg, model })
       // Allow plugins to inject context or replace compaction prompt.
       const compacting = yield* plugin.trigger(
         "experimental.session.compacting",
@@ -389,7 +402,7 @@ const layer = Layer.effect(
         compacting.prompt ??
         [
           buildPrompt({
-            previousSummary,
+            previousSummary: from >= 0 ? undefined : previousSummary,
             context: [conversation],
           }),
           ...(compactionPart?.focus ? [`The person asked this summary to focus on: ${compactionPart.focus}`] : []),
@@ -571,6 +584,7 @@ const layer = Layer.effect(
       auto: boolean
       overflow?: boolean
       until?: MessageID
+      from?: MessageID
       focus?: string
     }) {
       const msg = yield* session.updateMessage({
@@ -589,6 +603,7 @@ const layer = Layer.effect(
         auto: input.auto,
         overflow: input.overflow,
         ...(input.until ? { tail_start_id: input.until } : {}),
+        ...(input.from ? { from_id: input.from } : {}),
         ...(input.focus?.trim() ? { focus: input.focus.trim() } : {}),
       })
     })
