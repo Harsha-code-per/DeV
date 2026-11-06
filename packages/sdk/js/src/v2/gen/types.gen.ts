@@ -9724,6 +9724,34 @@ export type PermissionReplyResponses = {
 
 export type PermissionReplyResponse = PermissionReplyResponses[keyof PermissionReplyResponses]
 
+export type PermissionRuleData = {
+  body?: PermissionRule
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/permission/rule"
+}
+
+export type PermissionRuleErrors = {
+  /**
+   * BadRequest | InvalidRequestError
+   */
+  400: EffectHttpApiErrorBadRequest | InvalidRequestError
+}
+
+export type PermissionRuleError = PermissionRuleErrors[keyof PermissionRuleErrors]
+
+export type PermissionRuleResponses = {
+  /**
+   * Rule applied and saved
+   */
+  200: boolean
+}
+
+export type PermissionRuleResponse = PermissionRuleResponses[keyof PermissionRuleResponses]
+
 export type ProviderListData = {
   body?: never
   path?: never

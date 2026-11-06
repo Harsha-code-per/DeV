@@ -41,6 +41,19 @@ export const PermissionApi = HttpApi.make("permission")
             description: "Approve or deny a permission request from the AI assistant.",
           }),
         ),
+        HttpApiEndpoint.post("rule", `${root}/rule`, {
+          query: WorkspaceRoutingQuery,
+          payload: PermissionV1.Rule,
+          success: described(Schema.Boolean, "Rule applied and saved"),
+          error: HttpApiError.BadRequest,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "permission.rule",
+            summary: "Add a permission rule",
+            description:
+              "Apply an allow, ask or deny rule to this project straight away and save it to the global config, without restarting running sessions.",
+          }),
+        ),
       )
       .annotateMerge(
         OpenApi.annotations({

@@ -4,6 +4,8 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 
 ## 1.0.12 (2026-11-06)
 
+- `/permissions`, as in Claude Code: your mode, what Auto mode refused this session, and your allow, ask and never-allowed rules. Press Enter on a refusal to allow it from now on, change a rule, or add one such as `bash npm publish*`. Rules apply at once, without stopping work in progress, and are saved to `~/.config/dev/dev.json`.
+- A rule that names a risky command, such as `"git push --force*": "allow"`, now lets it run. Before, risky commands asked, or were refused in Auto mode, whatever your rules said.
 - Code intelligence is on by default: DeV can go to a definition, find references and see a symbol's type through the project's language server. Set `DEV_EXPERIMENTAL_LSP_TOOL=false` to turn it off.
 - `/hooks` lists the hooks you have set up, or shows how to add one.
 - `/keybindings` and `/statusline` open `tui.json`, where keybindings and the status line under the prompt live.

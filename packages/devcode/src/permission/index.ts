@@ -13,6 +13,8 @@ export interface Interface {
   readonly ask: (input: PermissionV1.AskInput) => Effect.Effect<void, PermissionV1.Error>
   readonly reply: (input: PermissionV1.ReplyInput) => Effect.Effect<void, PermissionV1.NotFoundError>
   readonly list: () => Effect.Effect<ReadonlyArray<PermissionV1.Request>>
+  /** Applies a rule the person added (e.g. with /permissions) to this project at once, ahead of the agent's rules. */
+  readonly addRule: (rule: PermissionV1.Rule) => Effect.Effect<void>
 }
 
 interface PendingEntry {
@@ -78,7 +80,13 @@ const layer = Layer.effect(
           })
         }
         if (input.sandbox === "confined") continue
-        if ((input.sandbox === "escape" || input.sandbox === "risky") && evaluate(request.permission, pattern, approved).action !== "allow") {
+        // Leaving the sandbox asks unless the person approved it this run. Risky commands ask even under the default
+        // "*" allow; a rule that names them (from dev.json or /permissions) or "Allow always" lets them run.
+        const named = input.sandbox === "risky" ? ruleset.filter((item) => item.pattern !== "*") : []
+        if (
+          (input.sandbox === "escape" || input.sandbox === "risky") &&
+          evaluate(request.permission, pattern, named, approved).action !== "allow"
+        ) {
           needsAsk = true
           continue
         }
@@ -176,7 +184,12 @@ const layer = Layer.effect(
       return Array.from(pending.values(), (item) => item.info)
     })
 
-    return Service.of({ ask, reply, list })
+    const addRule = Effect.fn("Permission.addRule")(function* (rule: PermissionV1.Rule) {
+      const { approved } = yield* InstanceState.get(state)
+      approved.push(...fromConfig({ [rule.permission]: { [rule.pattern]: rule.action } }))
+    })
+
+    return Service.of({ ask, reply, list, addRule })
   }),
 )
 

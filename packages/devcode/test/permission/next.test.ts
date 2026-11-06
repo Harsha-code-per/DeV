@@ -651,6 +651,44 @@ it.instance(
 )
 
 it.instance(
+  "ask - a rule naming a risky command lets it run, so /permissions can allow what auto mode refused",
+  () =>
+    Effect.gen(function* () {
+      yield* ask({
+        sessionID: SessionID.make("session_test"),
+        permission: "bash",
+        patterns: ["git push --force origin main"],
+        metadata: {},
+        always: [],
+        sandbox: "risky" as const,
+        ruleset: Permission.fromConfig({ bash: { "*": "allow", "git push --force*": "allow" } }),
+      })
+      const permission = yield* Permission.Service
+      yield* permission.addRule({ permission: "bash", pattern: "npm publish*", action: "allow" })
+      yield* ask({
+        sessionID: SessionID.make("session_test"),
+        permission: "bash",
+        patterns: ["npm publish --access public"],
+        metadata: {},
+        always: [],
+        sandbox: "risky" as const,
+        ruleset: Permission.fromConfig({ bash: { "*": "allow" } }),
+      })
+      yield* permission.addRule({ permission: "bash", pattern: "rm *", action: "deny" })
+      const denied = yield* ask({
+        sessionID: SessionID.make("session_test"),
+        permission: "bash",
+        patterns: ["rm notes.txt"],
+        metadata: {},
+        always: [],
+        ruleset: Permission.fromConfig({ bash: { "*": "allow" } }),
+      }).pipe(Effect.flip)
+      expect(denied).toBeInstanceOf(PermissionV1.DeniedError)
+    }),
+  { git: true },
+)
+
+it.instance(
   "ask - stays pending when action is ask",
   () =>
     Effect.gen(function* () {

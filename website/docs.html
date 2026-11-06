@@ -41,7 +41,7 @@
 <tr><td>Manual</td><td>DeV asks before it edits files or does anything risky. Commands in its sandbox run without asking.</td></tr>
 <tr><td>Accept edits</td><td>File edits go ahead; everything else asks as usual.</td></tr>
 <tr><td>Plan</td><td>For larger or unclear work. DeV reads the code and writes a plan, and changes nothing until you approve it.</td></tr>
-<tr><td>Auto</td><td>DeV never asks. Risky actions (deleting folders, force pushes, publishing, <code>sudo</code>, leaving the sandbox, writing outside the project, secrets files) are refused and DeV finds another way; after three refusals in a row, or twenty in a session, it asks you.</td></tr>
+<tr><td>Auto</td><td>DeV never asks. Risky actions (deleting folders, force pushes, publishing, <code>sudo</code>, leaving the sandbox, writing outside the project, secrets files) are refused and DeV finds another way; after three refusals in a row, or twenty in a session, it asks you. To let one through, allow it in <code>/permissions</code>.</td></tr>
 <tr><td>Goal</td><td>Auto, and DeV keeps working on your next message until it is true, such as "the tests pass", and a separate reviewer confirms it. Also <code>/goal &lt;objective&gt;</code>; control it with <code>/goal pause</code>, <code>/goal resume</code> and <code>/goal clear</code>. In scripts: <code>devcode run --auto "/goal &lt;objective&gt;"</code>. An unfinished goal comes back when you continue the session.</td></tr>
 </table></div>
 <p>DeV decides from how you word the request, so unusual wording may just start in Manual. You can switch at any time, or say "without planning" to skip a plan. Plan approval still asks you in Auto, because it is your decision and not a permission.</p>
@@ -57,6 +57,7 @@
 <tr><td><code>/memory</code></td><td>Edit the project's memory</td></tr>
 <tr><td><code>/rewind</code></td><td>Go back to an earlier message, files included</td></tr>
 <tr><td><code>/plugins</code></td><td>Manage skills, plugins and MCP servers</td></tr>
+<tr><td><code>/permissions</code></td><td>Change the mode, allow what Auto mode refused, and edit allow, ask and deny rules</td></tr>
 <tr><td><code>/hooks</code></td><td>See the hooks you have set up</td></tr>
 <tr><td><code>/keybindings</code>, <code>/statusline</code></td><td>Edit keybindings and the status line in <code>tui.json</code></td></tr>
 <tr><td><code>/tasks</code></td><td>See the session's subagents and open one</td></tr>

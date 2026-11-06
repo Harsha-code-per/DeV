@@ -33,7 +33,8 @@ async function mount(auto?: boolean, goal?: boolean) {
 const ask = (permission: string, command?: string) => ({
   sessionID: "ses_1",
   permission,
-  patterns: [],
+  patterns: command ? [command] : [],
+  always: command ? [command.split(" ")[0] + " *"] : [],
   metadata: command ? { command } : {},
 })
 
@@ -94,6 +95,19 @@ describe("permission modes", () => {
     expect(permission.mode).toBe("goal")
     expect(permission.decide(ask("edit"))).toEqual({ reply: "once" })
     expect(permission.decide(ask("bash", "sudo rm -rf /"))?.reply).toBe("reject")
+    app.renderer.destroy()
+  })
+
+  test("auto keeps a list of what it refused for /permissions, newest first and without repeats", async () => {
+    const { app, permission } = await mount(true)
+    permission.decide(ask("bash", "git push --force"))
+    permission.decide(ask("bash", "npm publish"))
+    permission.decide(ask("bash", "git push --force"))
+    permission.decide(ask("bash", "ls"))
+    expect(permission.refused.map((item) => item.patterns[0])).toEqual(["git push --force", "npm publish"])
+    expect(permission.refused[0]?.always).toEqual(["git *"])
+    permission.forget(permission.refused[0]!)
+    expect(permission.refused.map((item) => item.patterns[0])).toEqual(["npm publish"])
     app.renderer.destroy()
   })
 })

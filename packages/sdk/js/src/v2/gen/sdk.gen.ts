@@ -130,6 +130,9 @@ import type {
   PermissionReplyResponses,
   PermissionRespondErrors,
   PermissionRespondResponses,
+  PermissionRule,
+  PermissionRuleErrors,
+  PermissionRuleResponses,
   PermissionRuleset,
   PermissionV2Reply,
   PermissionV2Source,
@@ -3191,6 +3194,43 @@ export class Permission extends HeyApiClient {
     )
     return (options?.client ?? this.client).post<PermissionReplyResponses, PermissionReplyErrors, ThrowOnError>({
       url: "/permission/{requestID}/reply",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Add a permission rule
+   *
+   * Apply an allow, ask or deny rule to this project straight away and save it to the global config, without restarting running sessions.
+   */
+  public rule<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      permissionRule?: PermissionRule
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { key: "permissionRule", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<PermissionRuleResponses, PermissionRuleErrors, ThrowOnError>({
+      url: "/permission/rule",
       ...options,
       ...params,
       headers: {

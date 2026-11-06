@@ -71,6 +71,7 @@ import { Locale } from "./util/locale"
 import { DialogPrompt } from "./ui/dialog-prompt"
 import { DialogSelect } from "./ui/dialog-select"
 import { DialogAlert } from "./ui/dialog-alert"
+import { DialogPermissions } from "./component/dialog-permissions"
 import { PromptRefProvider, usePromptRef } from "./context/prompt"
 import { TuiConfigProvider, useTuiConfig, type TuiConfig } from "./config"
 import { createTuiApiAdapters } from "./plugin/adapters"
@@ -1068,28 +1069,38 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
       },
       {
         name: "permission.mode",
-        title: "Permission mode",
+        title: "Permissions: mode, rules, and what auto mode refused",
         category: "System",
         slashName: "permissions",
+        slashAliases: ["allowed-tools"],
         run: () => {
-          const modes = [
-            { value: "normal" as const, title: "Manual", description: MODE_NOTE.normal },
-            { value: "edits" as const, title: "Accept edits", description: MODE_NOTE.edits },
-            { value: "auto" as const, title: "Auto", description: MODE_NOTE.auto },
-            { value: "goal" as const, title: "Goal", description: MODE_NOTE.goal },
-          ]
+          const pickMode = () => {
+            const modes = [
+              { value: "normal" as const, title: "Manual", description: MODE_NOTE.normal },
+              { value: "edits" as const, title: "Accept edits", description: MODE_NOTE.edits },
+              { value: "auto" as const, title: "Auto", description: MODE_NOTE.auto },
+              { value: "goal" as const, title: "Goal", description: MODE_NOTE.goal },
+            ]
+            dialog.replace(() => (
+              <DialogSelect
+                title="Mode (Shift+Tab cycles, including plan)"
+                options={modes.map((mode) => ({
+                  ...mode,
+                  title: mode.value === local.permission.mode ? `${mode.title} (current)` : mode.title,
+                }))}
+                onSelect={(option) => {
+                  if (local.agent.current()?.name === "plan") local.agent.set(local.permission.planFrom ?? "build")
+                  local.permission.set(option.value)
+                  dialog.clear()
+                }}
+              />
+            ))
+          }
+          const current = local.agent.current()?.name === "plan" ? "plan" : local.permission.mode
           dialog.replace(() => (
-            <DialogSelect
-              title="Mode (Shift+Tab cycles, including plan)"
-              options={modes.map((mode) => ({
-                ...mode,
-                title: mode.value === local.permission.mode ? `${mode.title} (current)` : mode.title,
-              }))}
-              onSelect={(option) => {
-                if (local.agent.current()?.name === "plan") local.agent.set(local.permission.planFrom ?? "build")
-                local.permission.set(option.value)
-                dialog.clear()
-              }}
+            <DialogPermissions
+              mode={{ normal: "Manual", edits: "Accept edits", plan: "Plan", auto: "Auto", goal: "Goal" }[current]}
+              onMode={pickMode}
             />
           ))
         },

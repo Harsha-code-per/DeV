@@ -19,12 +19,16 @@ const IN_TOTAL = 20
 
 export type Decision = { reply: "once" } | { reply: "reject"; message: string } | undefined
 
+/** A request auto mode refused; /permissions offers to allow it from now on. */
+export type Refusal = Pick<PermissionRequest, "sessionID" | "permission" | "patterns" | "always"> & { risk: string }
+
 export const { use: usePermission, provider: PermissionProvider } = createSimpleContext({
   name: "Permission",
   init: () => {
     const args = useArgs()
-    const [store, setStore] = createStore<{ mode: PermissionMode; planFrom?: string }>({
+    const [store, setStore] = createStore<{ mode: PermissionMode; planFrom?: string; refused: Refusal[] }>({
       mode: args.goal ? "goal" : args.auto ? "auto" : args.acceptEdits ? "edits" : "normal",
+      refused: [],
     })
     // Refusals per session: in a row (an approval resets it) and in total (reset when it triggers).
     const blocked = new Map<string, { row: number; total: number }>()
@@ -42,8 +46,17 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
       setPlanFrom(agent: string | undefined) {
         setStore("planFrom", agent)
       },
+      /** What auto mode refused this run, newest first. */
+      get refused() {
+        return store.refused
+      },
+      forget(refusal: Refusal) {
+        setStore("refused", (list) => list.filter((item) => refusalKey(item) !== refusalKey(refusal)))
+      },
       /** How the current mode answers a permission request; undefined means ask the person. */
-      decide(request: Pick<PermissionRequest, "sessionID" | "permission" | "patterns" | "metadata">): Decision {
+      decide(
+        request: Pick<PermissionRequest, "sessionID" | "permission" | "patterns" | "always" | "metadata">,
+      ): Decision {
         if (store.mode === "edits") return request.permission === "edit" ? { reply: "once" } : undefined
         if (store.mode !== "auto" && store.mode !== "goal") return undefined
         const risk = requestRisk(request)
@@ -57,11 +70,27 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
           return undefined
         }
         blocked.set(request.sessionID, { row: count.row + 1, total: count.total + 1 })
+        setStore("refused", (list) =>
+          [
+            {
+              sessionID: request.sessionID,
+              permission: request.permission,
+              patterns: request.patterns,
+              always: request.always,
+              risk,
+            },
+            ...list.filter((item) => refusalKey(item) !== refusalKey(request)),
+          ].slice(0, 20),
+        )
         return {
           reply: "reject",
-          message: `Auto mode blocked this because it ${risk}. Do the task a safer way. If it really needs this, ask the user with the question tool.`,
+          message: `Auto mode blocked this because it ${risk}. Do the task a safer way. If it really needs this, ask the user with the question tool. The user can also allow it with /permissions.`,
         }
       },
     }
   },
 })
+
+function refusalKey(item: Pick<Refusal, "permission" | "patterns">) {
+  return [item.permission, ...item.patterns].join("\n")
+}
