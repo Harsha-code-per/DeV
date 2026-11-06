@@ -220,6 +220,32 @@ describe("tool.shell", () => {
 })
 
 describe("tool.shell permissions", () => {
+  each("asks before an action the user ruled out in chat, with the reason for auto mode", () =>
+    Effect.gen(function* () {
+      const tmp = yield* tmpdirScoped()
+      yield* runIn(
+        tmp,
+        Effect.gen(function* () {
+          const requests: Array<Omit<PermissionV1.Request, "id" | "sessionID" | "tool">> = []
+          const said = (text: string, synthetic?: boolean) =>
+            ({
+              info: { role: "user" },
+              parts: [{ type: "text", text, synthetic }],
+            }) as unknown as Tool.Context["messages"][number]
+          const next = { ...capture(requests, new Error("stop")), messages: [said("commit it but don't push")] }
+          yield* fail({ command: "git push origin main" }, next)
+          expect(requests[0]).toMatchObject({
+            sandbox: "risky",
+            metadata: { limit: "would push, which the user said not to do in this session" },
+          })
+          requests.length = 0
+          yield* fail({ command: "git push origin main" }, { ...next, messages: [said("don't push", true)] })
+          expect(requests[0]?.metadata.limit).toBeUndefined()
+        }),
+      )
+    }),
+  )
+
   each("asks for bash permission with correct pattern", () =>
     Effect.gen(function* () {
       const tmp = yield* tmpdirScoped()

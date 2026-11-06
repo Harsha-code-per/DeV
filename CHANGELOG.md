@@ -2,6 +2,10 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## Unreleased
+
+- DeV keeps to limits you set in chat. Say "don't push", "never commit or deploy" or "don't install new packages", and doing it anyway asks you first; Auto mode refuses it and tells DeV why. Saying so again later ("ok, push it") lifts the limit. This covers pushing, committing, merging, rebasing, opening pull requests, deploying, publishing, installing packages and deleting files.
+
 ## 1.0.12 (2026-11-06)
 
 - `/permissions`, as in Claude Code: your mode, what Auto mode refused this session, and your allow, ask and never-allowed rules. Press Enter on a refusal to allow it from now on, change a rule, or add one such as `bash npm publish*`. Rules apply at once, without stopping work in progress, and are saved to `~/.config/dev/dev.json`.

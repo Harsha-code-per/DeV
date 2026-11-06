@@ -1,4 +1,4 @@
-import { commandRisk } from "@dev-ai/core/command-risk"
+import { commandRisk, statedLimit } from "@dev-ai/core/command-risk"
 import { Effect, Stream } from "effect"
 import os from "os"
 import { createWriteStream } from "node:fs"
@@ -267,7 +267,7 @@ const parse = Effect.fn("ShellTool.parse")(function* (command: string, ps: boole
 const ask = Effect.fn("ShellTool.ask")(function* (
   ctx: Tool.Context,
   scan: Scan,
-  input: { command: string },
+  input: { command: string; limit?: string },
   sandbox: PermissionV1.AskInput["sandbox"],
 ) {
   if (scan.dirs.size > 0) {
@@ -296,6 +296,7 @@ const ask = Effect.fn("ShellTool.ask")(function* (
     metadata: {
       command: input.command,
       ...(sandbox === "escape" ? { sandbox } : {}),
+      ...(input.limit ? { limit: input.limit } : {}),
     },
     sandbox,
   })
@@ -651,12 +652,26 @@ export const ShellTool = Tool.define(
                           Sandbox.wrap(params.command, [root, ...scan.dirs], shell, cfg.sandbox),
                         )
                   const escape = params.dangerouslyDisableSandbox && Sandbox.supported() && !ps
-                  // The sandbox still reaches git hosts and registries, so a force push or publish asks first.
-                  const risky = commandRisk(params.command) !== undefined
-                  if (escape || risky) scan.patterns.add(params.command)
-                  yield* ask(ctx, scan, params, escape ? "escape" : risky ? "risky" : wrapped ? "confined" : undefined).pipe(
-                    Effect.onError(() => (wrapped ? Effect.promise(() => Sandbox.cleanup()) : Effect.void)),
+                  // The sandbox still reaches git hosts and registries, so a force push or publish asks first,
+                  // and so does anything the person ruled out in chat ("don't push"), which auto mode refuses.
+                  const limit = statedLimit(
+                    ctx.messages
+                      .filter((message) => message.info.role === "user")
+                      .map((message) =>
+                        message.parts
+                          .flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : []))
+                          .join("\n"),
+                      ),
+                    { permission: ShellID.ToolID, metadata: { command: params.command } },
                   )
+                  const risky = commandRisk(params.command) !== undefined || limit !== undefined
+                  if (escape || risky) scan.patterns.add(params.command)
+                  yield* ask(
+                    ctx,
+                    scan,
+                    { ...params, limit },
+                    escape ? "escape" : risky ? "risky" : wrapped ? "confined" : undefined,
+                  ).pipe(Effect.onError(() => (wrapped ? Effect.promise(() => Sandbox.cleanup()) : Effect.void)))
                   return wrapped
                 }),
               )

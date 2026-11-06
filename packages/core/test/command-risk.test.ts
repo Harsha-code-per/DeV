@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { requestRisk } from "../src/command-risk"
+import { requestRisk, statedLimit } from "../src/command-risk"
 
 const bash = (command: string, metadata: Record<string, unknown> = {}) => ({
   permission: "bash",
@@ -24,13 +24,24 @@ test("auto mode still asks about destructive, irreversible or secret-touching ac
   ])
     expect(requestRisk(bash(command)), command).toBeDefined()
   expect(requestRisk(bash("npm install", { sandbox: "escape" }))).toBe("runs outside the sandbox")
-  expect(requestRisk({ permission: "edit", patterns: ["/p/.env"], metadata: { filepath: "/p/.env" } })).toBe("touches a secrets file")
+  expect(requestRisk({ permission: "edit", patterns: ["/p/.env"], metadata: { filepath: "/p/.env" } })).toBe(
+    "touches a secrets file",
+  )
 })
 
 test("everyday commands and edits go ahead", () => {
-  for (const command of ["bun test", "rm -rf dist", "git push origin feature", "git status", "npm install", "ls -la ~/projects"])
+  for (const command of [
+    "bun test",
+    "rm -rf dist",
+    "git push origin feature",
+    "git status",
+    "npm install",
+    "ls -la ~/projects",
+  ])
     expect(requestRisk(bash(command)), command).toBeUndefined()
-  expect(requestRisk({ permission: "edit", patterns: ["/p/src/env.ts"], metadata: { filepath: "/p/src/env.ts" } })).toBeUndefined()
+  expect(
+    requestRisk({ permission: "edit", patterns: ["/p/src/env.ts"], metadata: { filepath: "/p/src/env.ts" } }),
+  ).toBeUndefined()
 })
 
 test("auto mode refuses file writes outside the project and into .git, but not reads outside it", () => {
@@ -41,8 +52,36 @@ test("auto mode refuses file writes outside the project and into .git, but not r
   })
   expect(requestRisk(outside(true))).toBe("writes outside the project")
   expect(requestRisk(outside(false))).toBeUndefined()
-  expect(requestRisk({ permission: "edit", patterns: ["/p/.git/hooks/pre-commit"], metadata: { filepath: "/p/.git/hooks/pre-commit" } })).toBe(
-    "changes git internals, where hooks run code",
+  expect(
+    requestRisk({
+      permission: "edit",
+      patterns: ["/p/.git/hooks/pre-commit"],
+      metadata: { filepath: "/p/.git/hooks/pre-commit" },
+    }),
+  ).toBe("changes git internals, where hooks run code")
+  expect(
+    requestRisk({ permission: "edit", patterns: ["/p/.gitignore"], metadata: { filepath: "/p/.gitignore" } }),
+  ).toBeUndefined()
+})
+
+test("auto mode keeps to actions the user ruled out in chat until they lift it", () => {
+  const limit = (said: string[], command: string) => statedLimit(said, bash(command))
+  expect(limit(["fix the login bug but don't push"], "git push origin main")).toBe(
+    "would push, which the user said not to do in this session",
   )
-  expect(requestRisk({ permission: "edit", patterns: ["/p/.gitignore"], metadata: { filepath: "/p/.gitignore" } })).toBeUndefined()
+  expect(limit(["Never commit or deploy anything."], "git commit -m wip")).toBeDefined()
+  expect(limit(["Never commit or deploy anything."], "npm run deploy")).toBeDefined()
+  expect(limit(["commit without pushing"], "git commit -m x")).toBeUndefined()
+  expect(limit(["commit without pushing"], "git push")).toBeDefined()
+  expect(limit(["do not install new packages"], "bun add zod")).toBeDefined()
+  expect(limit(["don't delete any files"], "rm src/old.ts")).toBeDefined()
+  // A later message lifts it; unrelated negations and commands are fine.
+  expect(limit(["don't push", "looks good, push it now"], "git push")).toBeUndefined()
+  expect(limit(["don't worry, push when done"], "git push")).toBeUndefined()
+  expect(limit(["don't push"], "git status")).toBeUndefined()
+  expect(statedLimit(["don't push"], { permission: "edit", metadata: { filepath: "/p/a.ts" } })).toBeUndefined()
+  // The shell tool passes the reason on, so auto mode refuses it like any other risk.
+  expect(requestRisk(bash("git push", { limit: "would push, which the user said not to do in this session" }))).toBe(
+    "would push, which the user said not to do in this session",
+  )
 })
