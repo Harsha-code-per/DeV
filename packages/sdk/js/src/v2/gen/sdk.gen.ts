@@ -124,13 +124,13 @@ import type {
   PartUpdateResponses,
   PathGetErrors,
   PathGetResponses,
+  PermissionAction,
   PermissionListErrors,
   PermissionListResponses,
   PermissionReplyErrors,
   PermissionReplyResponses,
   PermissionRespondErrors,
   PermissionRespondResponses,
-  PermissionRule,
   PermissionRuleErrors,
   PermissionRuleResponses,
   PermissionRuleset,
@@ -3213,7 +3213,10 @@ export class Permission extends HeyApiClient {
     parameters?: {
       directory?: string
       workspace?: string
-      permissionRule?: PermissionRule
+      permission?: string
+      pattern?: string
+      action?: PermissionAction
+      save?: boolean
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -3224,7 +3227,10 @@ export class Permission extends HeyApiClient {
           args: [
             { in: "query", key: "directory" },
             { in: "query", key: "workspace" },
-            { key: "permissionRule", map: "body" },
+            { in: "body", key: "permission" },
+            { in: "body", key: "pattern" },
+            { in: "body", key: "action" },
+            { in: "body", key: "save" },
           ],
         },
       ],

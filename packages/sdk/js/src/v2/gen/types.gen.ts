@@ -9725,7 +9725,12 @@ export type PermissionReplyResponses = {
 export type PermissionReplyResponse = PermissionReplyResponses[keyof PermissionReplyResponses]
 
 export type PermissionRuleData = {
-  body?: PermissionRule
+  body?: {
+    permission: string
+    pattern: string
+    action: PermissionAction
+    save?: boolean
+  }
   path?: never
   query?: {
     directory?: string

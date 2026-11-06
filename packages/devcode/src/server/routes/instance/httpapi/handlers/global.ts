@@ -1,4 +1,5 @@
 import { Config } from "@/config/config"
+import { SessionStatus } from "@/session/status"
 import { GlobalBus, type GlobalEvent as GlobalBusEvent } from "@/bus/global"
 import { EffectBridge } from "@/effect/bridge"
 import { EventV2 } from "@dev-ai/core/event"
@@ -77,7 +78,13 @@ export const globalHandlers = HttpApiBuilder.group(RootHttpApi, "global", (handl
 
     const configUpdate = Effect.fn("GlobalHttpApi.configUpdate")(function* (ctx) {
       const result = yield* config.updateGlobal(ctx.payload)
-      if (result.changed) bridge.fork(disposeAllInstancesAndEmitGlobalDisposed({ swallowErrors: true }))
+      // Reload once running sessions finish; disposing now would abort their work.
+      if (result.changed)
+        bridge.fork(
+          SessionStatus.whenIdle.pipe(
+            Effect.andThen(disposeAllInstancesAndEmitGlobalDisposed({ swallowErrors: true })),
+          ),
+        )
       return result.info
     })
 

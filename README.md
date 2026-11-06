@@ -121,6 +121,7 @@ Shift+Tab cycles them in that order, and a shell command's permission prompt can
 | `/autocompact` | Set how full the conversation gets before DeV compacts it |
 | `/plugins` | Manage skills, plugins and MCP servers |
 | `/permissions` | Change the mode, allow what Auto mode refused, and edit rules |
+| `/add-dir` | Let DeV work in another folder |
 | `/hooks` | See the hooks you have set up |
 | `/keybindings`, `/statusline` | Edit keybindings and the status line in `tui.json` |
 | `/tasks` | See the session's subagents and open one |

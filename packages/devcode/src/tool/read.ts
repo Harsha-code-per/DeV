@@ -11,6 +11,7 @@ import { containsPath } from "../project/instance-context"
 import { Untrusted } from "@/util/untrusted"
 import { Instruction } from "../session/instruction"
 import { isPdfAttachment, sniffAttachmentMime } from "@/util/media"
+import { parseNotebook, renderNotebook } from "./notebook"
 
 const DEFAULT_READ_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000
@@ -328,6 +329,18 @@ export const ReadTool = Tool.define<
 
       if (isBinaryFile(filepath, sample)) {
         return yield* Effect.fail(new Error(`Cannot read binary file: ${filepath}`))
+      }
+
+      const notebook = filepath.endsWith(".ipynb") ? parseNotebook(yield* fs.readFileString(filepath)) : undefined
+      if (notebook) {
+        const text = renderNotebook(notebook)
+        const cut = text.length > MAX_BYTES
+        const body = `<path>${filepath}</path>\n<type>notebook</type>\n<content>\n${cut ? text.slice(0, MAX_BYTES) + `\n\n(Output capped at ${MAX_BYTES_LABEL}.)` : text}\n</content>`
+        return {
+          title,
+          output: containsPath(filepath, instance) ? body : Untrusted.wrap(filepath, body),
+          metadata: { preview: text.slice(0, 2000), truncated: cut, loaded: loaded.map((item) => item.filepath) },
+        }
       }
 
       const file = yield* lines(filepath, { limit: params.limit ?? DEFAULT_READ_LIMIT, offset: params.offset || 1 })

@@ -655,10 +655,14 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
             () =>
               toast.show({
                 variant: "success",
-                message: window
-                  ? `DeV compacts at ${Locale.number(window)} tokens, or the model's limit if lower`
-                  : "DeV compacts at the model's limit",
-                duration: 4000,
+                message:
+                  (window
+                    ? `DeV compacts at ${Locale.number(window)} tokens, or the model's limit if lower`
+                    : "DeV compacts at the model's limit") +
+                  (Object.values(sync.data.session_status).some((status) => status.type === "busy")
+                    ? ". This applies once the current work finishes."
+                    : ""),
+                duration: 5000,
               }),
             (error: unknown) => toast.error(error),
           )
@@ -1272,6 +1276,57 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
               onSelect={(option) => {
                 route.navigate({ type: "session", sessionID: option.value })
                 dialog.clear()
+              }}
+            />
+          ))
+        },
+      },
+      {
+        name: "directory.add",
+        title: "Add a folder DeV can read and edit",
+        category: "Session",
+        slashName: "add-dir",
+        run: async () => {
+          const input = (
+            await DialogPrompt.show(dialog, "Add a folder", { placeholder: "Path, e.g. ../shared or ~/notes" })
+          )?.trim()
+          if (!input) return dialog.clear()
+          // "~" is expanded by the server, which owns the home folder.
+          const folder = input.startsWith("~")
+            ? input
+            : path.resolve(project.data.instance.path.directory || process.cwd(), input)
+          if (!folder.startsWith("~") && !existsSync(folder)) {
+            dialog.clear()
+            toast.show({ variant: "warning", message: `No folder at ${folder}` })
+            return
+          }
+          dialog.replace(() => (
+            <DialogSelect
+              title={`Let DeV read and edit ${folder}`}
+              options={[
+                { value: false, title: "For now", description: "Until DeV restarts" },
+                { value: true, title: "Always", description: "Saved to your dev.json" },
+              ]}
+              onSelect={(option) => {
+                dialog.clear()
+                sdk.client.permission
+                  .rule(
+                    {
+                      permission: "external_directory",
+                      pattern: `${folder.replace(/\/+$/, "")}/*`,
+                      action: "allow",
+                      save: option.value,
+                    },
+                    { throwOnError: true },
+                  )
+                  .then(() =>
+                    toast.show({
+                      variant: "success",
+                      message: `DeV can now work in ${folder}. Mention it in your request.`,
+                      duration: 5000,
+                    }),
+                  )
+                  .catch(toast.error)
               }}
             />
           ))

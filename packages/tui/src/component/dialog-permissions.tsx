@@ -31,7 +31,7 @@ export function DialogPermissions(props: { mode: string; onMode: () => void }) {
 
   const save = async (items: Rule[], directory?: string) => {
     for (const rule of items) {
-      await sdk.client.permission.rule({ permissionRule: rule, directory }, { throwOnError: true })
+      await sdk.client.permission.rule({ ...rule, directory }, { throwOnError: true })
     }
   }
 

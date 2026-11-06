@@ -15,6 +15,7 @@ import { Database } from "@dev-ai/core/database/database"
 import { TodoWriteTool } from "./todo"
 import { WebFetchTool } from "./webfetch"
 import { WriteTool } from "./write"
+import { NotebookEditTool } from "./notebook"
 import { InvalidTool } from "./invalid"
 import { ShellJobTool } from "./shell-job"
 import { RememberTool } from "./remember"
@@ -111,6 +112,7 @@ const layer = Layer.effect(
     const shell = yield* ShellTool
     const globtool = yield* GlobTool
     const writetool = yield* WriteTool
+    const notebooktool = yield* NotebookEditTool
     const edit = yield* EditTool
     const greptool = yield* GrepTool
     const patchtool = yield* ApplyPatchTool
@@ -218,6 +220,7 @@ const layer = Layer.effect(
           grep: Tool.init(greptool),
           edit: Tool.init(edit),
           write: Tool.init(writetool),
+          notebook: Tool.init(notebooktool),
           task: Tool.init(task),
           fetch: Tool.init(webfetch),
           todo: Tool.init(todo),
@@ -247,6 +250,7 @@ const layer = Layer.effect(
             tool.grep,
             tool.edit,
             tool.write,
+            tool.notebook,
             tool.task,
             tool.fetch,
             tool.todo,

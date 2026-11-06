@@ -9,6 +9,12 @@ import { WorkspaceRoutingMiddleware, WorkspaceRoutingQuery } from "../middleware
 import { described } from "./metadata"
 
 const root = "/permission"
+const RulePayload = Schema.Struct({
+  ...PermissionV1.Rule.fields,
+  save: Schema.optional(Schema.Boolean).annotate({
+    description: "Also save the rule to the global config (default true); false keeps it until DeV restarts",
+  }),
+})
 const ReplyPayload = Schema.Struct({
   reply: PermissionV1.Reply,
   message: Schema.optional(Schema.String),
@@ -43,7 +49,7 @@ export const PermissionApi = HttpApi.make("permission")
         ),
         HttpApiEndpoint.post("rule", `${root}/rule`, {
           query: WorkspaceRoutingQuery,
-          payload: PermissionV1.Rule,
+          payload: RulePayload,
           success: described(Schema.Boolean, "Rule applied and saved"),
           error: HttpApiError.BadRequest,
         }).annotateMerge(

@@ -18,6 +18,14 @@ export interface Interface {
 
 export class Service extends Context.Service<Service, Interface>()("@dev-ai/SessionStatus") {}
 
+// Working sessions in every project, so a global config change can wait for them instead of aborting their work.
+const working = new Set<SessionID>()
+
+/** Waits until no session in this process is working, for at most ten minutes in case an idle update was missed. */
+export const whenIdle = Effect.gen(function* () {
+  for (let waited = 0; working.size > 0 && waited < 600; waited++) yield* Effect.sleep("1 second")
+})
+
 const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
@@ -40,10 +48,12 @@ const layer = Layer.effect(
       const data = yield* InstanceState.get(state)
       yield* events.publish(Event.Status, { sessionID, status })
       if (status.type === "idle") {
+        working.delete(sessionID)
         yield* events.publish(Event.Idle, { sessionID })
         data.delete(sessionID)
         return
       }
+      working.add(sessionID)
       data.set(sessionID, status)
     })
 

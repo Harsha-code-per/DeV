@@ -7,6 +7,9 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 - `/permissions`, as in Claude Code: your mode, what Auto mode refused this session, and your allow, ask and never-allowed rules. Press Enter on a refusal to allow it from now on, change a rule, or add one such as `bash npm publish*`. Rules apply at once, without stopping work in progress, and are saved to `~/.config/dev/dev.json`.
 - A rule that names a risky command, such as `"git push --force*": "allow"`, now lets it run. Before, risky commands asked, or were refused in Auto mode, whatever your rules said.
 - Code intelligence is on by default: DeV can go to a definition, find references and see a symbol's type through the project's language server. Set `DEV_EXPERIMENTAL_LSP_TOOL=false` to turn it off.
+- `/add-dir` lets DeV read and edit another folder, for now or always. Auto mode then works there instead of refusing.
+- Jupyter notebooks: DeV reads a `.ipynb` as cells with their outputs, and edits one cell at a time: replace, insert or delete.
+- Changing a setting, such as `/autocompact`, no longer stops the task that is running. The change applies once the task finishes.
 - `/hooks` lists the hooks you have set up, or shows how to add one.
 - `/keybindings` and `/statusline` open `tui.json`, where keybindings and the status line under the prompt live.
 - `/tasks` lists the session's subagents, running or done, and opens one.

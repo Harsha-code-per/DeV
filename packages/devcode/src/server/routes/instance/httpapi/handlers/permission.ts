@@ -38,9 +38,12 @@ export const permissionHandlers = HttpApiBuilder.group(InstanceHttpApi, "permiss
       return true
     })
 
-    const rule = Effect.fn("PermissionHttpApi.rule")(function* (ctx: { payload: PermissionV1.Rule }) {
+    const rule = Effect.fn("PermissionHttpApi.rule")(function* (ctx: {
+      payload: PermissionV1.Rule & { save?: boolean }
+    }) {
       yield* svc.addRule(ctx.payload)
-      // Saved without the global config restart, which would abort the work in progress. Other projects pick the
+      if (ctx.payload.save === false) return true
+      // Saved without restarting instances (addRule already applied it here), so running work goes on. Other projects pick the
       // rule up the next time they load. A tool set to one action ("bash": "ask") keeps it as the "*" fallback.
       const current = (yield* config.getGlobal()).permission?.[ctx.payload.permission]
       yield* config.updateGlobal({
