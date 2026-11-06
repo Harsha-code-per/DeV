@@ -2,7 +2,7 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## Unreleased
+## 1.0.14 (2026-11-06)
 
 - Subagents can work in a git worktree of their own, as in Claude Code: put `isolation: worktree` in an agent's file, or DeV asks for it when it hands off a task. The worktree is removed afterwards if the subagent changed nothing; otherwise DeV is told its path and branch, to review and merge. The subagent gets the same settings, agents and AGENTS.md as the conversation that started it, including ones not committed yet.
 - `devcode run` answers permission requests from subagents working in their own worktree.
