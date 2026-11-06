@@ -196,6 +196,10 @@ export const Info = Schema.Struct({
         description:
           "Compact automatically once the conversation reaches this many tokens, never later than the model's limit (set with /autocompact)",
       }),
+      idle: Schema.optional(Schema.Boolean).annotate({
+        description:
+          "Compact a long conversation (100k tokens or more) you have left idle for 55 minutes, before the prompt cache expires, so your next message sends a summary instead of the whole conversation (default: true)",
+      }),
     }),
   ),
   experimental: Schema.optional(

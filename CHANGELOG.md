@@ -2,6 +2,10 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## Unreleased
+
+- Idle compaction, as in Claude Code: a conversation of 100k tokens or more that you leave for 55 minutes is compacted before the prompt cache expires, so your next message sends a summary instead of the whole conversation. Turn it off with `"compaction": { "idle": false }`; `DEV_IDLE_COMPACT_MINUTES` and `DEV_IDLE_COMPACT_MIN_TOKENS` change when it happens.
+
 ## 1.0.13 (2026-11-06)
 
 - DeV keeps to limits you set in chat. Say "don't push", "never commit or deploy" or "don't install new packages", and doing it anyway asks you first; Auto mode refuses it and tells DeV why. Saying so again later ("ok, push it") lifts the limit. This covers pushing, committing, merging, rebasing, opening pull requests, deploying, publishing, installing packages and deleting files.

@@ -2395,6 +2395,7 @@ export type Config = {
     preserve_recent_tokens?: number
     reserved?: number
     window?: number
+    idle?: boolean
   }
   experimental?: {
     disable_paste_summary?: boolean

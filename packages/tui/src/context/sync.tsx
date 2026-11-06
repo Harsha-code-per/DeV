@@ -1,5 +1,6 @@
 import type {
   Message,
+  AssistantMessage,
   Agent,
   Provider,
   Session,
@@ -173,6 +174,38 @@ export const {
         .then((x) => (x.data ?? []).toSorted((a, b) => a.id.localeCompare(b.id)))
     }
 
+    // Idle compaction, as in Claude Code: a long conversation left alone for most of an hour is compacted before the
+    // prompt cache expires, so the next message sends a summary instead of the whole conversation at full price.
+    const idleTimers = new Map<string, ReturnType<typeof setTimeout>>()
+    const compactWhenIdle = (sessionID: string, idle: boolean, directory?: string, workspace?: string) => {
+      clearTimeout(idleTimers.get(sessionID))
+      idleTimers.delete(sessionID)
+      if (!idle) return
+      const minutes = Number(process.env.DEV_IDLE_COMPACT_MINUTES) || 55
+      const minimum = Number(process.env.DEV_IDLE_COMPACT_MIN_TOKENS) || 100_000
+      const timer = setTimeout(() => {
+        idleTimers.delete(sessionID)
+        if (store.config.compaction?.auto === false || store.config.compaction?.idle === false) return
+        if (store.session.find((item) => item.id === sessionID)?.parentID) return
+        const last = (store.message[sessionID] ?? []).findLast(
+          (item): item is AssistantMessage => item.role === "assistant" && item.tokens.output > 0,
+        )
+        if (!last || last.summary) return
+        const tokens = last.tokens
+        if (tokens.input + tokens.output + tokens.reasoning + tokens.cache.read + tokens.cache.write < minimum) return
+        void sdk.client.session.summarize({
+          sessionID,
+          providerID: last.providerID,
+          modelID: last.modelID,
+          directory,
+          workspace,
+        })
+      }, minutes * 60_000)
+      // A waiting timer must not keep DeV running after the person quits.
+      timer.unref?.()
+      idleTimers.set(sessionID, timer)
+    }
+
     event.subscribe((event, { directory, workspace }) => {
       switch (event.type) {
         case "server.instance.disposed":
@@ -311,6 +344,7 @@ export const {
 
         case "session.status": {
           setStore("session_status", event.properties.sessionID, event.properties.status)
+          compactWhenIdle(event.properties.sessionID, event.properties.status.type === "idle", directory, workspace)
           break
         }
 
