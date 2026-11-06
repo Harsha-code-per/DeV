@@ -138,6 +138,12 @@ Get the result as JSON:
 devcode -p "fix the failing test" --output-format json
 ```
 
+Work in a git worktree of its own, so parallel sessions don't collide:
+
+```sh
+devcode -w fix-login
+```
+
 The [docs](https://trydev.work/docs.html) cover configuration, free models and security.
 
 ## How we build it

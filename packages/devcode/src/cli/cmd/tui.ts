@@ -2,6 +2,7 @@ import { cmd } from "@/cli/cmd/cmd"
 import { Rpc } from "@/util/rpc"
 import { type rpc } from "../tui/worker"
 import path from "path"
+import { existsSync, mkdirSync, writeFileSync } from "fs"
 import { fileURLToPath } from "url"
 import { UI } from "@/cli/ui"
 import { errorMessage } from "@dev-ai/tui/util/error"
@@ -185,6 +186,11 @@ export const TuiThreadCommand = cmd({
         type: "number",
         describe: "cap visible mini replay to the newest N messages",
       })
+      .option("worktree", {
+        alias: "w",
+        type: "string",
+        describe: "work in a new git worktree under .dev/worktrees, on its own branch (optional name)",
+      })
       .option("demo", {
         type: "boolean",
         hidden: true,
@@ -245,7 +251,14 @@ export const TuiThreadCommand = cmd({
 
       // Resolve relative --project paths from PWD, then use the real cwd after
       // chdir so the thread and worker share the same directory key.
-      const next = resolveThreadDirectory(args.project)
+      const worktree =
+        args.worktree === undefined ? undefined : enterWorktree(resolveThreadDirectory(args.project), args.worktree)
+      if (worktree instanceof Error) {
+        UI.error(worktree.message)
+        process.exitCode = 1
+        return
+      }
+      const next = worktree?.dir ?? resolveThreadDirectory(args.project)
       const file = await target()
       try {
         process.chdir(next)
@@ -348,7 +361,8 @@ export const TuiThreadCommand = cmd({
               model: args.model,
               prompt,
               fork: args.fork,
-              auto: args.auto || args.yolo || args["dangerously-skip-permissions"] || args["permission-mode"] === "auto",
+              auto:
+                args.auto || args.yolo || args["dangerously-skip-permissions"] || args["permission-mode"] === "auto",
               acceptEdits: args["permission-mode"] === "accept-edits",
               goal: args["permission-mode"] === "goal",
             },
@@ -367,6 +381,7 @@ export const TuiThreadCommand = cmd({
         })
         process.exitCode = await child.exited
       }
+      if (worktree) leaveWorktree(worktree)
     } finally {
       try {
         unguard?.()
@@ -375,4 +390,47 @@ export const TuiThreadCommand = cmd({
     process.exit()
   },
 })
-// scratch
+
+// As in Claude Code's --worktree: a checkout of its own on branch devcode/<name>, so parallel sessions don't collide.
+function enterWorktree(directory: string, requested: string) {
+  const git = (...args: string[]) => Bun.spawnSync(["git", ...args], { cwd: directory })
+  const top = git("rev-parse", "--show-toplevel")
+  if (top.exitCode !== 0) return new Error("--worktree needs a git repository")
+  const root = top.stdout.toString().trim()
+  const name =
+    requested
+      .trim()
+      .replace(/[^A-Za-z0-9._-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || `session-${Date.now().toString(36)}`
+  const dir = path.join(root, ".dev", "worktrees", name)
+  const branch = `devcode/${name}`
+  const base = git("rev-parse", "HEAD").stdout.toString().trim()
+  if (existsSync(dir)) return { root, dir, branch, base }
+  mkdirSync(path.dirname(dir), { recursive: true })
+  // Ignores the worktrees folder itself, so the main checkout's git status stays clean.
+  writeFileSync(path.join(path.dirname(dir), ".gitignore"), "*\n")
+  const existing = git("show-ref", "--verify", "--quiet", `refs/heads/${branch}`).exitCode === 0
+  const made = git("worktree", "add", ...(existing ? [dir, branch] : ["-b", branch, dir, "HEAD"]))
+  if (made.exitCode !== 0) return new Error(made.stderr.toString().trim() || "Could not create the worktree")
+  UI.println(`Working in ${dir} on branch ${branch}`)
+  return { root, dir, branch, base }
+}
+
+/** Removes a worktree that has no changes or commits; otherwise says where it is. */
+function leaveWorktree(worktree: { root: string; dir: string; branch: string; base: string }) {
+  const git = (cwd: string, ...args: string[]) =>
+    Bun.spawnSync(["git", ...args], { cwd })
+      .stdout.toString()
+      .trim()
+  const dirty = git(worktree.dir, "status", "--porcelain")
+  const commits = git(worktree.root, "rev-list", "--count", `${worktree.base}..${worktree.branch}`)
+  if (!dirty && commits === "0") {
+    git(worktree.root, "worktree", "remove", worktree.dir)
+    git(worktree.root, "branch", "-D", worktree.branch)
+    UI.println(`Removed the worktree; nothing changed in it.`)
+    return
+  }
+  UI.println(
+    `Kept the worktree at ${worktree.dir} (branch ${worktree.branch}). Continue with: devcode -w ${path.basename(worktree.dir)}. Remove with: git worktree remove ${worktree.dir}`,
+  )
+}

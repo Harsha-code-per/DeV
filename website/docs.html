@@ -69,6 +69,9 @@
 <pre><code>devcode run "explain this repo"</code></pre>
 <p>To get the result as JSON:</p>
 <pre><code>devcode -p "fix the failing test" --output-format json</code></pre>
+<p>To work in a git worktree of its own, on branch <code>devcode/fix-login</code>, so parallel sessions don't collide:</p>
+<pre><code>devcode -w fix-login</code></pre>
+<p>When you exit, a worktree with no changes is removed. One with changes is kept; run the same command to continue in it.</p>
 
 <h2 id="config">Configuration</h2>
 <p>Settings live in <code>dev.json</code>, either in your project or in <code>~/.config/dev/</code>. Project memory lives in <code>DEV.md</code>. DeV also reads <code>AGENTS.md</code>.</p>

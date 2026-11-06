@@ -8,6 +8,7 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 - A rule that names a risky command, such as `"git push --force*": "allow"`, now lets it run. Before, risky commands asked, or were refused in Auto mode, whatever your rules said.
 - Code intelligence is on by default: DeV can go to a definition, find references and see a symbol's type through the project's language server. Set `DEV_EXPERIMENTAL_LSP_TOOL=false` to turn it off.
 - `/add-dir` lets DeV read and edit another folder, for now or always. Auto mode then works there instead of refusing.
+- `devcode -w <name>` (or `--worktree`) works in a git worktree of its own under `.dev/worktrees`, on branch `devcode/<name>`, so several sessions can change the same repo without colliding. On exit, a worktree with no changes is removed; one with changes is kept, and the same command continues in it.
 - Jupyter notebooks: DeV reads a `.ipynb` as cells with their outputs, and edits one cell at a time: replace, insert or delete.
 - Changing a setting, such as `/autocompact`, no longer stops the task that is running. The change applies once the task finishes.
 - `/hooks` lists the hooks you have set up, or shows how to add one.
