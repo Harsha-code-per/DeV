@@ -534,7 +534,7 @@ const layer = Layer.effect(
         return "stop"
       }
 
-      // What the person wrote goes into the summary word for word, as Claude Code's summaries keep it, and in
+      // What the person wrote goes into the summary word for word, and in
       // code rather than by asking the model: an instruction like "at the end, tell me X" doesn't survive being
       // summarized again at every compaction. Earlier summaries' copies carry forward.
       const said = [

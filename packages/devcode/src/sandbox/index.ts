@@ -11,7 +11,7 @@ import type { ConfigSandboxV1 } from "@dev-ai/core/v1/config/sandbox"
 const execFileAsync = promisify(execFile)
 
 // With `"sandbox": { "enabled": true }` in dev.json, DeV runs shell commands inside Anthropic's
-// sandbox-runtime (Apache-2.0), the OS-level sandbox Claude Code uses: bubblewrap on Linux, Seatbelt on
+// sandbox-runtime (Apache-2.0), an OS-level sandbox: bubblewrap on Linux, Seatbelt on
 // macOS. A command can write only to the project, temp folders and package-manager caches, cannot read
 // credentials, and reaches the network only through an allowlist. It is off by default, as in Claude
 // Code: confined commands can't use the person's logins (gh, cloud CLIs) or reach ordinary websites.

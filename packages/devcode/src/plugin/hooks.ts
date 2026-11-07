@@ -3,7 +3,7 @@ import type { ConfigHooksV1 } from "@dev-ai/core/v1/config/hooks"
 import { PartID } from "@/session/schema"
 import { Process } from "@/util/process"
 
-// User hooks from the `hooks` setting, with the semantics of Claude Code's documented hooks: each command
+// User hooks from the `hooks` setting, in the common hooks format: each command
 // gets the event as JSON on stdin; exit code 2 blocks PreToolUse and UserPromptSubmit (stderr is the
 // reason the agent or user sees) and reports stderr to the agent on PostToolUse; any other exit code is
 // logged and ignored. UserPromptSubmit and SessionStart stdout is added to the (first) prompt as context.

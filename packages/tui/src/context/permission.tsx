@@ -4,7 +4,7 @@ import { createSimpleContext } from "./helper"
 import type { PermissionRequest } from "@dev-ai/sdk/v2"
 import { requestRisk } from "@dev-ai/core/command-risk"
 
-// Permission modes, as in Claude Code (Shift+Tab cycles them, with plan between edits and auto):
+// Permission modes (Shift+Tab cycles them, with plan between edits and auto):
 // - normal: "Manual", ask before acting
 // - edits:  approve file edits automatically, ask for everything else
 // - auto:   never ask. Risky requests and actions the person ruled out in chat (see core command-risk.ts) are
@@ -14,7 +14,7 @@ import { requestRisk } from "@dev-ai/core/command-risk"
 // Explicitly denied actions never reach the user, so no mode can override a deny rule.
 export type PermissionMode = "normal" | "edits" | "auto" | "goal"
 
-// The same fallback thresholds as Claude Code's auto mode.
+// After this many refusals auto mode asks instead of looping.
 const IN_A_ROW = 3
 const IN_TOTAL = 20
 

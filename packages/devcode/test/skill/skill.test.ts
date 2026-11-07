@@ -17,9 +17,9 @@ import fs from "fs/promises"
 const node = LayerNode.compile(CrossSpawnSpawner.node)
 
 const it = testEffect(Layer.mergeAll(LayerNode.compile(Skill.node), node, testInstanceStoreLayer))
-const itWithoutClaudeCodeSkills = testEffect(
+const itWithoutClaudeFolderSkills = testEffect(
   Layer.mergeAll(
-    LayerNode.compile(Skill.node, [[RuntimeFlags.node, RuntimeFlags.layer({ disableClaudeCodeSkills: true })]]),
+    LayerNode.compile(Skill.node, [[RuntimeFlags.node, RuntimeFlags.layer({ disableClaudeFolderSkills: true })]]),
     node,
     testInstanceStoreLayer,
   ),
@@ -443,7 +443,7 @@ description: A skill in the .agents/skills directory.
     ),
   )
 
-  itWithoutClaudeCodeSkills.live("skips Claude Code skills when disabled", () =>
+  itWithoutClaudeFolderSkills.live("skips .claude folder skills when disabled", () =>
     provideTmpdirInstance(
       (dir) =>
         Effect.gen(function* () {
@@ -584,8 +584,8 @@ description: A skill in the .dev/skills directory.
   )
 })
 
-// Claude Code's skills: its config folder (CLAUDE_CONFIG_DIR), its enabled plugins and its SKILL.md options.
-describe("skill from Claude Code", () => {
+// An existing .claude folder (CLAUDE_CONFIG_DIR), its enabled plugins, and the common SKILL.md options.
+describe("skill from an existing .claude folder", () => {
   const write = (file: string, text: string) =>
     fs.mkdir(path.dirname(file), { recursive: true }).then(() => Bun.write(file, text))
 
@@ -626,7 +626,7 @@ describe("skill from Claude Code", () => {
     return config
   }
 
-  it.live("loads skills from CLAUDE_CONFIG_DIR and from enabled Claude Code plugins, named plugin:skill", () =>
+  it.live("loads skills from CLAUDE_CONFIG_DIR and from its enabled plugins, named plugin:skill", () =>
     Effect.gen(function* () {
       const tmp = yield* Effect.acquireRelease(
         Effect.promise(() => tmpdir({ git: true })),
@@ -675,7 +675,7 @@ describe("Skill.render", () => {
     ...extra,
   })
 
-  it.effect("fills arguments the way Claude Code does", () =>
+  it.effect("fills arguments in the common SKILL.md way", () =>
     Effect.sync(() => {
       expect(Skill.render(skill("Migrate $0 from $1 to $2."), { project: "/p", arguments: "Search JS TS" })).toBe(
         "Migrate Search from JS to TS.",
@@ -693,7 +693,7 @@ describe("Skill.render", () => {
       expect(Skill.render(skill("awk '{print $2}' costs \\$5 for $0"), { project: "/p", arguments: "x" })).toBe(
         "awk '{print $2}' costs $5 for x",
       )
-      // Arguments with no placeholder to go into are appended, as Claude Code does.
+      // Arguments with no placeholder to go into are appended.
       expect(Skill.render(skill("Review."), { project: "/p", arguments: "src/app.ts" })).toBe(
         "Review.\n\nARGUMENTS: src/app.ts",
       )

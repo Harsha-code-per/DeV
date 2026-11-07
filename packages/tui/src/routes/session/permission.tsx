@@ -422,7 +422,7 @@ export function PermissionPrompt(props: { request: PermissionRequest; directory?
               title="Permission required"
               header={header()}
               body={current.body}
-              // As in Claude Code, a shell prompt in Manual or Accept edits offers to approve and switch to auto.
+              // A shell prompt in Manual or Accept edits offers to approve and switch to auto.
               options={{
                 once: "Allow once",
                 ...(props.request.permission === "bash" && ["normal", "edits"].includes(permission.mode)

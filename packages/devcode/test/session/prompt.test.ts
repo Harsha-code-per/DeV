@@ -1849,7 +1849,7 @@ unix(
 )
 
 unix(
-  "a Claude Code skill run as /name fills $0 and its own folder, and hides user-invocable: false",
+  "a SKILL.md skill run as /name fills $0 and its own folder, and hides user-invocable: false",
   () =>
     Effect.gen(function* () {
       const { directory: dir } = yield* TestInstance

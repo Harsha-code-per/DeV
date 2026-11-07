@@ -1065,7 +1065,7 @@ export function Prompt(props: PromptProps) {
       void exit()
       return true
     }
-    // As in Claude Code: `# note` saves a note to the project's memory file, `#~ note` to your own DEV.md.
+    // `# note` saves a note to the project's memory file, `#~ note` to your own DEV.md.
     if (store.mode === "normal" && /^#~?\s*\S/.test(trimmed) && !trimmed.startsWith("##") && !trimmed.includes("\n")) {
       const user = trimmed.startsWith("#~")
       const res = await sdk.client.memory.add({
@@ -1186,7 +1186,7 @@ export function Prompt(props: PromptProps) {
         : null
     const goalArg = goalCommand?.[1]?.trim() ?? ""
     if (goalCommand) {
-      // Claude Code's aliases for clear work too.
+      // The common aliases for clear work too.
       const named = ["stop", "off", "reset", "none", "cancel"].includes(goalArg) ? "clear" : goalArg
       const action = ["pause", "resume", "clear"].includes(named) ? named : goalArg ? "set" : undefined
       const res = action

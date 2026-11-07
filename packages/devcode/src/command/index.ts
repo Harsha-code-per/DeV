@@ -36,7 +36,7 @@ export const Info = Schema.Struct({
 
 export type Info = Omit<Schema.Schema.Type<typeof Info>, "template"> & {
   template: Promise<string> | string
-  /** Skills fill Claude Code's placeholders themselves, from the arguments and session. */
+  /** Skills fill their placeholders themselves, from the arguments and session. */
   render?: (input: { sessionID: string; arguments: string }) => string
 }
 
@@ -63,7 +63,7 @@ export interface Interface {
   readonly list: () => Effect.Effect<Info[]>
 }
 
-// Claude Code's subagent types and DeV's names for the same agents.
+// Subagent types skills commonly name, and DeV's names for the same agents.
 function subagentName(type: string) {
   if (type === "general-purpose") return "general"
   return type.toLowerCase()
@@ -187,7 +187,7 @@ const layer = Layer.effect(
           name: item.name,
           description: item.description,
           source: "skill",
-          // "context: fork" runs the skill in a subagent of that type, as Claude Code does.
+          // "context: fork" runs the skill in a subagent of that type.
           ...(item.fork ? { agent: subagentName(item.fork), subtask: true } : {}),
           get template() {
             return withBase(Skill.render(item, { project: ctx.worktree }))

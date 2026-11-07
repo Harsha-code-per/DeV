@@ -56,7 +56,7 @@ const BaseParameterFields = {
 
 const BaseParameters = Schema.Struct(BaseParameterFields)
 
-const CLAUDE_CODE_AGENTS: Record<string, string> = { "general-purpose": "general", Explore: "explore" }
+const COMMON_AGENT_NAMES: Record<string, string> = { "general-purpose": "general", Explore: "explore" }
 
 export const Parameters = Schema.Struct({
   ...BaseParameterFields,
@@ -123,8 +123,8 @@ export const TaskTool = Tool.define(
         )
       }
 
-      // Skills written for Claude Code name its subagents; they are the same jobs here.
-      const type = CLAUDE_CODE_AGENTS[params.subagent_type] ?? params.subagent_type
+      // Skills written for other agents name their subagents; they are the same jobs here.
+      const type = COMMON_AGENT_NAMES[params.subagent_type] ?? params.subagent_type
       if (!ctx.extra?.bypassAgentCheck) {
         yield* ctx.ask({
           permission: id,
@@ -209,7 +209,7 @@ export const TaskTool = Tool.define(
       const ops = ctx.extra?.promptOps as TaskPromptOps
       if (!ops) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
 
-      // Worktree isolation, as in Claude Code: asked for on the call or in the agent's frontmatter (`isolation: worktree`).
+      // Worktree isolation: asked for on the call or in the agent's frontmatter (`isolation: worktree`).
       const isolated = params.isolation === "worktree" || next.options?.isolation === "worktree"
       const here = yield* InstanceState.context
       const runTask = Effect.fn("TaskTool.runIsolated")(function* () {
@@ -222,7 +222,7 @@ export const TaskTool = Tool.define(
         if (tree instanceof Error) return yield* Effect.fail(tree)
         const text = yield* instances
           // The main checkout stays the instance's root, so the subagent gets the same config, agents and AGENTS.md
-          // as the conversation that started it (as in Claude Code), even ones not committed yet; its tools work
+          // as the conversation that started it, even ones not committed yet; its tools work
           // in the worktree.
           .provide({ directory: tree.dir, worktree: here.worktree, project: here.project }, runHere())
           .pipe(

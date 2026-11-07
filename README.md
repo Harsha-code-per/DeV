@@ -92,7 +92,7 @@ devcode
 | **Subagents** | Focused helpers take on parts of a task, in parallel or in the background. Add `isolation: worktree` to an agent's file and it works in a git worktree of its own. |
 | **Rewind** | Go back to any earlier message and restore both the conversation and your files. |
 | **Project memory** | DeV keeps what it learns about your project in `DEV.md`, a file you can read and edit. |
-| **OS sandbox** | Optional, as in Claude Code. Turn it on with `"sandbox": { "enabled": true }` and, on Linux and macOS, shell commands can't read your SSH keys or cloud credentials. Off by default, so commands use your logins (`gh`, cloud CLIs) and network like your own terminal. |
+| **OS sandbox** | Optional. Turn it on with `"sandbox": { "enabled": true }` and, on Linux and macOS, shell commands can't read your SSH keys or cloud credentials. Off by default, so commands use your logins (`gh`, cloud CLIs) and network like your own terminal. |
 | **Free model routing** | `auto/free` moves between the free models you've connected and learns which ones work for you. |
 | **Built to extend** | Skills, plugins, hooks, custom agents and MCP servers are all included. |
 

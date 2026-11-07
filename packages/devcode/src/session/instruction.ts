@@ -62,12 +62,12 @@ const layer: Layer.Layer<
     const globalFiles = [
       path.join(global.config, "DEV.md"),
       path.join(global.config, "AGENTS.md"),
-      ...(!flags.disableClaudeCodePrompt ? [path.join(global.home, ".claude", "CLAUDE.md")] : []),
+      ...(!flags.disableClaudeMd ? [path.join(global.home, ".claude", "CLAUDE.md")] : []),
     ]
     const instructionFiles = [
       "DEV.md",
       "AGENTS.md",
-      ...(!flags.disableClaudeCodePrompt ? ["CLAUDE.md"] : []),
+      ...(!flags.disableClaudeMd ? ["CLAUDE.md"] : []),
       "CONTEXT.md", // deprecated
     ]
 

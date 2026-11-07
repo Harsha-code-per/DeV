@@ -42,7 +42,7 @@ process.env["DEV_EXPERIMENTAL_WORKSPACES"] = "true"
 // Set test home directory to isolate tests from user's actual home directory
 // This prevents tests from picking up real user configs/skills from ~/.claude/skills
 const testHome = path.join(dir, "home")
-// Claude Code's own config folder (skills, plugins) would otherwise point at the real one.
+// CLAUDE_CONFIG_DIR (an existing .claude folder with skills and plugins) would otherwise point at the real one.
 delete process.env["CLAUDE_CONFIG_DIR"]
 await fs.mkdir(testHome, { recursive: true })
 process.env["DEV_TEST_HOME"] = testHome

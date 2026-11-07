@@ -2,7 +2,7 @@ import path from "path"
 import { existsSync, mkdirSync, writeFileSync } from "fs"
 
 // Git worktrees under <repo>/.dev/worktrees/<name> on branch devcode/<name>, for `devcode -w` and for subagents
-// with `isolation: worktree`, as in Claude Code. Removed when nothing changed, kept (with its branch) otherwise.
+// with `isolation: worktree`. Removed when nothing changed, kept (with its branch) otherwise.
 // ponytail: synchronous git calls; `git worktree add` on a huge repo blocks for its duration.
 
 export type LocalWorktree = { root: string; dir: string; branch: string; base: string; name: string }

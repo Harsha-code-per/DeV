@@ -104,7 +104,7 @@ test("dev.json sandbox settings add hosts and paths and unhide chosen credential
   expect(custom.filesystem.allowWrite).toContain(path.join(os.homedir(), "shared"))
 })
 
-test("the sandbox is off unless dev.json turns it on, as in Claude Code", async () => {
+test("the sandbox is off unless dev.json turns it on", async () => {
   process.env["DEV_DISABLE_SANDBOX"] = "false"
   try {
     expect(await Sandbox.wrap("true", ["/work/app"], "/bin/bash")).toBeUndefined()

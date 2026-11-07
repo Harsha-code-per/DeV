@@ -51,7 +51,7 @@ export const SkillTool = Tool.define(
               `# Skill: ${info.name}`,
               "",
               Skill.render(info, { project: instance.worktree, sessionID: ctx.sessionID }).trim(),
-              // "context: fork": Claude Code runs these in a subagent; DeV hands that step to the task tool.
+              // "context: fork": these run in a subagent; DeV hands that step to the task tool.
               ...(info.fork
                 ? [
                     "",

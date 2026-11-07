@@ -1215,7 +1215,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
               message={
                 lines.length
                   ? lines.join("\n") + '\n\nEdit them under "hooks" in dev.json (/config).'
-                  : 'No hooks yet. Add them under "hooks" in dev.json (/config), same shape as Claude Code:\n"hooks": { "PostToolUse": [{ "matcher": "edit|write", "hooks": [{ "type": "command", "command": "bun run fmt" }] }] }'
+                  : 'No hooks yet. Add them under "hooks" in dev.json (/config), in the common hooks format:\n"hooks": { "PostToolUse": [{ "matcher": "edit|write", "hooks": [{ "type": "command", "command": "bun run fmt" }] }] }'
               }
             />
           ))

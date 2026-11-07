@@ -259,7 +259,7 @@ const layer = Layer.effect(
             tool.catalog,
             tool.patch,
             ...(tool.execute ? [tool.execute] : []),
-            // Only offered when Claude Code, Codex or Gemini CLI is installed.
+            // Only offered when another coding agent's CLI is installed.
             ...(ExternalAgent.installed().length > 0 ? [tool.externalAgent] : []),
             ...(flags.experimentalLspTool ? [tool.lsp] : []),
             ...(flags.experimentalPlanMode && flags.client === "cli" ? [tool.plan, tool.planEnter, tool.goal] : []),

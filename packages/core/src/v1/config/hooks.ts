@@ -2,7 +2,7 @@ export * as ConfigHooksV1 from "./hooks"
 
 import { Schema } from "effect"
 
-// Same shape as Claude Code's documented hooks setting, so existing hook configs carry over.
+// The common hooks setting shape, so existing hook configs carry over.
 export const Command = Schema.Struct({
   type: Schema.Literal("command"),
   command: Schema.String,

@@ -33,7 +33,7 @@ import { PluginCommand } from "./cli/cmd/plug"
 import { NativeHostCommand } from "./cli/cmd/native-host"
 import { Heap } from "./cli/heap"
 
-// As in Claude Code, `devcode -p "prompt"` (or --print) runs headless: it is `devcode run`, with
+// `devcode -p "prompt"` (or --print) runs headless: it is `devcode run`, with
 // `--output-format json|stream-json` meaning `--format json` (JSON events, one per line).
 const args = ((argv) => {
   if (argv[0] !== "-p" && argv[0] !== "--print") return argv
@@ -62,7 +62,7 @@ function show(out: string) {
 // individually (~107K → ~19K input tokens per request with the bundled servers), which keeps
 // free models within their context windows. Set DEV_EXPERIMENTAL_CODE_MODE=false to opt out.
 process.env.DEV_EXPERIMENTAL_CODE_MODE ??= "true"
-// DeV: subagents can run in the background (task tool `background: true`), as in Claude Code.
+// DeV: subagents can run in the background (task tool `background: true`), .
 process.env.DEV_EXPERIMENTAL_BACKGROUND_SUBAGENTS ??= "true"
 
 // 1.0.x installed DeV Code a second time as `dev`, the DeV desktop app's name. An upgrade is run by

@@ -20,14 +20,20 @@ export class Service extends ConfigService.Service<Service>()("@dev-ai/RuntimeFl
   disableEmbeddedWebUi: bool("DEV_DISABLE_EMBEDDED_WEB_UI"),
   disableExternalSkills: bool("DEV_DISABLE_EXTERNAL_SKILLS"),
   disableLspDownload: bool("DEV_DISABLE_LSP_DOWNLOAD"),
-  disableClaudeCodePrompt: Config.all({
-    broad: bool("DEV_DISABLE_CLAUDE_CODE"),
-    direct: bool("DEV_DISABLE_CLAUDE_CODE_PROMPT"),
-  }).pipe(Config.map((flags) => flags.broad || flags.direct)),
-  disableClaudeCodeSkills: Config.all({
-    broad: bool("DEV_DISABLE_CLAUDE_CODE"),
-    direct: bool("DEV_DISABLE_CLAUDE_CODE_SKILLS"),
-  }).pipe(Config.map((flags) => flags.broad || flags.direct)),
+  // Reading CLAUDE.md files and .claude/ folders. DEV_DISABLE_CLAUDE_FOLDER turns both off; the older
+  // DEV_DISABLE_CLAUDE_CODE* names still work.
+  disableClaudeMd: Config.all({
+    broad: bool("DEV_DISABLE_CLAUDE_FOLDER"),
+    direct: bool("DEV_DISABLE_CLAUDE_MD"),
+    legacy: bool("DEV_DISABLE_CLAUDE_CODE"),
+    legacyDirect: bool("DEV_DISABLE_CLAUDE_CODE_PROMPT"),
+  }).pipe(Config.map((flags) => flags.broad || flags.direct || flags.legacy || flags.legacyDirect)),
+  disableClaudeFolderSkills: Config.all({
+    broad: bool("DEV_DISABLE_CLAUDE_FOLDER"),
+    direct: bool("DEV_DISABLE_CLAUDE_FOLDER_SKILLS"),
+    legacy: bool("DEV_DISABLE_CLAUDE_CODE"),
+    legacyDirect: bool("DEV_DISABLE_CLAUDE_CODE_SKILLS"),
+  }).pipe(Config.map((flags) => flags.broad || flags.direct || flags.legacy || flags.legacyDirect)),
   enableExa: Config.all({
     experimental,
     enabled: bool("DEV_ENABLE_EXA"),
@@ -42,7 +48,7 @@ export class Service extends ConfigService.Service<Service>()("@dev-ai/RuntimeFl
   experimentalReferences: enabledByExperimental("DEV_EXPERIMENTAL_REFERENCES"),
   experimentalBackgroundSubagents: enabledByExperimental("DEV_EXPERIMENTAL_BACKGROUND_SUBAGENTS"),
   experimentalLspTy: bool("DEV_EXPERIMENTAL_LSP_TY"),
-  // Code intelligence is on by default, as in Claude Code; DEV_EXPERIMENTAL_LSP_TOOL=false turns it off.
+  // Code intelligence is on by default; DEV_EXPERIMENTAL_LSP_TOOL=false turns it off.
   experimentalLspTool: Config.boolean("DEV_EXPERIMENTAL_LSP_TOOL").pipe(Config.withDefault(true)),
   experimentalOxfmt: enabledByExperimental("DEV_EXPERIMENTAL_OXFMT"),
   experimentalPlanMode: Config.boolean("DEV_EXPERIMENTAL_PLAN_MODE").pipe(Config.withDefault(true)),

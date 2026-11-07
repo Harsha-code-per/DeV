@@ -38,7 +38,7 @@ const SECRET_FILE = /(^|\/)(\.env(\.[\w-]+)?|id_[a-z0-9]+|[\w-]*credentials?[\w.
 /**
  * Why auto mode refuses this permission request, or undefined when it can go ahead: risky commands,
  * writing outside the project or into .git, and touching secrets files. A command that leaves the sandbox
- * is judged like any other, as in Claude Code: running it on the person's machine is not a risk in itself.
+ * is judged like any other: running it on the person's machine is not a risk in itself.
  */
 export function requestRisk(request: {
   permission: string

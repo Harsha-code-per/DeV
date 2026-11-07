@@ -13,7 +13,7 @@ type Choice = { kind: "mode" } | { kind: "add" } | { kind: "refused"; refusal: R
 
 const CATEGORY: Record<Action, string> = { allow: "Allowed", ask: "Always ask", deny: "Never allowed" }
 
-// Like Claude Code's /permissions: what auto mode refused, the rules, and a way to change them. Rules apply to the
+// /permissions: what auto mode refused, the rules, and a way to change them. Rules apply to the
 // running project at once and are saved to the global dev.json.
 export function DialogPermissions(props: { mode: string; onMode: () => void }) {
   const dialog = useDialog()

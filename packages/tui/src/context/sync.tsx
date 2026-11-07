@@ -174,7 +174,7 @@ export const {
         .then((x) => (x.data ?? []).toSorted((a, b) => a.id.localeCompare(b.id)))
     }
 
-    // Idle compaction, as in Claude Code: a long conversation left alone for most of an hour is compacted before the
+    // Idle compaction: a long conversation left alone for most of an hour is compacted before the
     // prompt cache expires, so the next message sends a summary instead of the whole conversation at full price.
     const idleTimers = new Map<string, ReturnType<typeof setTimeout>>()
     const compactWhenIdle = (sessionID: string, idle: boolean, directory?: string, workspace?: string) => {

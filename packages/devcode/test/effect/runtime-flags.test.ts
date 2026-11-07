@@ -54,7 +54,7 @@ describe("RuntimeFlags", () => {
       expect(flags.disableEmbeddedWebUi).toBe(true)
       expect(flags.disableExternalSkills).toBe(true)
       expect(flags.disableLspDownload).toBe(true)
-      expect(flags.disableClaudeCodePrompt).toBe(false)
+      expect(flags.disableClaudeMd).toBe(false)
       expect(flags.enableExa).toBe(true)
       expect(flags.enableParallel).toBe(true)
       expect(flags.enableExperimentalModels).toBe(true)
@@ -120,8 +120,8 @@ describe("RuntimeFlags", () => {
       expect(flags.disableEmbeddedWebUi).toBe(false)
       expect(flags.disableExternalSkills).toBe(false)
       expect(flags.disableLspDownload).toBe(false)
-      expect(flags.disableClaudeCodePrompt).toBe(false)
-      expect(flags.disableClaudeCodeSkills).toBe(false)
+      expect(flags.disableClaudeMd).toBe(false)
+      expect(flags.disableClaudeFolderSkills).toBe(false)
       expect(flags.enableExa).toBe(false)
       expect(flags.experimentalIconDiscovery).toBe(false)
       expect(flags.experimentalOxfmt).toBe(false)
@@ -172,27 +172,36 @@ describe("RuntimeFlags", () => {
     }),
   )
 
-  it.effect("disableClaudeCodePrompt defaults to false", () =>
+  it.effect("disableClaudeMd defaults to false", () =>
     Effect.gen(function* () {
       const flags = yield* readFlags.pipe(Effect.provide(fromConfig({})))
 
-      expect(flags.disableClaudeCodePrompt).toBe(false)
+      expect(flags.disableClaudeMd).toBe(false)
     }),
   )
 
-  it.effect("disableClaudeCodePrompt reads DEV_DISABLE_CLAUDE_CODE_PROMPT", () =>
+  it.effect("DEV_DISABLE_CLAUDE_FOLDER turns off CLAUDE.md files and .claude/ skills", () =>
+    Effect.gen(function* () {
+      const flags = yield* readFlags.pipe(Effect.provide(fromConfig({ DEV_DISABLE_CLAUDE_FOLDER: "true" })))
+
+      expect(flags.disableClaudeMd).toBe(true)
+      expect(flags.disableClaudeFolderSkills).toBe(true)
+    }),
+  )
+
+  it.effect("disableClaudeMd reads DEV_DISABLE_CLAUDE_CODE_PROMPT", () =>
     Effect.gen(function* () {
       const flags = yield* readFlags.pipe(Effect.provide(fromConfig({ DEV_DISABLE_CLAUDE_CODE_PROMPT: "true" })))
 
-      expect(flags.disableClaudeCodePrompt).toBe(true)
+      expect(flags.disableClaudeMd).toBe(true)
     }),
   )
 
-  it.effect("disableClaudeCodePrompt inherits DEV_DISABLE_CLAUDE_CODE", () =>
+  it.effect("disableClaudeMd inherits DEV_DISABLE_CLAUDE_CODE", () =>
     Effect.gen(function* () {
       const flags = yield* readFlags.pipe(Effect.provide(fromConfig({ DEV_DISABLE_CLAUDE_CODE: "true" })))
 
-      expect(flags.disableClaudeCodePrompt).toBe(true)
+      expect(flags.disableClaudeMd).toBe(true)
     }),
   )
 
@@ -346,8 +355,8 @@ describe("RuntimeFlags", () => {
       expect(flags.disableEmbeddedWebUi).toBe(false)
       expect(flags.disableExternalSkills).toBe(false)
       expect(flags.disableLspDownload).toBe(false)
-      expect(flags.disableClaudeCodePrompt).toBe(false)
-      expect(flags.disableClaudeCodeSkills).toBe(false)
+      expect(flags.disableClaudeMd).toBe(false)
+      expect(flags.disableClaudeFolderSkills).toBe(false)
       expect(flags.enableExa).toBe(false)
       expect(flags.experimentalIconDiscovery).toBe(false)
       expect(flags.experimentalOxfmt).toBe(false)
@@ -357,27 +366,27 @@ describe("RuntimeFlags", () => {
     }),
   )
 
-  it.effect("disableClaudeCodeSkills defaults to false", () =>
+  it.effect("disableClaudeFolderSkills defaults to false", () =>
     Effect.gen(function* () {
       const flags = yield* readFlags.pipe(Effect.provide(fromConfig({})))
 
-      expect(flags.disableClaudeCodeSkills).toBe(false)
+      expect(flags.disableClaudeFolderSkills).toBe(false)
     }),
   )
 
-  it.effect("disableClaudeCodeSkills reads DEV_DISABLE_CLAUDE_CODE_SKILLS", () =>
+  it.effect("disableClaudeFolderSkills reads DEV_DISABLE_CLAUDE_CODE_SKILLS", () =>
     Effect.gen(function* () {
       const flags = yield* readFlags.pipe(Effect.provide(fromConfig({ DEV_DISABLE_CLAUDE_CODE_SKILLS: "true" })))
 
-      expect(flags.disableClaudeCodeSkills).toBe(true)
+      expect(flags.disableClaudeFolderSkills).toBe(true)
     }),
   )
 
-  it.effect("disableClaudeCodeSkills inherits DEV_DISABLE_CLAUDE_CODE", () =>
+  it.effect("disableClaudeFolderSkills inherits DEV_DISABLE_CLAUDE_CODE", () =>
     Effect.gen(function* () {
       const flags = yield* readFlags.pipe(Effect.provide(fromConfig({ DEV_DISABLE_CLAUDE_CODE: "true" })))
 
-      expect(flags.disableClaudeCodeSkills).toBe(true)
+      expect(flags.disableClaudeFolderSkills).toBe(true)
     }),
   )
 })

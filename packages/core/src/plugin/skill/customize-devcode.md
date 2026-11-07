@@ -434,9 +434,9 @@ When a user's config is broken and DeV won't start, these env vars help:
   inject inline JSON as a final local-scope merge.
 - `DEV_DISABLE_DEFAULT_PLUGINS=1`: skip default plugins.
 - `DEV_PURE=1`: skip external plugins entirely.
-- `DEV_DISABLE_EXTERNAL_SKILLS=1`,
-  `DEV_DISABLE_CLAUDE_CODE_SKILLS=1`: skip the external skill scans under
-  `~/.claude/` and `~/.agents/`.
+- `DEV_DISABLE_EXTERNAL_SKILLS=1`: skip the external skill scans under
+  `~/.claude/` and `~/.agents/`; `DEV_DISABLE_CLAUDE_FOLDER=1` skips only
+  `.claude/` folders and `CLAUDE.md` files.
 
 ## When proposing edits
 

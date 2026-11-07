@@ -240,7 +240,7 @@ describe("Instruction.system", () => {
     }),
   )
 
-  it.live("skips project and global CLAUDE.md when Claude Code prompt is disabled", () =>
+  it.live("skips project and global CLAUDE.md when reading them is turned off", () =>
     Effect.gen(function* () {
       const globalTmp = yield* tmpWithFiles({ ".claude/CLAUDE.md": "# Global Claude" })
       const projectTmp = yield* tmpWithFiles({ "CLAUDE.md": "# Project Claude" })
@@ -253,7 +253,7 @@ describe("Instruction.system", () => {
         expect(yield* svc.system()).toEqual([])
       }).pipe(
         provideInstance(projectTmp),
-        provideInstruction({ home: globalTmp, config: globalTmp }, { disableClaudeCodePrompt: true }),
+        provideInstruction({ home: globalTmp, config: globalTmp }, { disableClaudeMd: true }),
       )
     }),
   )

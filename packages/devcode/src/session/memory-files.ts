@@ -1,4 +1,4 @@
-// Two ways to organise project memory, as in Claude Code:
+// Two ways to organise project memory:
 // - `@path` lines in DEV.md (or AGENTS.md, CLAUDE.md, a rule) pull another file in, relative to the file
 //   that names it, up to four levels deep.
 // - Rule files in .dev/rules/ (or .claude/rules/): without `paths:` frontmatter they load every

@@ -4,21 +4,21 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 
 ## 1.0.17 (2026-11-07)
 
-- Your Claude Code skills work in DeV as they do in Claude Code. DeV now also reads skills from `CLAUDE_CONFIG_DIR` (not only `~/.claude`) and from the Claude Code plugins you have installed and enabled, named `plugin:skill` (for example `/cloudflare:wrangler`).
+- Skills you already have in a `.claude` folder work fully in DeV. DeV now also reads skills from `CLAUDE_CONFIG_DIR` (not only `~/.claude`) and from the plugins installed and enabled there, named `plugin:skill` (for example `/cloudflare:wrangler`).
 - Skills are in the `/` menu, with their argument hint.
 - Skill placeholders are filled in: `${CLAUDE_SKILL_DIR}`, `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_PLUGIN_DATA}`, `${CLAUDE_PROJECT_DIR}` and `${CLAUDE_SESSION_ID}`, and arguments as `$0`, `$1`, `$ARGUMENTS[N]`, `$ARGUMENTS` or named ones. A `$N` that no argument fills is left alone, so shell snippets in a skill still work.
 - Skill options: `user-invocable: false` keeps a skill out of the menu, `disable-model-invocation: true` means only you can start it, and `context: fork` runs it in a subagent (`agent:` picks which).
 
 ## 1.0.16 (2026-11-07)
 
-- DeV Auto (free) reads your images, PDFs, audio and video. A message with an attachment goes to a free model that can read it, for example a vision model on NVIDIA's or Google's free tier, instead of one that says it can't see images. If none of your free providers has such a model, DeV says so and suggests connecting Google with `/connect`.
+- DeV Auto (free) reads your images, PDFs, audio and video. A message with an attachment goes to a free model that can read it, such as a vision model from one of your free providers, instead of one that says it can't see images. If none of your free providers has such a model, DeV says so and suggests connecting one with `/connect`.
 - You can see which model DeV Auto picked. Each reply is labelled "Auto → model name", and the line under the prompt shows the model that answered last. While DeV Auto switches models, for example after a rate limit, it says which one it's trying.
-- Long tasks remember what you asked. When a conversation is compacted, everything you wrote is kept word for word after the summary, as Claude Code does, so an instruction like "at the end, tell me X" survives any number of compactions.
+- Long tasks remember what you asked. When a conversation is compacted, everything you wrote is kept word for word after the summary, so an instruction like "at the end, tell me X" survives any number of compactions.
 - Several DeV sessions at once (two terminals, or `devcode run` beside the TUI) no longer fail with "database is locked". Writes now wait their turn instead of failing when another session wrote at the same moment.
 
 ## 1.0.15 (2026-11-07)
 
-- DeV works on your machine like your own terminal again. The OS sandbox is now off by default, as in Claude Code, so `gh`, cloud CLIs and `curl` use your logins and reach any site. Turn the sandbox on with `"sandbox": { "enabled": true }` in `dev.json`.
+- DeV works on your machine like your own terminal again. The OS sandbox is now off by default, so `gh`, cloud CLIs and `curl` use your logins and reach any site. Turn the sandbox on with `"sandbox": { "enabled": true }` in `dev.json`.
 - Auto mode no longer refuses a command just because it runs outside the sandbox. It judges the command itself: reading your repos goes ahead, deleting your home folder doesn't.
 - When Auto mode refuses something and DeV really needs it, DeV tries again and you get the normal permission dialog, where Allow once and Allow always work. Before, DeV asked with a question whose answer couldn't approve anything, so it got stuck.
 - Web fetches try again after a network hiccup (or a 429 or 5xx answer) instead of reporting the site as unreachable.
@@ -27,9 +27,9 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 
 ## 1.0.14 (2026-11-06)
 
-- Subagents can work in a git worktree of their own, as in Claude Code: put `isolation: worktree` in an agent's file, or DeV asks for it when it hands off a task. The worktree is removed afterwards if the subagent changed nothing; otherwise DeV is told its path and branch, to review and merge. The subagent gets the same settings, agents and AGENTS.md as the conversation that started it, including ones not committed yet.
+- Subagents can work in a git worktree of their own: put `isolation: worktree` in an agent's file, or DeV asks for it when it hands off a task. The worktree is removed afterwards if the subagent changed nothing; otherwise DeV is told its path and branch, to review and merge. The subagent gets the same settings, agents and AGENTS.md as the conversation that started it, including ones not committed yet.
 - `devcode run` answers permission requests from subagents working in their own worktree.
-- Idle compaction, as in Claude Code: a conversation of 100k tokens or more that you leave for 55 minutes is compacted before the prompt cache expires, so your next message sends a summary instead of the whole conversation. Turn it off with `"compaction": { "idle": false }`; `DEV_IDLE_COMPACT_MINUTES` and `DEV_IDLE_COMPACT_MIN_TOKENS` change when it happens.
+- Idle compaction: a conversation of 100k tokens or more that you leave for 55 minutes is compacted before the prompt cache expires, so your next message sends a summary instead of the whole conversation. Turn it off with `"compaction": { "idle": false }`; `DEV_IDLE_COMPACT_MINUTES` and `DEV_IDLE_COMPACT_MIN_TOKENS` change when it happens.
 
 ## 1.0.13 (2026-11-06)
 
@@ -38,7 +38,7 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 
 ## 1.0.12 (2026-11-06)
 
-- `/permissions`, as in Claude Code: your mode, what Auto mode refused this session, and your allow, ask and never-allowed rules. Press Enter on a refusal to allow it from now on, change a rule, or add one such as `bash npm publish*`. Rules apply at once, without stopping work in progress, and are saved to `~/.config/dev/dev.json`.
+- `/permissions`: your mode, what Auto mode refused this session, and your allow, ask and never-allowed rules. Press Enter on a refusal to allow it from now on, change a rule, or add one such as `bash npm publish*`. Rules apply at once, without stopping work in progress, and are saved to `~/.config/dev/dev.json`.
 - A rule that names a risky command, such as `"git push --force*": "allow"`, now lets it run. Before, risky commands asked, or were refused in Auto mode, whatever your rules said.
 - Code intelligence is on by default: DeV can go to a definition, find references and see a symbol's type through the project's language server. Set `DEV_EXPERIMENTAL_LSP_TOOL=false` to turn it off.
 - `/add-dir` lets DeV read and edit another folder, for now or always. Auto mode then works there instead of refusing.
@@ -96,7 +96,7 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 - Web search works. It had been switched off since the rename, so DeV could only fetch pages it already knew the address of. It now uses Exa or Parallel, both free with no key, and falls back to the other when one fails.
 - Research is thorough: DeV searches several times and site by site, reads the pages that matter, and answers with a table of direct links and a list of what it could not confirm. On "hackathons in Hyderabad or online, 2 to 10 November" it went from no answer in seven minutes to twelve searches across eight sites with sources.
 - Pages built as JavaScript apps, such as Unstop and Hack2skill, are read through a browser-rendering reader when a plain fetch finds no text.
-- Skills written for Claude Code can start its `general-purpose` and `Explore` subagents.
+- Skills written for other agents can start their `general-purpose` and `Explore` subagents.
 
 ## 1.0.5 (2026-11-02)
 

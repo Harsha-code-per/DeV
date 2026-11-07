@@ -284,7 +284,7 @@ describe("tool.task", () => {
     }),
   )
 
-  it.instance("execute accepts Claude Code's subagent names", () =>
+  it.instance("execute accepts the common subagent names (general-purpose, Explore)", () =>
     Effect.gen(function* () {
       const { chat, assistant } = yield* seed()
       const tool = yield* TaskTool

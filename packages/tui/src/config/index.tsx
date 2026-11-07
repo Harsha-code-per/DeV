@@ -50,7 +50,7 @@ export const Attention = Schema.Struct({
   sounds: Schema.optional(AttentionSounds),
 }).annotate({ description: "Attention notification and sound settings" })
 
-// As in Claude Code: a command whose first line of output is shown under the prompt.
+// A command whose first line of output is shown under the prompt.
 export const StatusLine = Schema.Struct({
   command: Schema.String.annotate({
     description: "Shell command; gets {session_id, cwd, model, cost} as JSON on stdin and prints one line",

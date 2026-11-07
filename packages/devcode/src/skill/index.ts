@@ -39,7 +39,7 @@ export const Info = Schema.Struct({
   description: Schema.optional(Schema.String),
   location: Schema.String,
   content: Schema.String,
-  // Claude Code's SKILL.md options (code.claude.com/docs/en/skills), so its skills behave the same in DeV.
+  // Options from the common SKILL.md format, so skills written for other agents behave the same in DeV.
   /** Shown while typing the slash command, e.g. "[issue-number]". */
   argumentHint: Schema.optional(Schema.String),
   /** Names for positional arguments, used as $name. */
@@ -50,7 +50,7 @@ export const Info = Schema.Struct({
   modelInvocable: Schema.optional(Schema.Boolean),
   /** "context: fork": run in a subagent of this type. */
   fork: Schema.optional(Schema.String),
-  /** The Claude Code plugin it came from; its folder is ${CLAUDE_PLUGIN_ROOT}. */
+  /** The installed plugin it came from; its folder is ${CLAUDE_PLUGIN_ROOT}. */
   plugin: Schema.optional(Schema.Struct({ name: Schema.String, root: Schema.String, data: Schema.String })),
 })
 export type Info = Schema.Schema.Type<typeof Info>
@@ -144,8 +144,8 @@ const add = Effect.fnUntraced(function* (
   if (!isSkillFrontmatter(md.data)) return
   const data = md.data as Record<string, unknown>
   const plugin = plugins.find((item) => match.startsWith(item.root + path.sep))
-  // Claude Code names plugin skills plugin:skill, which is also how other skills refer to them.
-  // Its folder gives the second half, as in Claude Code's own list ("Agent Cost Report" is agent-cost-report).
+  // Plugin skills are named plugin:skill, which is also how other skills refer to them.
+  // Its folder gives the second half ("Agent Cost Report" in agent-cost-report/ is plugin:agent-cost-report).
   const name = plugin ? `${plugin.name}:${path.basename(path.dirname(match))}` : md.data.name
 
   if (state.skills[name]) {
@@ -213,7 +213,7 @@ const discoverSkills = Effect.fnUntraced(function* (
   fsys: FSUtil.Interface,
   global: Global.Interface,
   disableExternalSkills: boolean,
-  disableClaudeCodeSkills: boolean,
+  disableClaudeFolderSkills: boolean,
   directory: string,
   worktree: string,
 ) {
@@ -222,18 +222,18 @@ const discoverSkills = Effect.fnUntraced(function* (
   const externalDirs: string[] = []
   const plugins: Plugin[] = []
   if (!disableExternalSkills) {
-    if (!disableClaudeCodeSkills) externalDirs.push(CLAUDE_EXTERNAL_DIR)
+    if (!disableClaudeFolderSkills) externalDirs.push(CLAUDE_EXTERNAL_DIR)
     externalDirs.push(AGENTS_EXTERNAL_DIR)
 
-    // Claude Code's own folder moves with CLAUDE_CONFIG_DIR; ~/.claude is still read too.
-    const claude = disableClaudeCodeSkills ? [] : claudeConfigDirs(global.home)
+    // Skills already in a ~/.claude folder (moved by CLAUDE_CONFIG_DIR) are picked up too.
+    const claude = disableClaudeFolderSkills ? [] : claudeConfigDirs(global.home)
     const roots = [...new Set([...externalDirs.map((dir) => path.join(global.home, dir)), ...claude.slice(1)])]
     for (const root of roots) {
       if (!(yield* fsys.isDir(root))) continue
       yield* scan(state, root, EXTERNAL_SKILL_PATTERN, { dot: true, scope: "global" })
     }
 
-    // Skills from the Claude Code plugins the person has installed and enabled, as Claude Code loads them.
+    // Skills from plugins already installed and enabled in that folder.
     for (const root of claude) {
       for (const plugin of yield* Effect.promise(() => claudePlugins(root, directory))) {
         if (plugins.some((item) => item.root === plugin.root)) continue
@@ -282,13 +282,13 @@ const discoverSkills = Effect.fnUntraced(function* (
   }
 })
 
-/** Claude Code's config folders: ~/.claude, then CLAUDE_CONFIG_DIR when it points elsewhere. */
+/** Existing ~/.claude config folders: ~/.claude, then CLAUDE_CONFIG_DIR when it points elsewhere. */
 function claudeConfigDirs(home: string) {
   const own = process.env.CLAUDE_CONFIG_DIR?.replace(/^~(?=\/|$)/, home)
   return [...new Set([path.join(home, CLAUDE_EXTERNAL_DIR), ...(own ? [path.resolve(own)] : [])])]
 }
 
-/** Enabled Claude Code plugins in a config folder, from installed_plugins.json and settings.json. */
+/** Enabled plugins in such a folder, from installed_plugins.json and settings.json. */
 async function claudePlugins(root: string, directory: string): Promise<Plugin[]> {
   const read = (file: string) =>
     Bun.file(path.join(root, file))
@@ -322,7 +322,7 @@ const loadSkills = Effect.fnUntraced(function* (
     concurrency: "unbounded",
     discard: true,
   })
-  // DeV ships some plugins (superpowers, ponytail) itself; Claude Code's copy of the same skill would repeat it.
+  // DeV ships some plugins (superpowers, ponytail) itself; another copy of the same skill would repeat it.
   for (const skill of Object.values(state.skills))
     if (skill.plugin && state.skills[skill.name.slice(skill.plugin.name.length + 1)]) delete state.skills[skill.name]
 
@@ -348,7 +348,7 @@ const layer = Layer.effect(
           fsys,
           global,
           flags.disableExternalSkills,
-          flags.disableClaudeCodeSkills,
+          flags.disableClaudeFolderSkills,
           ctx.directory,
           ctx.worktree,
         )
@@ -405,9 +405,9 @@ const layer = Layer.effect(
 )
 
 /**
- * A skill's text with Claude Code's placeholders filled in: its folders, the project and session, and the
+ * A skill's text with its placeholders filled in: its folders, the project and session, and the
  * arguments typed after /skill-name (0-based $0 / $ARGUMENTS[0], named $name, all of them as $ARGUMENTS).
- * As in Claude Code, a $N no argument fills stays as written, so shell snippets like awk '{print $1}' survive.
+ * A $N no argument fills stays as written, so shell snippets like awk '{print $1}' survive.
  */
 export function render(skill: Info, input: { project: string; sessionID?: string; arguments?: string }) {
   const dir = skill.location === "<built-in>" ? undefined : path.dirname(skill.location)

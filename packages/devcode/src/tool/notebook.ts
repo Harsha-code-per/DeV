@@ -9,7 +9,7 @@ import { FSUtil } from "@dev-ai/core/fs-util"
 import { InstanceState } from "@/effect/instance-state"
 import { assertExternalDirectoryEffect } from "./external-directory"
 
-// Jupyter notebooks (.ipynb), as in Claude Code: read shows cells with their ids and outputs, notebook_edit
+// Jupyter notebooks (.ipynb): read shows cells with their ids and outputs, notebook_edit
 // replaces, inserts or deletes one cell. Cells without an id (nbformat before 4.5) are addressed as "cell-<index>".
 
 type Cell = { id?: string; cell_type: string; source: string | string[]; outputs?: Output[]; execution_count?: unknown }
