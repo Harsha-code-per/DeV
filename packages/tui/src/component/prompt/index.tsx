@@ -266,7 +266,9 @@ export function Prompt(props: PromptProps) {
       (m): m is AssistantMessage => m.role === "assistant" && m.served !== undefined,
     )?.served
     if (!served) return undefined
-    return sync.data.provider.find((item) => item.id === served.providerID)?.models[served.modelID]?.name ?? served.modelID
+    return (
+      sync.data.provider.find((item) => item.id === served.providerID)?.models[served.modelID]?.name ?? served.modelID
+    )
   })
 
   const lastUserMessage = createMemo(() => {
@@ -1610,7 +1612,9 @@ export function Prompt(props: PromptProps) {
                       </Show>
                       <Show when={store.mode === "normal" && local.permission.mode === "goal"}>
                         <text fg={fadeColor(theme.primary, agentMetaAlpha())}>
-                          {goal()?.status === "active" ? "goal · working until it's met" : "goal · say what should be true"}
+                          {goal()?.status === "active"
+                            ? "goal · working until it's met"
+                            : "goal · say what should be true"}
                         </text>
                       </Show>
                       <Show when={store.mode === "normal"}>
@@ -1631,7 +1635,10 @@ export function Prompt(props: PromptProps) {
                             }
                           >
                             {(name) => (
-                              <text wrapMode="none" fg={fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}>
+                              <text
+                                wrapMode="none"
+                                fg={fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}
+                              >
                                 Auto → {name()}
                               </text>
                             )}
