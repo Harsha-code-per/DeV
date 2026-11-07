@@ -4,6 +4,9 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 
 ## 1.0.16 (2026-11-07)
 
+- DeV Auto (free) reads your images, PDFs, audio and video. A message with an attachment goes to a free model that can read it, for example a vision model on NVIDIA's or Google's free tier, instead of one that says it can't see images. If none of your free providers has such a model, DeV says so and suggests connecting Google with `/connect`.
+- You can see which model DeV Auto picked. Each reply is labelled "Auto → model name", and the line under the prompt shows the model that answered last. While DeV Auto switches models, for example after a rate limit, it says which one it's trying.
+- Long tasks remember what you asked. When a conversation is compacted, everything you wrote is kept word for word after the summary, as Claude Code does, so an instruction like "at the end, tell me X" survives any number of compactions.
 - Several DeV sessions at once (two terminals, or `devcode run` beside the TUI) no longer fail with "database is locked". Writes now wait their turn instead of failing when another session wrote at the same moment.
 
 ## 1.0.15 (2026-11-07)
