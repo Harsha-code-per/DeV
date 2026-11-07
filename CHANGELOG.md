@@ -11,9 +11,6 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 - `devcode plugins` does the same from the command line: `marketplace add|list|update|remove`, `search`, `install`, `uninstall`, `enable`, `disable`, `update` and `list`, each with `--scope user|project|local`.
 - A plugin agent or command that names a model by a short alias instead of `provider/model` now runs on your session's model instead of failing.
 - `DEV_DISABLE_CLAUDE_FOLDER=1` turns off reading `CLAUDE.md` files and `.claude/` folders. The older variable names still work.
-
-## 1.0.17 (2026-11-07)
-
 - Skills you already have in a `.claude` folder work fully in DeV. DeV now also reads skills from `CLAUDE_CONFIG_DIR` (not only `~/.claude`) and from the plugins installed and enabled there, named `plugin:skill` (for example `/cloudflare:wrangler`).
 - Skills are in the `/` menu, with their argument hint.
 - Skill placeholders are filled in: `${CLAUDE_SKILL_DIR}`, `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_PLUGIN_DATA}`, `${CLAUDE_PROJECT_DIR}` and `${CLAUDE_SESSION_ID}`, and arguments as `$0`, `$1`, `$ARGUMENTS[N]`, `$ARGUMENTS` or named ones. A `$N` that no argument fills is left alone, so shell snippets in a skill still work.

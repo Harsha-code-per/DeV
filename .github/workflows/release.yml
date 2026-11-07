@@ -47,8 +47,11 @@ jobs:
         run: |
           prerelease=""
           case "$DEV_VERSION" in *-*) prerelease="--prerelease" ;; esac
+          # The notes are this version's CHANGELOG section, written for users, not the commit list.
+          awk -v v="$DEV_VERSION" '$0 ~ "^## " v "( |$)" {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "See CHANGELOG.md." > notes.md
           gh release create "$GITHUB_REF_NAME" dist/release/* --repo "$GITHUB_REPOSITORY" \
-            --title "$GITHUB_REF_NAME" --generate-notes --verify-tag $prerelease
+            --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag $prerelease
 
       # A release made with the workflow token starts no other workflow by itself.
       - name: Test the install on clean machines
