@@ -2,6 +2,13 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.17 (2026-11-07)
+
+- Your Claude Code skills work in DeV as they do in Claude Code. DeV now also reads skills from `CLAUDE_CONFIG_DIR` (not only `~/.claude`) and from the Claude Code plugins you have installed and enabled, named `plugin:skill` (for example `/cloudflare:wrangler`).
+- Skills are in the `/` menu, with their argument hint.
+- Skill placeholders are filled in: `${CLAUDE_SKILL_DIR}`, `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_PLUGIN_DATA}`, `${CLAUDE_PROJECT_DIR}` and `${CLAUDE_SESSION_ID}`, and arguments as `$0`, `$1`, `$ARGUMENTS[N]`, `$ARGUMENTS` or named ones. A `$N` that no argument fills is left alone, so shell snippets in a skill still work.
+- Skill options: `user-invocable: false` keeps a skill out of the menu, `disable-model-invocation: true` means only you can start it, and `context: fork` runs it in a subagent (`agent:` picks which).
+
 ## 1.0.16 (2026-11-07)
 
 - DeV Auto (free) reads your images, PDFs, audio and video. A message with an attachment goes to a free model that can read it, for example a vision model on NVIDIA's or Google's free tier, instead of one that says it can't see images. If none of your free providers has such a model, DeV says so and suggests connecting Google with `/connect`.
