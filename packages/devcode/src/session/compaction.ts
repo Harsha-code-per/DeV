@@ -94,6 +94,55 @@ function summaryText(message: SessionV1.WithParts) {
   return text || undefined
 }
 
+const SAID_HEADING = "## What the person wrote (verbatim, oldest first)"
+// ponytail: the newest 40 messages, each cut at 3000 characters; a long pasted log keeps its start.
+const SAID_MAX = 40
+const SAID_CHARS = 3000
+
+function userText(message: SessionV1.WithParts) {
+  return message.parts
+    .filter((part): part is SessionV1.TextPart => part.type === "text" && !part.synthetic && !part.ignored)
+    .map((part) => part.text.trim())
+    .filter(Boolean)
+    .join("\n")
+}
+
+/** The person's messages an earlier summary kept word for word. */
+function verbatim(summary: string | undefined) {
+  const at = summary?.lastIndexOf(SAID_HEADING) ?? -1
+  if (!summary || at < 0) return []
+  // Each message is a Markdown quote; an empty line separates messages (blank lines inside one are ">").
+  return summary
+    .slice(at + SAID_HEADING.length)
+    .split("\n\n")
+    .filter((block) => block.startsWith(">"))
+    .map((block) =>
+      block
+        .split("\n")
+        .map((line) => line.replace(/^> ?/, ""))
+        .join("\n"),
+    )
+}
+
+function withoutSaid(summary: string | undefined) {
+  const at = summary?.indexOf(SAID_HEADING) ?? -1
+  return summary && at >= 0 ? summary.slice(0, at).trim() : summary
+}
+
+function saidSection(said: string[]) {
+  const kept = said.slice(-SAID_MAX)
+  return [
+    SAID_HEADING,
+    ...(said.length > kept.length ? [`(${said.length - kept.length} earlier messages left out)`] : []),
+    ...kept.map((text) =>
+      (text.length > SAID_CHARS ? `${text.slice(0, SAID_CHARS)}… [shortened]` : text)
+        .split("\n")
+        .map((line) => (line ? `> ${line}` : ">"))
+        .join("\n"),
+    ),
+  ].join("\n\n")
+}
+
 function completedCompactions(messages: SessionV1.WithParts[]) {
   const users = new Map<MessageID, number>()
   for (let i = 0; i < messages.length; i++) {
@@ -402,9 +451,15 @@ const layer = Layer.effect(
         compacting.prompt ??
         [
           buildPrompt({
-            previousSummary: from >= 0 ? undefined : previousSummary,
+            previousSummary: from >= 0 ? undefined : withoutSaid(previousSummary),
             context: [conversation],
           }),
+          // DeV appends these itself after the summary; shown here so the summary is written knowing them.
+          ...(from < 0 && verbatim(previousSummary).length > 0
+            ? [
+                `Earlier messages from the person, which DeV keeps word for word after your summary (don't copy them into it):\n${verbatim(previousSummary).join("\n\n")}`,
+              ]
+            : []),
           ...(compactionPart?.focus ? [`The person asked this summary to focus on: ${compactionPart.focus}`] : []),
           ...compacting.context,
         ]
@@ -478,6 +533,22 @@ const layer = Layer.effect(
         yield* session.updateMessage(processor.message)
         return "stop"
       }
+
+      // What the person wrote goes into the summary word for word, as Claude Code's summaries keep it, and in
+      // code rather than by asking the model: an instruction like "at the end, tell me X" doesn't survive being
+      // summarized again at every compaction. Earlier summaries' copies carry forward.
+      const said = [
+        ...(from >= 0 ? [] : verbatim(previousSummary)),
+        ...selected.head.flatMap((message) => (message.info.role === "user" ? [userText(message)] : [])),
+      ].filter(Boolean)
+      if (said.length > 0)
+        yield* session.updatePart({
+          id: PartID.ascending(),
+          messageID: msg.id,
+          sessionID: input.sessionID,
+          type: "text",
+          text: saidSection(said),
+        })
 
       if (compactionPart && selected.tail_start_id && compactionPart.tail_start_id !== selected.tail_start_id) {
         yield* session.updatePart({

@@ -1674,6 +1674,57 @@ describe("session.compaction.process", () => {
     }).pipe(withCompaction({ llm: stub.llmLayer, config: cfg({ tail_turns: 0 }) }))
   })
 
+  itCompaction.instance("what the person wrote stays word for word across repeated compactions", () => {
+    const stub = llm()
+    // The model's summaries drop the instruction, as a weak summary would.
+    stub.push(reply("## Objective\n- read files"))
+    let second: LLM.StreamInput["messages"] = []
+    stub.push(
+      reply("## Objective\n- write ARCH.md", (input) => {
+        second = input.messages
+      }),
+    )
+
+    return Effect.gen(function* () {
+      const ssn = yield* SessionNs.Service
+      const session = yield* ssn.create({})
+      yield* createUserMessage(session.id, "Remember the code word saffron-42.\n\nTell it to me at the very end.")
+      yield* createCompactionMarker(session.id)
+      let msgs = yield* ssn.messages({ sessionID: session.id })
+      yield* SessionCompaction.use.process({
+        parentID: msgs.at(-1)!.info.id,
+        messages: msgs,
+        sessionID: session.id,
+        auto: false,
+      })
+
+      yield* createUserMessage(session.id, "now write ARCH.md")
+      yield* createCompactionMarker(session.id)
+      msgs = MessageV2.filterCompacted(yield* MessageV2.stream(session.id))
+      yield* SessionCompaction.use.process({
+        parentID: msgs.at(-1)!.info.id,
+        messages: msgs,
+        sessionID: session.id,
+        auto: false,
+      })
+
+      const summaries = MessageV2.filterCompacted(yield* MessageV2.stream(session.id)).filter(
+        (message) => message.info.role === "assistant" && message.info.summary,
+      )
+      const latest = summaries
+        .at(-1)!
+        .parts.flatMap((part) => (part.type === "text" ? [part.text] : []))
+        .join("\n")
+      expect(latest).toContain("> Remember the code word saffron-42.\n>\n> Tell it to me at the very end.")
+      expect(latest).toContain("> now write ARCH.md")
+      // Carried once, not duplicated by the second compaction.
+      expect(latest.split("saffron-42").length - 1).toBe(1)
+      // The second summary was written knowing the instruction, but not asked to copy DeV's own section.
+      expect(JSON.stringify(second)).toContain("saffron-42")
+      expect(JSON.stringify(second)).not.toContain("What the person wrote")
+    }).pipe(withCompaction({ llm: stub.llmLayer, config: cfg({ tail_turns: 0 }) }))
+  })
+
   itCompaction.instance("keeps recent pre-compaction turns across repeated compactions", () => {
     const stub = llm()
     stub.push(reply("summary one"))
