@@ -641,9 +641,9 @@ export const ShellTool = Tool.define(
                   )
                   const scan = yield* collect(tree.rootNode, cwd, ps, shell, instanceCtx)
                   if (!containsPath(cwd, instanceCtx)) scan.dirs.add(cwd)
-                  // DeV: the command runs inside the OS sandbox where the platform supports it, and then
-                  // needs no approval (deny rules still apply). It may write to the project and to any
-                  // outside directory the user approves for it. Leaving the sandbox always asks the user.
+                  // DeV: with the sandbox turned on (dev.json "sandbox.enabled", off by default) the command runs
+                  // inside it and then needs no approval (deny rules still apply). It may write to the project
+                  // and to any outside directory the user approves for it. Leaving the sandbox asks the user.
                   const root = instanceCtx.worktree === "/" ? instanceCtx.directory : instanceCtx.worktree
                   const wrapped =
                     ps || params.dangerouslyDisableSandbox
@@ -651,7 +651,7 @@ export const ShellTool = Tool.define(
                       : yield* Effect.promise(() =>
                           Sandbox.wrap(params.command, [root, ...scan.dirs], shell, cfg.sandbox),
                         )
-                  const escape = params.dangerouslyDisableSandbox && Sandbox.supported() && !ps
+                  const escape = params.dangerouslyDisableSandbox && Sandbox.on(cfg.sandbox) && !ps
                   // The sandbox still reaches git hosts and registries, so a force push or publish asks first,
                   // and so does anything the person ruled out in chat ("don't push"), which auto mode refuses.
                   const limit = statedLimit(

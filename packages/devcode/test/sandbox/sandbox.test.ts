@@ -14,7 +14,7 @@ afterAll(() => fs.rm(outside, { force: true }))
 
 async function sh(command: string, root: string, env?: Record<string, string>) {
   process.env["DEV_DISABLE_SANDBOX"] = "false"
-  const wrapped = await Sandbox.wrap(command, [root], "/bin/bash").finally(() => {
+  const wrapped = await Sandbox.wrap(command, [root], "/bin/bash", { enabled: true }).finally(() => {
     process.env["DEV_DISABLE_SANDBOX"] = "true"
   })
   expect(wrapped).toBeDefined()
@@ -45,7 +45,7 @@ describe.skipIf(!available)("shell sandbox", () => {
     await Bun.write(
       script,
       `import { Sandbox } from ${JSON.stringify(path.resolve(import.meta.dir, "../../src/sandbox"))}
-await Sandbox.wrap("true", [${JSON.stringify(dir.path)}], "/bin/bash")
+await Sandbox.wrap("true", [${JSON.stringify(dir.path)}], "/bin/bash", { enabled: true })
 console.log("ready")
 setInterval(() => {}, 1000)
 `,
@@ -102,4 +102,16 @@ test("dev.json sandbox settings add hosts and paths and unhide chosen credential
   expect(custom.network.allowedDomains).toContain("npm.mycompany.com")
   expect(custom.network.allowedDomains).toContain("registry.npmjs.org")
   expect(custom.filesystem.allowWrite).toContain(path.join(os.homedir(), "shared"))
+})
+
+test("the sandbox is off unless dev.json turns it on, as in Claude Code", async () => {
+  process.env["DEV_DISABLE_SANDBOX"] = "false"
+  try {
+    expect(await Sandbox.wrap("true", ["/work/app"], "/bin/bash")).toBeUndefined()
+    expect(await Sandbox.wrap("true", ["/work/app"], "/bin/bash", { enabled: false })).toBeUndefined()
+    expect(Sandbox.on()).toBe(false)
+    expect(Sandbox.on({ enabled: true })).toBe(Sandbox.supported())
+  } finally {
+    process.env["DEV_DISABLE_SANDBOX"] = "true"
+  }
 })

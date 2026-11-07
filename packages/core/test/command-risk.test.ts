@@ -23,7 +23,9 @@ test("auto mode still asks about destructive, irreversible or secret-touching ac
     "cat ~/.ssh/id_ed25519",
   ])
     expect(requestRisk(bash(command)), command).toBeDefined()
-  expect(requestRisk(bash("npm install", { sandbox: "escape" }))).toBe("runs outside the sandbox")
+  // Leaving the sandbox is judged by the command itself: reading the person's repos goes ahead, wiping home doesn't.
+  expect(requestRisk(bash("gh repo list --limit 500", { sandbox: "escape" }))).toBeUndefined()
+  expect(requestRisk(bash("rm -rf ~", { sandbox: "escape" }))).toBe("deletes a whole folder tree")
   expect(requestRisk({ permission: "edit", patterns: ["/p/.env"], metadata: { filepath: "/p/.env" } })).toBe(
     "touches a secrets file",
   )

@@ -92,7 +92,7 @@ devcode
 | **Subagents** | Focused helpers take on parts of a task, in parallel or in the background. Add `isolation: worktree` to an agent's file and it works in a git worktree of its own. |
 | **Rewind** | Go back to any earlier message and restore both the conversation and your files. |
 | **Project memory** | DeV keeps what it learns about your project in `DEV.md`, a file you can read and edit. |
-| **OS sandbox** | On Linux and macOS, shell commands can't read your SSH keys or cloud credentials. |
+| **OS sandbox** | Optional, as in Claude Code. Turn it on with `"sandbox": { "enabled": true }` and, on Linux and macOS, shell commands can't read your SSH keys or cloud credentials. Off by default, so commands use your logins (`gh`, cloud CLIs) and network like your own terminal. |
 | **Free model routing** | `auto/free` moves between the free models you've connected and learns which ones work for you. |
 | **Built to extend** | Skills, plugins, hooks, custom agents and MCP servers are all included. |
 
@@ -100,10 +100,10 @@ devcode
 
 | Mode | What happens |
 |---|---|
-| **Manual** | DeV asks before it edits files or does anything risky. Commands in its sandbox run without asking. |
+| **Manual** | DeV asks before it edits files or does anything risky. With the sandbox on, commands inside it run without asking. |
 | **Accept edits** | File edits go ahead, and everything else asks as usual. |
 | **Plan** | DeV writes a plan and changes nothing until you approve it. |
-| **Auto** | DeV never asks. Risky actions (deleting folders, force pushes, publishing, `sudo`, leaving the sandbox, writing outside the project, secrets files) are refused and DeV finds another way; after three refusals in a row, or twenty in a session, it asks you. To let one through, allow it in `/permissions`. |
+| **Auto** | DeV never asks. Risky actions (deleting folders, force pushes, publishing, `sudo`, writing outside the project, secrets files) are refused and DeV finds another way. If DeV really needs one and tries it again, you're asked, as you are after three refusals in a row or twenty in a session. To let one through from now on, allow it in `/permissions`. |
 | **Goal** | Auto, and DeV keeps working on your next message until it is true and a separate reviewer confirms it. Also `/goal <objective>`, or `devcode run --auto "/goal <objective>"` in scripts. An unfinished goal comes back when you continue the session. |
 
 Shift+Tab cycles them in that order, and a shell command's permission prompt can approve it and switch to Auto. Start in one with `--permission-mode manual|accept-edits|plan|auto|goal`, or `--auto`.

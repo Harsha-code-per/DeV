@@ -6,7 +6,7 @@ ${workdirSection}
 
 Use `${tmp}` for temporary work outside the workspace. This directory has already been created, already exists, and is pre-approved for external directory access.
 
-Commands run in a sandbox where the platform supports it: they write only to the workspace, temp folders and package caches, cannot read credentials (~/.ssh, cloud and git tokens), and reach only package registries and git hosts. Inside it they run without asking the user. When the task needs more (installing globally, writing elsewhere, another host, pushing with the user's credentials), run the command with `dangerouslyDisableSandbox: true`; the user is asked to approve it. Don't use it to get around a deny rule or a refusal.
+Commands run directly on the user's machine, with the user's own logins and network, so CLIs such as gh, cloud tools and curl work as they would in the user's terminal. If the user turned on DeV's sandbox, a command's output says it ran sandboxed: it writes only to the workspace, temp folders and package caches, cannot read credentials, and reaches only package registries and git hosts. When a sandboxed command failed because of that, run it again with `dangerouslyDisableSandbox: true`; the user is asked to approve it. Don't use it to get around a deny rule or a refusal.
 
 IMPORTANT: This tool is for terminal operations like git, npm, docker, etc. DO NOT use it for file operations (reading, writing, editing, searching, finding files) - use the specialized tools for this instead.
 

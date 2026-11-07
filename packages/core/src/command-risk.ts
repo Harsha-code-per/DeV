@@ -37,7 +37,8 @@ const SECRET_FILE = /(^|\/)(\.env(\.[\w-]+)?|id_[a-z0-9]+|[\w-]*credentials?[\w.
 
 /**
  * Why auto mode refuses this permission request, or undefined when it can go ahead: risky commands,
- * leaving the sandbox, writing outside the project or into .git, and touching secrets files.
+ * writing outside the project or into .git, and touching secrets files. A command that leaves the sandbox
+ * is judged like any other, as in Claude Code: running it on the person's machine is not a risk in itself.
  */
 export function requestRisk(request: {
   permission: string
@@ -45,7 +46,6 @@ export function requestRisk(request: {
   metadata?: Record<string, unknown>
 }) {
   const command = typeof request.metadata?.command === "string" ? request.metadata.command : undefined
-  if (request.metadata?.sandbox === "escape") return "runs outside the sandbox"
   // Set by the shell tool from statedLimit below, since only the server sees the whole conversation.
   if (typeof request.metadata?.limit === "string") return request.metadata.limit
   const risk = request.permission === "bash" && command ? commandRisk(command) : undefined

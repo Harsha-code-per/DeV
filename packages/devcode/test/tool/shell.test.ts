@@ -246,6 +246,22 @@ describe("tool.shell permissions", () => {
     }),
   )
 
+  each("with the sandbox off (the default) dangerouslyDisableSandbox is not an escape to approve", () =>
+    Effect.gen(function* () {
+      const tmp = yield* tmpdirScoped()
+      const before = process.env["DEV_DISABLE_SANDBOX"]
+      yield* runIn(
+        tmp,
+        Effect.gen(function* () {
+          process.env["DEV_DISABLE_SANDBOX"] = "false"
+          const requests: Array<Omit<PermissionV1.Request, "id" | "sessionID" | "tool">> = []
+          yield* run({ command: "echo hello", dangerouslyDisableSandbox: true }, capture(requests))
+          expect(requests.some((request) => request.metadata.sandbox === "escape")).toBe(false)
+        }),
+      ).pipe(Effect.ensuring(Effect.sync(() => (process.env["DEV_DISABLE_SANDBOX"] = before))))
+    }),
+  )
+
   each("asks for bash permission with correct pattern", () =>
     Effect.gen(function* () {
       const tmp = yield* tmpdirScoped()

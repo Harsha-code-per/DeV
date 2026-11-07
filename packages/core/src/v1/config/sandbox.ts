@@ -6,7 +6,8 @@ const Paths = Schema.optional(Schema.mutable(Schema.Array(Schema.String)))
 
 export const Info = Schema.Struct({
   enabled: Schema.optional(Schema.Boolean).annotate({
-    description: "Run shell commands in the OS sandbox (default true where supported: Linux and macOS)",
+    description:
+      "Run shell commands in the OS sandbox on Linux and macOS (default false). Confined commands write only to the project and temp folders, cannot read credentials and reach only package registries and git hosts",
   }),
   network: Schema.optional(
     Schema.Struct({

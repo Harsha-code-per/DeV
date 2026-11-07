@@ -10,10 +10,12 @@ import type { ConfigSandboxV1 } from "@dev-ai/core/v1/config/sandbox"
 
 const execFileAsync = promisify(execFile)
 
-// DeV runs every shell command inside Anthropic's sandbox-runtime (Apache-2.0), the OS-level sandbox
-// Claude Code uses: bubblewrap on Linux, Seatbelt on macOS. A command can write only to the project,
-// temp folders and package-manager caches, cannot read credentials, and reaches the network only
-// through an allowlist. Where the sandbox can't start, commands run unsandboxed and that is logged.
+// With `"sandbox": { "enabled": true }` in dev.json, DeV runs shell commands inside Anthropic's
+// sandbox-runtime (Apache-2.0), the OS-level sandbox Claude Code uses: bubblewrap on Linux, Seatbelt on
+// macOS. A command can write only to the project, temp folders and package-manager caches, cannot read
+// credentials, and reaches the network only through an allowlist. It is off by default, as in Claude
+// Code: confined commands can't use the person's logins (gh, cloud CLIs) or reach ordinary websites.
+// Where the sandbox can't start, commands run unsandboxed and that is logged.
 
 // ponytail: fixed allowlist; make it configurable (dev.json "sandbox") when someone needs more hosts.
 const NETWORK = [
@@ -67,6 +69,11 @@ export function supported() {
   return !Flag.DEV_DISABLE_SANDBOX && (process.platform === "linux" || process.platform === "darwin")
 }
 
+/** Whether shell commands run sandboxed: the person turned it on and this platform has one. */
+export function on(settings?: ConfigSandboxV1.Info) {
+  return settings?.enabled === true && supported()
+}
+
 /**
  * Settings for one command; `writable` is the project plus any outside directory approved for it, and
  * `settings` is the user's `sandbox` section in dev.json (extra hosts and paths, credentials to unhide).
@@ -98,7 +105,7 @@ let ready: Promise<boolean> | undefined
  * (unsupported platform, disabled, or the sandbox failed to start).
  */
 export async function wrap(command: string, writable: string[], shell?: string, settings?: ConfigSandboxV1.Info) {
-  if (!supported() || settings?.enabled === false) return undefined
+  if (!on(settings)) return undefined
   const { SandboxManager } = await import("@anthropic-ai/sandbox-runtime")
   ready ??= SandboxManager.initialize(config(writable, settings)).then(
     () => {

@@ -25,7 +25,7 @@ export function parameterSchema() {
     }),
     dangerouslyDisableSandbox: Schema.optional(Schema.Boolean).annotate({
       description:
-        "Run the command outside the sandbox. Only after a command failed because the sandbox blocked it (a write outside the project, a blocked host, a credential it needs); the user is asked to approve.",
+        "Run the command outside DeV's sandbox. Only after a command's output said it ran sandboxed and it failed because of that (a write outside the project, a blocked host, a credential it needs); the user is asked to approve.",
     }),
   })
 }

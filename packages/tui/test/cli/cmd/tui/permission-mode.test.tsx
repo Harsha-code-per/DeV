@@ -61,6 +61,10 @@ describe("permission modes", () => {
     const { app, permission } = await mount(true)
     expect(permission.mode).toBe("auto")
     expect(permission.decide(ask("bash", "bun test"))).toEqual({ reply: "once" })
+    // Leaving the sandbox is not risky in itself: reading the person's repos with their gh login goes ahead.
+    expect(
+      permission.decide({ ...ask("bash", "gh repo list --limit 500"), metadata: { command: "gh repo list", sandbox: "escape" } }),
+    ).toEqual({ reply: "once" })
     expect(permission.decide(ask("external_directory"))).toEqual({ reply: "once" })
     const risky = permission.decide(ask("bash", "git push --force"))
     expect(risky?.reply).toBe("reject")
@@ -68,25 +72,35 @@ describe("permission modes", () => {
     app.renderer.destroy()
   })
 
-  test("auto asks the person after repeated refusals instead of looping", async () => {
+  test("auto asks the person when DeV repeats a refused request, since it really needs it", async () => {
     const { app, permission } = await mount(true)
-    const push = ask("bash", "git push --force")
-    expect([1, 2, 3].map(() => permission.decide(push)?.reply)).toEqual(["reject", "reject", "reject"])
-    expect(permission.decide(push)).toBeUndefined()
-    expect(permission.decide(push)?.reply).toBe("reject")
+    const list = ask("bash", "git push --force origin main")
+    expect(permission.decide(list)?.reply).toBe("reject")
+    expect(permission.decide(list)).toBeUndefined()
+    expect(permission.decide(list)).toBeUndefined()
+    // Another session has refused nothing yet.
+    expect(permission.decide({ ...list, sessionID: "ses_2" })?.reply).toBe("reject")
+    app.renderer.destroy()
+  })
+
+  test("auto asks the person after 3 different refusals in a row instead of looping", async () => {
+    const { app, permission } = await mount(true)
+    const replies = ["a", "b", "c"].map((branch) => permission.decide(ask("bash", `git push --force origin ${branch}`))?.reply)
+    expect(replies).toEqual(["reject", "reject", "reject"])
+    expect(permission.decide(ask("bash", "git push --force origin d"))).toBeUndefined()
+    expect(permission.decide(ask("bash", "git push --force origin e"))?.reply).toBe("reject")
     app.renderer.destroy()
   })
 
   test("auto asks after 20 refusals in a session even with approvals between them", async () => {
     const { app, permission } = await mount(true)
-    const push = ask("bash", "git push --force")
     const replies = Array.from({ length: 20 }, (_, i) => {
-      const reply = permission.decide(push)?.reply
+      const reply = permission.decide(ask("bash", `git push --force origin b${i}`))?.reply
       if (i % 2 === 1) permission.decide(ask("bash", "ls"))
       return reply
     })
     expect(replies.every((reply) => reply === "reject")).toBe(true)
-    expect(permission.decide(push)).toBeUndefined()
+    expect(permission.decide(ask("bash", "git push --force origin last"))).toBeUndefined()
     app.renderer.destroy()
   })
 
@@ -104,9 +118,9 @@ describe("permission modes", () => {
     permission.decide(ask("bash", "npm publish"))
     permission.decide(ask("bash", "git push --force"))
     permission.decide(ask("bash", "ls"))
-    expect(permission.refused.map((item) => item.patterns[0])).toEqual(["git push --force", "npm publish"])
-    expect(permission.refused[0]?.always).toEqual(["git *"])
-    permission.forget(permission.refused[0]!)
+    expect(permission.refused.map((item) => item.patterns[0])).toEqual(["npm publish", "git push --force"])
+    expect(permission.refused[1]?.always).toEqual(["git *"])
+    permission.forget(permission.refused[1]!)
     expect(permission.refused.map((item) => item.patterns[0])).toEqual(["npm publish"])
     app.renderer.destroy()
   })
