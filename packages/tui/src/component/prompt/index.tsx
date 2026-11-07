@@ -331,7 +331,9 @@ export function Prompt(props: PromptProps) {
       last.tokens.input + last.tokens.output + last.tokens.reasoning + last.tokens.cache.read + last.tokens.cache.write
     if (tokens <= 0) return
 
-    const model = sync.data.provider.find((item) => item.id === last.providerID)?.models[last.modelID]
+    // For DeV Auto, the window of the free model that answered, not the router's nominal one.
+    const ref = last.served ?? last
+    const model = sync.data.provider.find((item) => item.id === ref.providerID)?.models[ref.modelID]
     const pct = model?.limit.context ? `${Math.round((tokens / model.limit.context) * 100)}%` : undefined
     const cost = session?.cost ?? 0
     return {
@@ -1614,15 +1616,25 @@ export function Prompt(props: PromptProps) {
                       <Show when={store.mode === "normal"}>
                         <box flexDirection="row" gap={1}>
                           <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>·</text>
-                          <text
-                            flexShrink={0}
-                            fg={fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}
+                          <Show
+                            when={routedTo()}
+                            fallback={
+                              <>
+                                <text
+                                  flexShrink={0}
+                                  fg={fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}
+                                >
+                                  {local.model.parsed().model}
+                                </text>
+                                <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>{currentProviderLabel()}</text>
+                              </>
+                            }
                           >
-                            {local.model.parsed().model}
-                          </text>
-                          <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>{currentProviderLabel()}</text>
-                          <Show when={routedTo()}>
-                            {(name) => <text fg={fadeColor(theme.text, modelMetaAlpha())}>→ {name()}</text>}
+                            {(name) => (
+                              <text wrapMode="none" fg={fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}>
+                                Auto → {name()}
+                              </text>
+                            )}
                           </Show>
                           <Show when={showVariant()}>
                             <text fg={fadeColor(theme.textMuted, variantMetaAlpha())}>·</text>
@@ -1818,7 +1830,10 @@ export function Prompt(props: PromptProps) {
               {props.hint ?? (
                 <Show when={props.sessionID} fallback={<text />}>
                   <box marginLeft={1}>
-                    <text fg={theme.textMuted}>{location()?.directory ?? paths.cwd}</text>
+                    {/* A long path keeps its end and never wraps under the usage beside it. */}
+                    <text fg={theme.textMuted} wrapMode="none">
+                      {Locale.truncateLeft(location()?.directory ?? paths.cwd, Math.floor(dimensions().width / 2))}
+                    </text>
                   </box>
                 </Show>
               )}
