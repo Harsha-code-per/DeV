@@ -39,6 +39,19 @@ export const Info = Schema.Struct({
   description: Schema.optional(Schema.String),
   location: Schema.String,
   content: Schema.String,
+  // Claude Code's SKILL.md options (code.claude.com/docs/en/skills), so its skills behave the same in DeV.
+  /** Shown while typing the slash command, e.g. "[issue-number]". */
+  argumentHint: Schema.optional(Schema.String),
+  /** Names for positional arguments, used as $name. */
+  arguments: Schema.optional(Schema.Array(Schema.String)),
+  /** false: only DeV may load it ("user-invocable: false"), so it's not in the slash menu. */
+  userInvocable: Schema.optional(Schema.Boolean),
+  /** false: only the person may start it ("disable-model-invocation: true"). */
+  modelInvocable: Schema.optional(Schema.Boolean),
+  /** "context: fork": run in a subagent of this type. */
+  fork: Schema.optional(Schema.String),
+  /** The Claude Code plugin it came from; its folder is ${CLAUDE_PLUGIN_ROOT}. */
+  plugin: Schema.optional(Schema.Struct({ name: Schema.String, root: Schema.String, data: Schema.String })),
 })
 export type Info = Schema.Schema.Type<typeof Info>
 
@@ -84,9 +97,12 @@ type State = {
   dirs: Set<string>
 }
 
+type Plugin = { name: string; root: string; data: string }
+
 type DiscoveryState = {
   matches: string[]
   dirs: string[]
+  plugins: Plugin[]
 }
 
 type ScanState = {
@@ -102,7 +118,12 @@ export interface Interface {
   readonly available: (agent?: Agent.Info) => Effect.Effect<Info[]>
 }
 
-const add = Effect.fnUntraced(function* (state: State, match: string, events: EventV2Bridge.Service["Service"]) {
+const add = Effect.fnUntraced(function* (
+  state: State,
+  match: string,
+  plugins: Plugin[],
+  events: EventV2Bridge.Service["Service"],
+) {
   const md = yield* Effect.tryPromise({
     try: () => ConfigMarkdown.parse(match),
     catch: (err) => err,
@@ -121,21 +142,37 @@ const add = Effect.fnUntraced(function* (state: State, match: string, events: Ev
   if (!md) return
 
   if (!isSkillFrontmatter(md.data)) return
+  const data = md.data as Record<string, unknown>
+  const plugin = plugins.find((item) => match.startsWith(item.root + path.sep))
+  // Claude Code names plugin skills plugin:skill, which is also how other skills refer to them.
+  // Its folder gives the second half, as in Claude Code's own list ("Agent Cost Report" is agent-cost-report).
+  const name = plugin ? `${plugin.name}:${path.basename(path.dirname(match))}` : md.data.name
 
-  if (state.skills[md.data.name]) {
+  if (state.skills[name]) {
     yield* Effect.logWarning("duplicate skill name", {
-      name: md.data.name,
-      existing: state.skills[md.data.name].location,
+      name,
+      existing: state.skills[name].location,
       duplicate: match,
     })
   }
 
+  const text = (key: string) => (typeof data[key] === "string" ? (data[key] as string) : undefined)
+  const description = [md.data.description, text("when_to_use")].filter(Boolean).join(" ") || undefined
+  const named = Array.isArray(data.arguments)
+    ? data.arguments.filter((item): item is string => typeof item === "string")
+    : text("arguments")?.split(/\s+/).filter(Boolean)
   state.dirs.add(path.dirname(match))
-  state.skills[md.data.name] = {
-    name: md.data.name,
-    description: md.data.description,
+  state.skills[name] = {
+    name,
+    description,
     location: match,
     content: md.content,
+    argumentHint: text("argument-hint"),
+    arguments: named,
+    userInvocable: data["user-invocable"] === false ? false : undefined,
+    modelInvocable: data["disable-model-invocation"] === true ? false : undefined,
+    fork: data.context === "fork" ? (text("agent") ?? "general-purpose") : undefined,
+    plugin,
   }
 })
 
@@ -183,14 +220,26 @@ const discoverSkills = Effect.fnUntraced(function* (
   const state: ScanState = { matches: new Set(), dirs: new Set() }
 
   const externalDirs: string[] = []
+  const plugins: Plugin[] = []
   if (!disableExternalSkills) {
     if (!disableClaudeCodeSkills) externalDirs.push(CLAUDE_EXTERNAL_DIR)
     externalDirs.push(AGENTS_EXTERNAL_DIR)
 
-    for (const dir of externalDirs) {
-      const root = path.join(global.home, dir)
+    // Claude Code's own folder moves with CLAUDE_CONFIG_DIR; ~/.claude is still read too.
+    const claude = disableClaudeCodeSkills ? [] : claudeConfigDirs(global.home)
+    const roots = [...new Set([...externalDirs.map((dir) => path.join(global.home, dir)), ...claude.slice(1)])]
+    for (const root of roots) {
       if (!(yield* fsys.isDir(root))) continue
       yield* scan(state, root, EXTERNAL_SKILL_PATTERN, { dot: true, scope: "global" })
+    }
+
+    // Skills from the Claude Code plugins the person has installed and enabled, as Claude Code loads them.
+    for (const root of claude) {
+      for (const plugin of yield* Effect.promise(() => claudePlugins(root, directory))) {
+        if (plugins.some((item) => item.root === plugin.root)) continue
+        plugins.push(plugin)
+        yield* scan(state, plugin.root, "skills/*/SKILL.md", { dot: true, scope: "plugin" })
+      }
     }
 
     const upDirs = yield* fsys
@@ -229,18 +278,53 @@ const discoverSkills = Effect.fnUntraced(function* (
   return {
     matches: Array.from(state.matches),
     dirs: Array.from(state.dirs),
+    plugins,
   }
 })
+
+/** Claude Code's config folders: ~/.claude, then CLAUDE_CONFIG_DIR when it points elsewhere. */
+function claudeConfigDirs(home: string) {
+  const own = process.env.CLAUDE_CONFIG_DIR?.replace(/^~(?=\/|$)/, home)
+  return [...new Set([path.join(home, CLAUDE_EXTERNAL_DIR), ...(own ? [path.resolve(own)] : [])])]
+}
+
+/** Enabled Claude Code plugins in a config folder, from installed_plugins.json and settings.json. */
+async function claudePlugins(root: string, directory: string): Promise<Plugin[]> {
+  const read = (file: string) =>
+    Bun.file(path.join(root, file))
+      .json()
+      .catch(() => undefined) as Promise<Record<string, any> | undefined>
+  const [installed, settings] = await Promise.all([read("plugins/installed_plugins.json"), read("settings.json")])
+  const enabled = settings?.enabledPlugins ?? {}
+  return Object.entries((installed?.plugins ?? {}) as Record<string, any[]>).flatMap(([id, installs]) => {
+    if (enabled[id] !== true || !Array.isArray(installs)) return []
+    // A project install applies inside that project; a user install everywhere.
+    const install =
+      installs.find((item) => item?.scope === "project" && directory.startsWith(item.projectPath ?? "\0")) ??
+      installs.find((item) => item?.scope === "user")
+    if (typeof install?.installPath !== "string") return []
+    return [
+      {
+        name: id.split("@")[0]!,
+        root: install.installPath,
+        data: path.join(root, "plugins", "data", id.replace(/[^a-zA-Z0-9_-]/g, "-")),
+      },
+    ]
+  })
+}
 
 const loadSkills = Effect.fnUntraced(function* (
   state: State,
   discovered: DiscoveryState,
   events: EventV2Bridge.Service["Service"],
 ) {
-  yield* Effect.forEach(discovered.matches, (match) => add(state, match, events), {
+  yield* Effect.forEach(discovered.matches, (match) => add(state, match, discovered.plugins, events), {
     concurrency: "unbounded",
     discard: true,
   })
+  // DeV ships some plugins (superpowers, ponytail) itself; Claude Code's copy of the same skill would repeat it.
+  for (const skill of Object.values(state.skills))
+    if (skill.plugin && state.skills[skill.name.slice(skill.plugin.name.length + 1)]) delete state.skills[skill.name]
 
   yield* Effect.logInfo("init", { count: Object.keys(state.skills).length })
 })
@@ -309,7 +393,9 @@ const layer = Layer.effect(
 
     const available = Effect.fn("Skill.available")(function* (agent?: Agent.Info) {
       const s = yield* InstanceState.get(state)
-      const list = Object.values(s.skills).toSorted((a, b) => a.name.localeCompare(b.name))
+      const list = Object.values(s.skills)
+        .filter((skill) => skill.modelInvocable !== false)
+        .toSorted((a, b) => a.name.localeCompare(b.name))
       if (!agent) return list
       return list.filter((skill) => Permission.evaluate("skill", skill.name, agent.permission).action !== "deny")
     })
@@ -317,6 +403,46 @@ const layer = Layer.effect(
     return Service.of({ get, require, all, dirs, available })
   }),
 )
+
+/**
+ * A skill's text with Claude Code's placeholders filled in: its folders, the project and session, and the
+ * arguments typed after /skill-name (0-based $0 / $ARGUMENTS[0], named $name, all of them as $ARGUMENTS).
+ * As in Claude Code, a $N no argument fills stays as written, so shell snippets like awk '{print $1}' survive.
+ */
+export function render(skill: Info, input: { project: string; sessionID?: string; arguments?: string }) {
+  const dir = skill.location === "<built-in>" ? undefined : path.dirname(skill.location)
+  const vars: Record<string, string | undefined> = {
+    CLAUDE_SKILL_DIR: dir,
+    CLAUDE_PLUGIN_ROOT: skill.plugin?.root,
+    CLAUDE_PLUGIN_DATA: skill.plugin?.data,
+    CLAUDE_PROJECT_DIR: input.project,
+    CLAUDE_SESSION_ID: input.sessionID,
+  }
+  const filled = skill.content.replace(
+    /\$\{(CLAUDE_[A-Z_]+)\}|\$(CLAUDE_[A-Z_]+)\b/g,
+    (whole, braced, bare) => vars[braced ?? bare] ?? whole,
+  )
+  if (input.arguments === undefined) return filled
+  const args = [...input.arguments.matchAll(/"([^"]*)"|'([^']*)'|(\S+)/g)].map((m) => m[1] ?? m[2] ?? m[3]!)
+  const used = { any: false }
+  const out = filled
+    .replace(/\\\$/g, "\u0000")
+    .replace(/\$ARGUMENTS\[(\d+)\]|\$(\d+)\b/g, (whole, a, b) => {
+      const value = args[Number(a ?? b)]
+      if (value === undefined) return whole
+      used.any = true
+      return value
+    })
+    .replace(/\$ARGUMENTS\b/g, () => ((used.any = true), input.arguments!))
+    .replace(/\$([a-zA-Z_][\w-]*)/g, (whole, key: string) => {
+      const index = skill.arguments?.indexOf(key) ?? -1
+      if (index < 0) return whole
+      used.any = true
+      return args[index] ?? ""
+    })
+    .replace(/\u0000/g, "$")
+  return used.any || !input.arguments.trim() ? out : `${out}\n\nARGUMENTS: ${input.arguments}`
+}
 
 export function fmt(list: Info[], opts: { verbose: boolean }) {
   const described = list.filter((skill) => skill.description !== undefined)

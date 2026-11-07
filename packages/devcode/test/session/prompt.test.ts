@@ -8,6 +8,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { expect } from "bun:test"
 import { Cause, Deferred, Duration, Effect, Exit, Fiber, Layer } from "effect"
 import path from "path"
+import fs from "fs/promises"
 import { fileURLToPath } from "url"
 import { NamedError } from "@dev-ai/core/util/error"
 import { Agent as AgentSvc } from "../../src/agent/agent"
@@ -1016,31 +1017,33 @@ it.instance("subtask child inherits parent session external_directory allow", ()
   }),
 )
 
-noLLMServer.instance("prompt tools replace previous prompt tool rules", () =>
-  Effect.gen(function* () {
-    const prompt = yield* SessionPrompt.Service
-    const sessions = yield* Session.Service
-    const session = yield* sessions.create({ title: "Prompt tools" })
+noLLMServer.instance(
+  "prompt tools replace previous prompt tool rules",
+  () =>
+    Effect.gen(function* () {
+      const prompt = yield* SessionPrompt.Service
+      const sessions = yield* Session.Service
+      const session = yield* sessions.create({ title: "Prompt tools" })
 
-    yield* prompt.prompt({
-      sessionID: session.id,
-      agent: "build",
-      noReply: true,
-      tools: { bash: false },
-      parts: [{ type: "text", text: "first" }],
-    })
-    yield* prompt.prompt({
-      sessionID: session.id,
-      agent: "build",
-      noReply: true,
-      tools: { read: true },
-      parts: [{ type: "text", text: "second" }],
-    })
+      yield* prompt.prompt({
+        sessionID: session.id,
+        agent: "build",
+        noReply: true,
+        tools: { bash: false },
+        parts: [{ type: "text", text: "first" }],
+      })
+      yield* prompt.prompt({
+        sessionID: session.id,
+        agent: "build",
+        noReply: true,
+        tools: { read: true },
+        parts: [{ type: "text", text: "second" }],
+      })
 
-    const reloaded = yield* sessions.get(session.id)
-    expect(reloaded.permission).toEqual([{ permission: "read", pattern: "*", action: "allow" }])
-    expect(Permission.evaluate("bash", "anything", reloaded.permission ?? []).action).toBe("ask")
-  }),
+      const reloaded = yield* sessions.get(session.id)
+      expect(reloaded.permission).toEqual([{ permission: "read", pattern: "*", action: "allow" }])
+      expect(Permission.evaluate("bash", "anything", reloaded.permission ?? []).action).toBe("ask")
+    }),
   { config: cfg },
 )
 
@@ -1842,6 +1845,38 @@ unix(
         expect(JSON.stringify(inputs.at(-1)?.messages)).toContain("configured")
       }),
     ),
+  30_000,
+)
+
+unix(
+  "a Claude Code skill run as /name fills $0 and its own folder, and hides user-invocable: false",
+  () =>
+    Effect.gen(function* () {
+      const { directory: dir } = yield* TestInstance
+      const write = (name: string, text: string) =>
+        Effect.promise(async () => {
+          await fs.mkdir(path.join(dir, ".claude", "skills", name), { recursive: true })
+          await Bun.write(path.join(dir, ".claude", "skills", name, "SKILL.md"), text)
+        })
+      yield* write(
+        "greet",
+        '---\nname: greet\ndescription: Greet.\nargument-hint: "[who]"\n---\nSay hello to $0 using ${CLAUDE_SKILL_DIR}/hello.txt\n',
+      )
+      yield* write("background", "---\nname: background\ndescription: Only for DeV.\nuser-invocable: false\n---\nx\n")
+      const { llm } = yield* useServerConfig((url) => providerCfg(url))
+      const { prompt, chat } = yield* boot()
+      yield* llm.text("done")
+
+      yield* prompt.command({ sessionID: chat.id, command: "greet", arguments: "Ada" })
+      const sent = JSON.stringify((yield* llm.inputs).at(-1)?.messages)
+      expect(sent).toContain("Say hello to Ada using")
+      expect(sent).toContain(path.join(".claude", "skills", "greet", "hello.txt"))
+
+      const commands = yield* Command.Service
+      const list = yield* commands.list()
+      expect(list.find((item) => item.name === "greet")?.hints).toEqual(["[who]"])
+      expect(list.some((item) => item.name === "background")).toBe(false)
+    }),
   30_000,
 )
 

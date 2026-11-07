@@ -447,12 +447,13 @@ export function Autocomplete(props: {
   const commands = createMemo((): AutocompleteOption[] => {
     const results: AutocompleteOption[] = [...slashes()]
 
+    // Skills are in the menu as in Claude Code (/skill-name, /plugin:skill), with their argument hint.
     for (const serverCommand of sync.data.command) {
-      if (serverCommand.source === "skill") continue
       const label = serverCommand.source === "mcp" ? ":mcp" : ""
+      const hint = serverCommand.source === "skill" ? serverCommand.hints[0] : undefined
       results.push({
         display: "/" + serverCommand.name + label,
-        description: serverCommand.description,
+        description: [hint, serverCommand.description].filter(Boolean).join("  "),
         onSelect: () => {
           const newText = "/" + serverCommand.name + " "
           const cursor = props.input().logicalCursor

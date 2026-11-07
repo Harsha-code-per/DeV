@@ -34,7 +34,11 @@ export const Info = Schema.Struct({
   hints: Schema.Array(Schema.String),
 }).annotate({ identifier: "Command" })
 
-export type Info = Omit<Schema.Schema.Type<typeof Info>, "template"> & { template: Promise<string> | string }
+export type Info = Omit<Schema.Schema.Type<typeof Info>, "template"> & {
+  template: Promise<string> | string
+  /** Skills fill Claude Code's placeholders themselves, from the arguments and session. */
+  render?: (input: { sessionID: string; arguments: string }) => string
+}
 
 export function hints(template: string) {
   const result: string[] = []
@@ -57,6 +61,12 @@ export const Default = {
 export interface Interface {
   readonly get: (name: string) => Effect.Effect<Info | undefined>
   readonly list: () => Effect.Effect<Info[]>
+}
+
+// Claude Code's subagent types and DeV's names for the same agents.
+function subagentName(type: string) {
+  if (type === "general-purpose") return "general"
+  return type.toLowerCase()
 }
 
 export class Service extends Context.Service<Service, Interface>()("@dev-ai/Command") {}
@@ -161,21 +171,29 @@ const layer = Layer.effect(
 
       for (const item of yield* skill.all()) {
         if (commands[item.name]) continue
+        // "user-invocable: false": only DeV loads it, so it stays out of the slash menu.
+        if (item.userInvocable === false) continue
         const dir = item.location === "<built-in>" ? undefined : path.dirname(item.location)
+        const withBase = (content: string) =>
+          dir
+            ? [
+                content,
+                "",
+                `Base directory for this skill: ${dir}`,
+                "Relative paths in this skill (e.g., scripts/, references/) are relative to this base directory.",
+              ].join("\n")
+            : content
         commands[item.name] = {
           name: item.name,
           description: item.description,
           source: "skill",
+          // "context: fork" runs the skill in a subagent of that type, as Claude Code does.
+          ...(item.fork ? { agent: subagentName(item.fork), subtask: true } : {}),
           get template() {
-            if (!dir) return item.content
-            return [
-              item.content,
-              "",
-              `Base directory for this skill: ${dir}`,
-              "Relative paths in this skill (e.g., scripts/, references/) are relative to this base directory.",
-            ].join("\n")
+            return withBase(Skill.render(item, { project: ctx.worktree }))
           },
-          hints: [],
+          render: (input) => withBase(Skill.render(item, { project: ctx.worktree, ...input })),
+          hints: item.argumentHint ? [item.argumentHint] : [],
         }
       }
 

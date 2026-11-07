@@ -2,6 +2,7 @@ import path from "path"
 import { Effect, Schema } from "effect"
 import { Ripgrep } from "@dev-ai/core/ripgrep"
 import { Skill } from "../skill"
+import { InstanceState } from "@/effect/instance-state"
 import * as Tool from "./tool"
 import DESCRIPTION from "./skill.txt"
 
@@ -20,6 +21,7 @@ export const SkillTool = Tool.define(
       parameters: Parameters,
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context) =>
         Effect.gen(function* () {
+          const instance = yield* InstanceState.context
           const info = yield* skill
             .require(params.name)
             .pipe(Effect.catchTag("Skill.NotFoundError", (error) => Effect.die(new Error(error.message))))
@@ -48,7 +50,14 @@ export const SkillTool = Tool.define(
               `<skill_content name="${info.name}">`,
               `# Skill: ${info.name}`,
               "",
-              info.content.trim(),
+              Skill.render(info, { project: instance.worktree, sessionID: ctx.sessionID }).trim(),
+              // "context: fork": Claude Code runs these in a subagent; DeV hands that step to the task tool.
+              ...(info.fork
+                ? [
+                    "",
+                    `This skill runs in its own subagent: call the task tool with subagent_type "${info.fork === "general-purpose" ? "general" : info.fork.toLowerCase()}" and the instructions above as the prompt, then report its result.`,
+                  ]
+                : []),
               "",
               `Base directory for this skill: ${base}`,
               "Relative paths in this skill (e.g., scripts/, reference/) are relative to this base directory.",

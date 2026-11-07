@@ -583,3 +583,126 @@ description: A skill in the .dev/skills directory.
     ),
   )
 })
+
+// Claude Code's skills: its config folder (CLAUDE_CONFIG_DIR), its enabled plugins and its SKILL.md options.
+describe("skill from Claude Code", () => {
+  const write = (file: string, text: string) =>
+    fs.mkdir(path.dirname(file), { recursive: true }).then(() => Bun.write(file, text))
+
+  async function claudeHome(home: string) {
+    const config = path.join(home, ".claude-personal")
+    const plugin = path.join(config, "plugins", "cache", "market", "tools", "1.0.0")
+    const off = path.join(config, "plugins", "cache", "market", "off", "1.0.0")
+    await write(
+      path.join(config, "plugins", "installed_plugins.json"),
+      JSON.stringify({
+        version: 2,
+        plugins: {
+          "tools@market": [{ scope: "user", installPath: plugin }],
+          "off@market": [{ scope: "user", installPath: off }],
+        },
+      }),
+    )
+    await write(
+      path.join(config, "settings.json"),
+      JSON.stringify({ enabledPlugins: { "tools@market": true, "off@market": false } }),
+    )
+    await write(
+      path.join(plugin, "skills", "deploy", "SKILL.md"),
+      `---\nname: deploy\ndescription: Deploy the app.\nargument-hint: "[env]"\ndisable-model-invocation: true\n---\nRun \${CLAUDE_PLUGIN_ROOT}/scripts/deploy.sh $0\n`,
+    )
+    await write(
+      path.join(plugin, "skills", "helper", "SKILL.md"),
+      `---\nname: helper\ndescription: Background knowledge.\nuser-invocable: false\ncontext: fork\nagent: Explore\n---\nLook around.\n`,
+    )
+    await write(
+      path.join(off, "skills", "hidden", "SKILL.md"),
+      `---\nname: hidden\ndescription: Disabled plugin.\n---\nx\n`,
+    )
+    await write(
+      path.join(config, "skills", "personal", "SKILL.md"),
+      `---\nname: personal\ndescription: From CLAUDE_CONFIG_DIR.\n---\nUse \${CLAUDE_SKILL_DIR}/notes.md\n`,
+    )
+    return config
+  }
+
+  it.live("loads skills from CLAUDE_CONFIG_DIR and from enabled Claude Code plugins, named plugin:skill", () =>
+    Effect.gen(function* () {
+      const tmp = yield* Effect.acquireRelease(
+        Effect.promise(() => tmpdir({ git: true })),
+        (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+      )
+      const config = yield* Effect.promise(() => claudeHome(tmp.path))
+      const before = process.env.CLAUDE_CONFIG_DIR
+      process.env.CLAUDE_CONFIG_DIR = config
+      yield* withHome(
+        tmp.path,
+        Effect.gen(function* () {
+          const skill = yield* Skill.Service
+          const names = (yield* skill.all()).map((item) => item.name).toSorted()
+          expect(names).toContain("tools:deploy")
+          expect(names).toContain("tools:helper")
+          expect(names).toContain("personal")
+          expect(names.some((name) => name.includes("hidden"))).toBe(false)
+
+          const deploy = (yield* skill.get("tools:deploy"))!
+          expect(deploy.argumentHint).toBe("[env]")
+          expect(Skill.render(deploy, { project: "/p", arguments: "prod" })).toContain(
+            `${deploy.plugin!.root}/scripts/deploy.sh prod`,
+          )
+          // disable-model-invocation keeps it out of what DeV may load by itself.
+          expect((yield* skill.available()).map((item) => item.name)).not.toContain("tools:deploy")
+
+          const helper = (yield* skill.get("tools:helper"))!
+          expect(helper.userInvocable).toBe(false)
+          expect(helper.fork).toBe("Explore")
+
+          const personal = (yield* skill.get("personal"))!
+          expect(Skill.render(personal, { project: "/p" })).toContain(
+            path.join(config, "skills", "personal", "notes.md"),
+          )
+        }).pipe(provideInstance(tmp.path)),
+      ).pipe(Effect.ensuring(Effect.sync(() => (process.env.CLAUDE_CONFIG_DIR = before))))
+    }),
+  )
+})
+
+describe("Skill.render", () => {
+  const skill = (content: string, extra: Partial<Skill.Info> = {}): Skill.Info => ({
+    name: "s",
+    location: "/skills/s/SKILL.md",
+    content,
+    ...extra,
+  })
+
+  it.effect("fills arguments the way Claude Code does", () =>
+    Effect.sync(() => {
+      expect(Skill.render(skill("Migrate $0 from $1 to $2."), { project: "/p", arguments: "Search JS TS" })).toBe(
+        "Migrate Search from JS to TS.",
+      )
+      expect(Skill.render(skill("A: $ARGUMENTS[1] / all: $ARGUMENTS"), { project: "/p", arguments: '"a b" c' })).toBe(
+        'A: c / all: "a b" c',
+      )
+      expect(
+        Skill.render(skill("Fix $issue on $branch", { arguments: ["issue", "branch"] }), {
+          project: "/p",
+          arguments: "42",
+        }),
+      ).toBe("Fix 42 on ")
+      // A $N no argument fills stays, so shell snippets survive; \$ is a literal dollar.
+      expect(Skill.render(skill("awk '{print $2}' costs \\$5 for $0"), { project: "/p", arguments: "x" })).toBe(
+        "awk '{print $2}' costs $5 for x",
+      )
+      // Arguments with no placeholder to go into are appended, as Claude Code does.
+      expect(Skill.render(skill("Review."), { project: "/p", arguments: "src/app.ts" })).toBe(
+        "Review.\n\nARGUMENTS: src/app.ts",
+      )
+      expect(
+        Skill.render(skill("In ${CLAUDE_SKILL_DIR} for $CLAUDE_PROJECT_DIR (${CLAUDE_SESSION_ID})"), {
+          project: "/p",
+          sessionID: "ses_1",
+        }),
+      ).toBe("In /skills/s for /p (ses_1)")
+    }),
+  )
+})

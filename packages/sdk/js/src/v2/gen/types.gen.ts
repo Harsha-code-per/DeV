@@ -8799,6 +8799,16 @@ export type AppSkillsResponses = {
     description?: string
     location: string
     content: string
+    argumentHint?: string
+    arguments?: Array<string>
+    userInvocable?: boolean
+    modelInvocable?: boolean
+    fork?: string
+    plugin?: {
+      name: string
+      root: string
+      data: string
+    }
   }>
 }
 
