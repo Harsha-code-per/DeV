@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect"
+import { Effect, Schedule, Schema } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/unstable/http"
 import { Parser } from "htmlparser2"
 import * as Tool from "./tool"
@@ -26,7 +26,11 @@ export const WebFetchTool = Tool.define(
   "webfetch",
   Effect.gen(function* () {
     const http = yield* HttpClient.HttpClient
-    const httpOk = HttpClient.filterStatusOk(http)
+    // A lookup or connection that fails once (flaky DNS or Wi-Fi) is tried again before the page is called
+    // unreachable, as are 429 and 5xx answers.
+    const httpOk = HttpClient.filterStatusOk(http).pipe(
+      HttpClient.retryTransient({ retryOn: "errors-only", times: 2, schedule: Schedule.spaced("1 second") }),
+    )
 
     return {
       description: DESCRIPTION,

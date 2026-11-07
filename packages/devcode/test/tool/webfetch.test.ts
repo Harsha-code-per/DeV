@@ -116,6 +116,22 @@ describe("tool.webfetch", () => {
         }),
     ),
   )
+
+  it.instance("tries again when a site fails for a moment instead of calling it unreachable", () => {
+    let calls = 0
+    return withFetch(
+      () =>
+        ++calls === 1
+          ? new Response("busy", { status: 503 })
+          : new Response("back up", { status: 200, headers: { "content-type": "text/plain" } }),
+      (url) =>
+        Effect.gen(function* () {
+          const result = yield* exec({ url: new URL("/flaky", url).toString(), format: "text" })
+          expect(result.output).toContain("back up")
+          expect(calls).toBe(2)
+        }),
+    )
+  })
 })
 
 describe("tool.webfetch javascript apps", () => {
