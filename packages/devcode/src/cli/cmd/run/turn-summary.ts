@@ -36,11 +36,13 @@ export function messageTurnSummaryCommit(
     return
   }
 
-  const model = providers?.find((item) => item.id === info.providerID)?.models[info.modelID]?.name
+  // DeV Auto names the free model it routed this reply to.
+  const ref = info.served ?? info
+  const model = providers?.find((item) => item.id === ref.providerID)?.models[ref.modelID]?.name ?? ref.modelID
 
   return turnSummaryCommit({
     agent: Locale.titlecase(info.agent),
-    model: model ?? info.modelID,
+    model: info.served ? `Auto → ${model}` : model,
     duration: Locale.duration(completed - info.time.created),
     messageID: info.id,
   })

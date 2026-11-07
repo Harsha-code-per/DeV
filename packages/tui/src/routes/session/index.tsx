@@ -282,7 +282,7 @@ export function Session() {
         receipt(messages().find((m) => m.id === root)?.time.created ?? 0, turnAssistants(root), turnParts(root)),
       model: () => {
         const last = turnAssistants(root).at(-1)
-        return last ? Model.name(providers(), last.providerID, last.modelID) : ""
+        return last ? Model.answered(providers(), last) : ""
       },
       answer: () =>
         turnParts(root).findLast((part) => part.type === "text" && !part.synthetic && part.text.trim() !== "")?.id,
@@ -1580,7 +1580,7 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
   const { theme } = useTheme()
   const sync = useSync()
   const messages = createMemo(() => sync.data.message[props.message.sessionID] ?? [])
-  const model = createMemo(() => Model.name(ctx.providers(), props.message.providerID, props.message.modelID))
+  const model = createMemo(() => Model.answered(ctx.providers(), props.message))
 
   const turn = createMemo(() => ctx.turn(props.message.id))
   // A folded turn shows only its final answer: the answer must never hide behind a receipt.

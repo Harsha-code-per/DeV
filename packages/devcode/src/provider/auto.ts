@@ -1,8 +1,14 @@
-import { type LanguageModelV3, type LanguageModelV3CallOptions, type LanguageModelV3StreamPart } from "@ai-sdk/provider"
+import {
+  type LanguageModelV3,
+  type LanguageModelV3CallOptions,
+  type LanguageModelV3Prompt,
+  type LanguageModelV3StreamPart,
+} from "@ai-sdk/provider"
 import { APICallError } from "ai"
 import { sortBy } from "remeda"
 import type { Provider } from "./provider"
 import { ProviderError } from "./error"
+import { ProviderTransform } from "./transform"
 import path from "path"
 import { Global } from "@dev-ai/core/global"
 import fs from "fs/promises"
@@ -177,10 +183,14 @@ function perMinuteLimit(error: unknown) {
 }
 
 // What the session shows while the router works; keyed by session because one router serves them all.
-const watchers = new Map<string, (message: string | undefined) => void>()
+type Listener = (message: string | undefined, served?: Provider.Model) => void
+const watchers = new Map<string, Listener>()
 
-/** Reports routing progress for a session; undefined means a model has started answering. */
-export function watch(sessionID: string, listener: (message: string | undefined) => void) {
+/**
+ * Reports routing progress for a session. An undefined message means a model has started answering;
+ * `served` is that model, so the session can show which free model is actually replying.
+ */
+export function watch(sessionID: string, listener: Listener) {
   watchers.set(sessionID, listener)
   return () => {
     watchers.delete(sessionID)
@@ -214,8 +224,14 @@ export function candidates(providers: Record<string, Provider.Info>, now = Date.
     groups.flatMap((g) => (g[i] ? [g[i]] : [])),
   ).flat()
   // Models on cooldown go last; among the rest, the most reliable first (stable, so ties keep the interleave).
-  return sortBy(interleaved, (m) => cooling(m, now), [(m) => score(m), "desc"]).slice(0, MAX_CANDIDATES)
+  const ranked = sortBy(interleaved, (m) => cooling(m, now), [(m) => score(m), "desc"])
+  // The best few that read each kind of attachment come along too, so a request with an image can reach
+  // a model that sees it even when the top-ranked ones are text-only. language() picks per request.
+  const readers = MEDIA.flatMap((kind) => ranked.filter((m) => m.capabilities.input?.[kind]).slice(0, 3))
+  return [...new Set([...ranked.slice(0, MAX_CANDIDATES), ...readers])]
 }
+
+const MEDIA = ["image", "pdf", "audio", "video"] as const
 
 export function info(providers: Record<string, Provider.Info>): Provider.Info | undefined {
   if (candidates(providers).length === 0) return undefined
@@ -234,9 +250,10 @@ export function info(providers: Record<string, Provider.Info>): Provider.Info | 
         capabilities: {
           temperature: true,
           reasoning: false,
-          attachment: false,
+          // It takes every kind of attachment and routes a request that has one to a free model that reads it.
+          attachment: true,
           toolcall: true,
-          input: { text: true, audio: false, image: false, video: false, pdf: false },
+          input: { text: true, audio: true, image: true, video: true, pdf: true },
           output: { text: true, audio: false, image: false, video: false, pdf: false },
           interleaved: false,
         },
@@ -258,17 +275,25 @@ export function language(
   opts: { firstResponseMs?: number; totalBudgetMs?: number } = {},
 ): LanguageModelV3 {
   const attempt = async <T>(
-    signal: AbortSignal | undefined,
+    options: LanguageModelV3CallOptions,
     windowMs: number,
-    headers: Record<string, string | undefined> | undefined,
-    run: (item: (typeof list)[number], signal: AbortSignal) => PromiseLike<T>,
+    run: (item: (typeof list)[number], options: LanguageModelV3CallOptions) => PromiseLike<T>,
   ) => {
-    const report = (message: string | undefined) => watchers.get(headers?.["X-Session-Id"] ?? "")?.(message)
+    const signal = options.abortSignal
+    const report: Listener = (message, served) =>
+      watchers.get(options.headers?.["X-Session-Id"] ?? "")?.(message, served)
     const started = Date.now()
     const budget = opts.totalBudgetMs ?? TOTAL_BUDGET_MS
     const errors: unknown[] = []
+    // Models that read every attachment in the request go first; the rest get it described as unreadable.
+    const kinds = attachments(options.prompt)
+    const reads = (model: Provider.Model) => kinds.every((kind) => model.capabilities.input?.[kind])
+    const tries = [...list.filter((item) => reads(item.model)), ...list.filter((item) => !reads(item.model))].slice(
+      0,
+      MAX_CANDIDATES,
+    )
     for (const round of [0, 1]) {
-      for (const [index, item] of list.entries()) {
+      for (const [index, item] of tries.entries()) {
         if (signal?.aborted) throw signal.reason
         if (Date.now() - started > budget) break
         const name = item.model.name ?? item.model.id
@@ -278,14 +303,18 @@ export function language(
         const deadline = new AbortController()
         const timer = setTimeout(() => deadline.abort(new Error(`${key(item.model)} did not respond`)), windowMs)
         try {
-          const result = await run(item, signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal)
-          report(undefined)
+          const result = await run(item, {
+            ...options,
+            prompt: reads(item.model) ? options.prompt : unreadable(options.prompt, item.model),
+            abortSignal: signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal,
+          })
+          report(undefined, item.model)
           return result
         } catch (e) {
           if (signal?.aborted) throw e
           cool(item.model, e)
           errors.push(e)
-          const next = list[index + 1]
+          const next = tries[index + 1]
           if (next) report(`${name} ${problem(e)}, trying ${next.model.name ?? next.model.id}…`)
         } finally {
           clearTimeout(timer)
@@ -293,7 +322,7 @@ export function language(
         }
       }
       // Every model refused. On a free tier that is usually a limit about to clear.
-      const pause = round === 0 ? shortestCooldown(list.map((item) => item.model)) : undefined
+      const pause = round === 0 ? shortestCooldown(tries.map((item) => item.model)) : undefined
       if (pause === undefined || Date.now() - started + pause > budget) break
       report(`Free models are rate limited, retrying in ${Math.ceil(pause / 1000)}s…`)
       await new Promise<void>((resolve) => {
@@ -323,45 +352,68 @@ export function language(
     supportedUrls: {},
     doGenerate: (options) =>
       // Non-streaming: the window covers the whole answer, so it is longer.
-      attempt(
-        options.abortSignal,
-        (opts.firstResponseMs ?? FIRST_RESPONSE_MS) * 4,
-        options.headers,
-        async (item, abortSignal) => {
-          const result = await item.language.doGenerate({ ...options, abortSignal })
-          record(item.model, true)
-          return result
-        },
-      ),
+      attempt(options, (opts.firstResponseMs ?? FIRST_RESPONSE_MS) * 4, async (item, next) => {
+        const result = await item.language.doGenerate(next)
+        record(item.model, true)
+        return result
+      }),
     doStream: (options) =>
-      attempt(
-        options.abortSignal,
-        opts.firstResponseMs ?? FIRST_RESPONSE_MS,
-        options.headers,
-        async (item, abortSignal) => {
-          // The deadline only guards the wait for headers; once streaming starts it is cleared.
-          const result = await item.language.doStream({ ...options, abortSignal })
-          const seen = { error: false }
-          return {
-            ...result,
-            stream: result.stream.pipeThrough(
-              new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
-                transform(part, controller) {
-                  if (part.type === "error") {
-                    seen.error = true
-                    cool(item.model, part.error)
-                  }
-                  controller.enqueue(part)
-                },
-                flush() {
-                  if (!seen.error) record(item.model, true)
-                },
-              }),
-            ),
-          }
-        },
-      ),
+      attempt(options, opts.firstResponseMs ?? FIRST_RESPONSE_MS, async (item, next) => {
+        // The deadline only guards the wait for headers; once streaming starts it is cleared.
+        const result = await item.language.doStream(next)
+        const seen = { error: false }
+        return {
+          ...result,
+          stream: result.stream.pipeThrough(
+            new TransformStream<LanguageModelV3StreamPart, LanguageModelV3StreamPart>({
+              transform(part, controller) {
+                if (part.type === "error") {
+                  seen.error = true
+                  cool(item.model, part.error)
+                }
+                controller.enqueue(part)
+              },
+              flush() {
+                if (!seen.error) record(item.model, true)
+              },
+            }),
+          ),
+        }
+      }),
   }
+}
+
+/** The kinds of attachment the person sent, which decide which free models can answer. */
+function attachments(prompt: LanguageModelV3Prompt) {
+  const kinds = prompt.flatMap((message) =>
+    message.role === "user"
+      ? message.content.flatMap((part) => {
+          const kind = part.type === "file" ? ProviderTransform.mimeToModality(part.mediaType) : undefined
+          return kind ? [kind] : []
+        })
+      : [],
+  )
+  return [...new Set(kinds)]
+}
+
+// For a model that can't read an attachment (when every one that can is busy or none is connected), the
+// attachment becomes a note the model passes on, instead of an error from the provider.
+// ponytail: only the person's own attachments; media inside tool results go to the model unchanged.
+function unreadable(prompt: LanguageModelV3Prompt, model: Provider.Model): LanguageModelV3Prompt {
+  return prompt.map((message) => {
+    if (message.role !== "user") return message
+    return {
+      ...message,
+      content: message.content.map((part) => {
+        const kind = part.type === "file" ? ProviderTransform.mimeToModality(part.mediaType) : undefined
+        if (part.type !== "file" || !kind || model.capabilities.input?.[kind]) return part
+        return {
+          type: "text" as const,
+          text: `ERROR: Cannot read ${part.filename ? `"${part.filename}"` : kind}: no free model that reads ${kind} input is available right now. Tell the user, and that connecting Google with /connect adds free Gemini models that read images, PDFs, audio and video.`,
+        }
+      }),
+    }
+  })
 }
 
 export function cool(model: Provider.Model, error: unknown, now = Date.now()) {

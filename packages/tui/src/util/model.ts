@@ -1,4 +1,4 @@
-import type { Provider } from "@dev-ai/sdk/v2"
+import type { AssistantMessage, Provider } from "@dev-ai/sdk/v2"
 
 export function parse(value: string) {
   const [providerID, ...modelID] = value.split("/")
@@ -25,4 +25,13 @@ export function name(
   modelID: string,
 ) {
   return get(list, providerID, modelID)?.name ?? modelID
+}
+
+/** The model behind a reply: for DeV Auto, the free model it routed this reply to. */
+export function answered(
+  list: Provider[] | ReadonlyMap<string, Provider> | undefined,
+  message: Pick<AssistantMessage, "providerID" | "modelID" | "served">,
+) {
+  if (!message.served) return name(list, message.providerID, message.modelID)
+  return `Auto → ${name(list, message.served.providerID, message.served.modelID)}`
 }

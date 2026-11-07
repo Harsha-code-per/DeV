@@ -306,3 +306,69 @@ describe("AutoProvider routing", () => {
     expect(AutoProvider.candidates(providers)).toEqual([])
   })
 })
+
+describe("AutoProvider attachments", () => {
+  const seeing = (providerID: string, id: string) =>
+    ({ ...model(providerID, id), name: id, capabilities: { toolcall: true, input: { image: true } } }) as Provider.Model
+  const withImage = (): any => ({
+    prompt: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "what is in this picture?" },
+          { type: "file", mediaType: "image/png", data: "iVBORw0KGgo=", filename: "shot.png" },
+        ],
+      },
+    ],
+    headers: { "X-Session-Id": "img" },
+  })
+
+  test("a request with an image goes to a free model that reads images, and says which one answered", async () => {
+    const text = model("groq", "text-only")
+    const vision = seeing("google", "gemini-vision")
+    const got: { id: string; prompt: any }[] = []
+    const served: string[] = []
+    const unwatch = AutoProvider.watch("img", (_, model) => model && served.push(String(model.id)))
+    const lm = AutoProvider.language([
+      { model: text, language: fake(async () => (got.push({ id: "text", prompt: undefined }), { content: [] })) },
+      {
+        model: vision,
+        language: {
+          doGenerate: async (o: any) => (got.push({ id: "vision", prompt: o.prompt }), { content: [] }),
+        } as any,
+      },
+    ])
+    await lm.doGenerate(withImage())
+    expect(got.map((call) => call.id)).toEqual(["vision"])
+    expect(got[0]!.prompt[0].content[1]).toMatchObject({ type: "file", mediaType: "image/png" })
+    expect(served).toEqual(["gemini-vision"])
+    unwatch()
+  })
+
+  test("with no free model that reads images, the image becomes a note telling the person how to add one", async () => {
+    const calls: any[] = []
+    const lm = AutoProvider.language([
+      {
+        model: model("groq", "text-only"),
+        language: { doGenerate: async (o: any) => (calls.push(o.prompt), { content: [] }) } as any,
+      },
+    ])
+    await lm.doGenerate(withImage())
+    const content = calls[0][0].content
+    expect(content.some((part: any) => part.type === "file")).toBe(false)
+    expect(content[1].text).toContain('Cannot read "shot.png"')
+    expect(content[1].text).toContain("/connect")
+  })
+
+  test("the best image readers stay candidates even when text-only models rank higher", () => {
+    const text = Array.from({ length: 10 }, (_, i) => model("groq", `t${i}`, 0))
+    const vision = seeing("groq", "llama-vision")
+    const providers = {
+      groq: {
+        id: "groq",
+        models: { ...Object.fromEntries(text.map((m) => [m.id, m])), v: { ...vision, release_date: "2000-01-01" } },
+      },
+    } as unknown as Record<string, Provider.Info>
+    expect(AutoProvider.candidates(providers).map((m) => String(m.id))).toContain("llama-vision")
+  })
+})

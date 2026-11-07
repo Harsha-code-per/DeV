@@ -656,12 +656,18 @@ const layer = Layer.effect(
             const stream = llm.stream(streamInput)
             // Show which free model the router is on; attempt 0 marks progress rather than a retry.
             const bridge = yield* EffectBridge.make()
-            const progress = (message: string | undefined) => {
+            const progress = (message: string | undefined, served?: Provider.Model) => {
               bridge.fork(
-                status.set(
-                  ctx.sessionID,
-                  message ? { type: "retry", attempt: 0, message, next: Date.now() } : { type: "busy" },
-                ),
+                Effect.gen(function* () {
+                  yield* status.set(
+                    ctx.sessionID,
+                    message ? { type: "retry", attempt: 0, message, next: Date.now() } : { type: "busy" },
+                  )
+                  if (!served) return
+                  // Which free model the router reached, so the session can show it instead of "Auto".
+                  ctx.assistantMessage.served = { providerID: served.providerID, modelID: served.id }
+                  yield* session.updateMessage(ctx.assistantMessage)
+                }),
               )
             }
             const unwatch = AutoProvider.watch(ctx.sessionID, progress)

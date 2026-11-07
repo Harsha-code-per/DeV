@@ -259,6 +259,16 @@ export function Prompt(props: PromptProps) {
     if (tuiConfig.cursor) input.cursorStyle = tuiConfig.cursor
   })
 
+  // With DeV Auto selected, the free model that answered last in this session, shown beside "Auto".
+  const routedTo = createMemo(() => {
+    if (!props.sessionID || local.model.current()?.providerID !== "auto") return undefined
+    const served = (sync.data.message[props.sessionID] ?? []).findLast(
+      (m): m is AssistantMessage => m.role === "assistant" && m.served !== undefined,
+    )?.served
+    if (!served) return undefined
+    return sync.data.provider.find((item) => item.id === served.providerID)?.models[served.modelID]?.name ?? served.modelID
+  })
+
   const lastUserMessage = createMemo(() => {
     if (!props.sessionID) return undefined
     const messages = sync.data.message[props.sessionID]
@@ -1611,6 +1621,9 @@ export function Prompt(props: PromptProps) {
                             {local.model.parsed().model}
                           </text>
                           <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>{currentProviderLabel()}</text>
+                          <Show when={routedTo()}>
+                            {(name) => <text fg={fadeColor(theme.text, modelMetaAlpha())}>→ {name()}</text>}
+                          </Show>
                           <Show when={showVariant()}>
                             <text fg={fadeColor(theme.textMuted, variantMetaAlpha())}>·</text>
                             <text>

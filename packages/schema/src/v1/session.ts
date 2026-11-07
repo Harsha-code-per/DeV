@@ -488,6 +488,8 @@ export const Assistant = Schema.Struct({
   structured: Schema.optional(Schema.Any),
   variant: Schema.optional(Schema.String),
   finish: Schema.optional(Schema.String),
+  // The model that actually answered when modelID is a router (DeV Auto picks a free model per request).
+  served: Schema.optional(Schema.Struct({ providerID: Provider.ID, modelID: Model.ID })),
 }).annotate({ identifier: "AssistantMessage" })
 export type Assistant = Omit<Types.DeepMutable<Schema.Schema.Type<typeof Assistant>>, "error"> & {
   error?: AssistantError
