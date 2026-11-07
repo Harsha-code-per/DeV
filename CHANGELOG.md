@@ -2,6 +2,15 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.15 (2026-11-07)
+
+- DeV works on your machine like your own terminal again. The OS sandbox is now off by default, as in Claude Code, so `gh`, cloud CLIs and `curl` use your logins and reach any site. Turn the sandbox on with `"sandbox": { "enabled": true }` in `dev.json`.
+- Auto mode no longer refuses a command just because it runs outside the sandbox. It judges the command itself: reading your repos goes ahead, deleting your home folder doesn't.
+- When Auto mode refuses something and DeV really needs it, DeV tries again and you get the normal permission dialog, where Allow once and Allow always work. Before, DeV asked with a question whose answer couldn't approve anything, so it got stuck.
+- Web fetches try again after a network hiccup (or a 429 or 5xx answer) instead of reporting the site as unreachable.
+- The "What's new" screen after an update fits the terminal: long notes scroll (arrow keys, Page Up/Down or the mouse wheel) and the ok button stays visible.
+- A long folder path in the footer is shortened from the left instead of overlapping the status beside it in a narrow terminal.
+
 ## 1.0.14 (2026-11-06)
 
 - Subagents can work in a git worktree of their own, as in Claude Code: put `isolation: worktree` in an agent's file, or DeV asks for it when it hands off a task. The worktree is removed afterwards if the subagent changed nothing; otherwise DeV is told its path and branch, to review and merge. The subagent gets the same settings, agents and AGENTS.md as the conversation that started it, including ones not committed yet.
