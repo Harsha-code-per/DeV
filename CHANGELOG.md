@@ -2,6 +2,10 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.16 (2026-11-07)
+
+- Several DeV sessions at once (two terminals, or `devcode run` beside the TUI) no longer fail with "database is locked". Writes now wait their turn instead of failing when another session wrote at the same moment.
+
 ## 1.0.15 (2026-11-07)
 
 - DeV works on your machine like your own terminal again. The OS sandbox is now off by default, as in Claude Code, so `gh`, cloud CLIs and `curl` use your logins and reach any site. Turn the sandbox on with `"sandbox": { "enabled": true }` in `dev.json`.
