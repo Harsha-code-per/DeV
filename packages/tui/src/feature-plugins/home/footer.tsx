@@ -1,6 +1,8 @@
 import type { TuiPlugin, TuiPluginApi } from "@dev-ai/plugin/tui"
 import type { BuiltinTuiPlugin } from "../builtins"
 import { createMemo, Match, Show, Switch } from "solid-js"
+import { useTerminalDimensions } from "@opentui/solid"
+import { Locale } from "../../util/locale"
 import { abbreviateHome } from "../../runtime"
 import { useTuiPaths } from "../../context/runtime"
 import { useHomeSessionDestination } from "../../routes/home/session-destination"
@@ -21,7 +23,17 @@ function Directory(props: { api: TuiPluginApi }) {
     return out
   })
 
-  return <Show when={dir()}>{(value) => <text fg={theme().textMuted}>{value()}</text>}</Show>
+  const dimensions = useTerminalDimensions()
+  // A long path keeps its end (project and branch) and never wraps under the items beside it.
+  return (
+    <Show when={dir()}>
+      {(value) => (
+        <text fg={theme().textMuted} wrapMode="none">
+          {Locale.truncateLeft(value(), Math.floor(dimensions().width / 2))}
+        </text>
+      )}
+    </Show>
+  )
 }
 
 function Mcp(props: { api: TuiPluginApi }) {

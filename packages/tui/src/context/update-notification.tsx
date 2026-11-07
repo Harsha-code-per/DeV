@@ -84,13 +84,10 @@ export const { use: useUpdateNotification, provider: UpdateNotificationProvider 
       if (seen === undefined && !upgraded) return
       const changes = seen ? changesSince(seen, InstallationVersion) : changesSince("0", InstallationVersion).split("\n\n")[0]
       if (!changes) return
-      setTimeout(
-        () =>
-          dialog.replace(() => (
-            <DialogAlert title={`What's new in DeV Code ${InstallationVersion}`} message={changes} />
-          )),
-        800,
-      )
+      setTimeout(() => {
+        dialog.replace(() => <DialogAlert title={`What's new in DeV Code ${InstallationVersion}`} message={changes} />)
+        dialog.setSize("large")
+      }, 800)
     })
 
     const restart = () => {

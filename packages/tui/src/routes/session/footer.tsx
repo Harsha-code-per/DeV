@@ -5,6 +5,8 @@ import { useDirectory } from "../../context/directory"
 import { useConnected } from "../../component/use-connected"
 import { createStore } from "solid-js/store"
 import { useRoute } from "../../context/route"
+import { useTerminalDimensions } from "@opentui/solid"
+import { Locale } from "../../util/locale"
 
 export function Footer() {
   const { theme } = useTheme()
@@ -18,6 +20,7 @@ export function Footer() {
     return sync.data.permission[route.data.sessionID] ?? []
   })
   const directory = useDirectory()
+  const dimensions = useTerminalDimensions()
   const connected = useConnected()
 
   const [store, setStore] = createStore({
@@ -51,7 +54,10 @@ export function Footer() {
 
   return (
     <box flexDirection="row" justifyContent="space-between" gap={1} flexShrink={0}>
-      <text fg={theme.textMuted}>{directory()}</text>
+      {/* A long path keeps its end (project and branch) and never wraps under the status beside it. */}
+      <text fg={theme.textMuted} wrapMode="none">
+        {Locale.truncateLeft(directory(), Math.floor(dimensions().width / 2))}
+      </text>
       <box gap={2} flexDirection="row" flexShrink={0}>
         <Switch>
           <Match when={store.welcome}>
