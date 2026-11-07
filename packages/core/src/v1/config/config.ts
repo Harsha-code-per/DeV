@@ -56,6 +56,23 @@ export const Info = Schema.Struct({
       "Enable or disable snapshot tracking. When false, filesystem snapshots are not recorded and undoing or reverting will not undo/redo file changes. Defaults to true.",
   }),
   plugin: Schema.optional(Schema.mutable(Schema.Array(ConfigPluginV1.Spec))),
+  enabled_plugins: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)).annotate({
+    description:
+      'Marketplace plugins to turn on or off, as "plugin@marketplace": true. Set by /plugins and `devcode plugin install`',
+  }),
+  marketplaces: Schema.optional(
+    Schema.Record(
+      Schema.String,
+      Schema.Struct({
+        source: Schema.String.annotate({
+          description: "owner/repo (with #ref to pin), a git URL, a URL to marketplace.json, or a local folder",
+        }),
+      }),
+    ),
+  ).annotate({
+    description:
+      "Plugin marketplaces by name. Put one in the project's .dev/dev.json so everyone on the team gets it",
+  }),
   share: Schema.optional(Schema.Literals(["manual", "auto", "disabled"])).annotate({
     description:
       "Control sharing behavior:'manual' allows manual sharing via commands, 'auto' enables automatic sharing, 'disabled' disables all sharing",

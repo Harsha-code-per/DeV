@@ -71,6 +71,7 @@ import { Locale } from "./util/locale"
 import { DialogPrompt } from "./ui/dialog-prompt"
 import { DialogSelect } from "./ui/dialog-select"
 import { DialogAlert } from "./ui/dialog-alert"
+import { DialogPlugins } from "./component/dialog-plugins"
 import { DialogPermissions } from "./component/dialog-permissions"
 import { PromptRefProvider, usePromptRef } from "./context/prompt"
 import { TuiConfigProvider, useTuiConfig, type TuiConfig } from "./config"
@@ -1070,6 +1071,14 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
           await sync.session.refresh()
           dialog.clear()
         },
+      },
+      {
+        name: "plugins.marketplace",
+        title: "Plugins: find, install and manage",
+        category: "System",
+        slashName: "plugins",
+        slashAliases: ["plugin", "marketplace"],
+        run: () => dialog.replace(() => <DialogPlugins />),
       },
       {
         name: "permission.mode",

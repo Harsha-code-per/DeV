@@ -200,7 +200,7 @@ function View(props: { api: TuiPluginApi }) {
 
   return (
     <DialogSelect
-      title="Plugins"
+      title="Code plugins"
       options={rows()}
       current={cur()}
       onMove={(item) => setCur(item.value)}
@@ -240,7 +240,7 @@ const tui: TuiPlugin = async (api) => {
     commands: [
       {
         name: "plugins.list",
-        title: "Plugins",
+        title: "Code plugins",
         category: "System",
         namespace: "palette",
         run() {

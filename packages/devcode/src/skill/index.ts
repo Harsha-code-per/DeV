@@ -17,6 +17,7 @@ import { Glob } from "@dev-ai/core/util/glob"
 import { Discovery } from "./discovery"
 import { isRecord } from "@/util/record"
 import { escapeHtml } from "@/util/html"
+import { Marketplace } from "@/marketplace"
 
 const CLAUDE_EXTERNAL_DIR = ".claude"
 const AGENTS_EXTERNAL_DIR = ".agents"
@@ -251,12 +252,19 @@ const discoverSkills = Effect.fnUntraced(function* (
     }
   }
 
+  // Skills from marketplace plugins turned on in any scope.
+  const cfg = yield* config.get()
+  for (const plugin of yield* Effect.promise(() => Marketplace.enabled(cfg))) {
+    if (plugins.some((item) => item.root === plugin.root)) continue
+    plugins.push({ name: plugin.name, root: plugin.root, data: plugin.data })
+    yield* scan(state, plugin.root, "skills/*/SKILL.md", { dot: true, scope: "plugin" })
+  }
+
   const configDirs = yield* config.directories()
   for (const dir of configDirs) {
     yield* scan(state, dir, DEV_SKILL_PATTERN)
   }
 
-  const cfg = yield* config.get()
   for (const item of cfg.skills?.paths ?? []) {
     const expanded = item.startsWith("~/") ? path.join(global.home, item.slice(2)) : item
     const dir = path.isAbsolute(expanded) ? expanded : path.join(directory, expanded)

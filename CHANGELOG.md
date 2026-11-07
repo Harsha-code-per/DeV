@@ -2,6 +2,16 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.18 (2026-11-07)
+
+- Plugin marketplaces. `/plugins` lists the plugins in every marketplace you've added, with the ones you have installed first; type to search. Add a marketplace from `owner/repo` (add `#tag` to pin it), a git URL, a URL to its `marketplace.json`, or a folder. Plugins in the common open format install unchanged, with their skills, commands, agents, hooks and MCP servers, named `plugin:name`.
+- Three install scopes: for you in every project, for everyone on the repo (saved in `.dev/dev.json`, which you commit), or for you in this repo only (saved in the new `.dev/dev.local.json`, kept out of git). The most specific scope wins.
+- Each install is pinned to a version or commit, and DeV shows what a plugin adds before you use it, including hooks and MCP servers that run on your machine. Changes apply once running work finishes, with no restart.
+- A team can list its marketplaces under `"marketplaces"` in the project's `.dev/dev.json`.
+- `devcode plugins` does the same from the command line: `marketplace add|list|update|remove`, `search`, `install`, `uninstall`, `enable`, `disable`, `update` and `list`, each with `--scope user|project|local`.
+- A plugin agent or command that names a model by a short alias instead of `provider/model` now runs on your session's model instead of failing.
+- `DEV_DISABLE_CLAUDE_FOLDER=1` turns off reading `CLAUDE.md` files and `.claude/` folders. The older variable names still work.
+
 ## 1.0.17 (2026-11-07)
 
 - Skills you already have in a `.claude` folder work fully in DeV. DeV now also reads skills from `CLAUDE_CONFIG_DIR` (not only `~/.claude`) and from the plugins installed and enabled there, named `plugin:skill` (for example `/cloudflare:wrangler`).

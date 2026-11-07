@@ -321,6 +321,8 @@ Commands:
   devcode acp                          start ACP (Agent Client Protocol) server
   devcode mcp                          manage MCP (Model Context Protocol) servers
   devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
+  devcode plugins <action> [target..]  install plugins (skills, commands, agents, hooks, MCP
+                                       servers) from plugin marketplaces
   devcode [project]                    start dev tui                                       [default]
   devcode attach <url>                 attach to a running DeV Code server
   devcode run [message..]              run dev with a message
@@ -639,6 +641,8 @@ Commands:
   devcode acp                          start ACP (Agent Client Protocol) server
   devcode mcp                          manage MCP (Model Context Protocol) servers
   devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
+  devcode plugins <action> [target..]  install plugins (skills, commands, agents, hooks, MCP
+                                       servers) from plugin marketplaces
   devcode [project]                    start dev tui                                       [default]
   devcode attach <url>                 attach to a running DeV Code server
   devcode run [message..]              run dev with a message
@@ -707,6 +711,8 @@ Commands:
   devcode acp                          start ACP (Agent Client Protocol) server
   devcode mcp                          manage MCP (Model Context Protocol) servers
   devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
+  devcode plugins <action> [target..]  install plugins (skills, commands, agents, hooks, MCP
+                                       servers) from plugin marketplaces
   devcode [project]                    start dev tui                                       [default]
   devcode attach <url>                 attach to a running DeV Code server
   devcode run [message..]              run dev with a message

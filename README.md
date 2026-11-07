@@ -94,6 +94,7 @@ devcode
 | **Project memory** | DeV keeps what it learns about your project in `DEV.md`, a file you can read and edit. |
 | **OS sandbox** | Optional. Turn it on with `"sandbox": { "enabled": true }` and, on Linux and macOS, shell commands can't read your SSH keys or cloud credentials. Off by default, so commands use your logins (`gh`, cloud CLIs) and network like your own terminal. |
 | **Free model routing** | `auto/free` moves between the free models you've connected and learns which ones work for you. |
+| **Plugin marketplaces** | Add any plugin marketplace in the common open format (`/plugins`, or `devcode plugins marketplace add owner/repo`) and install plugins with their skills, commands, agents, hooks and MCP servers, for you, for your team's repo, or just for your checkout. |
 | **Built to extend** | Skills, plugins, hooks, custom agents and MCP servers are all included. |
 
 ## Modes
@@ -119,7 +120,7 @@ Shift+Tab cycles them in that order, and a shell command's permission prompt can
 | `/init` | Write a `DEV.md` for this project |
 | `/rewind` | Go back to an earlier message, or summarize everything before it |
 | `/autocompact` | Set how full the conversation gets before DeV compacts it |
-| `/plugins` | Manage skills, plugins and MCP servers |
+| `/plugins` | Find, install and manage plugins from marketplaces |
 | `/permissions` | Change the mode, allow what Auto mode refused, and edit rules |
 | `/add-dir` | Let DeV work in another folder |
 | `/hooks` | See the hooks you have set up |
@@ -136,6 +137,13 @@ Get the result as JSON:
 
 ```sh
 devcode -p "fix the failing test" --output-format json
+```
+
+Install a plugin for everyone on the repo:
+
+```sh
+devcode plugins marketplace add owner/repo
+devcode plugins install some-plugin --scope project
 ```
 
 Work in a git worktree of its own, so parallel sessions don't collide:

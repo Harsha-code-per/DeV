@@ -1,3 +1,4 @@
+import { Marketplace } from "../../src/marketplace"
 import { test, expect, describe, afterEach, beforeEach, spyOn } from "bun:test"
 import { ConfigV1 } from "@dev-ai/core/v1/config/config"
 import { LayerNode } from "@dev-ai/core/effect/layer-node"
@@ -2232,3 +2233,32 @@ test("parseManagedPlist handles empty config", async () => {
   )
   expect(config.$schema).toBe("https://trydev.work/schema/config.json")
 })
+
+it.instance("a marketplace plugin turned on for the project adds its commands, agents, hooks and MCP servers", () =>
+  Effect.gen(function* () {
+    const { directory } = yield* TestInstance
+    yield* Effect.promise(async () => {
+      const market = path.join(directory, "..", `kit-market-${Date.now()}`)
+      const put = (file: string, text: string) =>
+        fs.mkdir(path.dirname(file), { recursive: true }).then(() => Bun.write(file, text))
+      await put(
+        path.join(market, ".claude-plugin", "marketplace.json"),
+        JSON.stringify({ name: "kitmarket", owner: { name: "t" }, plugins: [{ name: "kit", source: "./kit" }] }),
+      )
+      await put(path.join(market, "kit", "commands", "hi.md"), "---\ndescription: Hi\n---\nHi\n")
+      await put(path.join(market, "kit", "agents", "helper.md"), "---\ndescription: Helps\nmode: subagent\n---\nHelp.\n")
+      await put(path.join(market, "kit", ".mcp.json"), JSON.stringify({ mcpServers: { notes: { command: "notes-mcp" } } }))
+      await put(
+        path.join(market, "kit", "hooks", "hooks.json"),
+        JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: "command", command: "echo done" }] }] } }),
+      )
+      await Marketplace.addMarketplace(market)
+      await Marketplace.install("kit@kitmarket", "project", directory)
+    })
+    const config = yield* Config.use.get()
+    expect(config.command?.["kit:hi"]?.template).toBe("Hi")
+    expect(config.agent?.["kit:helper"]?.prompt).toBe("Help.")
+    expect(config.mcp?.["kit:notes"]).toEqual({ type: "local", command: ["notes-mcp"] })
+    expect(config.hooks?.Stop?.at(-1)).toEqual({ hooks: [{ type: "command", command: "echo done" }] })
+  }),
+)

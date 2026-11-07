@@ -37,6 +37,8 @@ import { ConfigV2Compat } from "./v2-compat"
 import { Npm } from "@dev-ai/core/npm"
 import { withTransientReadRetry } from "@/util/effect-http-client"
 import DevDefaults from "./dev-defaults.json"
+import { Marketplace } from "@/marketplace"
+import { ConfigHooksV1 } from "@dev-ai/core/v1/config/hooks"
 
 // Custom merge function that concatenates array fields instead of replacing them
 // Keep remeda's deep conditional merge type out of hot config-loading paths; TS profiling showed it dominates here.
@@ -260,9 +262,7 @@ const layer = Layer.effect(
       if (!Flag.DEV_CONFIG && !Flag.DEV_CONFIG_DIR && !Flag.DEV_CONFIG_CONTENT) {
         const file = globalConfigFile()
         if (!existsSync(file)) {
-          yield* fs
-            .writeWithDirs(file, "{}\n")
-            .pipe(Effect.catch(() => Effect.void))
+          yield* fs.writeWithDirs(file, "{}\n").pipe(Effect.catch(() => Effect.void))
         }
       }
       result = mergeConfig(result, yield* loadFile(path.join(Global.Path.config, "config.json"), env))
@@ -308,11 +308,21 @@ const layer = Layer.effect(
       yield* fs.ensureDir(dir)
       const gitignore = path.join(dir, ".gitignore")
       const hasIgnore = yield* fs.existsSafe(gitignore)
-      if (!hasIgnore) {
+      const local = Brand.CONFIG_NAMES.flatMap((name) => [`${name}.local.json`, `${name}.local.jsonc`])
+      const current = hasIgnore ? yield* fs.readFileString(gitignore).pipe(Effect.orElseSucceed(() => "")) : undefined
+      const lines = current?.split("\n") ?? [
+        "node_modules",
+        "package.json",
+        "package-lock.json",
+        "bun.lock",
+        ".gitignore",
+      ]
+      const missing = local.filter((line) => !lines.includes(line))
+      if (current === undefined || missing.length > 0) {
         yield* fs
           .writeFileString(
             gitignore,
-            ["node_modules", "package.json", "package-lock.json", "bun.lock", ".gitignore"].join("\n"),
+            [...lines.filter((line, index) => line || index < lines.length - 1), ...missing].join("\n") + "\n",
           )
           .pipe(
             Effect.catchIf(
@@ -446,7 +456,13 @@ const layer = Layer.effect(
 
         for (const dir of directories) {
           if (Brand.isConfigDir(dir) || dir === Flag.DEV_CONFIG_DIR) {
-            for (const file of Brand.CONFIG_NAMES.toReversed().flatMap((name) => [`${name}.json`, `${name}.jsonc`])) {
+            // dev.local.json is the "local" scope: settings for this checkout only, kept out of git.
+            for (const file of Brand.CONFIG_NAMES.toReversed().flatMap((name) => [
+              `${name}.json`,
+              `${name}.jsonc`,
+              `${name}.local.json`,
+              `${name}.local.jsonc`,
+            ])) {
               const source = path.join(dir, file)
               yield* Effect.logDebug(`loading config from ${source}`)
               yield* merge(source, yield* loadFile(source, authEnv))
@@ -488,6 +504,24 @@ const layer = Layer.effect(
           // returns normalized Specs and we only need to attach origin metadata here.
           const list = yield* Effect.promise(() => ConfigPlugin.load(dir))
           yield* mergePluginOrigins(dir, list)
+        }
+
+        // Marketplace plugins turned on in any scope bring commands, agents, hooks and MCP servers, named
+        // plugin:name so they never collide with the person's own. Their skills load with the other skills.
+        for (const plugin of yield* Effect.promise(() => Marketplace.enabled(result))) {
+          const parts = yield* Effect.promise(() => Marketplace.components(plugin)).pipe(
+            Effect.tapError((error) => Effect.logWarning("plugin failed to load", { plugin: plugin.id, error })),
+            Effect.orElseSucceed(() => undefined),
+          )
+          if (!parts) continue
+          result.command = { ...parts.commands, ...result.command }
+          result.agent = { ...parts.agents, ...result.agent }
+          result.mcp = { ...parts.mcp, ...result.mcp }
+          const known = new Set(Object.keys(ConfigHooksV1.Info.fields))
+          const hooks: Record<string, unknown[]> = { ...(result.hooks ?? {}) }
+          for (const [event, list] of Object.entries(parts.hooks))
+            if (known.has(event)) hooks[event] = [...(hooks[event] ?? []), ...list]
+          result.hooks = hooks as Info["hooks"]
         }
 
         if (process.env.DEV_CONFIG_CONTENT) {

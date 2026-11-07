@@ -1947,6 +1947,17 @@ export type Config = {
         },
       ]
   >
+  enabled_plugins?: {
+    [key: string]: boolean
+  }
+  marketplaces?: {
+    [key: string]: {
+      /**
+       * owner/repo (with #ref to pin), a git URL, a URL to marketplace.json, or a local folder
+       */
+      source: string
+    }
+  }
   share?: "manual" | "auto" | "disabled"
   autoshare?: boolean
   /**
@@ -2811,6 +2822,54 @@ export type McpServerNotFoundError = {
   _tag: "McpServerNotFoundError"
   name: string
   message: string
+}
+
+export type PluginEntry = {
+  id: string
+  name: string
+  marketplace: string
+  description?: string
+  version?: string
+  category?: string
+  tags: Array<string>
+  homepage?: string
+  license?: string
+  author?: string
+}
+
+export type PluginError = {
+  message: string
+}
+
+export type PluginInstalled = {
+  id: string
+  version: string
+  enabled: boolean
+  scope?: "user" | "project" | "local"
+  installPath: string
+  installedAt: string
+}
+
+export type PluginMarketplace = {
+  name: string
+  source: string
+  description?: string
+  owner?: string
+  plugins: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+}
+
+export type PluginContents = {
+  skills: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  commands: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  agents: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  hooks: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  mcp: Array<string>
+}
+
+export type PluginResult = {
+  id: string
+  message: string
+  contents?: PluginContents
 }
 
 export type Project = {
@@ -9143,6 +9202,306 @@ export type McpDisconnectResponses = {
 }
 
 export type McpDisconnectResponse = McpDisconnectResponses[keyof McpDisconnectResponses]
+
+export type PluginsAvailableData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/plugins/available"
+}
+
+export type PluginsAvailableErrors = {
+  /**
+   * PluginError | InvalidRequestError
+   */
+  400: PluginError | InvalidRequestError
+}
+
+export type PluginsAvailableError = PluginsAvailableErrors[keyof PluginsAvailableErrors]
+
+export type PluginsAvailableResponses = {
+  /**
+   * Plugins in every added marketplace
+   */
+  200: Array<PluginEntry>
+}
+
+export type PluginsAvailableResponse = PluginsAvailableResponses[keyof PluginsAvailableResponses]
+
+export type PluginsInstalledData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/plugins/installed"
+}
+
+export type PluginsInstalledErrors = {
+  /**
+   * PluginError | InvalidRequestError
+   */
+  400: PluginError | InvalidRequestError
+}
+
+export type PluginsInstalledError = PluginsInstalledErrors[keyof PluginsInstalledErrors]
+
+export type PluginsInstalledResponses = {
+  /**
+   * Installed plugins
+   */
+  200: Array<PluginInstalled>
+}
+
+export type PluginsInstalledResponse = PluginsInstalledResponses[keyof PluginsInstalledResponses]
+
+export type PluginsMarketplacesData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/plugins/marketplaces"
+}
+
+export type PluginsMarketplacesErrors = {
+  /**
+   * PluginError | InvalidRequestError
+   */
+  400: PluginError | InvalidRequestError
+}
+
+export type PluginsMarketplacesError = PluginsMarketplacesErrors[keyof PluginsMarketplacesErrors]
+
+export type PluginsMarketplacesResponses = {
+  /**
+   * Added marketplaces
+   */
+  200: Array<PluginMarketplace>
+}
+
+export type PluginsMarketplacesResponse = PluginsMarketplacesResponses[keyof PluginsMarketplacesResponses]
+
+export type PluginsMarketplaceAddData = {
+  body?: {
+    source: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/plugins/marketplaces"
+}
+
+export type PluginsMarketplaceAddErrors = {
+  /**
+   * PluginError | InvalidRequestError
+   */
+  400: PluginError | InvalidRequestError
+}
+
+export type PluginsMarketplaceAddError = PluginsMarketplaceAddErrors[keyof PluginsMarketplaceAddErrors]
+
+export type PluginsMarketplaceAddResponses = {
+  /**
+   * The added marketplace
+   */
+  200: PluginMarketplace
+}
+
+export type PluginsMarketplaceAddResponse = PluginsMarketplaceAddResponses[keyof PluginsMarketplaceAddResponses]
+
+export type PluginsMarketplaceUpdateData = {
+  body?: never
+  path: {
+    name: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/plugins/marketplaces/{name}/update"
+}
+
+export type PluginsMarketplaceUpdateErrors = {
+  /**
+   * PluginError | InvalidRequestError
+   */
+  400: PluginError | InvalidRequestError
+}
+
+export type PluginsMarketplaceUpdateError = PluginsMarketplaceUpdateErrors[keyof PluginsMarketplaceUpdateErrors]
+
+export type PluginsMarketplaceUpdateResponses = {
+  /**
+   * The updated marketplace
+   */
+  200: PluginMarketplace
+}
+
+export type PluginsMarketplaceUpdateResponse =
+  PluginsMarketplaceUpdateResponses[keyof PluginsMarketplaceUpdateResponses]
+
+export type PluginsMarketplaceRemoveData = {
+  body?: never
+  path: {
+    name: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/plugins/marketplaces/{name}"
+}
+
+export type PluginsMarketplaceRemoveErrors = {
+  /**
+   * PluginError | InvalidRequestError
+   */
+  400: PluginError | InvalidRequestError
+}
+
+export type PluginsMarketplaceRemoveError = PluginsMarketplaceRemoveErrors[keyof PluginsMarketplaceRemoveErrors]
+
+export type PluginsMarketplaceRemoveResponses = {
+  /**
+   * Removed
+   */
+  200: boolean
+}
+
+export type PluginsMarketplaceRemoveResponse =
+  PluginsMarketplaceRemoveResponses[keyof PluginsMarketplaceRemoveResponses]
+
+export type PluginsInstallData = {
+  body?: {
+    id: string
+    scope: "user" | "project" | "local"
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/plugins/install"
+}
+
+export type PluginsInstallErrors = {
+  /**
+   * PluginError | InvalidRequestError
+   */
+  400: PluginError | InvalidRequestError
+}
+
+export type PluginsInstallError = PluginsInstallErrors[keyof PluginsInstallErrors]
+
+export type PluginsInstallResponses = {
+  /**
+   * Installed
+   */
+  200: PluginResult
+}
+
+export type PluginsInstallResponse = PluginsInstallResponses[keyof PluginsInstallResponses]
+
+export type PluginsUninstallData = {
+  body?: {
+    id: string
+    scope: "user" | "project" | "local"
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/plugins/uninstall"
+}
+
+export type PluginsUninstallErrors = {
+  /**
+   * PluginError | InvalidRequestError
+   */
+  400: PluginError | InvalidRequestError
+}
+
+export type PluginsUninstallError = PluginsUninstallErrors[keyof PluginsUninstallErrors]
+
+export type PluginsUninstallResponses = {
+  /**
+   * Uninstalled
+   */
+  200: PluginResult
+}
+
+export type PluginsUninstallResponse = PluginsUninstallResponses[keyof PluginsUninstallResponses]
+
+export type PluginsEnableData = {
+  body?: {
+    id: string
+    scope: "user" | "project" | "local"
+    enabled: boolean
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/plugins/enable"
+}
+
+export type PluginsEnableErrors = {
+  /**
+   * PluginError | InvalidRequestError
+   */
+  400: PluginError | InvalidRequestError
+}
+
+export type PluginsEnableError = PluginsEnableErrors[keyof PluginsEnableErrors]
+
+export type PluginsEnableResponses = {
+  /**
+   * Changed
+   */
+  200: PluginResult
+}
+
+export type PluginsEnableResponse = PluginsEnableResponses[keyof PluginsEnableResponses]
+
+export type PluginsUpdateData = {
+  body?: {
+    id: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/plugins/update"
+}
+
+export type PluginsUpdateErrors = {
+  /**
+   * PluginError | InvalidRequestError
+   */
+  400: PluginError | InvalidRequestError
+}
+
+export type PluginsUpdateError = PluginsUpdateErrors[keyof PluginsUpdateErrors]
+
+export type PluginsUpdateResponses = {
+  /**
+   * Updated
+   */
+  200: PluginResult
+}
+
+export type PluginsUpdateResponse = PluginsUpdateResponses[keyof PluginsUpdateResponses]
 
 export type ProjectListData = {
   body?: never

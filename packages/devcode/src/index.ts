@@ -16,6 +16,7 @@ import { DebugCommand } from "./cli/cmd/debug"
 import { StatsCommand } from "./cli/cmd/stats"
 import { McpCommand } from "./cli/cmd/mcp"
 import { CatalogCommand } from "./cli/cmd/catalog"
+import { PluginsCommand } from "./cli/cmd/plugins"
 import { ExportCommand } from "./cli/cmd/export"
 import { ImportCommand } from "./cli/cmd/import"
 import { AttachCommand } from "./cli/cmd/attach"
@@ -113,6 +114,7 @@ const cli = yargs(args)
   .command(AcpCommand)
   .command(McpCommand)
   .command(CatalogCommand)
+  .command(PluginsCommand)
   .command(TuiThreadCommand)
   .command(AttachCommand)
   .command(RunCommand)

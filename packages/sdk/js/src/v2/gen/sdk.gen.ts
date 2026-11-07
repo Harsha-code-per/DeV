@@ -136,6 +136,26 @@ import type {
   PermissionRuleset,
   PermissionV2Reply,
   PermissionV2Source,
+  PluginsAvailableErrors,
+  PluginsAvailableResponses,
+  PluginsEnableErrors,
+  PluginsEnableResponses,
+  PluginsInstalledErrors,
+  PluginsInstalledResponses,
+  PluginsInstallErrors,
+  PluginsInstallResponses,
+  PluginsMarketplaceAddErrors,
+  PluginsMarketplaceAddResponses,
+  PluginsMarketplaceRemoveErrors,
+  PluginsMarketplaceRemoveResponses,
+  PluginsMarketplacesErrors,
+  PluginsMarketplacesResponses,
+  PluginsMarketplaceUpdateErrors,
+  PluginsMarketplaceUpdateResponses,
+  PluginsUninstallErrors,
+  PluginsUninstallResponses,
+  PluginsUpdateErrors,
+  PluginsUpdateResponses,
   ProjectCommands,
   ProjectCurrentErrors,
   ProjectCurrentResponses,
@@ -2574,6 +2594,374 @@ export class Mcp extends HeyApiClient {
   private _auth?: Auth2
   get auth(): Auth2 {
     return (this._auth ??= new Auth2({ client: this.client }))
+  }
+}
+
+export class Marketplace extends HeyApiClient {
+  /**
+   * Add a plugin marketplace
+   *
+   * Add a plugin marketplace
+   */
+  public add<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      source?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "source" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      PluginsMarketplaceAddResponses,
+      PluginsMarketplaceAddErrors,
+      ThrowOnError
+    >({
+      url: "/plugins/marketplaces",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Fetch a marketplace's latest plugin list
+   *
+   * Fetch a marketplace's latest plugin list
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "name" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      PluginsMarketplaceUpdateResponses,
+      PluginsMarketplaceUpdateErrors,
+      ThrowOnError
+    >({
+      url: "/plugins/marketplaces/{name}/update",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Remove a marketplace and its plugins
+   *
+   * Remove a marketplace and its plugins
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      name: string
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "name" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      PluginsMarketplaceRemoveResponses,
+      PluginsMarketplaceRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/plugins/marketplaces/{name}",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Plugins extends HeyApiClient {
+  /**
+   * List plugins in the added marketplaces
+   *
+   * List plugins in the added marketplaces
+   */
+  public available<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<PluginsAvailableResponses, PluginsAvailableErrors, ThrowOnError>({
+      url: "/plugins/available",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * List installed plugins and where they are on
+   *
+   * List installed plugins and where they are on
+   */
+  public installed<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<PluginsInstalledResponses, PluginsInstalledErrors, ThrowOnError>({
+      url: "/plugins/installed",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * List plugin marketplaces
+   *
+   * List plugin marketplaces
+   */
+  public marketplaces<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<PluginsMarketplacesResponses, PluginsMarketplacesErrors, ThrowOnError>({
+      url: "/plugins/marketplaces",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Install a plugin and turn it on in a scope
+   *
+   * Install a plugin and turn it on in a scope
+   */
+  public install<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      id?: string
+      scope?: "user" | "project" | "local"
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "id" },
+            { in: "body", key: "scope" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<PluginsInstallResponses, PluginsInstallErrors, ThrowOnError>({
+      url: "/plugins/install",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Remove a plugin from a scope
+   *
+   * Remove a plugin from a scope
+   */
+  public uninstall<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      id?: string
+      scope?: "user" | "project" | "local"
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "id" },
+            { in: "body", key: "scope" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<PluginsUninstallResponses, PluginsUninstallErrors, ThrowOnError>({
+      url: "/plugins/uninstall",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Turn a plugin on or off in a scope
+   *
+   * Turn a plugin on or off in a scope
+   */
+  public enable<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      id?: string
+      scope?: "user" | "project" | "local"
+      enabled?: boolean
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "id" },
+            { in: "body", key: "scope" },
+            { in: "body", key: "enabled" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<PluginsEnableResponses, PluginsEnableErrors, ThrowOnError>({
+      url: "/plugins/enable",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Update a plugin to its marketplace's current version
+   *
+   * Update a plugin to its marketplace's current version
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      id?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "id" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<PluginsUpdateResponses, PluginsUpdateErrors, ThrowOnError>({
+      url: "/plugins/update",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  private _marketplace?: Marketplace
+  get marketplace(): Marketplace {
+    return (this._marketplace ??= new Marketplace({ client: this.client }))
   }
 }
 
@@ -7347,6 +7735,11 @@ export class DevcodeClient extends HeyApiClient {
   private _mcp?: Mcp
   get mcp(): Mcp {
     return (this._mcp ??= new Mcp({ client: this.client }))
+  }
+
+  private _plugins?: Plugins
+  get plugins(): Plugins {
+    return (this._plugins ??= new Plugins({ client: this.client }))
   }
 
   private _project?: Project
