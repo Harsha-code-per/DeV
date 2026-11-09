@@ -1,7 +1,7 @@
 name: packages
 
-# Linux packages for a release, built from its own archives: .deb and .rpm attached to the release,
-# the AUR package devcode-bin, and the Homebrew tap. The release workflow starts this; it can also be
+# Packages for a release, built from its own archives: .deb and .rpm attached to the release, the VS Code
+# extension, the AUR package devcode-bin, and the Homebrew tap. The release workflow starts this; it can also be
 # run by hand for an existing tag. Then it starts install-test, which installs each package.
 on:
   workflow_dispatch:
@@ -101,6 +101,25 @@ jobs:
           git add Formula/devcode.rb
           git -c user.name="Harshavardhan K" -c user.email="Harsha-code-per@users.noreply.github.com" commit -qm "devcode ${TAG#v}" || exit 0
           git push -q
+
+  # The VS Code extension, packaged from the release's own source and attached as devcode-vscode.vsix.
+  vscode:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(inputs.tag, '-') }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+      - name: Package
+        working-directory: packages/vscode
+        run: |
+          npm pkg set version="${TAG#v}"
+          npx -y @vscode/vsce@3.6.0 package --no-dependencies -o "$GITHUB_WORKSPACE/devcode-vscode.vsix"
+      - name: Attach to the release
+        run: gh release upload "$TAG" devcode-vscode.vsix --clobber
 
   install-test:
     needs: deb-rpm

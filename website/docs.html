@@ -5,7 +5,7 @@
 </head><body>
 <header class="topbar"><a href="./"><img src="mark.svg" alt="DeV home"></a><nav><a href="docs.html">Docs</a><a href="https://github.com/Harsha-code-per/DeV">GitHub</a></nav></header>
 <div class="docs">
-<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#connect">Connect a model</a><a href="#free">Free models</a><a href="#modes">Modes</a><a href="#commands">Commands</a><a href="#config">Configuration</a><a href="#security">Security</a><a href="#bench">Benchmarks</a><a href="#faq">FAQ</a></nav>
+<nav class="toc" aria-label="On this page"><a href="#install">Install</a><a href="#vscode">VS Code</a><a href="#connect">Connect a model</a><a href="#free">Free models</a><a href="#modes">Modes</a><a href="#commands">Commands</a><a href="#config">Configuration</a><a href="#security">Security</a><a href="#bench">Benchmarks</a><a href="#faq">FAQ</a></nav>
 <main class="doc">
 <h1>DeV Code docs</h1>
 <p>DeV Code is a coding agent for your terminal. Start it with <code>devcode</code> in your project folder.</p>
@@ -28,6 +28,11 @@
 <p>On ARM Linux, use <code>devcode-linux-arm64.deb</code> or <code>devcode-linux-arm64.rpm</code> instead. With Scoop on Windows:</p>
 <pre><code>scoop install https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode.json</code></pre>
 <p>The install scripts and the npm package check every download against the release's SHA-256 checksums before installing anything, and every release lists the checksums of its packages. To update, run <code>devcode upgrade</code>. If you installed with a package manager, it tells you the command to run.</p>
+
+<h2 id="vscode">Use DeV in VS Code</h2>
+<p>The DeV Code extension opens DeV in a terminal beside your file and tells it what you're looking at. Install DeV first, then the extension:</p>
+<pre><code>curl -fsSLo /tmp/devcode-vscode.vsix https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode-vscode.vsix &amp;&amp; code --install-extension /tmp/devcode-vscode.vsix</code></pre>
+<p>Press <code>Ctrl+Esc</code> (<code>Cmd+Esc</code> on macOS), or the DeV button above the editor, to open DeV. Your selection goes to DeV as you move, shown beside its prompt, so you can ask about "the selected function" without copying it. <code>Ctrl+Alt+K</code> (<code>Cmd+Alt+K</code>) mentions the selected lines in what you're writing. The extension talks to DeV over a local connection that only the terminal it opened can use.</p>
 
 <h2 id="connect">Connect a model</h2>
 <p>Start <code>devcode</code> in a project folder and type <code>/connect</code>. Pick a provider, paste its key, and you're ready. DeV saves the key in its own private store, so you don't need env variables or a <code>.env</code> file.</p>

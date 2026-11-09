@@ -1,0 +1,44 @@
+{
+  "name": "devcode-vscode",
+  "displayName": "DeV Code",
+  "description": "The open-source coding agent, beside your code. Every pro feature, any model, free.",
+  "version": "1.0.27",
+  "publisher": "devcodeagent",
+  "license": "MIT",
+  "private": true,
+  "icon": "icon.png",
+  "homepage": "https://trydev.work",
+  "repository": { "type": "git", "url": "https://github.com/Harsha-code-per/DeV" },
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["AI", "Other"],
+  "keywords": ["coding agent", "ai", "free", "open source", "devcode"],
+  "main": "./extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "commands": [
+      { "command": "devcode.open", "title": "Open DeV Code", "category": "DeV", "icon": "mark.svg" },
+      { "command": "devcode.mention", "title": "Mention the selection in DeV Code", "category": "DeV" }
+    ],
+    "keybindings": [
+      { "command": "devcode.open", "key": "ctrl+escape", "mac": "cmd+escape" },
+      { "command": "devcode.mention", "key": "ctrl+alt+k", "mac": "cmd+alt+k", "when": "editorTextFocus" }
+    ],
+    "menus": {
+      "editor/title": [{ "command": "devcode.open", "group": "navigation" }],
+      "editor/context": [{ "command": "devcode.mention", "when": "editorHasSelection", "group": "devcode" }]
+    },
+    "configuration": {
+      "title": "DeV Code",
+      "properties": {
+        "devcode.command": {
+          "type": "string",
+          "default": "devcode",
+          "description": "The command that starts DeV Code in the terminal."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "bun test"
+  }
+}

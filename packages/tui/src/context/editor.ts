@@ -366,6 +366,8 @@ function resolveEditorConnection(
   if (port) {
     return {
       url: `ws://127.0.0.1:${port}`,
+      // The DeV extension for VS Code starts its terminal with the port and a token for its server.
+      authToken: process.env.DEV_EDITOR_AUTH || undefined,
       source: `env:${port}`,
     }
   }

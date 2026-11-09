@@ -742,6 +742,10 @@
         "solid-js": "^1.9.0",
       },
     },
+    "packages/vscode": {
+      "name": "devcode-vscode",
+      "version": "1.0.27",
+    },
   },
   "trustedDependencies": [
     "esbuild",
@@ -2376,6 +2380,8 @@
     "detect-node": ["detect-node@2.1.0", "", {}, "sha512-T0NIuQpnTvFDATNuHN5roPwSBG83rFsuO+MXXH9/3N1eFbn4wcPjttvjMLEPWJ0RGUYgQE7cGgS3tNxbqCGM7g=="],
 
     "devcode": ["devcode@workspace:packages/devcode"],
+
+    "devcode-vscode": ["devcode-vscode@workspace:packages/vscode"],
 
     "devlop": ["devlop@1.1.0", "", { "dependencies": { "dequal": "^2.0.0" } }, "sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA=="],
 
