@@ -6,6 +6,7 @@ import { Global } from "@dev-ai/core/global"
 import { Brand } from "@dev-ai/core/brand"
 import Data from "./catalog.json"
 import { Hash } from "@dev-ai/core/util/hash"
+import { ConfigPlugin } from "@/config/plugin"
 
 // DeV catalog: curated skills, plugins and MCP servers that can be installed per user or per
 // project. Every operation is an edit to that scope's config file (or skills folder), so the
@@ -63,6 +64,7 @@ export async function status(entry: Entry, scope: Scope, root: string): Promise<
     if (item?.type) return "installed"
     return entry.bundled ? "bundled" : "available"
   }
+  if (ConfigPlugin.pluginOff(entry.plugin!, cfg.enabled_plugins)) return "disabled"
   if (plugins(cfg).some((spec) => samePlugin(spec, entry.plugin!))) return "installed"
   return entry.bundled ? "bundled" : "available"
 }
@@ -121,9 +123,11 @@ export async function setEnabled(entry: Entry, scope: Scope, root: string, enabl
     return `${enabled ? "Enabled" : "Disabled"} MCP server ${entry.id} in ${where.config}`
   }
   if (entry.kind === "plugin") {
-    // ponytail: plugin lists accumulate across config layers, so a bundled plugin can't be
-    // switched off from user config yet; needs a disabled-plugins setting in the engine.
-    if (!enabled && entry.bundled) throw new Error(`${entry.id} is bundled with DeV and can't be disabled yet`)
+    // Plugin lists only add up across config layers, so a built-in plugin is switched off by name instead.
+    if (entry.bundled) {
+      await edit(where.config, ["enabled_plugins", pluginName(entry.plugin!)], enabled)
+      return `${enabled ? "Enabled" : "Disabled"} plugin ${entry.id} in ${where.config}`
+    }
     return enabled ? install(entry, scope, root) : uninstall(entry, scope, root)
   }
   // The skill scanner skips dot-directories, so a leading dot disables a skill in place.
@@ -163,7 +167,11 @@ async function fetchSkill(skill: NonNullable<Entry["skill"]>) {
 
 async function readConfig(
   file: string,
-): Promise<{ mcp?: Record<string, { type?: string; enabled?: boolean }>; plugin?: unknown[] }> {
+): Promise<{
+  mcp?: Record<string, { type?: string; enabled?: boolean }>
+  plugin?: unknown[]
+  enabled_plugins?: Record<string, boolean>
+}> {
   const text = await fs.readFile(file, "utf8").catch(() => "{}")
   return parse(text) ?? {}
 }

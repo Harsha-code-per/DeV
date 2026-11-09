@@ -28,6 +28,15 @@ export const Style = {
   TEXT_INFO_BOLD: "\x1b[94m\x1b[1m",
 }
 
+/**
+ * Writes the end of a command's output and waits until stdout has taken everything queued before it. DeV exits
+ * right after a command, which otherwise cuts off output still on its way into a pipe (`devcode export … | jq`
+ * lost everything past 128 KB). Bun's own buffer counts don't show that queue, so waiting on this write is the signal.
+ */
+export function end(text: string = EOL) {
+  return new Promise<void>((resolve) => process.stdout.write(text, () => resolve()))
+}
+
 export function println(...message: string[]) {
   print(...message)
   process.stderr.write(EOL)

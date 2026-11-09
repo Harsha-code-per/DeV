@@ -7,7 +7,7 @@ import { useSDK } from "../context/sdk"
 
 type Scope = "user" | "project" | "local"
 type Choice =
-  | { kind: "installed"; id: string; enabled: boolean; scope?: Scope }
+  | { kind: "installed"; id: string; enabled: boolean; scope?: Scope; code: boolean }
   | { kind: "available"; id: string }
   | { kind: "marketplace"; name: string }
   | { kind: "add" }
@@ -70,9 +70,9 @@ export function DialogPlugins() {
     const installedIds = new Set(value.installed.map((item) => item.id))
     return [
       ...value.installed.map((item) => ({
-        value: { kind: "installed", id: item.id, enabled: item.enabled, scope: item.scope } as Choice,
+        value: { kind: "installed", id: item.id, enabled: item.enabled, scope: item.scope, code: item.kind === "code" } as Choice,
         title: `${item.enabled ? "●" : "○"} ${item.id}`,
-        description: `${item.version}${item.scope ? ` · ${item.scope}` : ""}${item.enabled ? "" : " · off"}`,
+        description: `${item.kind === "code" ? "code plugin" : item.version}${item.scope ? ` · ${item.scope}` : ""}${item.enabled ? "" : " · off"}`,
         category: "Installed",
       })),
       ...value.available
@@ -171,10 +171,12 @@ export function DialogPlugins() {
       { value: "update", title: "Update", description: "to the version its marketplace lists now" },
       { value: "uninstall", title: "Uninstall", description: `remove from ${scope} scope` },
     ] as const
+    // A code plugin (DeV's built-ins too) comes from config, so it can only be switched on or off here.
+    const shown = item.code ? actions.filter((action) => action.value === "toggle") : actions
     dialog.replace(() => (
       <DialogSelect<(typeof actions)[number]["value"]>
         title={item.id}
-        options={[...actions]}
+        options={[...shown]}
         onSelect={(option) => {
           const request =
             option.value === "toggle"

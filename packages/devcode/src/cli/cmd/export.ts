@@ -287,6 +287,6 @@ const run = Effect.fn("Cli.export.body")(function* (args: { sessionID?: string; 
     const exportData = { info: sessionInfo, messages }
 
     process.stdout.write(JSON.stringify(args.sanitize ? sanitize(exportData) : exportData, null, 2))
-    process.stdout.write(EOL)
+    yield* Effect.promise(() => UI.end())
   }).pipe(Effect.catchCause(() => fail(`Session not found: ${sessionID!}`)))
 })

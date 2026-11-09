@@ -3,6 +3,7 @@ import fs from "fs/promises"
 import os from "os"
 import path from "path"
 import { Marketplace } from "../../src/marketplace"
+import { ConfigPlugin } from "../../src/config/plugin"
 
 const dir = await fs.mkdtemp(path.join(os.tmpdir(), "dev-marketplace-"))
 afterAll(() => fs.rm(dir, { recursive: true, force: true }))
@@ -154,5 +155,20 @@ describe("plugin marketplaces", () => {
     // Project scope in its own folder: user scope is shared, and later skill tests would find this skill.
     const result = await Marketplace.install("one-skill@team", "project", path.join(dir, "single"))
     expect(result.contents.skills).toBe(1)
+  })
+
+  test("a code plugin, built-in ones included, is switched off by its short name", async () => {
+    const project = path.join(dir, "code")
+    await write(path.join(project, ".dev", "dev.json"), JSON.stringify({ plugin: ["@acme/lint-helper@1.2.0"] }))
+    expect(await Marketplace.codePlugins(project)).toContainEqual(
+      expect.objectContaining({ id: "lint-helper", version: "1.2.0", enabled: true, kind: "code" }),
+    )
+    await Marketplace.setEnabled("lint-helper", "project", project, false)
+    const item = (await Marketplace.codePlugins(project)).find((entry) => entry.id === "lint-helper")
+    expect(item).toMatchObject({ enabled: false, scope: "project" })
+    // The loader skips a plugin switched off by its short name or its package name.
+    expect(ConfigPlugin.pluginOff("@acme/lint-helper@1.2.0", { "lint-helper": false })).toBe(true)
+    expect(ConfigPlugin.pluginOff("superpowers@git+https://github.com/obra/superpowers.git#v7.0.1", { superpowers: false })).toBe(true)
+    expect(ConfigPlugin.pluginOff("@acme/lint-helper@1.2.0", { "lint-helper": true })).toBe(false)
   })
 })

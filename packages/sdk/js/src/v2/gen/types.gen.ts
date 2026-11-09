@@ -2852,6 +2852,7 @@ export type PluginInstalled = {
   scope?: "user" | "project" | "local"
   installPath: string
   installedAt: string
+  kind?: string
 }
 
 export type PluginMarketplace = {

@@ -70,7 +70,8 @@ export const pluginsHandlers = HttpApiBuilder.group(InstanceHttpApi, "plugins", 
       .handle("installed", () =>
         Effect.gen(function* () {
           const root = yield* project
-          return yield* run(() => Marketplace.installed(root))
+          // DeV's built-in code plugins (and any npm ones) are listed too, so each can be switched off here.
+          return yield* run(async () => [...(await Marketplace.installed(root)), ...(await Marketplace.codePlugins(root))])
         }),
       )
       .handle("marketplaces", () =>

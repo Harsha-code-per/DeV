@@ -31,6 +31,8 @@ export const PluginInstalled = Schema.Struct({
   scope: Schema.optional(Scope),
   installPath: Schema.String,
   installedAt: Schema.String,
+  /** "code" for an npm or git code plugin (DeV's built-ins too), which can only be switched on or off here. */
+  kind: Schema.optional(Schema.String),
 }).annotate({ identifier: "PluginInstalled" })
 
 export const PluginMarketplace = Schema.Struct({

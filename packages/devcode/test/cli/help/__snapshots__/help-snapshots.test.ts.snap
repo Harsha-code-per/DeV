@@ -27,11 +27,13 @@ exports[`devcode CLI help-text snapshots every documented command emits stable h
 manage MCP (Model Context Protocol) servers
 
 Commands:
-  devcode mcp add [name]     add an MCP server
-  devcode mcp list           list MCP servers and their status                         [aliases: ls]
-  devcode mcp auth [name]    authenticate with an OAuth-enabled MCP server
-  devcode mcp logout [name]  remove OAuth credentials for an MCP server
-  devcode mcp debug <name>   debug OAuth connection for an MCP server
+  devcode mcp add [name]      add an MCP server
+  devcode mcp list            list MCP servers and their status                        [aliases: ls]
+  devcode mcp auth [name]     authenticate with an OAuth-enabled MCP server
+  devcode mcp logout [name]   remove OAuth credentials for an MCP server
+  devcode mcp debug <name>    debug OAuth connection for an MCP server
+  devcode mcp enable <name>   turn an MCP server on (built-in ones too), saved in your user config
+  devcode mcp disable <name>  turn an MCP server off (built-in ones too), saved in your user config
 
 Options:
   -h, --help        show help                                                              [boolean]

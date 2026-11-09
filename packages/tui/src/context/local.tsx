@@ -514,13 +514,11 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
       },
       async toggle(name: string) {
         const status = sync.data.mcp[name]
-        if (status?.status === "connected") {
-          // Disable: disconnect the MCP
-          await sdk.client.mcp.disconnect({ name })
-        } else {
-          // Enable/Retry: connect the MCP (handles disabled, failed, and other states)
-          await sdk.client.mcp.connect({ name })
-        }
+        const enabled = status?.status !== "connected"
+        // Disconnect, or connect (also retries a failed server), now…
+        await (enabled ? sdk.client.mcp.connect({ name }) : sdk.client.mcp.disconnect({ name }))
+        // …and remember it, so a server you switch off (DeV's built-in ones too) stays off in later sessions.
+        await sdk.client.global.config.update({ config: { mcp: { [name]: { enabled } } } }, { throwOnError: true })
       },
     }
 

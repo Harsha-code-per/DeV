@@ -39,6 +39,20 @@ export function pluginSpecifier(plugin: ConfigPluginV1.Spec): string {
   return Array.isArray(plugin) ? plugin[0] : plugin
 }
 
+/**
+ * The names `enabled_plugins` can switch a code plugin off by: its package ("@dietrichgebert/ponytail") and its
+ * short name ("ponytail"). That's how built-in plugins are turned off, since config layers only add to `plugin`.
+ */
+export function pluginNames(plugin: ConfigPluginV1.Spec) {
+  const spec = pluginSpecifier(plugin)
+  const pkg = spec.startsWith("file://") ? spec : parsePluginSpecifier(spec).pkg
+  return [...new Set([pkg, path.basename(pkg).replace(/\.(ts|js)$/, "")])]
+}
+
+export function pluginOff(plugin: ConfigPluginV1.Spec, enabled: Record<string, boolean> | undefined) {
+  return pluginNames(plugin).some((name) => enabled?.[name] === false)
+}
+
 export function pluginOptions(plugin: ConfigPluginV1.Spec): ConfigPluginV1.Options | undefined {
   return Array.isArray(plugin) ? plugin[1] : undefined
 }

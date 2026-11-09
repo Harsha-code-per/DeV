@@ -33,24 +33,17 @@ export const ModelsCommand = effectCmd({
     const provider = yield* Provider.Service
     const providers = yield* provider.list()
 
-    const print = (providerID: ProviderV2.ID, verbose?: boolean) => {
-      const p = providers[providerID]
-      const sorted = Object.entries(p.models).sort(([a], [b]) => a.localeCompare(b))
-      for (const [modelID, model] of sorted) {
-        process.stdout.write(`${providerID}/${modelID}`)
-        process.stdout.write(EOL)
-        if (verbose) {
-          process.stdout.write(JSON.stringify(model, null, 2))
-          process.stdout.write(EOL)
-        }
-      }
-    }
+    // One string, written with UI.end, so a long list piped to another program isn't cut off.
+    const list = (providerID: ProviderV2.ID, verbose?: boolean) =>
+      Object.entries(providers[providerID].models)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([modelID, model]) => `${providerID}/${modelID}${EOL}${verbose ? JSON.stringify(model, null, 2) + EOL : ""}`)
+        .join("")
 
     if (args.provider) {
       const providerID = ProviderV2.ID.make(args.provider)
       if (!providers[providerID]) return yield* fail(`Provider not found: ${args.provider}`)
-      print(providerID, args.verbose)
-      return
+      return yield* Effect.promise(() => UI.end(list(providerID, args.verbose)))
     }
 
     const ids = Object.keys(providers).sort((a, b) => {
@@ -61,6 +54,6 @@ export const ModelsCommand = effectCmd({
       return a.localeCompare(b)
     })
 
-    for (const providerID of ids) print(ProviderV2.ID.make(providerID), args.verbose)
+    yield* Effect.promise(() => UI.end(ids.map((id) => list(ProviderV2.ID.make(id), args.verbose)).join("")))
   }),
 })

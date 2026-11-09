@@ -7,6 +7,7 @@ import type {
   WorkspaceAdapter as PluginWorkspaceAdapter,
 } from "@dev-ai/plugin"
 import { Config } from "@/config/config"
+import { ConfigPlugin } from "@/config/plugin"
 import { createDevcodeClient } from "@dev-ai/sdk"
 import { ServerAuth } from "@/server/auth"
 import { Session } from "@/session/session"
@@ -167,7 +168,10 @@ const layer = Layer.effect(
           if (init._tag === "Some") hooks.push(init.value)
         }
 
-        const plugins = flags.pure ? [] : (cfg.plugin_origins ?? [])
+        // `"enabled_plugins": { "ponytail": false }` switches a code plugin off, built-in ones included.
+        const plugins = flags.pure
+          ? []
+          : (cfg.plugin_origins ?? []).filter((item) => !ConfigPlugin.pluginOff(item.spec, cfg.enabled_plugins))
         if (flags.pure && cfg.plugin_origins?.length) {
         }
         if (plugins.length) yield* config.waitForDependencies()

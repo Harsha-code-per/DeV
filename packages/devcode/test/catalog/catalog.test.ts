@@ -69,9 +69,13 @@ describe("Catalog", () => {
     expect((await Bun.file(where.config).json()).plugin).toEqual([])
   })
 
-  test("bundled plugins refuse to be disabled", async () => {
+  test("bundled plugins switch off by name, and back on", async () => {
     const root = await tmp()
-    await expect(Catalog.setEnabled(Catalog.get("superpowers")!, "project", root, false)).rejects.toThrow("bundled")
+    const entry = Catalog.get("superpowers")!
+    await Catalog.setEnabled(entry, "project", root, false)
+    expect(await Catalog.status(entry, "project", root)).toBe("disabled")
+    await Catalog.setEnabled(entry, "project", root, true)
+    expect(await Catalog.status(entry, "project", root)).not.toBe("disabled")
   })
 
   test("skills install from a pinned ref, disable in place and uninstall", async () => {

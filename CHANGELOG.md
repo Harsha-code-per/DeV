@@ -9,6 +9,11 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 - A marketplace named in config is added the first time you open `/plugins` or run `devcode plugins`, and refreshed daily.
 - A repo that is a single skill (`SKILL.md` at its root) installs as a plugin.
 - MCP servers that need an API key or token say which environment variables to set.
+- Everything built in can be switched off, and stays off:
+  - DeV's built-in plugins (superpowers, ponytail) and any code plugin you've added are listed in `/plugins` under Installed, where you can turn each off or on. Or run `devcode plugins disable ponytail`, or set `"enabled_plugins": { "ponytail": false }`.
+  - Turning an MCP server off in `/mcps` is now saved, so it stays off in later sessions. This works for the built-in servers too. Or run `devcode mcp disable <name>` and `devcode mcp enable <name>`.
+- `devcode mcp list` shows a server still on its first start (often a package download) as "starting" instead of "failed". It connects in your session once ready.
+- Long output piped to another program is no longer cut off at 128 KB. This affected `devcode export <session> | jq`, `devcode models --verbose` and `devcode debug skill`.
 - Typing `/plugins` and pressing Enter opens the plugins dialog. Before, an older built-in command of the same name ran instead; that command is now `/catalog`.
 
 ## 1.0.18 (2026-11-07)

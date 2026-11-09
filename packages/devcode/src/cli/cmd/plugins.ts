@@ -36,7 +36,7 @@ export const PluginsCommand = cmd({
     if (args.action === "marketplace") return marketplace(first, rest)
 
     if (args.action === "list") {
-      const list = await Marketplace.installed(project)
+      const list = [...(await Marketplace.installed(project)), ...(await Marketplace.codePlugins(project))]
       if (list.length === 0) UI.println("No plugins installed. Find some with `devcode plugins search`.")
       for (const item of list)
         UI.println(

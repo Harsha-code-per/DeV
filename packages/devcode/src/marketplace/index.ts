@@ -19,6 +19,10 @@ import { Process } from "@/util/process"
 import { ConfigCommand } from "@/config/command"
 import { ConfigAgent } from "@/config/agent"
 import DevDefaults from "@/config/dev-defaults.json"
+import { ConfigPlugin } from "@/config/plugin"
+import type { ConfigPluginV1 } from "@dev-ai/core/v1/config/plugin"
+import { Flag } from "@dev-ai/core/flag/flag"
+import { parsePluginSpecifier } from "@/plugin/shared"
 
 export type Scope = "user" | "project" | "local"
 
@@ -246,7 +250,8 @@ export async function uninstall(id: string, scope: Scope, project: string) {
 }
 
 export async function setEnabled(id: string, scope: Scope, project: string, enabled: boolean) {
-  const full = await resolveId(id)
+  const code = (await codePlugins(project)).some((item) => item.id === id)
+  const full = code ? id : await resolveId(id)
   await editConfig(scope, project, ["enabled_plugins", full], enabled)
   return full
 }
@@ -259,6 +264,26 @@ export async function update(id: string, project: string) {
   const scope = (await scopeOf(full, project)) ?? "user"
   const after = await install(full, scope, project)
   return { id: full, from: before?.version, to: after.version }
+}
+
+/**
+ * Code plugins (npm or git packages listed under `plugin`, DeV's built-ins included). Config layers only add to that
+ * list, so each is switched off by its short name in enabled_plugins, and is on unless a scope says false.
+ */
+export async function codePlugins(project: string) {
+  const order = ["user", "project", "local"] as const
+  const layers = await Promise.all(order.map((scope) => readConfig(scope, project)))
+  const specs = [...(Flag.DEV_DISABLE_BUNDLED_DEFAULTS ? [] : DevDefaults.plugin), ...layers.flatMap((layer) => layer.plugin ?? [])]
+  const named = new Map(specs.map((spec) => [ConfigPlugin.pluginNames(spec).at(-1)!, spec]))
+  return [...named].map(([id, spec]) => ({
+    id,
+    version: parsePluginSpecifier(ConfigPlugin.pluginSpecifier(spec)).version,
+    enabled: layers.reduce<boolean | undefined>((value, layer) => layer.enabled_plugins?.[id] ?? value, undefined) !== false,
+    scope: order.findLast((_, index) => layers[index]?.enabled_plugins?.[id] !== undefined),
+    kind: "code",
+    installPath: "",
+    installedAt: "",
+  }))
 }
 
 /** Installed plugins with where they're on, for listings. */
@@ -583,7 +608,10 @@ export async function configFile(scope: Scope, project: string) {
   return path.join(dir, scope === "local" ? `${Brand.CONFIG_NAME}.local.json` : `${Brand.CONFIG_NAME}.json`)
 }
 
-async function readConfig(scope: Scope, project: string): Promise<{ enabled_plugins?: Record<string, boolean> }> {
+async function readConfig(
+  scope: Scope,
+  project: string,
+): Promise<{ enabled_plugins?: Record<string, boolean>; plugin?: ConfigPluginV1.Spec[] }> {
   const text = await fs.readFile(await configFile(scope, project), "utf8").catch(() => "{}")
   return parse(text) ?? {}
 }

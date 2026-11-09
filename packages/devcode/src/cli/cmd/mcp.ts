@@ -103,9 +103,30 @@ export const McpCommand = cmd({
       .command(McpAuthCommand)
       .command(McpLogoutCommand)
       .command(McpDebugCommand)
+      .command(switchCommand(true))
+      .command(switchCommand(false))
       .demandCommand(),
   async handler() {},
 })
+
+/** `mcp enable|disable <name>`: saved in your user config, so it holds for DeV's built-in servers too. */
+function switchCommand(enabled: boolean) {
+  return effectCmd({
+    command: `${enabled ? "enable" : "disable"} <name>`,
+    describe: `turn an MCP server ${enabled ? "on" : "off"} (built-in ones too), saved in your user config`,
+    builder: (yargs) => yargs.positional("name", { describe: "name of the MCP server", type: "string", demandOption: true }),
+    handler: Effect.fn("Cli.mcp.switch")(function* (args) {
+      const cfg = yield* Config.Service
+      const names = configuredServers(yield* cfg.get()).map(([name]) => name)
+      if (!names.includes(args.name)) {
+        UI.error(`No MCP server named ${args.name}. Configured: ${names.join(", ") || "none"}`)
+        return
+      }
+      yield* cfg.updateGlobal({ mcp: { [args.name]: { enabled } } })
+      UI.println(`${enabled ? "Enabled" : "Disabled"} ${args.name}. It applies to new sessions.`)
+    }),
+  })
+}
 
 export const McpListCommand = effectCmd({
   command: "list",
@@ -152,6 +173,11 @@ export const McpListCommand = effectCmd({
         statusIcon = "✗"
         statusText = "needs client registration"
         hint = "\n    " + status.error
+      } else if (status.error === "Starting") {
+        // A first start (often an npx download) keeps going in a session; this command doesn't wait for it.
+        statusIcon = "…"
+        statusText = "starting"
+        hint = "\n    first start can take a while; it connects in your session"
       } else {
         statusIcon = "✗"
         statusText = "failed"
