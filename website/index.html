@@ -1,66 +1,319 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="mark.svg"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@75..150,400..900&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap"><link rel="stylesheet" href="site.css">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>DeV Code</title>
-<meta name="description" content="DeV Code gives every developer the premium features of a coding agent, with nothing to pay.">
-<meta property="og:title" content="DeV Code"><meta property="og:description" content="Pro coding for everyone. Premium coding agent features with nothing to pay."><meta property="og:image" content="https://trydev.work/og.png"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image">
-</head><body>
-<section class="hero">
-  <header class="topbar"><a href="./"><img src="mark.svg" alt="DeV home"></a><nav><a href="docs.html">Docs</a><a href="https://github.com/Harsha-code-per/DeV">GitHub</a></nav></header>
-  <div class="hero-in">
-    <h1>Pro coding for everyone.</h1>
-    <p>DeV Code is a coding agent for your terminal. It gives every developer the premium features that usually sit behind a paid plan, with nothing to pay and no card to add.</p>
-    <div class="cmd"><code id="install">curl -fsSL https://trydev.work/install | sh</code><button data-copy="#install">Copy</button></div>
-    <p class="alt">Prefer npm, pnpm or bun, or using Windows? See <a href="docs.html#install" style="color:inherit">the install guide</a>.</p>
+<link rel="icon" href="mark.svg" type="image/svg+xml">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="DeV Code is a free, open-source coding agent for your terminal. Bring any model.">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="canonical" href="https://trydev.work/">
+<meta property="og:title" content="DeV Code"><meta property="og:description" content="Every pro feature. Any model. Free. The open-source coding agent for your terminal."><meta property="og:image" content="https://trydev.work/og.png"><meta property="og:url" content="https://trydev.work/"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a fixed WebGL studio behind a tall scroll stage (hero → model seats → exploded layers → dive into the core),
+   then a dark terminal, a word-by-word statement, and light "product page" sections: keycap, specs, receipt, install. */
+:root {
+  --night: #000;
+  --ink: #f5f3ef;
+  --dim: #8d8a84;
+  --saffron: #f2a516;
+  --day: #eef0f2;
+  --day-ink: #16171a;
+  --day-dim: #62656b;
+  --rule: #d4d7db;
+  --sans: "Geist", system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box }
+html { background: var(--night) }
+body { margin: 0; background: var(--night); color: var(--ink); font: 400 18px/1.55 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden }
+a { color: inherit }
+button { font: inherit; color: inherit }
+:focus-visible { outline: 2px solid var(--saffron); outline-offset: 4px; border-radius: 4px }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.wrap { max-width: 1180px; margin-inline: auto }
+
+/* Top bar */
+.bar { position: fixed; inset: 0 0 auto; z-index: 20; display: flex; justify-content: space-between; align-items: center; height: 56px; font-size: 14px; color: var(--ink); border-bottom: 1px solid transparent; transition: background .35s, color .35s, border-color .35s }
+.bar.solid { background: rgba(14, 13, 12, .62); border-bottom-color: rgba(255, 255, 255, .07); backdrop-filter: saturate(160%) blur(18px); -webkit-backdrop-filter: saturate(160%) blur(18px) }
+.bar.light { background: rgba(238, 240, 242, .74); color: var(--day-ink); border-bottom-color: rgba(0, 0, 0, .07) }
+.bar .brand { display: flex; gap: 10px; align-items: center; font-weight: 600; text-decoration: none; letter-spacing: -.01em }
+.bar .brand svg { width: 24px; height: 24px }
+.bar nav { display: flex; gap: 26px }
+.bar nav a { text-decoration: none; opacity: .8 }
+.bar nav a:hover { opacity: 1 }
+
+/* Studio */
+.scene { position: fixed; inset: 0; z-index: 1; pointer-events: none }
+.scene canvas { position: absolute; inset: 0; width: 100%; height: 100% }
+.flash { position: absolute; inset: 0; opacity: 0; background: #000 }
+.grain { position: absolute; inset: -50%; opacity: .07; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"); animation: grain 1s steps(4) infinite }
+@keyframes grain { 25% { transform: translate(-3%, 2%) } 50% { transform: translate(2%, -4%) } 75% { transform: translate(-1%, 3%) } }
+.label { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 12px; opacity: 0; white-space: nowrap; will-change: transform, opacity }
+.label i { display: block; width: 46px; height: 1px; background: linear-gradient(90deg, transparent, rgba(245, 243, 239, .7)) }
+.label b { display: block; font-weight: 500; font-size: 15px; letter-spacing: -.005em }
+.label span { display: block; color: var(--dim); font-size: 13px }
+
+.stage { position: relative; z-index: 2; height: 900vh }
+.chapter { position: fixed; z-index: 3; visibility: hidden; opacity: 0 }
+.hero { inset: 0; display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: clamp(84px, 13vh, 140px) }
+.hero h1 { margin: 0; font: 600 clamp(44px, min(6.4vw, 10.5vh), 104px)/.95 var(--sans); letter-spacing: -.045em }
+.hero h1 span { display: block; overflow: hidden; padding-bottom: .06em }
+.hero h1 span > span { display: block }
+.hero h1 .soft { color: transparent; background: linear-gradient(180deg, #fff 10%, #9b958b 110%); -webkit-background-clip: text; background-clip: text }
+.hero p { margin: 0; max-width: 36ch; color: #bdb8b0; font-size: clamp(16px, 1.4vw, 19px) }
+.hero .actions { pointer-events: auto; margin-top: auto; margin-bottom: clamp(24px, 5vh, 56px); display: flex; align-items: center; gap: 28px; text-align: left }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 6px 6px 6px 18px; border-radius: 999px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); font: 400 14px var(--mono); max-width: calc(100vw - 32px) }
+.pill code { white-space: nowrap; overflow-x: auto; scrollbar-width: none; color: #e9e4da }
+.pill button { flex: none; border: 0; border-radius: 999px; padding: 9px 16px; background: var(--ink); color: #000; font: 500 14px var(--sans); cursor: pointer }
+.pill button:active { transform: scale(.97) }
+.side { left: max(16px, 6vw); top: 50%; transform: translateY(-50%); max-width: min(420px, 40vw) }
+.side h2 { margin: 0 0 18px; font: 600 clamp(36px, 4.6vw, 68px)/1 var(--sans); letter-spacing: -.04em }
+.side p { margin: 0; color: #bdb8b0 }
+.side .ways { list-style: none; padding: 0; margin: 26px 0 0; display: grid; gap: 10px }
+.side .ways li { display: flex; gap: 14px; align-items: baseline }
+.side .ways li::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--saffron); box-shadow: 0 0 12px var(--saffron); transform: translateY(-2px) }
+
+/* Session */
+.session { position: relative; z-index: 2; background: var(--night); height: 300vh }
+.session .pin { position: sticky; top: 0; height: 100vh; display: grid; place-items: center; padding-top: 56px }
+.session-inner { width: min(980px, 100%) }
+.session h2 { margin: 0 0 8px; font: 600 clamp(30px, 3.6vw, 52px)/1.05 var(--sans); letter-spacing: -.035em }
+.session .lede { margin: 0 0 30px; color: var(--dim); max-width: 56ch }
+.term { border-radius: 14px; background: linear-gradient(180deg, #17150f, #0c0b08); border: 1px solid #2b2618; box-shadow: 0 50px 120px -30px rgba(242, 165, 22, .28), inset 0 1px 0 rgba(255, 255, 255, .06); overflow: hidden }
+.term-top { display: flex; justify-content: center; padding: 11px; font: 400 12.5px var(--mono); color: #7a7466; border-bottom: 1px solid #241f14 }
+.term pre { margin: 0; padding: 24px clamp(16px, 3vw, 32px) 30px; min-height: 330px; font: 400 clamp(13px, 1.25vw, 15.5px)/1.85 var(--mono); white-space: pre-wrap; color: #e7e1d4 }
+.term .you { color: #fff }
+.term .dim { color: #7a7466 }
+.term .add { color: #9fd18b }
+.term .del { color: #e3836a }
+.term .ok { color: var(--saffron) }
+.term .caret { display: inline-block; width: .6em; height: 1.1em; vertical-align: -.2em; background: var(--saffron); animation: blink 1s steps(1) infinite }
+@keyframes blink { 50% { opacity: 0 } }
+
+/* Statement */
+.statement { position: relative; z-index: 2; background: var(--night); padding-block: 22vh 26vh }
+.statement p { margin: 0 auto; max-width: 20ch; text-align: center; font: 600 clamp(34px, 5.4vw, 80px)/1.04 var(--sans); letter-spacing: -.04em }
+.statement .w { opacity: .16 }
+
+/* Day */
+.day { position: relative; z-index: 2; background: var(--day); color: var(--day-ink); color-scheme: light }
+.day section { padding-block: clamp(90px, 16vh, 170px) }
+.day #modes { min-height: 100vh; display: flex; align-items: center; padding-block: 80px 40px }
+.day #modes .wrap { width: 100% }
+.day h2 { margin: 0 0 14px; font: 600 clamp(38px, 5vw, 76px)/1 var(--sans); letter-spacing: -.045em }
+.day .lede { margin: 0; color: var(--day-dim); max-width: 50ch; font-size: clamp(17px, 1.4vw, 20px) }
+.day :focus-visible { outline-color: var(--day-ink) }
+
+.modes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 60px; align-items: center; margin-top: clamp(28px, 5vh, 60px) }
+.keywell { display: grid; place-items: center; aspect-ratio: 1.3; max-height: 54vh; margin-inline: auto; width: 100%; border-radius: 34px; background: radial-gradient(120% 90% at 50% 20%, #fdfdfd, #dfe2e6); box-shadow: inset 0 2px 0 #fff, inset 0 -30px 60px rgba(0, 0, 0, .05), 0 40px 80px -40px rgba(20, 24, 30, .35) }
+.key { position: relative; width: min(330px, 70%); aspect-ratio: 1.55; border: 0; border-radius: 22px; cursor: pointer; background: linear-gradient(180deg, #2c2d31, #1b1c1f); box-shadow: 0 1px 0 1px #0d0e10, 0 14px 0 -2px #0b0b0d, 0 30px 40px -10px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .14); transition: transform .12s, box-shadow .12s; color: #f1efe9 }
+.key::before { content: ""; position: absolute; inset: 9px 12px 20px; border-radius: 15px; background: linear-gradient(180deg, #35363b, #222327); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 -10px 18px rgba(0, 0, 0, .25) }
+.key span { position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; height: 100%; padding: 24px 30px 34px; font: 500 22px var(--sans) }
+.key span small { font-size: 34px; line-height: 1 }
+.key { transition: transform .14s cubic-bezier(.3, .7, .4, 1), box-shadow .14s }
+.key:active, .key.down { transform: translateY(10px); box-shadow: 0 1px 0 1px #0d0e10, 0 4px 0 -2px #0b0b0d, 0 12px 20px -8px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .14) }
+.mode-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule) }
+.mode-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 0 12px; padding: 16px 0; border-bottom: 1px solid var(--rule); color: var(--day-dim); transition: color .3s }
+.mode-list li::before { content: ""; width: 9px; height: 9px; margin-top: 9px; border-radius: 50%; border: 1.5px solid currentColor; transition: background .3s, box-shadow .3s }
+.mode-list b { font-weight: 600; font-size: 20px; letter-spacing: -.01em }
+.mode-list p { grid-column: 2; margin: 0; max-height: 0; overflow: hidden; opacity: 0; transition: max-height .4s, opacity .3s, margin .4s; color: var(--day-dim); font-size: 16px }
+.mode-list li.on { color: var(--day-ink) }
+.mode-list li.on::before { background: var(--saffron); border-color: var(--saffron); box-shadow: 0 0 0 5px rgba(242, 165, 22, .22) }
+.mode-list li.on p { max-height: 90px; opacity: 1; margin-top: 4px }
+
+.specs { margin-top: 60px; border-top: 1px solid var(--day-ink) }
+.spec { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; gap: 8px 32px; align-items: baseline; padding: 24px 0; border-bottom: 1px solid var(--rule) }
+.spec h3 { margin: 0; font: 600 21px/1.2 var(--sans); letter-spacing: -.015em }
+.spec p { margin: 0; color: var(--day-dim); max-width: 58ch }
+.spec code { font: 400 14px var(--mono); color: var(--day-ink); white-space: nowrap }
+
+.proof { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 60px; align-items: start }
+.printer { position: relative; padding-top: 10px }
+.slot { position: relative; z-index: 2; height: 30px; border-radius: 15px; background: linear-gradient(180deg, #2b2c30, #121315); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .1), 0 18px 30px -18px rgba(0, 0, 0, .6) }
+.slot::after { content: ""; position: absolute; left: 7%; right: 7%; top: 13px; height: 4px; border-radius: 2px; background: #000 }
+.paper-clip { margin: -15px 9% 0; overflow: hidden; padding: 0 22px 40px; filter: drop-shadow(0 18px 18px rgba(20, 24, 30, .18)) drop-shadow(0 2px 2px rgba(20, 24, 30, .12)) }
+.paper { position: relative; padding: 34px 26px 30px; background: linear-gradient(180deg, #e6e3dc 0, #fbfaf6 14px, #fff 60%, #f6f4ee); font: 400 14.5px/1.9 var(--mono); color: #222; box-shadow: 0 22px 34px -18px rgba(0, 0, 0, .35); -webkit-mask: radial-gradient(circle 7px at 50% 100%, transparent 6.5px, #000 7px) 50% 100% / 18px 14px repeat-x, linear-gradient(#000, #000) top / 100% calc(100% - 13px) no-repeat; mask: radial-gradient(circle 7px at 50% 100%, transparent 6.5px, #000 7px) 50% 100% / 18px 14px repeat-x, linear-gradient(#000, #000) top / 100% calc(100% - 13px) no-repeat }
+.paper .row { display: flex; justify-content: space-between; gap: 16px }
+.paper .row span:last-child { text-align: right }
+.paper hr { border: 0; border-top: 1.5px dashed #b9b6ae; margin: 12px 0 }
+.paper .head { text-align: center; font-weight: 500; letter-spacing: .06em }
+.paper .total { font-weight: 500; font-size: 17px }
+.paper .foot { text-align: center; color: #666; margin-top: 8px }
+
+.install { background: radial-gradient(120% 80% at 50% 0%, #2a2116 0%, #17140f 55%, #121110 100%); color: var(--ink); text-align: center; padding-block: clamp(110px, 22vh, 220px) }
+.install h2 { margin: 0 0 16px; font: 600 clamp(48px, 9vw, 140px)/.92 var(--sans); letter-spacing: -.055em }
+.install .lede { color: var(--dim); margin: 0 auto 40px; max-width: 46ch }
+.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, .06); margin-bottom: 18px }
+.tabs button { border: 0; border-radius: 999px; padding: 8px 18px; background: transparent; color: var(--dim); cursor: pointer; font-size: 14px }
+.tabs button[aria-selected="true"] { background: var(--ink); color: #000 }
+.install .note { margin: 22px 0 0; color: var(--dim); font-size: 15px }
+footer { background: #121110; color: #a39d93; font-size: 14px; padding-block: 28px 40px; border-top: 1px solid #26231e; display: flex; flex-wrap: wrap; gap: 10px 26px; justify-content: center; align-items: center }
+footer .mark { width: 22px; height: 22px; display: block }
+footer a { text-decoration: none; color: var(--ink) }
+
+@media (max-width: 860px) {
+  .bar nav a.hide { display: none }
+  .hero .actions { flex-direction: column; gap: 16px; text-align: center }
+  .side { left: 16px; right: 16px; top: auto; bottom: 7vh; transform: none; max-width: none }
+  .side h2 { font-size: clamp(32px, 9vw, 44px) }
+  .label b { font-size: 13px }
+  .label span { display: none }
+  .label i { width: 22px }
+  .modes, .proof { grid-template-columns: 1fr; gap: 40px }
+  .spec { grid-template-columns: 1fr }
+  .term pre { min-height: 380px }
+}
+
+/* No motion or no WebGL: a still studio behind the hero, chapters read top to bottom. */
+.still .stage { height: auto }
+.still .chapter { position: relative; visibility: visible; opacity: 1; transform: none; inset: auto; min-height: 0; padding-block: 12vh }
+.still .hero { min-height: 100vh; padding-top: 18vh }
+.still .side { left: auto; max-width: 560px; margin-inline: max(16px, 6vw) }
+.still .scene { position: absolute; height: 100vh }
+.still .label, .still .grain { display: none }
+.still .session { height: auto }
+.still .session .pin { position: relative; height: auto; padding-block: 12vh }
+.still .statement .w { opacity: 1 }
+.no-gl .scene canvas { display: none }
+</style>
+</head>
+<body>
+<header class="bar gutter">
+  <a class="brand" href="#top" aria-label="DeV Code, back to top">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="14" fill="#F2A516"/><path d="M18 16h12c10 0 17 7 17 16s-7 16-17 16H18z" fill="none" stroke="#121317" stroke-width="5" stroke-linejoin="round"/><path d="M26 27l5 9 5-9" fill="none" stroke="#121317" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    DeV Code
+  </a>
+  <nav><a class="hide" href="#specs">Features</a><a class="hide" href="docs.html">Docs</a><a class="hide" href="#proof">Proof</a><a href="https://github.com/Harsha-code-per/DeV">GitHub</a><a href="#install">Install</a></nav>
+</header>
+
+<div class="scene" aria-hidden="true">
+  <canvas id="gl"></canvas>
+  <div id="labels"></div>
+  <div class="flash"></div>
+  <div class="grain"></div>
+</div>
+
+<main id="top">
+  <div class="stage" id="stage">
+    <section class="chapter hero gutter" data-chapter="hero">
+      <h1 aria-label="Every pro feature. Any model. Free.">
+        <span><span>Every pro feature.</span></span>
+        <span><span class="soft">Any model. Free.</span></span>
+      </h1>
+      <div class="actions"><p>DeV Code is an open-source coding agent for your terminal. You bring the model. DeV is everything around it.</p><div class="pill"><code>curl -fsSL https://trydev.work/install | sh</code><button type="button" data-copy>Copy</button></div></div>
+    </section>
+
+    <section class="chapter side gutter" data-chapter="bring">
+      <h2>You bring the model.</h2>
+      <p>DeV doesn't sell AI and never stands between you and it. Plug in what you already have.</p>
+      <ul class="ways">
+        <li>A free tier, and DeV Auto moves between free models for you</li>
+        <li>A model running on your own machine</li>
+        <li>Your own key for any major provider</li>
+      </ul>
+    </section>
+
+    <section class="chapter side gutter" data-chapter="around">
+      <h2>DeV is everything around it.</h2>
+      <p>The parts that usually sit behind a paid plan, built in layers around whatever model you choose. All of it free.</p>
+    </section>
   </div>
-</section>
-<section class="band demo"><div class="wrap"><img src="demo.gif" width="826" height="529" alt="DeV Code fixing a failing test: a live bar and a Plan, Do, Verify line while it works, then a one-line receipt showing 1 file changed, checks passed, 10 seconds and no cost."></div></section>
-<section class="band mission"><div class="wrap lead">
-  <h2>Great tools shouldn't depend on what you can pay.</h2>
-  <p class="big">A student, a freelancer and a team on a tight budget deserve the same tools as anyone else. We're building DeV so that nobody is held back by a subscription. Everything we build goes to everyone, free.</p>
-</div></section>
-<section class="band steps"><div class="wrap lead">
-  <h2>Premium features, included.</h2>
-  <div class="facts">
-    <div><h3>Plans you approve</h3><p>For larger work, DeV reads the code and writes a plan first. Nothing changes until you say yes.</p></div>
-    <div><h3>Goals it finishes</h3><p>Ask it to keep going until the tests pass. It keeps working, and an independent reviewer checks the result before the goal ends.</p></div>
-    <div><h3>It proves the work</h3><p>Before saying a task is done, DeV runs your tests or build and reports the real result. Every finished task ends in a receipt.</p></div>
-    <div><h3>Subagents</h3><p>Hand parts of a task to focused helpers that work in parallel, including in the background.</p></div>
-    <div><h3>Rewind anything</h3><p>Go back to any earlier message and restore both the conversation and your files.</p></div>
-    <div><h3>A real sandbox</h3><p>On Linux and macOS, shell commands run in an OS sandbox. They can't read your SSH keys or cloud credentials.</p></div>
-    <div><h3>It picks the mode</h3><p>Small fixes start straight away. Bigger work gets a plan. You can override it at any time with Shift+Tab.</p></div>
-    <div><h3>Project memory</h3><p>DeV remembers how your project works across sessions, in a file you can read and edit.</p></div>
-    <div><h3>Built to extend</h3><p>Skills, plugins, hooks, custom agents and MCP servers are all included, with no tier to unlock them.</p></div>
+
+  <section class="session gutter" id="session">
+    <div class="pin"><div class="session-inner">
+      <h2>It proves the work before it says done.</h2>
+      <p class="lede">DeV reads the code, makes the change, then runs your tests or build. Every finished task ends in a receipt.</p>
+      <div class="term" role="img" aria-label="A DeV Code session: asked to fix a failing cart test, DeV reads two files, finds the discount was applied after tax, edits one file, runs the tests, and reports done with one file changed, checks passed, in 10 seconds for $0.00.">
+        <div class="term-top">~/shop — devcode</div>
+        <pre id="typed"></pre>
+      </div>
+    </div></div>
+  </section>
+
+  <section class="statement gutter">
+    <p class="wrap" id="words">The model is only half of a coding agent. The other half is the plans, the safety, the checks and the memory. That half usually costs a subscription. With DeV it costs nothing, whichever model you bring.</p>
+  </section>
+
+  <div class="day">
+    <section class="gutter" id="modes"><div class="wrap">
+      <h2>Five modes. One key.</h2>
+      <p class="lede">Shift+Tab moves between them. DeV also picks one from what you ask, and you can always change it. Scroll, or press the key yourself.</p>
+      <div class="modes">
+        <div class="keywell"><button class="key" type="button" id="key" aria-label="Next mode"><span><small>⇧</small>tab</span></button></div>
+        <ul class="mode-list" id="modeList" aria-live="polite">
+          <li class="on"><b>Manual</b><p>DeV asks before it edits files or does anything risky.</p></li>
+          <li><b>Accept edits</b><p>File edits go ahead. Everything else asks as usual.</p></li>
+          <li><b>Plan</b><p>DeV writes a plan and changes nothing until you approve it.</p></li>
+          <li><b>Auto</b><p>DeV never asks. Risky actions are refused with the reason, and it finds another way.</p></li>
+          <li><b>Goal</b><p>Auto, and DeV keeps working until what you asked for is true, checked by a reviewer.</p></li>
+        </ul>
+      </div>
+    </div></section>
+
+    <section class="gutter" id="specs"><div class="wrap">
+      <h2>What's in the box.</h2>
+      <p class="lede">Every one of these works with every model, and every built-in can be switched off.</p>
+      <div class="specs">
+        <div class="spec"><h3>Plans</h3><p>For larger work DeV reads the code and writes a plan first. Nothing changes until you say yes.</p><code>plan mode</code></div>
+        <div class="spec"><h3>Goals</h3><p>Ask it to keep going until the tests pass. A separate reviewer checks before the goal ends.</p><code>/goal</code></div>
+        <div class="spec"><h3>Receipts</h3><p>Your tests or build run before DeV says done, and every task ends with what changed and what it cost.</p><code>every task</code></div>
+        <div class="spec"><h3>Subagents</h3><p>Helpers take parts of a task in parallel, each in its own git worktree if you like.</p><code>/tasks</code></div>
+        <div class="spec"><h3>Rewind</h3><p>Go back to any earlier message and restore both the conversation and your files.</p><code>/rewind</code></div>
+        <div class="spec"><h3>Safety</h3><p>Risky actions ask first or are refused with the reason. An optional sandbox keeps your keys out of reach.</p><code>/permissions</code></div>
+        <div class="spec"><h3>Memory</h3><p>DeV remembers how your project works and what you told it, across sessions.</p><code>/memory</code></div>
+        <div class="spec"><h3>Voice</h3><p>Hold Space and talk. Speech becomes text on your own computer, free and offline.</p><code>/voice</code></div>
+        <div class="spec"><h3>Plugins</h3><p>Skills, hooks, agents and MCP servers from DeV's own marketplace, for you, your team or one checkout.</p><code>/plugins</code></div>
+        <div class="spec"><h3>Keyboard</h3><p>Vim keys in the prompt, suggested next prompts, and a screen reader mode that speaks plain lines.</p><code>/vim</code></div>
+      </div>
+    </div></section>
+
+    <section class="gutter" id="proof"><div class="wrap proof">
+      <div>
+        <h2>Measured, not promised.</h2>
+        <p class="lede">We run DeV on real coding tasks on free models and publish the score. Installs are tested on clean machines for every release.</p>
+      </div>
+      <div class="printer" aria-label="Receipt">
+        <div class="slot"></div>
+        <div class="paper-clip"><div class="paper" id="paper">
+          <div class="head">DeV CODE 1.0.24</div>
+          <hr>
+          <div class="row"><span>Real tasks passed</span><span>27 / 30</span></div>
+          <div class="row"><span>Account needed</span><span>No</span></div>
+          <div class="row"><span>Telemetry</span><span>Only if you turn it on</span></div>
+          <div class="row"><span>Your keys go to</span><span>Your provider only</span></div>
+          <div class="row"><span>Runs on</span><span>Linux, macOS, Windows</span></div>
+          <div class="row"><span>Licence</span><span>MIT</span></div>
+          <hr>
+          <div class="row total"><span>Price</span><span>$0.00</span></div>
+          <div class="foot">Your model. Your keys. Your machine.</div>
+        </div></div>
+      </div>
+    </div></section>
   </div>
-</div></section>
-<section class="band"><div class="wrap lead">
-  <h2>How we build it.</h2>
-  <div class="facts">
-    <div><h3>Measured, not claimed</h3><p>We test DeV on real coding tasks with hidden tests it never sees. It passes 27 of 30 at no cost, and the tasks and results are published.</p></div>
-    <div><h3>Tested as you get it</h3><p>Every release is installed on clean Linux, macOS and Windows machines before you see it.</p></div>
-    <div><h3>Open source</h3><p>DeV Code is MIT licensed, so you can read it, change it and use it in your commercial work.</p></div>
-  </div>
-</div></section>
-<section class="band steps"><div class="wrap lead">
-  <h2>Start in three steps.</h2>
-  <ol>
-    <li><div><b>Install</b>Run the command at the top of this page.</div></li>
-    <li><div><b>Connect a model</b>Type <code>devcode</code>, then <code>/connect</code>, and pick from the free options at the top of the list.</div></li>
-    <li><div><b>Say what you want built</b>DeV works in the folder you started it from.</div></li>
-  </ol>
-</div></section>
-<section class="band"><div class="wrap lead">
-  <h2>The DeV family.</h2>
-  <div class="facts">
-    <div><h3>DeV Code</h3><p>A coding agent for your terminal, for creating projects and building software. Available now.</p></div>
-    <div><h3>DeV</h3><p>An assistant for Windows, macOS and Linux that runs in the background, wakes to your voice and works across your computer. In development.</p></div>
-    <div><h3>DeV for Chrome</h3><p>A browser extension that helps you debug and get things done on any page. In development.</p></div>
-    <div><h3>DeV for Web</h3><p>A chat site where anyone can talk to free AI models, with nothing to install. Planned.</p></div>
-  </div>
-</div></section>
-<section class="band steps"><div class="wrap lead">
-  <h2>Help us build it.</h2>
-  <p class="big">DeV is built without funding, on free tools and free tiers. Sponsors help it grow faster, and DeV stays free for everyone.</p>
-  <p><a class="sponsor" href="https://github.com/sponsors/Harsha-code-per">Sponsor DeV</a></p>
-</div></section>
-<footer><div class="wrap"><p>DeV Code builds on <a href="https://github.com/anomalyco/opencode">OpenCode</a>, and we're grateful to its authors. Model providers set their own free limits and terms. <a href="docs.html">Read the docs</a>.</p></div></footer>
-<script src="site.js"></script>
-</body></html>
+
+  <section class="install gutter" id="install">
+    <h2>Start in one line.</h2>
+    <p class="lede">Then run <code>devcode</code> in any project. DeV sets up a free model on first run if you don't have one.</p>
+    <div class="tabs" role="tablist" aria-label="Install method">
+      <button type="button" role="tab" aria-selected="true" data-cmd="curl -fsSL https://trydev.work/install | sh">macOS and Linux</button>
+      <button type="button" role="tab" aria-selected="false" data-cmd="irm https://trydev.work/install.ps1 | iex">Windows</button>
+      <button type="button" role="tab" aria-selected="false" data-cmd="npm i -g @devcodeagent/cli">npm</button>
+    </div>
+    <div><div class="pill"><code id="cmd">curl -fsSL https://trydev.work/install | sh</code><button type="button" data-copy>Copy</button></div></div>
+    <p class="note">Open source under MIT. No account. No card. Model providers set their own free limits and terms.</p>
+  </section>
+</main>
+<footer class="gutter"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="14" fill="#F2A516"/><path d="M18 16h12c10 0 17 7 17 16s-7 16-17 16H18z" fill="none" stroke="#121317" stroke-width="5" stroke-linejoin="round"/><path d="M26 27l5 9 5-9" fill="none" stroke="#121317" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>DeV Code, built by Harshavardhan K</span><span>Builds on <a href="https://github.com/anomalyco/opencode">OpenCode</a></span><a href="docs.html">Docs</a><a href="https://github.com/Harsha-code-per/DeV">GitHub</a><a href="https://github.com/sponsors/Harsha-code-per">Sponsor</a></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

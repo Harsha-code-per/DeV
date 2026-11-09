@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DeV Code theme",
+  "type": "object",
+  "allowComments": true,
+  "allowTrailingCommas": true,
+  "properties": {
+    "$schema": { "type": "string" },
+    "defs": {
+      "description": "Named colours that theme entries can refer to by name.",
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "theme": {
+      "description": "Each entry is a hex colour, the name of a def, or a dark and light pair.",
+      "type": "object",
+      "properties": { "thinkingOpacity": { "type": "number", "minimum": 0, "maximum": 1 } },
+      "additionalProperties": {
+        "anyOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "properties": { "dark": { "type": "string" }, "light": { "type": "string" } },
+            "required": ["dark", "light"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "required": ["theme"]
+}
