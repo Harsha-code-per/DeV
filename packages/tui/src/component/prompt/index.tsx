@@ -214,6 +214,38 @@ export function Prompt(props: PromptProps) {
   const workspace = usePromptWorkspace(props.sessionID)
   const move = usePromptMove({ projectID: project.project, sessionID: () => props.sessionID })
   const voice = usePromptVoice(() => input)
+  const suggestionsEnabled = createMemo(() => kv.get("prompt_suggestions", true))
+  const [suggestion, setSuggestion] = createSignal<{ sessionID: string; text: string }>()
+  const shownSuggestion = createMemo(() => {
+    const value = suggestion()
+    if (!value || value.sessionID !== props.sessionID || store.prompt.input || store.mode === "shell") return
+    if (!suggestionsEnabled()) return
+    return value.text
+  })
+
+  // When a turn ends, ask the small model what the user will likely type next.
+  createEffect(
+    on(
+      () => status().type,
+      (type, previous) => {
+        if (type !== "idle") {
+          setSuggestion(undefined)
+          return
+        }
+        const sessionID = props.sessionID
+        if (!previous || previous === "idle" || !sessionID || !suggestionsEnabled()) return
+        sdk.client.session
+          .suggest({ sessionID })
+          .then((result) => {
+            const text = result.data?.text
+            if (!text || props.sessionID !== sessionID || status().type !== "idle") return
+            setSuggestion({ sessionID, text })
+          })
+          .catch(() => {})
+      },
+    ),
+  )
+
   const vimEnabled = createMemo(() => kv.get("vim_mode", false))
   const [vim, setVim] = createSignal(Vim.initial())
 
@@ -716,6 +748,20 @@ export function Prompt(props: PromptProps) {
         },
       },
       {
+        title: suggestionsEnabled() ? "Turn off prompt suggestions" : "Turn on prompt suggestions",
+        desc: "Suggest the next prompt when DeV finishes",
+        name: "prompt.suggestions.toggle",
+        category: "Prompt",
+        slashName: "suggestions",
+        run: () => {
+          const next = !suggestionsEnabled()
+          kv.set("prompt_suggestions", next)
+          if (!next) setSuggestion(undefined)
+          toast.show({ message: next ? "Prompt suggestions on" : "Prompt suggestions off", variant: "info" })
+          dialog.clear()
+        },
+      },
+      {
         title: vimEnabled() ? "Turn off vim keys" : "Turn on vim keys",
         desc: "Edit the prompt with vim keys",
         name: "prompt.vim.toggle",
@@ -1036,22 +1082,39 @@ export function Prompt(props: PromptProps) {
     }
   })
 
-  useBindings(() => ({
-    target: inputTarget,
-    enabled:
-      inputTarget() !== undefined &&
-      vimEnabled() &&
-      store.mode !== "shell" &&
-      !auto()?.visible &&
-      (vim().mode !== "normal" || vim().pending !== ""),
-    bindings: [{ key: "escape", desc: "Vim normal mode", group: "Prompt", cmd: () => vimKey("escape") }],
-  }))
-
-  useBindings(() => ({
-    target: inputTarget,
-    enabled: inputTarget() !== undefined && vimEnabled() && vim().mode === "normal",
-    bindings: [{ key: "ctrl+r", desc: "Redo", group: "Prompt", cmd: () => vimKey("ctrl+r") }],
-  }))
+  // One layer for the conditional prompt keys: every input-scoped layer adds a
+  // listener to the textarea, and Node warns past ten of them.
+  useBindings(() => {
+    const normal = vimEnabled() && vim().mode === "normal"
+    const escape =
+      vimEnabled() && store.mode !== "shell" && !auto()?.visible && (vim().mode !== "normal" || vim().pending !== "")
+    const suggested = shownSuggestion() !== undefined && !auto()?.visible
+    return {
+      target: inputTarget,
+      enabled: inputTarget() !== undefined && (normal || escape || suggested),
+      bindings: [
+        ...(escape
+          ? [{ key: "escape", desc: "Vim normal mode", group: "Prompt", cmd: () => vimKey("escape") }]
+          : []),
+        ...(normal ? [{ key: "ctrl+r", desc: "Redo", group: "Prompt", cmd: () => vimKey("ctrl+r") }] : []),
+        ...(suggested
+          ? [
+              {
+                key: "right",
+                desc: "Use the suggested prompt",
+                group: "Prompt",
+                cmd: () => {
+                  const text = shownSuggestion()
+                  if (!text) return
+                  setSuggestion(undefined)
+                  input.insertText(text)
+                },
+              },
+            ]
+          : []),
+      ],
+    }
+  })
 
   useBindings(() => {
     return {
@@ -1590,6 +1653,8 @@ export function Prompt(props: PromptProps) {
     if (local.permission.mode === "goal" && goal()?.status !== "active")
       return `What should be true when it's done? "all tests pass"`
     if (voice.enabled()) return "Hold Space to talk, or type…"
+    const suggested = shownSuggestion()
+    if (suggested) return `${suggested}   → to use`
     if (!list().length) return undefined
     return `Ask anything… "${list()[store.placeholder % list().length]}"`
   })

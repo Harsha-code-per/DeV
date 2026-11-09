@@ -19,6 +19,7 @@ import { PluginsApi } from "./groups/plugins"
 import { PermissionApi } from "./groups/permission"
 import { ProjectApi } from "./groups/project"
 import { ProjectCopyApi } from "./groups/project-copy"
+import { SessionSuggestApi } from "./groups/session-suggest"
 import { ProviderApi } from "./groups/provider"
 import { PtyApi, PtyConnectApi } from "./groups/pty"
 import { QuestionApi } from "./groups/question"
@@ -73,6 +74,7 @@ export const InstanceHttpApi = HttpApi.make("devcode-instance")
   .addHttpApi(PermissionApi)
   .addHttpApi(ProviderApi)
   .addHttpApi(SessionApi)
+  .addHttpApi(SessionSuggestApi)
   .addHttpApi(SyncApi)
   .addHttpApi(TuiApi)
   .addHttpApi(WorkspaceApi)

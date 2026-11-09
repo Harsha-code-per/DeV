@@ -5,6 +5,8 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 ## 1.0.24 (unreleased)
 
 - Vim keys in the prompt. Type `/vim` to turn them on or off; DeV remembers the choice. Esc switches to normal mode, and the mode shows under the prompt. Motions (`w b e`, `0 ^ $`, `f t ; ,`, `gg G`, `h j k l`) take counts, and operators (`d c y`) work with motions and text objects such as `iw`, `i"` and `i(`. Also `x`, `r`, `~`, `J`, `p`, `.` to repeat, `u` and `ctrl+r` to undo and redo a whole change, and visual mode with `v` and `V`. Enter sends the prompt from either mode, and Esc in normal mode still interrupts DeV.
+- Prompt suggestions. When DeV finishes, the empty prompt suggests what you'll probably ask next, such as "run the tests" or your answer to a question it asked. Press → to use it, or just type your own. It's one short request to your small model, sent only while the TUI is open. Type `/suggestions` to turn them off or on; DeV remembers the choice.
+- `/hooks` shows prompt and agent hooks by their question instead of an empty address.
 
 ## 1.0.23 (2026-11-09)
 

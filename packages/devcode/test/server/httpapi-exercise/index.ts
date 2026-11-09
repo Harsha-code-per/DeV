@@ -1548,6 +1548,17 @@ const scenarios: Scenario[] = [
       "status",
     ),
   http.protected
+    .post("/session/{sessionID}/suggest", "session.suggest")
+    .seeded((ctx) => ctx.session({ title: "Suggest session" }))
+    .at((ctx) => ({
+      path: route("/session/{sessionID}/suggest", { sessionID: ctx.state.id }),
+      headers: ctx.headers(),
+    }))
+    .json(200, (body) => {
+      object(body)
+      check(body.text === undefined, "a session with no exchange yet has no suggestion")
+    }),
+  http.protected
     .post("/session/{sessionID}/summarize", "session.summarize")
     .preserveDatabase()
     .withLlm()

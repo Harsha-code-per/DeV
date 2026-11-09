@@ -1968,6 +1968,7 @@ export type Config = {
   enabled_providers?: Array<string>
   model?: string
   small_model?: string
+  advisor_model?: string
   default_agent?: string
   subagent_depth?: number
   username?: string
@@ -2090,6 +2091,30 @@ export type Config = {
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
       >
     }>
     PostToolUse?: Array<{
@@ -2114,6 +2139,30 @@ export type Config = {
             }
             /**
              * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
@@ -2144,6 +2193,30 @@ export type Config = {
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
       >
     }>
     Stop?: Array<{
@@ -2168,6 +2241,30 @@ export type Config = {
             }
             /**
              * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
@@ -2198,6 +2295,30 @@ export type Config = {
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
       >
     }>
     SessionEnd?: Array<{
@@ -2222,6 +2343,30 @@ export type Config = {
             }
             /**
              * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
@@ -2252,6 +2397,30 @@ export type Config = {
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
       >
     }>
     SubagentStop?: Array<{
@@ -2276,6 +2445,30 @@ export type Config = {
             }
             /**
              * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
@@ -2306,6 +2499,30 @@ export type Config = {
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
       >
     }>
     PreCompact?: Array<{
@@ -2330,6 +2547,30 @@ export type Config = {
             }
             /**
              * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
@@ -2360,6 +2601,30 @@ export type Config = {
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
       >
     }>
     FileChanged?: Array<{
@@ -2384,6 +2649,132 @@ export type Config = {
             }
             /**
              * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+    }>
+    PermissionRequest?: Array<{
+      matcher?: string
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+    }>
+    SubagentStart?: Array<{
+      matcher?: string
+      hooks: Array<
+        | {
+            type: "command"
+            command: string
+            /**
+             * Seconds before the hook is stopped (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "http"
+            /**
+             * Receives the event as a JSON POST
+             */
+            url: string
+            headers?: {
+              [key: string]: string
+            }
+            /**
+             * Seconds before the request is cancelled (default 60)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "prompt"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 30)
+             */
+            timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            type: "agent"
+            /**
+             * What the model checks. $ARGUMENTS is replaced by the event JSON (appended when absent). It answers {"ok": true} or {"ok": false, "reason": …}
+             */
+            prompt: string
+            model?: string
+            /**
+             * Seconds before the check is abandoned (default 60)
              */
             timeout?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
           }
@@ -8868,6 +9259,7 @@ export type AppSkillsResponses = {
     userInvocable?: boolean
     modelInvocable?: boolean
     fork?: string
+    allowedTools?: Array<string>
     plugin?: {
       name: string
       root: string
@@ -11377,6 +11769,38 @@ export type PartUpdateResponses = {
 }
 
 export type PartUpdateResponse = PartUpdateResponses[keyof PartUpdateResponses]
+
+export type SessionSuggestData = {
+  body?: never
+  path: {
+    sessionID: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/session/{sessionID}/suggest"
+}
+
+export type SessionSuggestErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type SessionSuggestError = SessionSuggestErrors[keyof SessionSuggestErrors]
+
+export type SessionSuggestResponses = {
+  /**
+   * Success
+   */
+  200: {
+    text?: string
+  }
+}
+
+export type SessionSuggestResponse = SessionSuggestResponses[keyof SessionSuggestResponses]
 
 export type SyncStartData = {
   body?: never

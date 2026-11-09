@@ -1214,7 +1214,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
             (matchers ?? []).flatMap((matcher) =>
               matcher.hooks.map(
                 (hook) =>
-                  `${event}${matcher.matcher ? ` [${matcher.matcher}]` : ""}: ${hook.type === "command" ? hook.command : `POST ${hook.url}`}`,
+                  `${event}${matcher.matcher ? ` [${matcher.matcher}]` : ""}: ${hook.type === "command" ? hook.command : hook.type === "http" ? `POST ${hook.url}` : `${hook.type}: ${hook.prompt}`}`,
               ),
             ),
           )

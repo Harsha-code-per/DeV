@@ -93,6 +93,7 @@ import { pluginsHandlers } from "./handlers/plugins"
 import { permissionHandlers } from "./handlers/permission"
 import { projectHandlers } from "./handlers/project"
 import { projectCopyHandlers } from "./handlers/project-copy"
+import { sessionSuggestHandlers } from "./handlers/session-suggest"
 import { providerHandlers } from "./handlers/provider"
 import { ptyConnectHandlers, ptyHandlers } from "./handlers/pty"
 import { questionHandlers } from "./handlers/question"
@@ -166,6 +167,7 @@ const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
     permissionHandlers,
     providerHandlers,
     sessionHandlers,
+    sessionSuggestHandlers,
     syncHandlers,
     tuiHandlers,
     workspaceHandlers,
