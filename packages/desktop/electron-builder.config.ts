@@ -101,7 +101,7 @@ const getBase = (appId: string): Configuration => ({
     icon: `resources/icons`,
     category: "Development",
     // electron-builder takes the .deb maintainer from the author email, and package.json has none.
-    maintainer: "Harsha Vardhan",
+    maintainer: "Harshavardhan K",
     executableName: appId,
     desktop: {
       entry: {

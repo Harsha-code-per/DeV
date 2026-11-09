@@ -18,7 +18,7 @@ const xml = `<?xml version="1.0" encoding="UTF-8"?>
   <summary>${summary}</summary>
 
   <developer id="io.github.harsha-code-per">
-    <name>Harsha Vardhan</name>
+    <name>Harshavardhan K</name>
   </developer>
 
   <description>
