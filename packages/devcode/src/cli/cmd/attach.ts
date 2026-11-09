@@ -5,14 +5,13 @@ import { validateSession } from "../tui/validate-session"
 import { ServerAuth } from "@/server/auth"
 
 export const AttachCommand = cmd({
-  command: "attach <url>",
-  describe: "attach to a running DeV Code server",
+  command: "attach [url]",
+  describe: "attach to a running DeV Code server, or without a url to your background sessions (devcode run --bg)",
   builder: (yargs) =>
     yargs
       .positional("url", {
         type: "string",
-        describe: "http://localhost:4096",
-        demandOption: true,
+        describe: "http://localhost:4096; omit it for the background server",
       })
       .option("dir", {
         type: "string",
@@ -67,6 +66,16 @@ export const AttachCommand = cmd({
     }
     const noReplay = args.replay === false || args.noReplay === true
 
+    // No url: the background server that `devcode run --bg` started, with its own password.
+    const background = args.url ? undefined : await import("../background").then((mod) => mod.Background.find())
+    if (!args.url && !background) {
+      UI.error("No background sessions are running. Start one with `devcode run --bg \"your task\"`, or give a server url.")
+      process.exitCode = 1
+      return
+    }
+    const url = args.url ?? background!.url
+    const password = args.password ?? background?.password
+
     const directory = (() => {
       if (!args.dir) return undefined
       try {
@@ -76,14 +85,14 @@ export const AttachCommand = cmd({
         // If the directory doesn't exist locally (remote attach), pass it through.
         return args.dir
       }
-    })()
+    })() ?? (background ? process.cwd() : undefined)
 
     if (args.mini) {
       const { runMini } = await import("./run")
       await runMini({
-        attach: args.url,
+        attach: url,
         directory,
-        password: args.password,
+        password,
         username: args.username,
         continue: args.continue,
         session: args.session,
@@ -111,12 +120,12 @@ export const AttachCommand = cmd({
       return
     }
 
-    const headers = ServerAuth.headers({ password: args.password, username: args.username })
+    const headers = ServerAuth.headers({ password, username: args.username })
     const config = await TuiConfig.get()
 
     try {
       await validateSession({
-        url: args.url,
+        url,
         sessionID: args.session,
         directory,
         headers,
@@ -132,7 +141,7 @@ export const AttachCommand = cmd({
     const { createLegacyTuiPluginHost } = await import("@/plugin/tui/runtime")
     await Effect.runPromise(
       run({
-        url: args.url,
+        url,
         config,
         pluginHost: createLegacyTuiPluginHost(),
         args: {

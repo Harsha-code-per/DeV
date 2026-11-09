@@ -4,6 +4,8 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 
 ## 1.0.21 (unreleased)
 
+- Background sessions. `devcode run --bg "task"` starts the task and returns at once; it keeps working after you close the terminal. `devcode session list` shows each background session as working or "needs you" (`--running` lists only those), and `devcode attach --session <id>` joins it, so you can watch it or answer a permission prompt it's waiting on. The background server runs on this machine only, behind a password only you can read, and shuts itself down after 30 minutes with nothing to do (`DEV_BACKGROUND_IDLE_MINUTES` changes that). It reloads a project's settings before starting new work there when nothing else is running.
+- The TUI shows permission prompts and questions that were already waiting when it connected, for example after a restart, instead of only new ones.
 - Prompt and agent hooks. A hook can be a question for a model instead of a script: `{ "type": "prompt", "prompt": "Block it if it rewrites git history. $ARGUMENTS" }`. The model answers ok or not ok with a reason, and not ok counts like exit code 2 (a blocked tool call, a blocked prompt, or more work before stopping). An `agent` hook does the same but can read files (Read, Grep, Glob) before deciding. Both run in a hidden session that is deleted afterwards, on your session's model unless the hook sets `"model": "provider/model"`.
 
 ## 1.0.20 (2026-11-09)

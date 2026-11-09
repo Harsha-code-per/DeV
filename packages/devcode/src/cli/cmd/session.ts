@@ -82,13 +82,23 @@ export const SessionListCommand = effectCmd({
         type: "string",
         choices: ["table", "json"],
         default: "table",
+      })
+      .option("running", {
+        describe: "only sessions working or waiting for you in the background (devcode run --bg)",
+        type: "boolean",
+        default: false,
       }),
   handler: Effect.fn("Cli.session.list")(function* (args) {
-    const sessions = yield* Session.Service.use((svc) => svc.list({ roots: true, limit: args.maxCount }))
+    const all = yield* Session.Service.use((svc) => svc.list({ roots: true, limit: args.running ? undefined : args.maxCount }))
+    const live = yield* Effect.promise(() => liveStatus(process.cwd()))
+    const sessions = args.running ? all.filter((session) => live.has(session.id)) : all
 
-    if (sessions.length === 0) return
+    if (sessions.length === 0) {
+      if (args.running) console.log("Nothing is running in the background.")
+      return
+    }
 
-    const output = args.format === "json" ? formatSessionJSON(sessions) : formatSessionTable(sessions)
+    const output = args.format === "json" ? formatSessionJSON(sessions, live) : formatSessionTable(sessions, live)
 
     const shouldPaginate = process.stdout.isTTY && !args.maxCount && args.format === "table"
 
@@ -115,29 +125,51 @@ export const SessionListCommand = effectCmd({
   }),
 })
 
-function formatSessionTable(sessions: Session.Info[]): string {
+/**
+ * What the background server (devcode run --bg) is doing right now: "working", or "needs you" when a permission
+ * prompt is waiting. Empty when no background server is running.
+ */
+async function liveStatus(directory: string) {
+  const { Background } = await import("../background")
+  const server = await Background.find()
+  const live = new Map<string, string>()
+  if (!server) return live
+  const { createDevcodeClient } = await import("@dev-ai/sdk/v2")
+  const sdk = createDevcodeClient({ baseUrl: server.url, directory, headers: Background.headers(server) })
+  const [statuses, waiting] = await Promise.all([
+    sdk.session.status().then((result) => result.data ?? {}).catch(() => ({})),
+    sdk.permission.list().then((result) => result.data ?? []).catch(() => []),
+  ])
+  for (const [id, status] of Object.entries(statuses)) if (status.type !== "idle") live.set(id, "working")
+  for (const request of waiting) live.set(request.sessionID, "needs you")
+  return live
+}
+
+function formatSessionTable(sessions: Session.Info[], live: Map<string, string>): string {
   const lines: string[] = []
 
   const maxIdWidth = Math.max(20, ...sessions.map((s) => s.id.length))
   const maxTitleWidth = Math.max(25, ...sessions.map((s) => s.title.length))
+  const status = (session: Session.Info) => (live.size > 0 ? `  ${(live.get(session.id) ?? "").padEnd(9)}` : "")
 
-  const header = `Session ID${" ".repeat(maxIdWidth - 10)}  Title${" ".repeat(maxTitleWidth - 5)}  Updated`
+  const header = `Session ID${" ".repeat(maxIdWidth - 10)}  Title${" ".repeat(maxTitleWidth - 5)}${live.size > 0 ? "  Status   " : ""}  Updated`
   lines.push(header)
   lines.push("─".repeat(header.length))
   for (const session of sessions) {
     const truncatedTitle = Locale.truncate(session.title, maxTitleWidth)
     const timeStr = Locale.todayTimeOrDateTime(session.time.updated)
-    const line = `${session.id.padEnd(maxIdWidth)}  ${truncatedTitle.padEnd(maxTitleWidth)}  ${timeStr}`
+    const line = `${session.id.padEnd(maxIdWidth)}  ${truncatedTitle.padEnd(maxTitleWidth)}${status(session)}  ${timeStr}`
     lines.push(line)
   }
 
   return lines.join(EOL)
 }
 
-function formatSessionJSON(sessions: Session.Info[]): string {
+function formatSessionJSON(sessions: Session.Info[], live: Map<string, string>): string {
   const jsonData = sessions.map((session) => ({
     id: session.id,
     title: session.title,
+    ...(live.has(session.id) ? { status: live.get(session.id) } : {}),
     updated: session.time.updated,
     created: session.time.created,
     projectId: session.projectID,

@@ -44,12 +44,12 @@ Options:
 `;
 
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev attach --help 1`] = `
-"devcode attach <url>
+"devcode attach [url]
 
-attach to a running DeV Code server
+attach to a running DeV Code server, or without a url to your background sessions (devcode run --bg)
 
 Positionals:
-  url  http://localhost:4096                                                     [string] [required]
+  url  http://localhost:4096; omit it for the background server                             [string]
 
 Options:
   -h, --help          show help                                                            [boolean]
@@ -108,7 +108,10 @@ Options:
                          the message is verified done
                              [string] [choices: "manual", "default", "accept-edits", "auto", "goal"]
       --auto             auto mode: approve everything except risky actions, which are refused with
-                         the reason                                       [boolean] [default: false]"
+                         the reason                                       [boolean] [default: false]
+      --bg               run in the background and return at once; see it with \`devcode session
+                         list\`, join it with \`devcode attach --session <id>\`
+                                                                          [boolean] [default: false]"
 `;
 
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev debug --help 1`] = `
@@ -326,7 +329,8 @@ Commands:
   devcode plugins <action> [target..]  install plugins (skills, commands, agents, hooks, MCP
                                        servers) from plugin marketplaces
   devcode [project]                    start dev tui                                       [default]
-  devcode attach <url>                 attach to a running DeV Code server
+  devcode attach [url]                 attach to a running DeV Code server, or without a url to your
+                                       background sessions (devcode run --bg)
   devcode run [message..]              run dev with a message
   devcode debug                        debugging and troubleshooting tools
   devcode providers                    manage AI providers and credentials           [aliases: auth]
@@ -613,7 +617,9 @@ Options:
       --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
       --pure        run without external plugins                                           [boolean]
   -n, --max-count   limit to N most recent sessions                                         [number]
-      --format      output format             [string] [choices: "table", "json"] [default: "table"]"
+      --format      output format             [string] [choices: "table", "json"] [default: "table"]
+      --running     only sessions working or waiting for you in the background (devcode run --bg)
+                                                                          [boolean] [default: false]"
 `;
 
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev session delete --help 1`] = `
@@ -646,7 +652,8 @@ Commands:
   devcode plugins <action> [target..]  install plugins (skills, commands, agents, hooks, MCP
                                        servers) from plugin marketplaces
   devcode [project]                    start dev tui                                       [default]
-  devcode attach <url>                 attach to a running DeV Code server
+  devcode attach [url]                 attach to a running DeV Code server, or without a url to your
+                                       background sessions (devcode run --bg)
   devcode run [message..]              run dev with a message
   devcode debug                        debugging and troubleshooting tools
   devcode providers                    manage AI providers and credentials           [aliases: auth]
@@ -716,7 +723,8 @@ Commands:
   devcode plugins <action> [target..]  install plugins (skills, commands, agents, hooks, MCP
                                        servers) from plugin marketplaces
   devcode [project]                    start dev tui                                       [default]
-  devcode attach <url>                 attach to a running DeV Code server
+  devcode attach [url]                 attach to a running DeV Code server, or without a url to your
+                                       background sessions (devcode run --bg)
   devcode run [message..]              run dev with a message
   devcode debug                        debugging and troubleshooting tools
   devcode providers                    manage AI providers and credentials           [aliases: auth]

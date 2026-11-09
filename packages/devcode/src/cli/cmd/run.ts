@@ -129,7 +129,7 @@ export const RunCommand = effectCmd({
   describe: "run dev with a message",
   // --attach connects to a remote server (no local instance needed); the
   // default path runs an in-process server and needs the project instance.
-  instance: (args) => !args.attach,
+  instance: (args) => !args.attach && !args.bg,
   // For --dir without --attach, load instance for the resolved target dir.
   // The handler also chdirs (preserving the legacy order: chdir → file resolution).
   directory: (args) => (args.dir && !args.attach ? path.resolve(process.cwd(), args.dir) : process.cwd()),
@@ -250,6 +250,11 @@ export const RunCommand = effectCmd({
       .option("auto", {
         type: "boolean",
         describe: "auto mode: approve everything except risky actions, which are refused with the reason",
+        default: false,
+      })
+      .option("bg", {
+        type: "boolean",
+        describe: "run in the background and return at once; see it with `devcode session list`, join it with `devcode attach --session <id>`",
         default: false,
       })
       .option("yolo", {
@@ -467,6 +472,37 @@ export const RunCommand = effectCmd({
         if (args.title === undefined) return
         if (args.title !== "") return args.title
         return message.slice(0, 50) + (message.length > 50 ? "..." : "")
+      }
+
+      // --bg: hand the task to the background server and return. Permission prompts wait there until you attach.
+      if (args.bg) {
+        if (!message.trim()) die("--bg needs a message")
+        if (args.attach || interactive || args.continue || args.session) die("--bg starts a new session; it can't be combined with --attach, --mini, --continue or --session")
+        const { Background } = await import("../background")
+        const server = await Background.ensure()
+        const sdk = createDevcodeClient({ baseUrl: server.url, directory: directory ?? root, headers: Background.headers(server) })
+        // The server keeps each project loaded, so a changed dev.json would go unseen. With nothing working or
+        // waiting in this project, reload it first; otherwise leave it, so running work isn't interrupted.
+        const busy = await Promise.all([
+          sdk.session.status().then((result) => Object.values(result.data ?? {}).some((status) => status.type !== "idle")),
+          sdk.permission.list().then((result) => (result.data ?? []).length > 0),
+        ]).then((flags) => flags.some(Boolean), () => true)
+        if (!busy) await sdk.instance.dispose().catch(() => undefined)
+        const name = title() ?? rawMessage.slice(0, 50) + (rawMessage.length > 50 ? "…" : "")
+        const created = await sdk.session.create({ title: name, agent: args.agent, permission: [...rules] })
+        const id = created.data?.id
+        if (!id) die("Couldn't start the background session")
+        await sdk.session.promptAsync({
+          sessionID: id!,
+          agent: args.agent,
+          model: pick(args.model),
+          variant: args.variant,
+          parts: [...files, { type: "text", text: message }],
+        })
+        UI.println(`Started in the background: ${id}`)
+        UI.println(UI.Style.TEXT_DIM + "  devcode session list            see what's running" + UI.Style.TEXT_NORMAL)
+        UI.println(UI.Style.TEXT_DIM + `  devcode attach --session ${id}  watch it, or answer a permission prompt` + UI.Style.TEXT_NORMAL)
+        return
       }
 
       async function session(sdk: DevcodeClient): Promise<SessionInfo | undefined> {
@@ -1059,6 +1095,7 @@ export async function runMini(input: MiniCommandInput) {
     "permission-mode": undefined,
     permissionMode: undefined,
     auto: false,
+    bg: false,
     yolo: false,
     "dangerously-skip-permissions": false,
     dangerouslySkipPermissions: false,

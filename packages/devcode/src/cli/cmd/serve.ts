@@ -23,6 +23,11 @@ export const ServeCommand = effectCmd({
     console.log(`DeV Code server listening on http://${server.hostname}:${server.port}`)
     const { Scheduler } = yield* Effect.promise(() => import("../../scheduler"))
     Scheduler.start(Server.Default().app.fetch)
+    // The background server (devcode run --bg) shuts itself down when it has nothing to do.
+    if (process.env.DEV_BACKGROUND === "1") {
+      const { Background } = yield* Effect.promise(() => import("../background"))
+      yield* Effect.promise(() => Background.exitWhenIdle())
+    }
 
     yield* Effect.never
   }),

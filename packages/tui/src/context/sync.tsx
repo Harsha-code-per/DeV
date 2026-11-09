@@ -560,6 +560,21 @@ export const {
             sdk.client.session.status({ workspace }).then((x) => {
               setStore("session_status", reconcile(x.data ?? {}))
             }),
+            // Prompts already waiting when the TUI connects (a background session, or a TUI that restarted);
+            // otherwise only ones asked from now on would show. This mode's own rules answer what they can first.
+            sdk.client.permission.list({ workspace }).then((x) => {
+              const waiting = (x.data ?? []).filter((request) => {
+                const decision = permission.decide(request)
+                if (decision) void sdk.client.permission.reply({ requestID: request.id, ...decision, workspace })
+                return !decision
+              })
+              for (const [sessionID, requests] of Object.entries(Object.groupBy(waiting, (request) => request.sessionID)))
+                setStore("permission", sessionID, requests ?? [])
+            }),
+            sdk.client.question.list({ workspace }).then((x) => {
+              for (const [sessionID, requests] of Object.entries(Object.groupBy(x.data ?? [], (request) => request.sessionID)))
+                setStore("question", sessionID, requests ?? [])
+            }),
             sdk.client.provider.auth({ workspace }).then((x) => setStore("provider_auth", reconcile(x.data ?? {}))),
             sdk.client.vcs.get({ workspace }).then((x) => setStore("vcs", reconcile(x.data))),
             project.workspace.sync(),

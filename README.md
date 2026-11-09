@@ -95,6 +95,7 @@ devcode
 | **OS sandbox** | Optional. Turn it on with `"sandbox": { "enabled": true }` and, on Linux and macOS, shell commands can't read your SSH keys or cloud credentials. Off by default, so commands use your logins (`gh`, cloud CLIs) and network like your own terminal. |
 | **Free model routing** | `auto/free` moves between the free models you've connected and learns which ones work for you. |
 | **Plugin marketplaces** | Add any plugin marketplace in the common open format (`/plugins`, or `devcode plugins marketplace add owner/repo`) and install plugins with their skills, commands, agents, hooks and MCP servers, for you, for your team's repo, or just for your checkout. |
+| **Background sessions** | `devcode run --bg "task"` keeps working after you close the terminal. `devcode session list --running` shows what's working and what's waiting for you, and `devcode attach --session <id>` picks it up. |
 | **Built to extend** | Skills, plugins, hooks, custom agents and MCP servers are all included. |
 
 ## Modes
