@@ -1,6 +1,6 @@
 # DeV roadmap
 
-DeV brings premium AI to anyone, with nothing to pay. This page shows what we're building and where it stands. A ticked item is verified on the compiled release, not just in the source.
+DeV gives everyone the premium features of an AI agent, free, with any model they bring. This page shows what we're building and where it stands. A ticked item is verified on the compiled release, not just in the source.
 
 ## The DeV family
 

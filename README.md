@@ -4,13 +4,13 @@
 
 # DeV
 
-**Premium AI for everyone.**
+**Every pro feature. Any model. Free.**
 
-DeV brings premium AI to anyone, with nothing to pay: an assistant on your computer, a coding agent in your terminal, and help in your browser. DeV Code, the coding agent, comes first.
+DeV Code is an open-source coding agent for your terminal. You bring the model: a free tier DeV sets up for you, a model running on your own machine, or your own key. DeV gives you everything around it that usually sits behind a paid plan, and DeV itself costs nothing.
 
 [Website](https://trydev.work) · [Docs](https://trydev.work/docs.html) · [Roadmap](docs/ROADMAP.md) · [Report a bug](https://github.com/Harsha-code-per/DeV/issues/new/choose) · [Sponsor](#support-dev)
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-F2A516)](LICENSE) [![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-121317)](#install) [![Cost](https://img.shields.io/badge/cost-free-F2A516)](#why-dev)
+[![License: MIT](https://img.shields.io/badge/license-MIT-F2A516)](LICENSE) [![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-121317)](#install-dev-code) [![Price](https://img.shields.io/badge/price-free-F2A516)](#why-dev)
 
 <img src="website/demo.gif" alt="DeV Code fixing a failing test, then showing a one-line receipt" width="760">
 
@@ -18,9 +18,21 @@ DeV brings premium AI to anyone, with nothing to pay: an assistant on your compu
 
 ## Why DeV
 
-Great tools shouldn't depend on what you can pay. A student, a freelancer and a team on a tight budget deserve the same tools as anyone else.
+The model is only half of a coding agent. The other half decides whether it plans before it edits, proves the work before calling it done, stays out of your secrets, and picks up where it left off. That half is usually what a subscription pays for.
 
-DeV includes the features that usually sit behind a paid plan, for everyone. There's no subscription and no card to add. It's open source under the MIT licence, so you can use it in your commercial work.
+DeV is that half, free and open source under the MIT licence. Use it with whatever model you have, switch whenever you like, and use it in your commercial work.
+
+## Bring your own model
+
+DeV doesn't sell or resell AI. You connect the model, and DeV works with all of these:
+
+| Option | What it costs | How |
+|---|---|---|
+| **Free tiers** | Nothing. The provider sets its own limits. | `/connect` lists providers with a free tier first. **DeV Auto** moves between the free models you've connected, sends images and PDFs to one that can read them, and learns which ones work for you. |
+| **Models on your machine** | Nothing, and nothing leaves your computer | Running local models (Ollama, LM Studio) are found automatically. |
+| **Your own key** | What your provider charges you | Add a key for any major provider, or any OpenAI-compatible endpoint, with `/connect`. |
+
+Your keys stay on your machine. DeV has no account, no server in the middle and no telemetry you didn't choose.
 
 ## The DeV family
 
@@ -29,7 +41,7 @@ DeV includes the features that usually sit behind a paid plan, for everyone. The
 | **DeV Code** | A coding agent for your terminal. Create projects and build software. | `curl`, npm, pnpm or bun | Available now |
 | **DeV** | An assistant for Windows, macOS and Linux that runs in the background, wakes to your voice and works across your computer. | Installers: `.exe`, `.dmg` and Linux packages | In development |
 | **DeV for Chrome** | A browser extension that helps you debug and get things done on any page. | Browser extension | In development |
-| **DeV for Web** | A chat site where anyone can talk to free AI models, with nothing to install. | Your browser | Planned |
+| **DeV for Web** | A chat site for the models you bring, with nothing to install. | Your browser | Planned |
 
 ## Install DeV Code
 
@@ -93,10 +105,14 @@ devcode
 | **Rewind** | Go back to any earlier message and restore both the conversation and your files. |
 | **Project memory** | DeV keeps what it learns about your project in `DEV.md`, a file you can read and edit. |
 | **OS sandbox** | Optional. Turn it on with `"sandbox": { "enabled": true }` and, on Linux and macOS, shell commands can't read your SSH keys or cloud credentials. Off by default, so commands use your logins (`gh`, cloud CLIs) and network like your own terminal. |
-| **Free model routing** | `auto/free` moves between the free models you've connected and learns which ones work for you. |
+| **The advisor** | When DeV is stuck, or a choice would be costly to undo, it asks a stronger model for advice and carries on. |
+| **Voice** | `/voice`: hold Space and talk. Speech becomes text on your computer, free and offline. |
 | **Plugin marketplaces** | Add any plugin marketplace in the common open format (`/plugins`, or `devcode plugins marketplace add owner/repo`) and install plugins with their skills, commands, agents, hooks and MCP servers, for you, for your team's repo, or just for your checkout. |
 | **Background sessions** | `devcode run --bg "task"` keeps working after you close the terminal. `devcode session list --running` shows what's working and what's waiting for you, and `devcode attach --session <id>` picks it up. |
-| **Built to extend** | Skills, plugins, hooks, custom agents and MCP servers are all included. |
+| **`@devcode` on GitHub** | `devcode github install` adds a workflow: comment `@devcode fix this` on an issue and DeV opens a pull request. |
+| **Remembers what you teach it** | Say "from now on use pnpm" and it's saved for the project. |
+| **Your keyboard, your way** | Vim keys (`/vim`), suggested next prompts (→ to use), and a screen reader mode (`devcode --screen-reader`). |
+| **Built to extend** | Skills, plugins, hooks (scripts, or a question for a model), custom agents and MCP servers are all included. |
 
 ## Modes
 
@@ -157,7 +173,7 @@ The [docs](https://trydev.work/docs.html) cover configuration, free models and s
 
 ## How we build it
 
-- **Measured, not claimed.** We test DeV on [real coding tasks](bench/README.md) with hidden tests it never sees. It passes 27 of 30 on free models, at no cost.
+- **Measured, not claimed.** We test DeV on [real coding tasks](bench/README.md) with hidden tests it never sees. On free models it passes 27 of 30, and the run cost nothing.
 - **Tested as you get it.** Every release is installed on clean Linux, macOS and Windows machines.
 - **Secure by default.** We treat the model as untrusted. Read how in [SECURITY.md](SECURITY.md).
 
@@ -165,7 +181,7 @@ Model providers set their own free limits and terms. Windows doesn't have a sand
 
 ## Support DeV
 
-DeV is built without funding, on free tools and free tiers. If you'd like to see it grow faster, please [sponsor the project](https://github.com/sponsors/Harsha-code-per). Every sponsorship goes into building DeV, and DeV stays free for everyone.
+DeV is built by one developer, without funding, on free tools and free tiers. If you'd like to see it grow faster, please [sponsor the project](https://github.com/sponsors/Harsha-code-per). Every sponsorship goes into building DeV, and DeV stays free for everyone.
 
 You can also help by starring the repo, reporting bugs and telling other developers.
 
