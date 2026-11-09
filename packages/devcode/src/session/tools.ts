@@ -57,6 +57,14 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   const truncate = yield* Truncate.Service
   const flags = yield* RuntimeFlags.Service
 
+  type BeforeOutput = { args: Record<string, unknown>; permission?: "allow" | "ask" }
+  // Runs PreToolUse hooks; one can rewrite args in place or decide this call's permission prompt.
+  const before = (tool: string, sessionID: string, callID: string, args: Record<string, unknown>) =>
+    Effect.gen(function* () {
+      const output = yield* plugin.trigger("tool.execute.before", { tool, sessionID, callID }, { args } as BeforeOutput)
+      if (output.permission) yield* permission.decide(callID, output.permission)
+    })
+
   const context = (args: Record<string, unknown>, options: ToolExecutionOptions): Tool.Context => ({
     sessionID: input.session.id,
     abort: options.abortSignal!,
@@ -104,11 +112,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
         return run.promise(
           Effect.gen(function* () {
             const ctx = context(args, options)
-            yield* plugin.trigger(
-              "tool.execute.before",
-              { tool: item.id, sessionID: ctx.sessionID, callID: ctx.callID },
-              { args },
-            )
+            yield* before(item.id, ctx.sessionID, options.toolCallId, args)
             const result = yield* item.execute(args, ctx)
             const output = {
               ...result,
@@ -400,11 +404,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       run.promise(
         Effect.gen(function* () {
           const ctx = context(args, opts)
-          yield* plugin.trigger(
-            "tool.execute.before",
-            { tool: key, sessionID: ctx.sessionID, callID: opts.toolCallId },
-            { args },
-          )
+          yield* before(key, ctx.sessionID, opts.toolCallId, args)
           const result: Awaited<ReturnType<NonNullable<typeof execute>>> = yield* Effect.gen(function* () {
             yield* ctx.ask({ permission: key, metadata: {}, patterns: ["*"], always: ["*"] })
             return yield* Effect.promise(() => execute(args, opts))

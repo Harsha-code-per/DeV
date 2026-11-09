@@ -38,6 +38,8 @@ export const Info = Schema.Struct({
   PreCompact: List,
   PostCompact: List,
   FileChanged: List,
+  PermissionRequest: List,
+  SubagentStart: List,
 })
 export type Info = Schema.Schema.Type<typeof Info>
 export type Event = keyof Info

@@ -265,7 +265,8 @@ export interface Hooks {
   ) => Promise<void>
   "tool.execute.before"?: (
     input: { tool: string; sessionID: string; callID: string },
-    output: { args: any },
+    /** permission: "allow" skips the permission prompt for this call (a deny rule still wins); "ask" always prompts. */
+    output: { args: any; permission?: "allow" | "ask" },
   ) => Promise<void>
   "shell.env"?: (
     input: { cwd: string; sessionID?: string; callID?: string },

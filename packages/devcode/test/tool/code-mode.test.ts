@@ -57,6 +57,7 @@ function harness(input: {
     Layer.mock(Agent.Service, {
       get: () => Effect.succeed({ name: "build", permission: input.permission ?? [] } as any),
     }),
+    Layer.mock(Permission.Service, { decide: () => Effect.void }),
     Layer.mock(Session.Service, {
       get: () => Effect.succeed({ permission: [] } as any),
     }),

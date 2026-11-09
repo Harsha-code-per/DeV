@@ -134,16 +134,19 @@ function toolTree(catalog: readonly CatalogEntry[], run: (entry: CatalogEntry) =
 
 const invokeChildTool = Effect.fn("CodeMode.invokeChildTool")(function* (input: {
   plugin: Plugin.Interface
+  permission: Permission.Interface
   entry: CatalogEntry
   args: Record<string, unknown>
   callID: string
   ctx: Tool.Context
 }) {
-  yield* input.plugin.trigger(
+  const before = yield* input.plugin.trigger(
     "tool.execute.before",
     { tool: input.entry.key, sessionID: input.ctx.sessionID, callID: input.callID },
-    { args: input.args },
+    { args: input.args } as { args: Record<string, unknown>; permission?: "allow" | "ask" },
   )
+  // The permission check below belongs to the outer execute call, so a hook's verdict is keyed by its id.
+  if (before.permission && input.ctx.callID) yield* input.permission.decide(input.ctx.callID, before.permission)
   const result: CallToolResult = yield* Effect.gen(function* () {
     yield* input.ctx.ask({ permission: input.entry.key, metadata: {}, patterns: ["*"], always: ["*"] })
     // Deliberately mirrors McpCatalog.convertTool's transport call so the MCP service stays free of tool-loop concerns.
@@ -193,6 +196,7 @@ export const CodeModeTool = Tool.define(
     const agents = yield* Agent.Service
     const sessions = yield* Session.Service
     const plugin = yield* Plugin.Service
+    const permission = yield* Permission.Service
 
     const init: Tool.DefWithoutID<typeof Parameters, Metadata> = {
       description: DESCRIPTION,
@@ -223,6 +227,7 @@ export const CodeModeTool = Tool.define(
             childCalls += 1
             const result = yield* invokeChildTool({
               plugin,
+              permission,
               entry,
               args: (input ?? {}) as Record<string, unknown>,
               callID: `${ctx.callID ?? entry.key}/${childCalls}`,

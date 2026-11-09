@@ -1312,3 +1312,34 @@ it.instance(
     }),
   { git: true },
 )
+
+it.instance(
+  "decide - a hook's allow skips the prompt for that one call, ask forces one, and deny still wins",
+  () =>
+    Effect.gen(function* () {
+      const permission = yield* Permission.Service
+      const session = SessionID.make("session_hook")
+      const tool = (callID: string) => ({ messageID: "msg_test", callID })
+      const call = (callID: string, ruleset: PermissionV1.Rule[]) =>
+        ask({ sessionID: session, permission: "bash", patterns: ["ls"], metadata: {}, always: [], ruleset, tool: tool(callID) })
+      const asks = [{ permission: "bash", pattern: "*", action: "ask" as const }]
+      const allows = [{ permission: "bash", pattern: "*", action: "allow" as const }]
+
+      yield* permission.decide("call_1", "allow")
+      expect(yield* call("call_1", asks)).toBeUndefined()
+
+      yield* permission.decide("call_2", "allow")
+      expect(yield* fail(call("call_2", [{ permission: "bash", pattern: "*", action: "deny" }]))).toBeInstanceOf(
+        PermissionV1.DeniedError,
+      )
+
+      // "ask" prompts even where the rules allow; the decision is used once.
+      yield* permission.decide("call_3", "ask")
+      const prompted = yield* call("call_3", allows).pipe(Effect.forkScoped)
+      expect(yield* waitForPending(1)).toHaveLength(1)
+      yield* rejectAll()
+      yield* Fiber.await(prompted)
+      expect(yield* call("call_3", allows)).toBeUndefined()
+    }),
+  { git: true },
+)

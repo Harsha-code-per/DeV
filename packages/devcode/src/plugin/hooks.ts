@@ -3,28 +3,73 @@ import type { ConfigHooksV1 } from "@dev-ai/core/v1/config/hooks"
 import { PartID } from "@/session/schema"
 import { Process } from "@/util/process"
 
-// User hooks from the `hooks` setting, in the common hooks format: each command
-// gets the event as JSON on stdin; exit code 2 blocks PreToolUse and UserPromptSubmit (stderr is the
-// reason the agent or user sees) and reports stderr to the agent on PostToolUse; any other exit code is
-// logged and ignored. UserPromptSubmit and SessionStart stdout is added to the (first) prompt as context.
-// Exit code 2 on Stop keeps the agent working, with stderr as its next instruction; the hook then sees
-// stop_hook_active: true and should let it stop, and DeV stops after MAX_CONTINUES in a row regardless.
-// PreCompact stdout is added to the compaction instructions. Notification, SubagentStop,
-// PostToolUseFailure, PostCompact, SessionEnd and FileChanged only inform. An http hook receives the
-// same JSON as a POST; its 2xx body counts as stdout, and {"decision":"block","reason":…} as exit 2.
+// User hooks from the `hooks` setting, in the common hooks format, so hooks written for other agents (and the ones
+// inside marketplace plugins) work unchanged. Each hook gets the event as JSON on stdin, with tool names and inputs
+// in that format ("Bash", tool_input.file_path).
+//
+// A hook answers with its exit code or with one JSON object on stdout:
+// - exit 2, {"decision":"block","reason":…} or {"continue":false,"stopReason":…} blocks PreToolUse and
+//   UserPromptSubmit, keeps the agent working on Stop (the reason is its next instruction), and is fed back to the
+//   agent on PostToolUse. Any other non-zero exit is logged and ignored.
+// - PreToolUse hookSpecificOutput: permissionDecision "deny" blocks, "ask" always prompts, "allow" skips the prompt
+//   for that call (a deny rule still wins); updatedInput replaces the tool's input; additionalContext is added to
+//   the tool's result.
+// - PostToolUse: additionalContext is added to the result; updatedToolOutput (or updatedMCPToolOutput) replaces it.
+// - UserPromptSubmit and SessionStart: plain stdout or additionalContext is added to the (first) prompt.
+// - PermissionRequest: hookSpecificOutput.decision {behavior: "allow" | "deny"} answers the permission prompt.
+// PreCompact stdout is added to the compaction instructions. Notification, SubagentStart, SubagentStop,
+// PostToolUseFailure, PostCompact, SessionEnd and FileChanged only inform. An http hook receives the same JSON as a
+// POST and answers with its 2xx body the same way.
 const MAX_CONTINUES = 3
+
+// DeV's tool ids, as the names hooks written in the common format expect. A matcher may use either.
+const COMMON: Record<string, string[]> = {
+  bash: ["Bash"],
+  read: ["Read"],
+  write: ["Write"],
+  edit: ["Edit"],
+  glob: ["Glob"],
+  grep: ["Grep"],
+  list: ["LS"],
+  webfetch: ["WebFetch"],
+  websearch: ["WebSearch"],
+  task: ["Agent", "Task"],
+  todowrite: ["TodoWrite"],
+  skill: ["Skill"],
+  question: ["AskUserQuestion"],
+  notebook_edit: ["NotebookEdit"],
+}
+
+type Result = { code: number; stdout: string; stderr: string; json?: Output }
+type Output = {
+  continue?: boolean
+  stopReason?: string
+  decision?: string
+  reason?: string
+  hookSpecificOutput?: {
+    permissionDecision?: string
+    permissionDecisionReason?: string
+    updatedInput?: Record<string, unknown>
+    additionalContext?: string
+    updatedToolOutput?: unknown
+    updatedMCPToolOutput?: unknown
+    decision?: { behavior?: string; message?: string }
+  }
+}
 
 export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
   const state: { hooks?: ConfigHooksV1.Info } = {}
   // SessionStart output is a promise because the first prompt can arrive before the hook finishes.
   const sessions = new Map<string, { context?: Promise<string | undefined>; continues: number }>()
   const session = (id: string) => sessions.get(id) ?? sessions.set(id, { continues: 0 }).get(id)!
-  const run = (event: ConfigHooksV1.Event, payload: Record<string, unknown>, tool?: string) =>
+  // PreToolUse additionalContext, added to that call's result.
+  const pending = new Map<string, string>()
+  const run = (event: ConfigHooksV1.Event, payload: Record<string, unknown>, names?: string[]) =>
     runHooks(
       state.hooks?.[event] ?? [],
       { hook_event_name: event, cwd: input.directory, ...payload },
       input.directory,
-      tool,
+      names,
     )
 
   return {
@@ -35,21 +80,51 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
       if (!state.hooks?.PreToolUse) return
       const results = await run(
         "PreToolUse",
-        { session_id: info.sessionID, tool_name: info.tool, tool_input: output.args },
-        info.tool,
+        { session_id: info.sessionID, tool_name: toolName(info.tool), tool_input: common(output.args), tool_use_id: info.callID },
+        names(info.tool),
       )
-      const blocked = results.find((result) => result.code === 2)
-      if (blocked) throw new Error(`Blocked by a PreToolUse hook: ${blocked.stderr.trim() || "no reason given"}`)
+      const reason = blocked(results)
+      if (reason !== undefined) throw new Error(`Blocked by a PreToolUse hook: ${reason || "no reason given"}`)
+      const decisions = results.map((result) => permissionDecision(result.json))
+      if (decisions.includes("ask")) output.permission = "ask"
+      else if (decisions.includes("allow")) output.permission = "allow"
+      const updated = results.findLast((result) => isRecord(result.json?.hookSpecificOutput?.updatedInput))
+      // updatedInput replaces the whole input; the tool's own arguments object is what runs, so edit it in place.
+      if (updated) {
+        for (const key of Object.keys(output.args)) delete output.args[key]
+        Object.assign(output.args, native(updated.json!.hookSpecificOutput!.updatedInput!))
+      }
+      const context = additionalContext(results)
+      if (context.length > 0) pending.set(info.callID, context.join("\n"))
     },
     "tool.execute.after": async (info, output) => {
+      const before = pending.get(info.callID)
+      pending.delete(info.callID)
       // A failed subtask reports no output.
-      if (!state.hooks?.PostToolUse || !output) return
+      if (!output) return
+      if (before) output.output += `\n\nPreToolUse hook:\n${before}`
+      if (!state.hooks?.PostToolUse) return
       const results = await run(
         "PostToolUse",
-        { session_id: info.sessionID, tool_name: info.tool, tool_input: info.args, tool_response: output.output },
-        info.tool,
+        {
+          session_id: info.sessionID,
+          tool_name: toolName(info.tool),
+          tool_input: common(info.args),
+          tool_response: output.output,
+          tool_use_id: info.callID,
+        },
+        names(info.tool),
       )
-      const feedback = results.filter((result) => result.code === 2).map((result) => result.stderr.trim())
+      const replaced = results.findLast((result) => {
+        const specific = result.json?.hookSpecificOutput
+        return specific?.updatedToolOutput !== undefined || specific?.updatedMCPToolOutput !== undefined
+      })?.json?.hookSpecificOutput
+      if (replaced) output.output = text(replaced.updatedToolOutput ?? replaced.updatedMCPToolOutput)
+      const feedback = [
+        ...results.flatMap((result) => (result.code === 2 ? [result.stderr.trim()] : [])),
+        ...results.flatMap((result) => (result.json?.decision === "block" && result.json.reason ? [result.json.reason] : [])),
+        ...additionalContext(results),
+      ]
       if (feedback.length > 0) output.output += `\n\nPostToolUse hook:\n${feedback.join("\n")}`
     },
     "chat.message": async (info, output) => {
@@ -58,11 +133,12 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
         .flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : []))
         .join("\n")
       const results = await run("UserPromptSubmit", { session_id: info.sessionID, prompt })
-      const blocked = results.find((result) => result.code === 2)
-      if (blocked)
-        throw new Error(`Prompt blocked by a UserPromptSubmit hook: ${blocked.stderr.trim() || "no reason given"}`)
+      const reason = blocked(results)
+      if (reason !== undefined) throw new Error(`Prompt blocked by a UserPromptSubmit hook: ${reason || "no reason given"}`)
       const current = session(info.sessionID)
-      const context = [await current.context, ...stdout(results)].filter((text): text is string => Boolean(text))
+      const context = [await current.context, ...stdout(results), ...additionalContext(results)].filter(
+        (item): item is string => Boolean(item),
+      )
       current.context = undefined
       if (context.length === 0) return
       output.parts.push({
@@ -79,7 +155,7 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
       if (info.parentID || !state.hooks?.Stop) return
       const current = session(info.sessionID)
       const results = await run("Stop", { session_id: info.sessionID, stop_hook_active: current.continues > 0 })
-      const reason = results.find((result) => result.code === 2)?.stderr.trim()
+      const reason = blocked(results)?.trim()
       if (!reason || current.continues >= MAX_CONTINUES) {
         current.continues = 0
         return
@@ -89,28 +165,42 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
     },
     "experimental.session.compacting": async (info, output) => {
       if (!state.hooks?.PreCompact) return
-      output.context.push(...stdout(await run("PreCompact", { session_id: info.sessionID, trigger: "auto" })))
+      output.context.push(...stdout(await run("PreCompact", { session_id: info.sessionID, trigger: "auto" }, ["auto"])))
     },
     event: async ({ event }) => {
       const props = event.properties as
         | {
+            id?: string
             sessionID?: string
-            info?: { id?: string; parentID?: string }
+            permission?: string
+            patterns?: string[]
+            metadata?: Record<string, unknown>
+            info?: { id?: string; parentID?: string; title?: string }
             part?: { type?: string; tool?: string; state?: { status?: string; input?: unknown; error?: string } }
             title?: string
             file?: string
           }
         | undefined
-      const notify = (message: string, type: string) =>
-        run("Notification", { session_id: props?.sessionID, message, notification_type: type })
-      if (event.type === "permission.updated" && state.hooks?.Notification)
-        await notify(`DeV needs your permission: ${props?.title ?? "a tool"}`, "permission_prompt")
+      // The plugin API's event list predates this name; it is what a permission prompt publishes now.
+      if ((event.type as string) === "permission.asked" && props?.id && props.sessionID) {
+        if (state.hooks?.Notification)
+          await run(
+            "Notification",
+            {
+              session_id: props.sessionID,
+              message: `DeV needs your permission to use ${toolName(props.permission ?? "a tool")}`,
+              notification_type: "permission_prompt",
+            },
+            ["permission_prompt"],
+          )
+        if (state.hooks?.PermissionRequest) await permissionRequest({ ...props, id: props.id, sessionID: props.sessionID })
+      }
       if (event.type === "session.compacted" && state.hooks?.PostCompact)
-        await run("PostCompact", { session_id: props?.sessionID })
+        await run("PostCompact", { session_id: props?.sessionID, trigger: "auto" }, ["auto"])
       if (event.type === "session.deleted" && state.hooks?.SessionEnd && props?.info?.id && !props.info.parentID)
-        await run("SessionEnd", { session_id: props.info.id, reason: "deleted" })
+        await run("SessionEnd", { session_id: props.info.id, reason: "other" }, ["other"])
       if (event.type === "file.edited" && state.hooks?.FileChanged && props?.file)
-        await run("FileChanged", { file_path: props.file })
+        await run("FileChanged", { file_path: props.file, event: "change" }, [props.file.split(/[\\/]/).at(-1)!])
       if (
         event.type === "message.part.updated" &&
         state.hooks?.PostToolUseFailure &&
@@ -121,41 +211,139 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
           "PostToolUseFailure",
           {
             session_id: props.sessionID,
-            tool_name: props.part.tool,
-            tool_input: props.part.state.input,
+            tool_name: toolName(props.part.tool ?? ""),
+            tool_input: common(props.part.state.input),
             error: props.part.state.error,
           },
-          props.part.tool,
+          names(props.part.tool ?? ""),
         )
       if (event.type === "session.idle" && state.hooks?.SubagentStop && props?.sessionID) {
         const info = await input.client.session.get({ path: { id: props.sessionID } }).catch(() => undefined)
         if (info?.data?.parentID)
-          await run("SubagentStop", { session_id: props.sessionID, parent_session_id: info.data.parentID })
+          await run("SubagentStop", { session_id: props.sessionID, parent_session_id: info.data.parentID, agent_id: props.sessionID })
       }
+      if (event.type === "session.created" && props?.info?.id && props.info.parentID && state.hooks?.SubagentStart)
+        await run("SubagentStart", {
+          session_id: props.info.parentID,
+          agent_id: props.info.id,
+          description: props.info.title,
+        })
       if (event.type === "session.created" && state.hooks?.SessionStart && props?.info?.id && !props.info.parentID) {
-        const context = run("SessionStart", { session_id: props.info.id, source: "startup" }).then(
-          (results) => stdout(results).join("\n\n") || undefined,
+        const context = run("SessionStart", { session_id: props.info.id, source: "startup" }, ["startup"]).then(
+          (results) => [...stdout(results), ...additionalContext(results)].join("\n\n") || undefined,
         )
         session(props.info.id).context = context
         await context
       }
     },
   }
+
+  // A PermissionRequest hook can answer the prompt the person would otherwise see.
+  async function permissionRequest(request: { id: string; sessionID: string; permission?: string; patterns?: string[]; metadata?: Record<string, unknown> }) {
+    const results = await run(
+      "PermissionRequest",
+      {
+        session_id: request.sessionID,
+        tool_name: toolName(request.permission ?? ""),
+        tool_input: common(request.metadata ?? {}),
+        patterns: request.patterns,
+      },
+      names(request.permission ?? ""),
+    )
+    const behaviors = results.map((result) => result.json?.hookSpecificOutput?.decision?.behavior)
+    // A deny from any hook wins over an allow from another.
+    const response = behaviors.includes("deny") ? "reject" : behaviors.includes("allow") ? "once" : undefined
+    if (!response) return
+    await input.client
+      .postSessionIdPermissionsPermissionId({ path: { id: request.sessionID, permissionID: request.id }, body: { response } })
+      .catch(() => undefined)
+  }
 }
 
-function stdout(results: { code: number; stdout: string }[]) {
-  return results.flatMap((result) => (result.code === 0 && result.stdout.trim() ? [result.stdout.trim()] : []))
+function toolName(tool: string) {
+  return COMMON[tool]?.[0] ?? tool
+}
+
+function names(tool: string) {
+  return [tool, ...(COMMON[tool] ?? [])]
+}
+
+/** A tool's arguments as hooks in the common format read them: filePath becomes file_path. */
+function common(args: unknown) {
+  if (!isRecord(args)) return args
+  return Object.fromEntries(Object.entries(args).map(([key, value]) => [key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`), value]))
+}
+
+/** updatedInput back as DeV's arguments: file_path becomes filePath. */
+function native(args: Record<string, unknown>) {
+  return Object.fromEntries(Object.entries(args).map(([key, value]) => [key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()), value]))
+}
+
+function blocked(results: Result[]) {
+  for (const result of results) {
+    if (result.code === 2) return result.stderr.trim()
+    const json = result.json
+    if (!json) continue
+    if (json.decision === "block" || json.decision === "deny") return json.reason ?? ""
+    if (json.continue === false) return json.stopReason ?? ""
+    if (json.hookSpecificOutput?.permissionDecision === "deny") return json.hookSpecificOutput.permissionDecisionReason ?? ""
+  }
+  return undefined
+}
+
+function permissionDecision(json: Output | undefined) {
+  const decision = json?.hookSpecificOutput?.permissionDecision
+  if (decision) return decision
+  // The older top-level form: "approve" is allow.
+  return json?.decision === "approve" ? "allow" : undefined
+}
+
+function additionalContext(results: Result[]) {
+  return results.flatMap((result) => {
+    const context = result.json?.hookSpecificOutput?.additionalContext
+    return typeof context === "string" && context.trim() ? [context.trim()] : []
+  })
+}
+
+function stdout(results: Result[]) {
+  return results.flatMap((result) =>
+    result.code === 0 && !result.json && result.stdout.trim() ? [result.stdout.trim()] : [],
+  )
+}
+
+function text(value: unknown) {
+  return typeof value === "string" ? value : JSON.stringify(value)
+}
+
+/**
+ * Which hook groups run: no matcher, "" or "*" matches everything; letters, digits, "_", "-", spaces, "," and "|"
+ * are an exact list ("Edit|Write"); anything else is a regular expression ("mcp__.*", "^Notebook").
+ */
+function matches(matcher: string | undefined, names: string[] | undefined) {
+  if (!names || !matcher || matcher === "*") return true
+  if (/^[\w\s,|-]*$/.test(matcher)) {
+    const list = matcher.split(/[|,]/).map((item) => item.trim().toLowerCase())
+    return names.some((name) => list.includes(name.toLowerCase()))
+  }
+  const pattern = regex(matcher)
+  return pattern ? names.some((name) => pattern.test(name)) : false
+}
+
+function regex(source: string) {
+  try {
+    return new RegExp(source)
+  } catch {
+    return undefined
+  }
 }
 
 async function runHooks(
   matchers: ConfigHooksV1.Info["PreToolUse"] & {},
   payload: Record<string, unknown>,
   cwd: string,
-  tool?: string,
-) {
-  const commands = matchers
-    .filter((entry) => !tool || !entry.matcher || new RegExp(`^(?:${entry.matcher})$`, "i").test(tool))
-    .flatMap((entry) => entry.hooks)
+  names?: string[],
+): Promise<Result[]> {
+  const commands = matchers.filter((entry) => matches(entry.matcher, names)).flatMap((entry) => entry.hooks)
   return Promise.all(
     commands.map(async (hook) => {
       if (hook.type === "http") return post(hook, payload)
@@ -163,15 +351,18 @@ async function runHooks(
       const result = await Process.run([...shell, hook.command], {
         cwd,
         input: JSON.stringify(payload),
+        // The project root, under both names: DeV's own and the one shared hook scripts use.
+        env: { ...process.env, DEV_PROJECT_DIR: cwd, CLAUDE_PROJECT_DIR: cwd },
         abort: AbortSignal.timeout((hook.timeout ?? 60) * 1000),
         nothrow: true,
       })
-      return { code: result.code, stdout: result.stdout.toString(), stderr: result.stderr.toString() }
+      const out = result.stdout.toString()
+      return { code: result.code, stdout: out, stderr: result.stderr.toString(), json: parseOutput(out) }
     }),
   )
 }
 
-async function post(hook: typeof ConfigHooksV1.Http.Type, payload: Record<string, unknown>) {
+async function post(hook: typeof ConfigHooksV1.Http.Type, payload: Record<string, unknown>): Promise<Result> {
   const response = await fetch(hook.url, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...hook.headers },
@@ -181,16 +372,21 @@ async function post(hook: typeof ConfigHooksV1.Http.Type, payload: Record<string
   if (response instanceof Error) return { code: 1, stdout: "", stderr: response.message }
   const body = await response.text().catch(() => "")
   if (!response.ok) return { code: 1, stdout: "", stderr: `HTTP ${response.status}` }
-  const decision = parseDecision(body)
-  if (decision?.decision === "block") return { code: 2, stdout: "", stderr: decision.reason ?? "blocked" }
-  return { code: 0, stdout: body, stderr: "" }
+  return { code: 0, stdout: body, stderr: "", json: parseOutput(body) }
 }
 
-function parseDecision(body: string) {
+/** Output is JSON only when it is one object with nothing else around it; anything else is plain text. */
+function parseOutput(text: string): Output | undefined {
+  const trimmed = text.trim()
+  if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return undefined
   try {
-    const value = JSON.parse(body) as { decision?: string; reason?: string }
-    return typeof value === "object" && value ? value : undefined
+    const value: unknown = JSON.parse(trimmed)
+    return isRecord(value) ? (value as Output) : undefined
   } catch {
     return undefined
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }

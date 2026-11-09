@@ -1,3 +1,4 @@
+import { Permission } from "@/permission"
 import { beforeAll, describe, expect, test } from "bun:test"
 import { CodeModeTool, describeCatalog } from "@/tool/code-mode"
 import { McpCatalog } from "@/mcp/catalog"
@@ -152,6 +153,7 @@ async function buildTool() {
     }),
     Layer.mock(Agent.Service, { get: () => Effect.succeed({ name: "build", permission: [] } as any) }),
     Layer.mock(Session.Service, { get: () => Effect.succeed({ permission: [] } as any) }),
+    Layer.mock(Permission.Service, { decide: () => Effect.void }),
     Layer.mock(MCP.Service, {
       tools: () => Effect.succeed(mcpTools),
       clients: () => Effect.succeed({ [SERVER]: {} as any }),

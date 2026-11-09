@@ -20,6 +20,11 @@ export interface Interface {
    * commands that leave the sandbox) but never overrides a "deny".
    */
   readonly grant: (sessionID: string, rules: PermissionV1.Rule[]) => Effect.Effect<void>
+  /**
+   * A hook's verdict on one tool call (PreToolUse permissionDecision): "allow" skips the prompt for that call only,
+   * "ask" prompts even where rules allow. A "deny" rule still wins either way.
+   */
+  readonly decide: (callID: string, decision: "allow" | "ask") => Effect.Effect<void>
 }
 
 interface PendingEntry {
@@ -31,6 +36,7 @@ interface State {
   pending: Map<PermissionV1.ID, PendingEntry>
   approved: PermissionV1.Rule[]
   grants: Map<string, PermissionV1.Rule[]>
+  decisions: Map<string, "allow" | "ask">
 }
 
 export function evaluate(permission: string, pattern: string, ...rulesets: PermissionV1.Ruleset[]): PermissionV1.Rule {
@@ -58,6 +64,7 @@ const layer = Layer.effect(
           pending: new Map<PermissionV1.ID, PendingEntry>(),
           approved: [],
           grants: new Map<string, PermissionV1.Rule[]>(),
+          decisions: new Map<string, "allow" | "ask">(),
         }
 
         yield* Effect.addFinalizer(() =>
@@ -74,9 +81,11 @@ const layer = Layer.effect(
     )
 
     const ask = Effect.fn("Permission.ask")(function* (input: PermissionV1.AskInput) {
-      const { approved, pending, grants } = yield* InstanceState.get(state)
+      const { approved, pending, grants, decisions } = yield* InstanceState.get(state)
       const { ruleset, ...request } = input
       const granted = grants.get(request.sessionID) ?? []
+      const decision = request.tool ? decisions.get(request.tool.callID) : undefined
+      if (request.tool) decisions.delete(request.tool.callID)
       let needsAsk = false
 
       for (const pattern of request.patterns) {
@@ -87,9 +96,14 @@ const layer = Layer.effect(
             ruleset: ruleset.filter((rule) => Wildcard.match(request.permission, rule.permission)),
           })
         }
+        if (decision === "ask") {
+          needsAsk = true
+          continue
+        }
         if (input.sandbox === "confined") continue
         // Leaving the sandbox asks unless the person approved it this run. Risky commands ask even under the default
         // "*" allow; a rule that names them (from dev.json or /permissions) or "Allow always" lets them run.
+        if (decision === "allow") continue
         if (evaluate(request.permission, pattern, granted).action === "allow") continue
         const named = input.sandbox === "risky" ? ruleset.filter((item) => item.pattern !== "*") : []
         if (
@@ -199,12 +213,17 @@ const layer = Layer.effect(
       grants.set(sessionID, [...(grants.get(sessionID) ?? []), ...rules])
     })
 
+    const decide = Effect.fn("Permission.decide")(function* (callID: string, decision: "allow" | "ask") {
+      const { decisions } = yield* InstanceState.get(state)
+      decisions.set(callID, decision)
+    })
+
     const addRule = Effect.fn("Permission.addRule")(function* (rule: PermissionV1.Rule) {
       const { approved } = yield* InstanceState.get(state)
       approved.push(...fromConfig({ [rule.permission]: { [rule.pattern]: rule.action } }))
     })
 
-    return Service.of({ ask, reply, list, addRule, grant })
+    return Service.of({ ask, reply, list, addRule, grant, decide })
   }),
 )
 

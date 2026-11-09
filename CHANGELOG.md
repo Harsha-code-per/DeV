@@ -4,6 +4,12 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 
 ## 1.0.20 (unreleased)
 
+- Hooks written for other agents, including the ones inside marketplace plugins, now work unchanged:
+  - Hooks see the common tool names (`Bash`, `Edit`, `Write`, `Read`) and field names (`tool_input.file_path`), plus `tool_use_id`. Matchers work as lists (`Edit|Write`) or patterns (`^Notebook`, `mcp__.*`).
+  - A hook can answer with JSON on stdout as well as with its exit code. `PreToolUse` can allow a call without the permission prompt (a `deny` in your permissions still wins), force a prompt with `ask`, deny it with a reason, rewrite its input (`updatedInput`) or add context. `PostToolUse` can replace the tool's output or send feedback. `UserPromptSubmit` and `Stop` can block with a reason.
+  - New `PermissionRequest` hook: it can approve or deny a permission prompt before you answer it. New `SubagentStart` hook.
+  - Hook commands get `CLAUDE_PROJECT_DIR` (and `DEV_PROJECT_DIR`), the project folder.
+  - The `Notification` hook for permission prompts fires again.
 - Skills can list the tools they use in `allowed-tools` (for example `allowed-tools: Bash(git add:*), Bash(git status:*), Read`). Once the skill starts, from its `/` command or when DeV loads it, those tools run without asking for the rest of the session. A `deny` in your permissions still wins. MCP tools are written `mcp__server__tool`, or `mcp__server` for all of one server's tools.
 
 ## 1.0.19 (2026-11-09)
