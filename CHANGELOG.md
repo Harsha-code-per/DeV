@@ -2,7 +2,7 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## 1.0.27 (unreleased)
+## 1.0.27 (2026-11-09)
 
 - Talk to an agent directly. A subagent's or background task's own screen (ctrl+x ↓ from the main conversation) now has a prompt: what you type goes to that agent, even while it works, and it picks it up at its next step. Its permission requests now show on its own screen too. While the prompt is empty, ↑ ← → still move between the main conversation and its agents; once you start typing, they edit your text.
 - DeV Code for VS Code. A new extension opens DeV in a terminal beside your file (`Ctrl+Esc`, or the DeV button above the editor). It shares your selection as you move, so you can ask about "the selected function" without copying it, and `Ctrl+Alt+K` mentions the selected lines in your message. It talks to DeV over a local connection that only the terminal it opened can use. Each release attaches `devcode-vscode.vsix`; install it with `code --install-extension devcode-vscode.vsix`.
