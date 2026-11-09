@@ -41,10 +41,10 @@ jobs:
           mkdir -p out
           for pair in x64:amd64 arm64:arm64; do
             name="${pair%%:*}"
-            gh release download "$TAG" -p "devcode-linux-$name.tar.gz"
-            mkdir "stage-$name" && tar -xzf "devcode-linux-$name.tar.gz" -C "stage-$name"
+            gh release download "$TAG" -p "devcode-linux-$name.tar.gz" --clobber
+            rm -rf stage && mkdir stage && tar -xzf "devcode-linux-$name.tar.gz" -C stage
             for format in deb rpm; do
-              ARCH="${pair##*:}" VERSION="${TAG#v}" SRC="stage-$name" \
+              ARCH="${pair##*:}" VERSION="${TAG#v}" \
                 ./nfpm package -f packaging/nfpm.yaml -p "$format" -t "out/devcode-linux-$name.$format"
             done
           done

@@ -11,7 +11,8 @@ homepage: https://trydev.work
 license: MIT
 section: devel
 contents:
-  - src: ${SRC}/
+  # The workflow unpacks each architecture's archive into stage/ before packaging it.
+  - src: ./stage/
     dst: /usr/lib/devcode/
     type: tree
   - src: /usr/lib/devcode/devcode
