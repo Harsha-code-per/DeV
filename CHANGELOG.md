@@ -2,7 +2,7 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## 1.0.19 (unreleased)
+## 1.0.19 (2026-11-09)
 
 - `/plugins` is full from the start: DeV adds its own marketplace, rebuilt every night from the official MCP Registry and GitHub. It lists over 6,000 popular, maintained plugins, skills and MCP servers, each with its star count, and ones marked Verified come first. A server is listed only when it comes from the owner of the repo whose stars it shows. To turn the marketplace off, set `"marketplaces": { "dev": { "source": "" } }`.
 - Search in `/plugins` matches descriptions as well as names, and lists the best-known matches first. Discover shows the top 100; keep typing to narrow it.
