@@ -2,6 +2,15 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.19 (unreleased)
+
+- `/plugins` is full from the start: DeV adds its own marketplace, rebuilt every night from the official MCP Registry and GitHub. It lists over 6,000 popular, maintained plugins, skills and MCP servers, each with its star count, and ones marked Verified come first. A server is listed only when it comes from the owner of the repo whose stars it shows. To turn the marketplace off, set `"marketplaces": { "dev": { "source": "" } }`.
+- Search in `/plugins` matches descriptions as well as names, and lists the best-known matches first. Discover shows the top 100; keep typing to narrow it.
+- A marketplace named in config is added the first time you open `/plugins` or run `devcode plugins`, and refreshed daily.
+- A repo that is a single skill (`SKILL.md` at its root) installs as a plugin.
+- MCP servers that need an API key or token say which environment variables to set.
+- Typing `/plugins` and pressing Enter opens the plugins dialog. Before, an older built-in command of the same name ran instead; that command is now `/catalog`.
+
 ## 1.0.18 (2026-11-07)
 
 - Plugin marketplaces. `/plugins` lists the plugins in every marketplace you've added, with the ones you have installed first; type to search. Add a marketplace from `owner/repo` (add `#tag` to pin it), a git URL, a URL to its `marketplace.json`, or a folder. Plugins in the common open format install unchanged, with their skills, commands, agents, hooks and MCP servers, named `plugin:name`.

@@ -18,6 +18,7 @@ import { Brand } from "@dev-ai/core/brand"
 import { Process } from "@/util/process"
 import { ConfigCommand } from "@/config/command"
 import { ConfigAgent } from "@/config/agent"
+import DevDefaults from "@/config/dev-defaults.json"
 
 export type Scope = "user" | "project" | "local"
 
@@ -41,6 +42,8 @@ export type Entry = {
   license?: string
   author?: { name?: string }
   source: PluginSource
+  /** Free-form; DeV's index puts stars, kind ("plugin", "skill", "mcp"), verified and needed env vars here. */
+  metadata?: Record<string, any>
 }
 
 export type Marketplace = {
@@ -154,6 +157,37 @@ export async function removeMarketplace(name: string) {
     await fs.rm(item.installLocation, { recursive: true, force: true })
   delete known[name]
   await writeJson(knownFile(), known)
+}
+
+/**
+ * Adds the marketplaces config names (DeV's own index by default, or a team's in .dev/dev.json) that this machine
+ * hasn't fetched yet, and refreshes any older than a day in the background.
+ */
+export async function ensure(configured: Record<string, { source: string }> | undefined, cwd: string) {
+  const known = await readJson<Record<string, { source: string; lastUpdated: string }>>(knownFile(), {})
+  for (const item of Object.values(configured ?? {})) {
+    // An empty source turns a declared marketplace off, e.g. "marketplaces": { "dev": { "source": "" } }.
+    if (!item?.source?.trim()) continue
+    const source = normalize(item.source, cwd)
+    const existing = Object.entries(known).find(([, value]) => value.source === source)
+    if (!existing) {
+      await addMarketplace(source, cwd).catch(() => undefined)
+      continue
+    }
+    if (Date.now() - Date.parse(existing[1].lastUpdated) > 86_400_000)
+      void updateMarketplace(existing[0]).catch(() => undefined)
+  }
+}
+
+/** ensure() for the command line, which has no loaded config: DeV's defaults plus the three scope files. */
+export async function ensureFromFiles(project: string) {
+  const layers = await Promise.all((["user", "project", "local"] as const).map((scope) => readConfig(scope, project)))
+  const configured = Object.assign(
+    {},
+    DevDefaults.marketplaces as Record<string, { source: string }>,
+    ...layers.map((layer) => (layer as { marketplaces?: Record<string, { source: string }> }).marketplaces ?? {}),
+  )
+  await ensure(configured, project)
 }
 
 /** Every plugin in every added marketplace. */
@@ -350,7 +384,7 @@ export async function contents(dir: string) {
   const plugin: Plugin = { id: "x@x", name: "x", marketplace: "x", root: dir, data: "" }
   const parts = await components(plugin)
   return {
-    skills: await count("skills/*/SKILL.md"),
+    skills: (await count("skills/*/SKILL.md")) + (await count("SKILL.md")),
     commands: Object.keys(parts.commands).length,
     agents: Object.keys(parts.agents).length,
     hooks: Object.values(parts.hooks).reduce((sum, list) => sum + list.length, 0),

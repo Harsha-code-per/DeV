@@ -7,10 +7,12 @@ import { InstanceState } from "@/effect/instance-state"
 import { EffectBridge } from "@/effect/bridge"
 import { SessionStatus } from "@/session/status"
 import { disposeAllInstancesAndEmitGlobalDisposed } from "@/server/global-lifecycle"
+import { Config } from "@/config/config"
 
 export const pluginsHandlers = HttpApiBuilder.group(InstanceHttpApi, "plugins", (handlers) =>
   Effect.gen(function* () {
     const bridge = yield* EffectBridge.make()
+    const config = yield* Config.Service
 
     const run = <A>(fn: () => Promise<A>) =>
       Effect.tryPromise({
@@ -25,6 +27,13 @@ export const pluginsHandlers = HttpApiBuilder.group(InstanceHttpApi, "plugins", 
         SessionStatus.whenIdle.pipe(Effect.andThen(disposeAllInstancesAndEmitGlobalDisposed({ swallowErrors: true }))),
       )
 
+    // DeV's own index (and any marketplace the project's config names) is there without adding it by hand.
+    const ensure = Effect.gen(function* () {
+      const cfg = yield* config.get()
+      const root = yield* project
+      yield* run(() => Marketplace.ensure(cfg.marketplaces, root))
+    })
+
     const marketplaceInfo = (item: Marketplace.Marketplace) => ({
       name: item.name,
       source: item.source,
@@ -35,19 +44,27 @@ export const pluginsHandlers = HttpApiBuilder.group(InstanceHttpApi, "plugins", 
 
     return handlers
       .handle("available", () =>
-        run(async () =>
-          (await Marketplace.entries()).map((entry) => ({
-            id: `${entry.name}@${entry.marketplace}`,
-            name: entry.name,
-            marketplace: entry.marketplace,
-            description: entry.description,
-            version: entry.version,
-            category: entry.category,
-            tags: [...(entry.tags ?? []), ...(entry.keywords ?? [])].filter((tag) => typeof tag === "string"),
-            homepage: entry.homepage,
-            license: entry.license,
-            author: entry.author?.name,
-          })),
+        ensure.pipe(
+          Effect.andThen(
+            run(async () =>
+              (await Marketplace.entries()).map((entry) => ({
+                id: `${entry.name}@${entry.marketplace}`,
+                name: entry.name,
+                marketplace: entry.marketplace,
+                description: entry.description,
+                version: entry.version,
+                category: entry.category,
+                tags: [...(entry.tags ?? []), ...(entry.keywords ?? [])].filter((tag) => typeof tag === "string"),
+                homepage: entry.homepage,
+                license: entry.license,
+                author: entry.author?.name,
+                kind: entry.metadata?.kind ?? entry.category,
+                stars: typeof entry.metadata?.stars === "number" ? entry.metadata.stars : undefined,
+                verified: entry.metadata?.verified === true ? true : undefined,
+                needs: Array.isArray(entry.metadata?.needs) ? entry.metadata.needs.map(String) : undefined,
+              })),
+            ),
+          ),
         ),
       )
       .handle("installed", () =>
@@ -56,7 +73,9 @@ export const pluginsHandlers = HttpApiBuilder.group(InstanceHttpApi, "plugins", 
           return yield* run(() => Marketplace.installed(root))
         }),
       )
-      .handle("marketplaces", () => run(async () => (await Marketplace.marketplaces()).map(marketplaceInfo)))
+      .handle("marketplaces", () =>
+        ensure.pipe(Effect.andThen(run(async () => (await Marketplace.marketplaces()).map(marketplaceInfo)))),
+      )
       .handle("marketplaceAdd", (ctx) =>
         Effect.gen(function* () {
           const root = yield* project

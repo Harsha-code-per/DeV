@@ -2835,6 +2835,10 @@ export type PluginEntry = {
   homepage?: string
   license?: string
   author?: string
+  kind?: string
+  stars?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  verified?: boolean
+  needs?: Array<string>
 }
 
 export type PluginError = {

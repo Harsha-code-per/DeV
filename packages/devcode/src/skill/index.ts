@@ -147,7 +147,12 @@ const add = Effect.fnUntraced(function* (
   const plugin = plugins.find((item) => match.startsWith(item.root + path.sep))
   // Plugin skills are named plugin:skill, which is also how other skills refer to them.
   // Its folder gives the second half ("Agent Cost Report" in agent-cost-report/ is plugin:agent-cost-report).
-  const name = plugin ? `${plugin.name}:${path.basename(path.dirname(match))}` : md.data.name
+  // A plugin that is a single skill (SKILL.md at its root) is named after the plugin.
+  const name = !plugin
+    ? md.data.name
+    : path.dirname(match) === plugin.root
+      ? plugin.name
+      : `${plugin.name}:${path.basename(path.dirname(match))}`
 
   if (state.skills[name]) {
     yield* Effect.logWarning("duplicate skill name", {
@@ -239,7 +244,7 @@ const discoverSkills = Effect.fnUntraced(function* (
       for (const plugin of yield* Effect.promise(() => claudePlugins(root, directory))) {
         if (plugins.some((item) => item.root === plugin.root)) continue
         plugins.push(plugin)
-        yield* scan(state, plugin.root, "skills/*/SKILL.md", { dot: true, scope: "plugin" })
+        yield* scan(state, plugin.root, "{SKILL.md,skills/*/SKILL.md}", { dot: true, scope: "plugin" })
       }
     }
 
@@ -257,7 +262,7 @@ const discoverSkills = Effect.fnUntraced(function* (
   for (const plugin of yield* Effect.promise(() => Marketplace.enabled(cfg))) {
     if (plugins.some((item) => item.root === plugin.root)) continue
     plugins.push({ name: plugin.name, root: plugin.root, data: plugin.data })
-    yield* scan(state, plugin.root, "skills/*/SKILL.md", { dot: true, scope: "plugin" })
+    yield* scan(state, plugin.root, "{SKILL.md,skills/*/SKILL.md}", { dot: true, scope: "plugin" })
   }
 
   const configDirs = yield* config.directories()

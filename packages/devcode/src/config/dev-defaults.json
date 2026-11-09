@@ -64,9 +64,14 @@
     }
   },
   "command": {
-    "plugins": {
+    "catalog": {
       "description": "browse and manage DeV's skills, plugins and MCP servers",
       "template": "Use the catalog tool to manage DeV's skills, plugins and MCP servers. Request: $ARGUMENTS\n\nIf the request is empty, list the catalog (action list), grouped by kind with each entry's user/project status in one short line each, then ask what to install, enable or disable. Otherwise carry the request out with the catalog tool and report the result."
+    }
+  },
+  "marketplaces": {
+    "dev": {
+      "source": "Harsha-code-per/dev-marketplace"
     }
   }
 }

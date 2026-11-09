@@ -18,6 +18,10 @@ export const PluginEntry = Schema.Struct({
   homepage: Schema.optional(Schema.String),
   license: Schema.optional(Schema.String),
   author: Schema.optional(Schema.String),
+  kind: Schema.optional(Schema.String),
+  stars: Schema.optional(Schema.Number),
+  verified: Schema.optional(Schema.Boolean),
+  needs: Schema.optional(Schema.Array(Schema.String)),
 }).annotate({ identifier: "PluginEntry" })
 
 export const PluginInstalled = Schema.Struct({

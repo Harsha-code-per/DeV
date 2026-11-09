@@ -1,4 +1,4 @@
-import { createResource } from "solid-js"
+import { createMemo, createResource, createSignal } from "solid-js"
 import { useDialog } from "../ui/dialog"
 import { DialogSelect, type DialogSelectOption } from "../ui/dialog-select"
 import { DialogPrompt } from "../ui/dialog-prompt"
@@ -20,6 +20,14 @@ const SCOPES: { value: Scope; title: string; description: string }[] = [
 
 const APPLIES = "It applies once running work finishes."
 
+const DISCOVER_LIMIT = 100
+
+const KIND: Record<string, string> = { plugin: "plugin", skill: "skill", mcp: "MCP server" }
+
+function stars(n: number) {
+  return n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 1)}k` : String(n)
+}
+
 // /plugins: plugins from the marketplaces you've added (installed ones first), and the marketplaces themselves.
 // Typing filters the whole list, so it doubles as search.
 export function DialogPlugins() {
@@ -40,7 +48,23 @@ export function DialogPlugins() {
   const reopen = () => dialog.replace(() => <DialogPlugins />)
   const fail = (error: unknown) => toast.error(error)
 
-  const options = (): DialogSelectOption<Choice>[] => {
+  const [query, setQuery] = createSignal("")
+
+  // Search names and descriptions, keeping the list's order (installed, then Verified, then most stars) so the
+  // best-known match comes first, not the closest name.
+  const options = () => {
+    const words = query().toLowerCase().split(/\s+/).filter(Boolean)
+    const matches = all().filter((option) =>
+      words.every((word) => `${option.title} ${option.description ?? ""}`.toLowerCase().includes(word)),
+    )
+    // The terminal UI stalls redrawing thousands of rows, so Discover shows the top matches; typing narrows the rest.
+    const shown = new Set(matches.filter((option) => option.category === "Discover").slice(0, DISCOVER_LIMIT))
+    return matches.filter((option) => option.category !== "Discover" || shown.has(option))
+  }
+
+  // Built once per load: filtering returns the same row objects, so the list reuses its rows instead of
+  // redrawing thousands of them on every keystroke (which froze the dialog).
+  const all = createMemo((): DialogSelectOption<Choice>[] => {
     const value = data()
     if (!value) return []
     const installedIds = new Set(value.installed.map((item) => item.id))
@@ -53,10 +77,20 @@ export function DialogPlugins() {
       })),
       ...value.available
         .filter((entry) => !installedIds.has(entry.id))
+        .toSorted(
+          (a, b) => Number(b.verified ?? 0) - Number(a.verified ?? 0) || Number(b.stars ?? 0) - Number(a.stars ?? 0),
+        )
         .map((entry) => ({
           value: { kind: "available", id: entry.id } as Choice,
           title: entry.id,
-          description: entry.description,
+          description: [
+            entry.stars !== undefined ? `★ ${stars(Number(entry.stars))}` : undefined,
+            KIND[entry.kind ?? ""],
+            entry.verified ? "Verified" : undefined,
+            entry.description,
+          ]
+            .filter(Boolean)
+            .join(" · "),
           category: "Discover",
         })),
       ...value.marketplaces.map((item) => ({
@@ -72,7 +106,7 @@ export function DialogPlugins() {
         category: "Marketplaces",
       },
     ]
-  }
+  })
 
   const addMarketplace = () =>
     dialog.replace(() => (
@@ -188,8 +222,10 @@ export function DialogPlugins() {
   return (
     <DialogSelect<Choice>
       title="Plugins"
-      placeholder="Search plugins"
+      placeholder={`Search ${(data()?.available.length ?? 0).toLocaleString()} plugins`}
       options={options()}
+      skipFilter
+      onFilter={setQuery}
       emptyView={<text>{data.loading ? "Loading plugins…" : "Nothing here yet."}</text>}
       onSelect={(option) => {
         const choice = option.value

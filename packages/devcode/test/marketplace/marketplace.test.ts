@@ -138,4 +138,20 @@ describe("plugin marketplaces", () => {
   test("a plugin path can't point outside its marketplace", async () => {
     await expect(Marketplace.install("escape@acme", "user", dir)).rejects.toThrow("points outside")
   })
+
+  test("a marketplace named in config is fetched on first use; an empty source turns it off", async () => {
+    const team = path.join(dir, "team-market")
+    await write(
+      path.join(team, ".dev-plugin", "marketplace.json"),
+      JSON.stringify({ name: "team", owner: { name: "T" }, plugins: [{ name: "one-skill", source: "./one" }] }),
+    )
+    await write(path.join(team, "one", "SKILL.md"), "---\nname: one-skill\ndescription: A single skill.\n---\nDo one thing.\n")
+    await Marketplace.ensure({ off: { source: "" } }, dir)
+    expect((await Marketplace.marketplaces()).map((item) => item.name)).not.toContain("team")
+    await Marketplace.ensure({ team: { source: team } }, dir)
+    expect((await Marketplace.marketplaces()).map((item) => item.name)).toContain("team")
+    // A repo that is one skill (SKILL.md at its root) installs as a skill.
+    const result = await Marketplace.install("one-skill@team", "user", dir)
+    expect(result.contents.skills).toBe(1)
+  })
 })

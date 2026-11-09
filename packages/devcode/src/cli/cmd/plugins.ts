@@ -31,6 +31,7 @@ export const PluginsCommand = cmd({
     const project = await projectRoot()
     const [first, ...rest] = args.target ?? []
     const scope = args.scope
+    await Marketplace.ensureFromFiles(project)
 
     if (args.action === "marketplace") return marketplace(first, rest)
 
