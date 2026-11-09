@@ -31,6 +31,7 @@ import { Plugin } from "../plugin"
 import { Provider } from "@/provider/provider"
 
 import { WebSearchTool } from "./websearch"
+import { AdvisorTool } from "./advisor"
 import { ExternalAgent, ExternalAgentTool } from "./external-agent"
 import { LspTool } from "./lsp"
 import * as Truncate from "./truncate"
@@ -108,6 +109,7 @@ const layer = Layer.effect(
     const goalSet = yield* GoalSetTool
     const webfetch = yield* WebFetchTool
     const websearch = yield* WebSearchTool
+    const advisor = yield* AdvisorTool
     const externalAgent = yield* ExternalAgentTool
     const shell = yield* ShellTool
     const globtool = yield* GlobTool
@@ -225,6 +227,7 @@ const layer = Layer.effect(
           fetch: Tool.init(webfetch),
           todo: Tool.init(todo),
           search: Tool.init(websearch),
+          advisor: Tool.init(advisor),
           skill: Tool.init(skilltool),
           catalog: Tool.init(catalogtool),
           patch: Tool.init(patchtool),
@@ -255,6 +258,7 @@ const layer = Layer.effect(
             tool.fetch,
             tool.todo,
             tool.search,
+            tool.advisor,
             tool.skill,
             tool.catalog,
             tool.patch,

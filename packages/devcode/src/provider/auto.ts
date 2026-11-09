@@ -185,6 +185,12 @@ function perMinuteLimit(error: unknown) {
 // What the session shows while the router works; keyed by session because one router serves them all.
 type Listener = (message: string | undefined, served?: Provider.Model) => void
 const watchers = new Map<string, Listener>()
+// The free model last answering each session, so the advisor can ask a different one.
+const served = new Map<string, Provider.Model>()
+
+export function servedBy(sessionID: string) {
+  return served.get(sessionID)
+}
 
 /**
  * Reports routing progress for a session. An undefined message means a model has started answering;
@@ -280,8 +286,11 @@ export function language(
     run: (item: (typeof list)[number], options: LanguageModelV3CallOptions) => PromiseLike<T>,
   ) => {
     const signal = options.abortSignal
-    const report: Listener = (message, served) =>
-      watchers.get(options.headers?.["X-Session-Id"] ?? "")?.(message, served)
+    const report: Listener = (message, model) => {
+      const session = options.headers?.["X-Session-Id"] ?? ""
+      if (model && session) served.set(session, model)
+      watchers.get(session)?.(message, model)
+    }
     const started = Date.now()
     const budget = opts.totalBudgetMs ?? TOTAL_BUDGET_MS
     const errors: unknown[] = []

@@ -1,0 +1,7 @@
+Ask a stronger model for advice on a hard decision, then continue the work yourself.
+
+Use it sparingly, when:
+- you've tried two approaches to a bug and both failed, or
+- you face a design choice with real trade-offs that is costly to reverse.
+
+Don't use it for routine work, for facts you can look up, or to have it write the code. Put everything it needs in the question: the goal, the relevant code or error, and what you already tried, because it can't see the conversation or the files. It answers with advice; you decide and act. A session can ask a few times at most.
