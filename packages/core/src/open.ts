@@ -6,3 +6,8 @@ export function openUrl(input: string) {
     return Promise.reject(new Error(`Only http and https links can be opened in the browser: ${input}`))
   return open(url.href)
 }
+
+/** Opens a file DeV itself wrote, such as an artifact page, in the default app for it. */
+export function openFile(file: string) {
+  return open(file)
+}

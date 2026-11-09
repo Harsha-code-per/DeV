@@ -1,0 +1,7 @@
+Create a web page for the person and open it in their browser: a report, a chart or dashboard, a diagram, a comparison, a slide, or a small interactive tool.
+
+Use it when they ask for something to look at, or when the result reads far better as a page than as terminal text, such as a wide table, a chart or a visual comparison. Don't use it for ordinary answers or code changes, and don't use it for files that belong in their project; write those with the edit tools.
+
+Write one complete, self-contained HTML document: CSS and JavaScript inline, no build step. Load a library only if it is really needed, from a CDN with an exact version. Make the page readable in light and dark mode and on a narrow window.
+
+Calling again with the same name replaces that page, so update a page instead of making a new one. The page stays on this computer; tell the person where it is.

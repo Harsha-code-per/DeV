@@ -126,6 +126,7 @@ devcode
 | **Project memory** | DeV keeps what it learns about your project in `DEV.md`, a file you can read and edit. |
 | **OS sandbox** | Optional. Turn it on with `"sandbox": { "enabled": true }` and, on Linux and macOS, shell commands can't read your SSH keys or cloud credentials. Off by default, so commands use your logins (`gh`, cloud CLIs) and network like your own terminal. |
 | **The advisor** | When DeV is stuck, or a choice would be costly to undo, it asks a stronger model for advice and carries on. |
+| **Pages you can see** | Ask for a chart, a report, a diagram or a small tool and DeV makes a web page and opens it in your browser. Pages stay on your computer, one folder per project; asking again by the same name updates the page. Off with `"permission": { "artifact": "deny" }`. |
 | **Voice** | `/voice`: hold Space and talk. Speech becomes text on your computer, free and offline. |
 | **Plugin marketplaces** | Add any plugin marketplace in the common open format (`/plugins`, or `devcode plugins marketplace add owner/repo`) and install plugins with their skills, commands, agents, hooks and MCP servers, for you, for your team's repo, or just for your checkout. |
 | **Background sessions** | `devcode run --bg "task"` keeps working after you close the terminal. `devcode session list --running` shows what's working and what's waiting for you, and `devcode attach --session <id>` picks it up. |

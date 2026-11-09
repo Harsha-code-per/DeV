@@ -2,6 +2,10 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.26 (unreleased)
+
+- Pages you can see. Ask for something to look at, such as "show me a chart of the scores in scores.csv", a report or a diagram, and DeV makes a web page and opens it in your browser. Pages stay on your computer, in DeV's data folder with one folder per project, and asking again by the same name updates the page instead of making a new one. In the TUI the step shows the page's name and where it is. Turn it off with `"permission": { "artifact": "deny" }`.
+
 ## 1.0.25 (2026-11-09)
 
 - Linux packages. Every release now has a `.deb` for Debian, Ubuntu, Mint and Pop!_OS and an `.rpm` for Fedora, RHEL, Rocky and AlmaLinux, for x64 and arm64, and an Arch package (`devcode-bin`). They install DeV to `/usr/lib/devcode` with `devcode` on your PATH. The install commands are on trydev.work and in the README.

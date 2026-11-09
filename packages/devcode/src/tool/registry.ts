@@ -19,6 +19,7 @@ import { NotebookEditTool } from "./notebook"
 import { InvalidTool } from "./invalid"
 import { ShellJobTool } from "./shell-job"
 import { RememberTool } from "./remember"
+import { ArtifactTool } from "./artifact"
 import { SkillTool } from "./skill"
 import { CatalogTool } from "./catalog"
 import * as Tool from "./tool"
@@ -99,6 +100,7 @@ const layer = Layer.effect(
     const invalid = yield* InvalidTool
     const shellJob = yield* ShellJobTool
     const remember = yield* RememberTool
+    const artifact = yield* ArtifactTool
     const task = yield* TaskTool
     const read = yield* ReadTool
     const question = yield* QuestionTool
@@ -216,6 +218,7 @@ const layer = Layer.effect(
           invalid: Tool.init(invalid),
           shellJob: Tool.init(shellJob),
           remember: Tool.init(remember),
+          artifact: Tool.init(artifact),
           shell: Tool.init(shell),
           read: Tool.init(read),
           glob: Tool.init(globtool),
@@ -257,6 +260,7 @@ const layer = Layer.effect(
             tool.task,
             tool.fetch,
             tool.todo,
+            tool.artifact,
             tool.search,
             tool.advisor,
             tool.skill,

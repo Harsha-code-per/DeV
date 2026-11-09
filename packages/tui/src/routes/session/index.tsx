@@ -1870,6 +1870,9 @@ function ToolPart(props: { last: boolean; part: ToolPart; message: AssistantMess
         <Match when={display() === "skill"}>
           <Skill {...toolprops} />
         </Match>
+        <Match when={display() === "artifact"}>
+          <Artifact {...toolprops} />
+        </Match>
         <Match when={true}>
           <GenericTool {...toolprops} />
         </Match>
@@ -2288,6 +2291,15 @@ function WebFetch(props: ToolProps) {
   return (
     <InlineTool icon="%" pending="Fetching from the web…" complete={stringValue(props.input.url)} part={props.part}>
       WebFetch {stringValue(props.input.url)}
+    </InlineTool>
+  )
+}
+
+// The page's path, not its HTML, which can be thousands of lines.
+function Artifact(props: ToolProps) {
+  return (
+    <InlineTool icon="◆" pending="Making a page…" complete={stringValue(props.metadata.file)} part={props.part}>
+      Page "{stringValue(props.input.name)}" {stringValue(props.metadata.file)}
     </InlineTool>
   )
 }
@@ -2731,6 +2743,7 @@ const toolDisplays = new Set([
   "question",
   "skill",
   "execute",
+  "artifact",
 ])
 
 export function toolDisplay(tool: string) {
