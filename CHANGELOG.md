@@ -2,7 +2,7 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## 1.0.22 (unreleased)
+## 1.0.22 (2026-11-09)
 
 - `@devcode` on GitHub. Run `devcode github install` in a repository: it adds a workflow, and then commenting `@devcode fix this` on an issue or pull request starts DeV Code in GitHub Actions. On an issue it opens a pull request with the change; on a pull request it pushes to that branch. Either way it replies with what it did. Only people with write access can start it, it runs on the free models by default with any provider key you add as a repository secret, and a `DEVCODE_MODEL` repository variable picks another model.
 
