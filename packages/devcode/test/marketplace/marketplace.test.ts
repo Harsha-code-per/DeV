@@ -151,7 +151,8 @@ describe("plugin marketplaces", () => {
     await Marketplace.ensure({ team: { source: team } }, dir)
     expect((await Marketplace.marketplaces()).map((item) => item.name)).toContain("team")
     // A repo that is one skill (SKILL.md at its root) installs as a skill.
-    const result = await Marketplace.install("one-skill@team", "user", dir)
+    // Project scope in its own folder: user scope is shared, and later skill tests would find this skill.
+    const result = await Marketplace.install("one-skill@team", "project", path.join(dir, "single"))
     expect(result.contents.skills).toBe(1)
   })
 })
