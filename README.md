@@ -38,7 +38,7 @@ Your keys stay on your machine. DeV has no account, no server in the middle and 
 
 | Product | What it is | Get it | Status |
 |---|---|---|---|
-| **DeV Code** | A coding agent for your terminal. Create projects and build software. | `curl`, npm, pnpm or bun | Available now |
+| **DeV Code** | A coding agent for your terminal. Create projects and build software. | `curl`, npm, pnpm, bun, apt, dnf or Scoop | Available now |
 | **DeV** | An assistant for Windows, macOS and Linux that runs in the background, wakes to your voice and works across your computer. | Installers: `.exe`, `.dmg` and Linux packages | In development |
 | **DeV for Chrome** | A browser extension that helps you debug and get things done on any page. | Browser extension | In development |
 | **DeV for Web** | A chat site for the models you bring, with nothing to install. | Your browser | Planned |
@@ -75,7 +75,27 @@ pnpm add -g @devcodeagent/cli
 bun add -g @devcodeagent/cli
 ```
 
-Every method checks the download against the release's SHA-256 checksums before installing anything.
+**Debian, Ubuntu, Mint, Pop!_OS**
+
+```sh
+curl -fsSLo /tmp/devcode.deb https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode-linux-x64.deb && sudo apt install /tmp/devcode.deb
+```
+
+**Fedora, RHEL, Rocky, AlmaLinux**
+
+```sh
+sudo dnf install https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode-linux-x64.rpm
+```
+
+On ARM Linux, use `devcode-linux-arm64.deb` or `devcode-linux-arm64.rpm`.
+
+**Scoop (Windows)**
+
+```powershell
+scoop install https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode.json
+```
+
+The install scripts and the npm package check every download against the release's SHA-256 checksums before installing anything, and every release lists the checksums of its packages.
 
 ## Quick start
 

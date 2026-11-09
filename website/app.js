@@ -3,6 +3,24 @@ import * as THREE from "three"
 const root = document.documentElement
 const motion = !matchMedia("(prefers-reduced-motion: reduce)").matches && window.gsap && window.ScrollTrigger
 if (!motion) root.classList.add("still")
+history.scrollRestoration = "manual"
+
+// ---------- Preloader ----------
+const loader = document.getElementById("loader")
+const progress = (p) => loader.style.setProperty("--p", p)
+const wait = (ms) => new Promise((done) => setTimeout(done, ms))
+// Ends the preloader: with motion the panel lifts and the opening shot plays, otherwise it fades.
+const reveal = (film) => {
+  root.classList.remove("loading")
+  if (!film) return root.classList.add("loaded")
+  film.lenis?.start()
+  gsap.timeline()
+    .to(".loader-in", { autoAlpha: 0, scale: 0.94, duration: 0.45, ease: "power2.in" })
+    .to(loader, { yPercent: -100, duration: 1.1, ease: "expo.inOut" }, "-=0.05")
+    .add(film.intro(), "-=0.6")
+    .add(() => root.classList.add("loaded"))
+}
+progress(0.3)
 
 // ---------- Page controls (work with or without WebGL) ----------
 document.querySelectorAll("[data-copy]").forEach((button) => button.addEventListener("click", () => {
@@ -38,8 +56,10 @@ const tint = () => {
   bar.classList.toggle("solid", scrollY > 40)
   bar.classList.toggle("light", r.top <= 28 && r.bottom >= 28)
 }
-addEventListener("scroll", tint, { passive: true })
-tint()
+if (!motion) {
+  addEventListener("scroll", tint, { passive: true })
+  tint()
+}
 
 const SESSION = [
   ["you", "❯ the cart total test fails, fix it\n\n"],
@@ -51,7 +71,10 @@ const SESSION = [
 ]
 const typed = document.getElementById("typed")
 const sessionChars = SESSION.reduce((n, part) => n + part[1].length, 0)
+const typing = { n: -1 }
 const typeTo = (n) => {
+  if (n === typing.n) return
+  typing.n = n
   const left = { n }
   typed.innerHTML = SESSION.map(([cls, text]) => {
     const shown = text.slice(0, Math.max(0, left.n))
@@ -84,6 +107,7 @@ const LAYERS = [
 ]
 
 if (renderer) studio()
+if (!renderer) reveal()
 
 function makeRenderer() {
   try {
@@ -101,7 +125,7 @@ function makeRenderer() {
   }
 }
 
-function studio() {
+async function studio() {
   // Neutral tone mapping keeps saffron, gold and titanium their real colours instead of shifting them.
   renderer.toneMapping = THREE.NeutralToneMapping
   renderer.toneMappingExposure = 1
@@ -188,7 +212,7 @@ function studio() {
     return el
   })
 
-  const view = { w: 1, h: 1, narrow: false, fit: 1, ratio: Math.min(devicePixelRatio, 1.5) }
+  const view = { w: 1, h: 1, narrow: false, fit: 1, labels: 0, ratio: Math.min(devicePixelRatio, 1.5) }
   const resize = () => {
     view.w = innerWidth
     view.h = innerHeight
@@ -213,6 +237,7 @@ function studio() {
   const seat = new THREE.Vector3()
   const anchor = new THREE.Vector3()
   const inside = new THREE.Vector3(0, 0.06, 0.42)
+  const target = new THREE.Vector3()
   const clamp = (v) => Math.min(1, Math.max(0, v))
 
   function frame(t) {
@@ -245,17 +270,19 @@ function studio() {
     if (S.dive > 0) {
       core.getWorldPosition(seat)
       look.lerp(seat, clamp(S.dive * 1.6))
-      camera.position.lerp(seat.clone().add(inside), S.dive)
+      camera.position.lerp(target.copy(seat).add(inside), S.dive)
     }
     camera.lookAt(look)
 
     const show = clamp((S.explode - 0.55) / 0.35) * clamp(1 - S.dive * 4)
-    plates.forEach((p, i) => {
+    // Labels are only touched while they are, or were just, visible.
+    if (show > 0 || view.labels > 0) plates.forEach((p, i) => {
       anchor.set(S.x + 2.15, p.mesh.position.y + p.height / 2, 0).project(camera)
       const el = labels[i]
       el.style.opacity = show
       el.style.transform = `translate(${((anchor.x + 1) / 2) * view.w}px, ${((1 - anchor.y) / 2) * view.h - 18}px)`
     })
+    view.labels = show
 
     renderer.toneMappingExposure = S.exposure
     renderer.render(scene, camera)
@@ -263,12 +290,16 @@ function studio() {
 
   resize()
   addEventListener("resize", resize)
+  progress(0.7)
+  if (!motion) Object.assign(S, { coreY: 0, glow: 1, spin: 0.55, dist: 21, el: 0.45, look: 2.0 })
 
-  if (!motion) {
-    Object.assign(S, { coreY: 0, glow: 1, spin: 0.55, dist: 21, el: 0.45, look: 2.0 })
-    frame(0)
-    return
-  }
+  // Compile every shader and upload every texture behind the preloader, so nothing stalls mid-scroll.
+  await Promise.all([document.fonts.ready, wait(motion ? 900 : 0)])
+  renderer.compile(scene, camera)
+  frame(0)
+  progress(1)
+  if (!motion) return reveal()
+  await wait(450)
 
   // If frames keep running long (a slow GPU), render fewer pixels until it keeps up.
   const pace = { last: 0, slow: 0 }
@@ -290,13 +321,14 @@ function studio() {
     adapt(now)
     frame(clock.getElapsedTime())
   })
-  scroll(active)
+  reveal(scroll(active))
 }
 
 function scroll(active) {
   gsap.registerPlugin(ScrollTrigger)
-  if (window.Lenis) {
-    const lenis = new Lenis({ lerp: 0.075 })
+  const lenis = window.Lenis ? new Lenis({ lerp: 0.075 }) : undefined
+  if (lenis) {
+    lenis.stop()
     lenis.on("scroll", ScrollTrigger.update)
     gsap.ticker.add((t) => lenis.raf(t * 1000))
     gsap.ticker.lagSmoothing(0)
@@ -306,9 +338,8 @@ function scroll(active) {
     }))
   }
 
-  // Opening shot: the studio lights come up on the object while the headline rises.
-  gsap.set(".hero", { autoAlpha: 1 })
-  gsap.timeline()
+  // Opening shot, played as the preloader lifts: the studio lights come up while the headline rises.
+  const intro = () => gsap.timeline()
     .to(S, { exposure: 1, duration: 2.6, ease: "power2.out" }, 0)
     .from(S, { spin: S.spin - 1.4, coreY: 3.4, duration: 3.2, ease: "expo.out" }, 0)
     .from(".hero h1 span > span", { yPercent: 115, duration: 1.3, ease: "expo.out", stagger: 0.1 }, 0.35)
@@ -339,8 +370,15 @@ function scroll(active) {
 
   gsap.to("#words .w", { opacity: 1, stagger: 0.1, ease: "none", scrollTrigger: { trigger: "#words", start: "top 78%", end: "bottom 45%", scrub: true } })
   // The modes section holds still while scrolling presses the key through all five modes.
-  ScrollTrigger.create({ trigger: "#modes", start: "top top", end: () => `+=${innerHeight * 2.2}`, pin: true, onUpdate: (st) => setMode(Math.min(modes.length - 1, Math.floor(st.progress * modes.length))) })
+  ScrollTrigger.create({ trigger: "#modes", start: "top top", end: () => `+=${innerHeight * 2.2}`, pin: true, anticipatePin: 1, onUpdate: (st) => setMode(Math.min(modes.length - 1, Math.floor(st.progress * modes.length))) })
   gsap.from("#paper", { yPercent: -100, ease: "none", scrollTrigger: { trigger: ".printer", start: "top 85%", end: "top 20%", scrub: 0.6 } })
+
+  // The bar's dark and light glass, created after the pin above so its positions include it.
+  ScrollTrigger.create({ start: 40, end: () => ScrollTrigger.maxScroll(window) + 1, onToggle: (st) => bar.classList.toggle("solid", st.isActive) })
+  ScrollTrigger.create({ trigger: ".day", start: "top 28px", end: "bottom 28px", onToggle: (st) => bar.classList.toggle("light", st.isActive) })
+
+  if (lenis) lenis.scrollTo(0, { immediate: true, force: true })
+  return { intro, lenis }
 }
 
 // Product-photography lighting: soft boxes with feathered edges in a dark room, so metal shows long, clean

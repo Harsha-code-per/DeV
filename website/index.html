@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="loading">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -47,6 +47,20 @@ button { font: inherit; color: inherit }
 .bar nav a { text-decoration: none; opacity: .8 }
 .bar nav a:hover { opacity: 1 }
 
+/* Preloader: the mark draws itself while the studio loads, then the panel lifts. */
+.loading, .loading body { overflow: hidden }
+.loader { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: #000 }
+.loaded .loader { opacity: 0; visibility: hidden; transition: opacity .6s, visibility .6s }
+.loader-in { display: grid; justify-items: center; gap: 30px }
+.loader svg { width: 68px; height: 68px; overflow: visible }
+.loader rect, .loader path { fill: none; stroke: var(--saffron); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.3s cubic-bezier(.65, 0, .25, 1) forwards }
+.loader path { animation-delay: .25s }
+.loader .v { animation-delay: .6s }
+@keyframes draw { to { stroke-dashoffset: 0 } }
+.loader-bar { width: 140px; height: 1px; background: rgba(255, 255, 255, .12); overflow: hidden }
+.loader-bar i { display: block; height: 100%; background: var(--ink); transform-origin: left; transform: scaleX(var(--p, 0)); transition: transform .6s cubic-bezier(.3, .7, .4, 1) }
+@media (prefers-reduced-motion: reduce) { .loader rect, .loader path { animation: none; stroke-dashoffset: 0 } }
+
 /* Studio */
 .scene { position: fixed; inset: 0; z-index: 1; pointer-events: none }
 .scene canvas { position: absolute; inset: 0; width: 100%; height: 100% }
@@ -58,6 +72,8 @@ button { font: inherit; color: inherit }
 
 .stage { position: relative; z-index: 2; height: 900vh }
 .chapter { position: fixed; z-index: 3; visibility: hidden; opacity: 0 }
+/* The hero starts visible (the preloader covers it); the opening shot animates what is inside it. */
+.chapter.hero { visibility: visible; opacity: 1 }
 .hero { inset: 0; display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: clamp(84px, 13vh, 140px) }
 .hero h1 { margin: 0; font: 600 clamp(44px, min(6.4vw, 10.5vh), 104px)/.95 var(--sans); letter-spacing: -.045em }
 .hero h1 span { display: block; overflow: hidden; padding-bottom: .06em }
@@ -143,14 +159,16 @@ button { font: inherit; color: inherit }
 .paper .total { font-weight: 500; font-size: 17px }
 .paper .foot { text-align: center; color: #666; margin-top: 8px }
 
-.install { background: radial-gradient(120% 80% at 50% 0%, #2a2116 0%, #17140f 55%, #121110 100%); color: var(--ink); text-align: center; padding-block: clamp(110px, 22vh, 220px) }
-.install h2 { margin: 0 0 16px; font: 600 clamp(48px, 9vw, 140px)/.92 var(--sans); letter-spacing: -.055em }
-.install .lede { color: var(--dim); margin: 0 auto 40px; max-width: 46ch }
-.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, .06); margin-bottom: 18px }
+/* The closing screen fills the view with the footer, so nothing light is left under the bar at the end. */
+.install { background: radial-gradient(120% 80% at 50% 0%, #2a2116 0%, #17140f 55%, #121110 100%); color: var(--ink); text-align: center; min-height: calc(100vh - 61px); min-height: calc(100svh - 61px); display: flex; flex-direction: column; justify-content: center; align-items: center; padding-block: 96px 56px }
+.install h2 { margin: 0 0 14px; font: 600 clamp(44px, 7.5vw, 116px)/.92 var(--sans); letter-spacing: -.055em }
+.install .lede { color: var(--dim); margin: 0 auto 32px; max-width: 46ch }
+.tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 4px; border-radius: 22px; background: rgba(255, 255, 255, .06); margin: 0 auto 18px; max-width: 720px }
 .tabs button { border: 0; border-radius: 999px; padding: 8px 18px; background: transparent; color: var(--dim); cursor: pointer; font-size: 14px }
 .tabs button[aria-selected="true"] { background: var(--ink); color: #000 }
-.install .note { margin: 22px 0 0; color: var(--dim); font-size: 15px }
-footer { background: #121110; color: #a39d93; font-size: 14px; padding-block: 28px 40px; border-top: 1px solid #26231e; display: flex; flex-wrap: wrap; gap: 10px 26px; justify-content: center; align-items: center }
+.install .note { margin: 22px 0 0; color: var(--dim); font-size: 15px; max-width: 60ch }
+.install .pill { max-width: min(760px, calc(100vw - 32px)) }
+footer { background: #121110; color: #a39d93; font-size: 14px; min-height: 61px; padding-block: 18px; border-top: 1px solid #26231e; display: flex; flex-wrap: wrap; gap: 10px 26px; justify-content: center; align-items: center }
 footer .mark { width: 22px; height: 22px; display: block }
 footer a { text-decoration: none; color: var(--ink) }
 
@@ -181,6 +199,16 @@ footer a { text-decoration: none; color: var(--ink) }
 </style>
 </head>
 <body>
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-in">
+    <svg viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="14" pathLength="1"/><path d="M18 16h12c10 0 17 7 17 16s-7 16-17 16H18z" pathLength="1"/><path class="v" d="M26 27l5 9 5-9" pathLength="1"/></svg>
+    <div class="loader-bar"><i></i></div>
+  </div>
+</div>
+<script>
+  // If the studio can't load (a blocked CDN, no JavaScript modules), never leave the preloader up.
+  setTimeout(() => document.documentElement.classList.replace("loading", "loaded"), 9000)
+</script>
 <header class="bar gutter">
   <a class="brand" href="#top" aria-label="DeV Code, back to top">
     <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="14" fill="#F2A516"/><path d="M18 16h12c10 0 17 7 17 16s-7 16-17 16H18z" fill="none" stroke="#121317" stroke-width="5" stroke-linejoin="round"/><path d="M26 27l5 9 5-9" fill="none" stroke="#121317" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -300,9 +328,14 @@ footer a { text-decoration: none; color: var(--ink) }
       <button type="button" role="tab" aria-selected="true" data-cmd="curl -fsSL https://trydev.work/install | sh">macOS and Linux</button>
       <button type="button" role="tab" aria-selected="false" data-cmd="irm https://trydev.work/install.ps1 | iex">Windows</button>
       <button type="button" role="tab" aria-selected="false" data-cmd="npm i -g @devcodeagent/cli">npm</button>
+      <button type="button" role="tab" aria-selected="false" data-cmd="bun add -g @devcodeagent/cli">bun</button>
+      <button type="button" role="tab" aria-selected="false" data-cmd="pnpm add -g @devcodeagent/cli">pnpm</button>
+      <button type="button" role="tab" aria-selected="false" data-cmd="curl -fsSLo /tmp/devcode.deb https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode-linux-x64.deb &amp;&amp; sudo apt install /tmp/devcode.deb">Debian and Ubuntu</button>
+      <button type="button" role="tab" aria-selected="false" data-cmd="sudo dnf install https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode-linux-x64.rpm">Fedora and RHEL</button>
+      <button type="button" role="tab" aria-selected="false" data-cmd="scoop install https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode.json">Scoop</button>
     </div>
     <div><div class="pill"><code id="cmd">curl -fsSL https://trydev.work/install | sh</code><button type="button" data-copy>Copy</button></div></div>
-    <p class="note">Open source under MIT. No account. No card. Model providers set their own free limits and terms.</p>
+    <p class="note">On ARM Linux, use the <code>arm64</code> package. Open source under MIT. No account. No card. Model providers set their own free limits and terms. <a href="docs.html#install">All install options</a></p>
   </section>
 </main>
 <footer class="gutter"><svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="14" fill="#F2A516"/><path d="M18 16h12c10 0 17 7 17 16s-7 16-17 16H18z" fill="none" stroke="#121317" stroke-width="5" stroke-linejoin="round"/><path d="M26 27l5 9 5-9" fill="none" stroke="#121317" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>DeV Code, built by Harshavardhan K</span><span>Builds on <a href="https://github.com/anomalyco/opencode">OpenCode</a></span><a href="docs.html">Docs</a><a href="https://github.com/Harsha-code-per/DeV">GitHub</a><a href="https://github.com/sponsors/Harsha-code-per">Sponsor</a></footer>

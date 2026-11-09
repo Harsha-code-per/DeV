@@ -21,7 +21,13 @@
 <pre><code>pnpm add -g @devcodeagent/cli</code></pre>
 <p>With bun:</p>
 <pre><code>bun add -g @devcodeagent/cli</code></pre>
-<p>Every method checks the download against the release's SHA-256 checksums before installing anything. To update, run <code>devcode upgrade</code>, or your package manager's install command again.</p>
+<p>On Debian, Ubuntu, Mint and Pop!_OS:</p>
+<pre><code>curl -fsSLo /tmp/devcode.deb https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode-linux-x64.deb &amp;&amp; sudo apt install /tmp/devcode.deb</code></pre>
+<p>On Fedora, RHEL, Rocky and AlmaLinux:</p>
+<pre><code>sudo dnf install https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode-linux-x64.rpm</code></pre>
+<p>On ARM Linux, use <code>devcode-linux-arm64.deb</code> or <code>devcode-linux-arm64.rpm</code> instead. With Scoop on Windows:</p>
+<pre><code>scoop install https://github.com/Harsha-code-per/DeV/releases/latest/download/devcode.json</code></pre>
+<p>The install scripts and the npm package check every download against the release's SHA-256 checksums before installing anything, and every release lists the checksums of its packages. To update, run <code>devcode upgrade</code>. If you installed with a package manager, it tells you the command to run.</p>
 
 <h2 id="connect">Connect a model</h2>
 <p>Start <code>devcode</code> in a project folder and type <code>/connect</code>. Pick a provider, paste its key, and you're ready. DeV saves the key in its own private store, so you don't need env variables or a <code>.env</code> file.</p>
