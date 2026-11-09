@@ -28,7 +28,7 @@ import { useEvent } from "../../context/event"
 import { editorSelectionKey, useEditorContext, type EditorSelection } from "../../context/editor"
 import { normalizePromptContent, openEditor } from "../../editor"
 import { useExit } from "../../context/exit"
-import { promptOffsetWidth } from "../../prompt/display"
+import { displaySlice, promptOffsetWidth } from "../../prompt/display"
 import { createStore, produce, unwrap } from "solid-js/store"
 import { usePromptHistory, type PromptInfo } from "../../prompt/history"
 import { computePromptTraits } from "../../prompt/traits"
@@ -57,6 +57,7 @@ import { useTuiConfig } from "../../config"
 import { usePromptWorkspace } from "./workspace"
 import { usePromptMove } from "./move"
 import { usePromptVoice } from "./voice"
+import { Vim } from "./vim"
 import { useUpdateNotification } from "../../context/update-notification"
 import { readLocalAttachment } from "./local-attachment"
 import { useLocation } from "../../context/location"
@@ -213,6 +214,78 @@ export function Prompt(props: PromptProps) {
   const workspace = usePromptWorkspace(props.sessionID)
   const move = usePromptMove({ projectID: project.project, sessionID: () => props.sessionID })
   const voice = usePromptVoice(() => input)
+  const vimEnabled = createMemo(() => kv.get("vim_mode", false))
+  const [vim, setVim] = createSignal(Vim.initial())
+
+  // Vim undoes a whole change, while the textarea records each typed key, so
+  // vim keeps its own snapshots. ponytail: whole-text snapshots, capped at 100.
+  const vimHistory: {
+    undo: { text: string; cursor: number }[]
+    redo: { text: string; cursor: number }[]
+    // An insert has a snapshot from before it started.
+    inserting: boolean
+  } = { undo: [], redo: [], inserting: false }
+
+  function vimSnapshot(text: string, cursor: number) {
+    vimHistory.undo = [...vimHistory.undo.slice(-99), { text, cursor }]
+    vimHistory.redo = []
+  }
+
+  // Runs one key through the vim engine and applies only the changed range, so
+  // prompt parts elsewhere in the text keep their marks.
+  function vimKey(key: string) {
+    const text = input.plainText
+    const chars = Vim.segment(text)
+    const cursor = Vim.segment(displaySlice(text, 0, input.cursorOffset)).length
+    const before = vim()
+    const result = Vim.key(chars, cursor, before, key)
+    setVim(result.state)
+    const restore = result.undo ? vimHistory.undo.pop() : result.redo ? vimHistory.redo.pop() : undefined
+    if (restore) (result.undo ? vimHistory.redo : vimHistory.undo).push({ text, cursor })
+    if (!restore && (result.undo || result.redo)) return
+    const startsChange = result.chars !== chars || (before.mode !== "insert" && result.state.mode === "insert")
+    if (!restore && startsChange) vimSnapshot(text, cursor)
+    vimHistory.inserting = result.state.mode === "insert"
+    const next = restore ? Vim.segment(restore.text) : result.chars
+    replaceChanged(chars, next)
+    input.cursorOffset = vimWidth(next, restore ? Math.min(restore.cursor, Math.max(0, next.length - 1)) : result.cursor)
+    if (result.state.mode !== "visual" && result.state.mode !== "visual-line") {
+      input.clearSelection()
+      return
+    }
+    const range = Vim.selection(next, result.cursor, result.state)
+    input.setSelection(vimWidth(next, range[0]), vimWidth(next, range[1]))
+  }
+
+  function vimWidth(chars: string[], count: number) {
+    return promptOffsetWidth(chars.slice(0, count).join(""))
+  }
+
+  function replaceChanged(chars: string[], next: string[]) {
+    if (next === chars) return
+    const shortest = Math.min(chars.length, next.length)
+    const prefix = Array.from({ length: shortest }).findIndex((_, i) => chars[i] !== next[i])
+    const head = prefix === -1 ? shortest : prefix
+    const suffix = Array.from({ length: shortest - head }).findIndex(
+      (_, i) => chars[chars.length - 1 - i] !== next[next.length - 1 - i],
+    )
+    const same = suffix === -1 ? shortest - head : suffix
+    if (chars.length - same > head) {
+      input.setSelection(vimWidth(chars, head), vimWidth(chars, chars.length - same))
+      input.deleteSelection()
+    }
+    input.cursorOffset = vimWidth(chars, head)
+    const added = next.slice(head, next.length - same).join("")
+    if (added) input.insertText(added)
+  }
+
+  createEffect(() => {
+    const mode = vim().mode
+    if (!inputTarget() || input.isDestroyed) return
+    if (!vimEnabled()) return
+    input.cursorStyle =
+      mode === "insert" ? (tuiConfig.cursor ?? { style: "line", blinking: true }) : { style: "block", blinking: false }
+  })
   const update = useUpdateNotification()
   const [cursorVersion, setCursorVersion] = createSignal(0)
   const currentProviderLabel = createMemo(() => local.model.parsed().provider)
@@ -643,6 +716,21 @@ export function Prompt(props: PromptProps) {
         },
       },
       {
+        title: vimEnabled() ? "Turn off vim keys" : "Turn on vim keys",
+        desc: "Edit the prompt with vim keys",
+        name: "prompt.vim.toggle",
+        category: "Prompt",
+        slashName: "vim",
+        run: () => {
+          const next = !vimEnabled()
+          kv.set("vim_mode", next)
+          setVim(Vim.initial())
+          if (!next && input && !input.isDestroyed) input.cursorStyle = tuiConfig.cursor ?? { style: "block", blinking: true }
+          toast.show({ message: next ? "Vim keys on. Esc for normal mode." : "Vim keys off", variant: "info" })
+          dialog.clear()
+        },
+      },
+      {
         title: "Move session",
         desc: "Move to another project dir",
         name: "session.move",
@@ -947,6 +1035,23 @@ export function Prompt(props: PromptProps) {
       bindings: [{ key: "escape", desc: "Exit shell mode", group: "Prompt", cmd: () => setStore("mode", "normal") }],
     }
   })
+
+  useBindings(() => ({
+    target: inputTarget,
+    enabled:
+      inputTarget() !== undefined &&
+      vimEnabled() &&
+      store.mode !== "shell" &&
+      !auto()?.visible &&
+      (vim().mode !== "normal" || vim().pending !== ""),
+    bindings: [{ key: "escape", desc: "Vim normal mode", group: "Prompt", cmd: () => vimKey("escape") }],
+  }))
+
+  useBindings(() => ({
+    target: inputTarget,
+    enabled: inputTarget() !== undefined && vimEnabled() && vim().mode === "normal",
+    bindings: [{ key: "ctrl+r", desc: "Redo", group: "Prompt", cmd: () => vimKey("ctrl+r") }],
+  }))
 
   useBindings(() => {
     return {
@@ -1300,6 +1405,10 @@ export function Prompt(props: PromptProps) {
       }, 50)
     }
     input.clear()
+    setVim((state) => ({ ...state, mode: "insert", pending: "" }))
+    vimHistory.undo = []
+    vimHistory.redo = []
+    vimHistory.inserting = false
     if (finishMoveProgress) move.finishSubmit()
     return true
   }
@@ -1530,6 +1639,10 @@ export function Prompt(props: PromptProps) {
               maxHeight={maxHeight()}
               onContentChange={() => {
                 const value = input.plainText
+                if (vimEnabled() && vim().mode === "insert" && !vimHistory.inserting) {
+                  vimSnapshot(store.prompt.input, Vim.segment(store.prompt.input).length)
+                  vimHistory.inserting = true
+                }
                 setStore("prompt", "input", value)
                 auto()?.onInput(value)
                 syncExtmarksWithPromptParts()
@@ -1542,6 +1655,12 @@ export function Prompt(props: PromptProps) {
                   e.preventDefault()
                   return
                 }
+                if (!vimEnabled() || vim().mode === "insert" || e.ctrl || e.meta || e.super) return
+                const key = e.name === "space" ? " " : e.sequence
+                const code = key.charCodeAt(0)
+                if (!key || code < 32 || code === 127) return
+                e.preventDefault()
+                vimKey(key)
               }}
               onSubmit={() => {
                 // IME: double-defer so the last composed character (e.g. Korean
@@ -1601,6 +1720,11 @@ export function Prompt(props: PromptProps) {
                 <Show when={local.agent.current()} fallback={<box height={1} />}>
                   {(agent) => (
                     <>
+                      <Show when={vimEnabled() && store.mode !== "shell"}>
+                        <text fg={vim().mode === "insert" ? theme.textMuted : theme.primary}>
+                          {{ insert: "INSERT", normal: "NORMAL", visual: "VISUAL", "visual-line": "V-LINE" }[vim().mode]}
+                        </text>
+                      </Show>
                       <text fg={fadeColor(highlight(), agentMetaAlpha())}>
                         {store.mode === "shell" ? "Shell" : Locale.titlecase(agent().name)}
                       </text>
