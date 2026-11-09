@@ -1463,6 +1463,8 @@ const layer = Layer.effect(
         throw error
       }
       const agentName = cmd.agent ?? input.agent
+      // A skill's allowed-tools run without asking in this session from now on (a "deny" still wins).
+      if (cmd.grants?.length) yield* permission.grant(input.sessionID, cmd.grants)
 
       const raw = input.arguments.match(argsRegex) ?? []
       const args = raw.map((arg) => arg.replace(quoteTrimRegex, ""))

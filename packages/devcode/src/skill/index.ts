@@ -18,6 +18,8 @@ import { Discovery } from "./discovery"
 import { isRecord } from "@/util/record"
 import { escapeHtml } from "@/util/html"
 import { Marketplace } from "@/marketplace"
+import { McpCatalog } from "@/mcp/catalog"
+import type { PermissionV1 } from "@dev-ai/core/v1/permission"
 
 const CLAUDE_EXTERNAL_DIR = ".claude"
 const AGENTS_EXTERNAL_DIR = ".agents"
@@ -51,6 +53,8 @@ export const Info = Schema.Struct({
   modelInvocable: Schema.optional(Schema.Boolean),
   /** "context: fork": run in a subagent of this type. */
   fork: Schema.optional(Schema.String),
+  /** "allowed-tools": tools that run without asking while the skill is in use, e.g. "Bash(git add:*)", "Read". */
+  allowedTools: Schema.optional(Schema.Array(Schema.String)),
   /** The installed plugin it came from; its folder is ${CLAUDE_PLUGIN_ROOT}. */
   plugin: Schema.optional(Schema.Struct({ name: Schema.String, root: Schema.String, data: Schema.String })),
 })
@@ -178,9 +182,62 @@ const add = Effect.fnUntraced(function* (
     userInvocable: data["user-invocable"] === false ? false : undefined,
     modelInvocable: data["disable-model-invocation"] === true ? false : undefined,
     fork: data.context === "fork" ? (text("agent") ?? "general-purpose") : undefined,
+    allowedTools: toolList(data["allowed-tools"]),
     plugin,
   }
 })
+
+/** "allowed-tools" is a list or one string, split on commas or spaces outside parentheses: "Bash(git add:*), Read". */
+function toolList(value: unknown) {
+  const items = Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : typeof value === "string"
+      ? (value.match(/[^\s,()]+(\([^)]*\))?/g) ?? [])
+      : []
+  return items.length ? items.map((item) => item.trim()) : undefined
+}
+
+// Tool names in the common SKILL.md format, as DeV's permission names.
+const PERMISSION: Record<string, string> = {
+  Bash: "bash",
+  Read: "read",
+  Write: "edit",
+  Edit: "edit",
+  MultiEdit: "edit",
+  NotebookEdit: "edit",
+  Glob: "glob",
+  Grep: "grep",
+  LS: "list",
+  WebFetch: "webfetch",
+  WebSearch: "websearch",
+  Task: "task",
+  Agent: "task",
+  TodoWrite: "todowrite",
+  Skill: "skill",
+  AskUserQuestion: "question",
+}
+
+/**
+ * A skill's allowed-tools as permission rules: "Bash(git add:*)" allows `git add …`, "Read" allows reading,
+ * "mcp__github__create_issue" one MCP tool and "mcp__github" all of that server's. Unknown names are skipped.
+ */
+export function grants(info: Info): PermissionV1.Rule[] {
+  return (info.allowedTools ?? []).flatMap((entry) => {
+    const match = entry.match(/^([\w-]+)(?:\((.*)\))?$/)
+    if (!match) return []
+    const [, tool, inner] = match as unknown as [string, string, string | undefined]
+    if (tool.startsWith("mcp__")) {
+      const [server, name] = tool.slice(5).split("__") as [string, string | undefined]
+      return [{ permission: name ? McpCatalog.toolName(server, name) : `${McpCatalog.toolName(server, "")}*`, pattern: "*", action: "allow" as const }]
+    }
+    const permission = PERMISSION[tool] ?? (Object.values(PERMISSION).includes(tool) ? tool : undefined)
+    if (!permission) return []
+    // Bash(git add:*) is a prefix rule; DeV's patterns are globs, so it becomes "git add *" (and "git add" alone).
+    const pattern = inner?.trim() || "*"
+    const prefix = pattern.endsWith(":*") ? pattern.slice(0, -2) : undefined
+    return (prefix ? [`${prefix} *`, prefix] : [pattern]).map((item) => ({ permission, pattern: item, action: "allow" as const }))
+  })
+}
 
 const scan = Effect.fnUntraced(function* (
   state: ScanState,

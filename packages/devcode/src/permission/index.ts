@@ -15,6 +15,11 @@ export interface Interface {
   readonly list: () => Effect.Effect<ReadonlyArray<PermissionV1.Request>>
   /** Applies a rule the person added (e.g. with /permissions) to this project at once, ahead of the agent's rules. */
   readonly addRule: (rule: PermissionV1.Rule) => Effect.Effect<void>
+  /**
+   * Lets a skill's allowed-tools run without asking in one session. A grant turns "ask" into "allow" (also for
+   * commands that leave the sandbox) but never overrides a "deny".
+   */
+  readonly grant: (sessionID: string, rules: PermissionV1.Rule[]) => Effect.Effect<void>
 }
 
 interface PendingEntry {
@@ -25,6 +30,7 @@ interface PendingEntry {
 interface State {
   pending: Map<PermissionV1.ID, PendingEntry>
   approved: PermissionV1.Rule[]
+  grants: Map<string, PermissionV1.Rule[]>
 }
 
 export function evaluate(permission: string, pattern: string, ...rulesets: PermissionV1.Ruleset[]): PermissionV1.Rule {
@@ -51,6 +57,7 @@ const layer = Layer.effect(
         const state = {
           pending: new Map<PermissionV1.ID, PendingEntry>(),
           approved: [],
+          grants: new Map<string, PermissionV1.Rule[]>(),
         }
 
         yield* Effect.addFinalizer(() =>
@@ -67,8 +74,9 @@ const layer = Layer.effect(
     )
 
     const ask = Effect.fn("Permission.ask")(function* (input: PermissionV1.AskInput) {
-      const { approved, pending } = yield* InstanceState.get(state)
+      const { approved, pending, grants } = yield* InstanceState.get(state)
       const { ruleset, ...request } = input
+      const granted = grants.get(request.sessionID) ?? []
       let needsAsk = false
 
       for (const pattern of request.patterns) {
@@ -82,6 +90,7 @@ const layer = Layer.effect(
         if (input.sandbox === "confined") continue
         // Leaving the sandbox asks unless the person approved it this run. Risky commands ask even under the default
         // "*" allow; a rule that names them (from dev.json or /permissions) or "Allow always" lets them run.
+        if (evaluate(request.permission, pattern, granted).action === "allow") continue
         const named = input.sandbox === "risky" ? ruleset.filter((item) => item.pattern !== "*") : []
         if (
           (input.sandbox === "escape" || input.sandbox === "risky") &&
@@ -184,12 +193,18 @@ const layer = Layer.effect(
       return Array.from(pending.values(), (item) => item.info)
     })
 
+    const grant = Effect.fn("Permission.grant")(function* (sessionID: string, rules: PermissionV1.Rule[]) {
+      if (rules.length === 0) return
+      const { grants } = yield* InstanceState.get(state)
+      grants.set(sessionID, [...(grants.get(sessionID) ?? []), ...rules])
+    })
+
     const addRule = Effect.fn("Permission.addRule")(function* (rule: PermissionV1.Rule) {
       const { approved } = yield* InstanceState.get(state)
       approved.push(...fromConfig({ [rule.permission]: { [rule.pattern]: rule.action } }))
     })
 
-    return Service.of({ ask, reply, list, addRule })
+    return Service.of({ ask, reply, list, addRule, grant })
   }),
 )
 

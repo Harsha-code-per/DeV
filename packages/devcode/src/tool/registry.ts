@@ -462,6 +462,7 @@ export const node = LayerNode.make({
     MCP.node,
     Database.node,
     Ripgrep.node,
+    Permission.node,
   ],
 })
 

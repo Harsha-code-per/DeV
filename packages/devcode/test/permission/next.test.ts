@@ -1269,3 +1269,46 @@ it.instance(
     }),
   { git: true },
 )
+
+it.instance(
+  "grant - a skill's allowed tools skip asking in that session only, and never override deny",
+  () =>
+    Effect.gen(function* () {
+      const permission = yield* Permission.Service
+      const session = SessionID.make("session_skill")
+      yield* permission.grant(session, [
+        { permission: "bash", pattern: "git add *", action: "allow" },
+        { permission: "bash", pattern: "rm *", action: "allow" },
+      ])
+      const asks = [{ permission: "bash", pattern: "*", action: "ask" as const }]
+      // Granted: runs without a prompt.
+      expect(
+        yield* ask({ sessionID: session, permission: "bash", patterns: ["git add ."], metadata: {}, always: [], ruleset: asks }),
+      ).toBeUndefined()
+      // A deny from config still wins over the grant.
+      const denied = yield* fail(
+        ask({
+          sessionID: session,
+          permission: "bash",
+          patterns: ["rm -rf build"],
+          metadata: {},
+          always: [],
+          ruleset: [{ permission: "bash", pattern: "rm *", action: "deny" }],
+        }),
+      )
+      expect(denied).toBeInstanceOf(PermissionV1.DeniedError)
+      // Another session still asks.
+      const other = yield* ask({
+        sessionID: SessionID.make("session_other"),
+        permission: "bash",
+        patterns: ["git add ."],
+        metadata: {},
+        always: [],
+        ruleset: asks,
+      }).pipe(Effect.forkScoped)
+      expect(yield* waitForPending(1)).toHaveLength(1)
+      yield* rejectAll()
+      yield* Fiber.await(other)
+    }),
+  { git: true },
+)

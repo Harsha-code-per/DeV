@@ -6,6 +6,7 @@ import type { InstanceContext } from "@/project/instance-context"
 import { Effect, Layer, Context, Schema } from "effect"
 import { Config } from "@/config/config"
 import { MCP } from "../mcp"
+import type { PermissionV1 } from "@dev-ai/core/v1/permission"
 import { Skill } from "../skill"
 import PROMPT_INITIALIZE from "./template/initialize.txt"
 import PROMPT_REVIEW from "./template/review.txt"
@@ -38,6 +39,8 @@ export type Info = Omit<Schema.Schema.Type<typeof Info>, "template"> & {
   template: Promise<string> | string
   /** Skills fill their placeholders themselves, from the arguments and session. */
   render?: (input: { sessionID: string; arguments: string }) => string
+  /** A skill's allowed-tools, granted to the session when the command runs. */
+  grants?: PermissionV1.Rule[]
 }
 
 export function hints(template: string) {
@@ -194,6 +197,7 @@ const layer = Layer.effect(
           },
           render: (input) => withBase(Skill.render(item, { project: ctx.worktree, ...input })),
           hints: item.argumentHint ? [item.argumentHint] : [],
+          grants: Skill.grants(item),
         }
       }
 

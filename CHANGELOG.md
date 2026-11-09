@@ -2,6 +2,10 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.20 (unreleased)
+
+- Skills can list the tools they use in `allowed-tools` (for example `allowed-tools: Bash(git add:*), Bash(git status:*), Read`). Once the skill starts, from its `/` command or when DeV loads it, those tools run without asking for the rest of the session. A `deny` in your permissions still wins. MCP tools are written `mcp__server__tool`, or `mcp__server` for all of one server's tools.
+
 ## 1.0.19 (2026-11-09)
 
 - `/plugins` is full from the start: DeV adds its own marketplace, rebuilt every night from the official MCP Registry and GitHub. It lists over 6,000 popular, maintained plugins, skills and MCP servers, each with its star count, and ones marked Verified come first. A server is listed only when it comes from the owner of the repo whose stars it shows. To turn the marketplace off, set `"marketplaces": { "dev": { "source": "" } }`.

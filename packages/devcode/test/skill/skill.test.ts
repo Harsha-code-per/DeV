@@ -91,6 +91,38 @@ describe("skill", () => {
     }),
   )
 
+  it.live("allowed-tools in either written form becomes permission rules", () =>
+    provideTmpdirInstance(
+      (dir) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(() =>
+            Promise.all([
+              Bun.write(
+                path.join(dir, ".dev", "skill", "commit", "SKILL.md"),
+                "---\nname: commit\ndescription: Commit.\nallowed-tools: Bash(git add:*), Bash(git status), Read, mcp__github__create_issue, Unknown\n---\nCommit.\n",
+              ),
+              Bun.write(
+                path.join(dir, ".dev", "skill", "look", "SKILL.md"),
+                "---\nname: look\ndescription: Look.\nallowed-tools:\n  - Grep\n  - mcp__docs\n---\nLook.\n",
+              ),
+            ]),
+          )
+          const skill = yield* Skill.Service
+          const rules = (name: string) =>
+            Effect.map(skill.require(name), (info) => Skill.grants(info).map((rule) => `${rule.permission} ${rule.pattern}`))
+          expect(yield* rules("commit")).toEqual([
+            "bash git add *",
+            "bash git add",
+            "bash git status",
+            "read *",
+            "github_create_issue *",
+          ])
+          expect(yield* rules("look")).toEqual(["grep *", "docs_* *"])
+        }),
+      { git: true },
+    ),
+  )
+
   it.live("discovers skills from .dev/skill/ directory", () =>
     provideTmpdirInstance(
       (dir) =>

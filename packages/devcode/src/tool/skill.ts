@@ -2,6 +2,7 @@ import path from "path"
 import { Effect, Schema } from "effect"
 import { Ripgrep } from "@dev-ai/core/ripgrep"
 import { Skill } from "../skill"
+import { Permission } from "@/permission"
 import { InstanceState } from "@/effect/instance-state"
 import * as Tool from "./tool"
 import DESCRIPTION from "./skill.txt"
@@ -15,6 +16,7 @@ export const SkillTool = Tool.define(
   Effect.gen(function* () {
     const skill = yield* Skill.Service
     const ripgrep = yield* Ripgrep.Service
+    const permission = yield* Permission.Service
 
     return {
       description: DESCRIPTION,
@@ -32,6 +34,8 @@ export const SkillTool = Tool.define(
             always: [params.name],
             metadata: {},
           })
+          // Its allowed-tools run without asking in this session from now on (a "deny" still wins).
+          yield* permission.grant(ctx.sessionID, Skill.grants(info))
 
           const dir = path.dirname(info.location)
           const base = dir
