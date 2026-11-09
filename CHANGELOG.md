@@ -2,7 +2,7 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## 1.0.21 (unreleased)
+## 1.0.21 (2026-11-09)
 
 - Background sessions. `devcode run --bg "task"` starts the task and returns at once; it keeps working after you close the terminal. `devcode session list` shows each background session as working or "needs you" (`--running` lists only those), and `devcode attach --session <id>` joins it, so you can watch it or answer a permission prompt it's waiting on. The background server runs on this machine only, behind a password only you can read, and shuts itself down after 30 minutes with nothing to do (`DEV_BACKGROUND_IDLE_MINUTES` changes that). It reloads a project's settings before starting new work there when nothing else is running.
 - The TUI shows permission prompts and questions that were already waiting when it connected, for example after a restart, instead of only new ones.
