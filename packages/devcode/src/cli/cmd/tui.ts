@@ -174,6 +174,10 @@ export const TuiThreadCommand = cmd({
         describe: "start the minimal interactive interface",
         default: false,
       })
+      .option("screen-reader", {
+        type: "boolean",
+        describe: "a plain conversation, one line after another, for screen readers",
+      })
       .option("replay", {
         type: "boolean",
         hidden: true,
@@ -268,6 +272,22 @@ export const TuiThreadCommand = cmd({
         return
       }
       const cwd = Filesystem.resolve(process.cwd())
+
+      // Read after the chdir: the TUI config is loaded once, for the directory current at the first read.
+      if (args.screenReader ?? (await TuiConfig.get()).screen_reader) {
+        const { runMini } = await import("./run")
+        await runMini({
+          directory: cwd,
+          continue: args.continue,
+          session: args.session,
+          fork: args.fork,
+          model: args.model,
+          agent: args.agent,
+          prompt: args.prompt,
+          screenReader: true,
+        })
+        return
+      }
 
       const network = resolveNetworkOptionsNoConfig(args)
       const external = hasArg("--port") || hasArg("--hostname") || network.mdns === true

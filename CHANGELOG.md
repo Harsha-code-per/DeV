@@ -6,6 +6,7 @@ DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); thi
 
 - Vim keys in the prompt. Type `/vim` to turn them on or off; DeV remembers the choice. Esc switches to normal mode, and the mode shows under the prompt. Motions (`w b e`, `0 ^ $`, `f t ; ,`, `gg G`, `h j k l`) take counts, and operators (`d c y`) work with motions and text objects such as `iw`, `i"` and `i(`. Also `x`, `r`, `~`, `J`, `p`, `.` to repeat, `u` and `ctrl+r` to undo and redo a whole change, and visual mode with `v` and `V`. Enter sends the prompt from either mode, and Esc in normal mode still interrupts DeV.
 - Prompt suggestions. When DeV finishes, the empty prompt suggests what you'll probably ask next, such as "run the tests" or your answer to a question it asked. Press → to use it, or just type your own. It's one short request to your small model, sent only while the TUI is open. Type `/suggestions` to turn them off or on; DeV remembers the choice.
+- Screen reader mode. `devcode --screen-reader` runs DeV as a plain conversation, one line after another, with nothing redrawn: type a request at the `>` prompt, and DeV's answer and each step it takes (such as "Read calc.py") are printed as ordinary lines. When DeV needs permission it asks in words, and you type yes, always or no. Type exit or press Ctrl+C to leave. To start this way every time, set `"screen_reader": true` in `tui.json`; `--no-screen-reader` overrides it.
 - `/hooks` shows prompt and agent hooks by their question instead of an empty address.
 
 ## 1.0.23 (2026-11-09)

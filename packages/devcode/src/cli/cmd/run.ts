@@ -17,6 +17,7 @@ import type { Argv } from "yargs"
 import path from "path"
 import { pathToFileURL } from "url"
 import { open } from "node:fs/promises"
+import { createInterface } from "node:readline/promises"
 import { Effect } from "effect"
 import { UI } from "../ui"
 import { effectCmd } from "../effect-cmd"
@@ -71,8 +72,15 @@ type SessionInfo = {
   directory?: string
 }
 
+// Screen reader mode prints words only: a reader would announce every icon.
+const output = { plain: false }
+
 function inline(info: Inline) {
   const suffix = info.description ? UI.Style.TEXT_DIM + ` ${info.description}` + UI.Style.TEXT_NORMAL : ""
+  if (output.plain) {
+    UI.println(UI.Style.TEXT_NORMAL + info.title + suffix)
+    return
+  }
   UI.println(UI.Style.TEXT_NORMAL + info.icon, UI.Style.TEXT_NORMAL + info.title + suffix)
 }
 
@@ -267,6 +275,12 @@ export const RunCommand = effectCmd({
         hidden: true,
         default: false,
       })
+      .option("screen-reader", {
+        type: "boolean",
+        hidden: true,
+        default: false,
+        describe: "a plain conversation, one line after another, for screen readers",
+      })
       .option("demo", {
         type: "boolean",
         default: false,
@@ -284,6 +298,8 @@ export const RunCommand = effectCmd({
     yield* Effect.promise(async () => {
       const rawMessage = [...args.message, ...(args["--"] || [])].join(" ")
       const interactive = args.mini
+      const screenReader = args["screen-reader"] && !interactive
+      output.plain = screenReader
       const goalMode = args["permission-mode"] === "goal"
       const auto =
         args.auto || args.yolo || args["dangerously-skip-permissions"] || args["permission-mode"] === "auto" || goalMode
@@ -438,7 +454,7 @@ export const RunCommand = effectCmd({
       message = resolveRunInput(message, piped) ?? ""
       const initialInput = resolveRunInput(rawMessage, piped)
 
-      if (message.trim().length === 0 && !args.command && !interactive) {
+      if (message.trim().length === 0 && !args.command && !interactive && !screenReader) {
         UI.error("You must provide a message or a command")
         process.exit(1)
       }
@@ -737,6 +753,8 @@ export const RunCommand = effectCmd({
         // created, and replies issued from inside the loop must use that client.
         // Events from every folder, not just this one: a subagent with worktree isolation runs in its own folder,
         // and its permission requests must be answered there.
+        // Screen reader mode asks for each message, and for permissions, on plain lines.
+        const reader = screenReader ? createInterface({ input: process.stdin, output: process.stdout }) : undefined
         async function loop(client: DevcodeClient, events: Awaited<ReturnType<typeof sdk.global.event>>) {
           const toggles = new Map<string, boolean>()
           const sessions = new Set([sessionID])
@@ -756,7 +774,11 @@ export const RunCommand = effectCmd({
               toggles.get("start") !== true
             ) {
               UI.empty()
-              UI.println(`> ${event.properties.info.agent} · ${event.properties.info.modelID}`)
+              UI.println(
+                output.plain
+                  ? `DeV, ${event.properties.info.agent} agent, ${event.properties.info.modelID} model:`
+                  : `> ${event.properties.info.agent} · ${event.properties.info.modelID}`,
+              )
               UI.empty()
               toggles.set("start", true)
             }
@@ -876,6 +898,17 @@ export const RunCommand = effectCmd({
                   reply: "once",
                   directory: item.directory,
                 })
+              } else if (reader) {
+                const answer = (
+                  await reader.question(
+                    `DeV asks to use ${permission.permission}: ${permission.patterns.join(", ")}. Allow it? Type yes, always, or no, then Enter: `,
+                  )
+                )
+                  .trim()
+                  .toLowerCase()
+                const reply = answer.startsWith("a") ? "always" : answer.startsWith("y") ? "once" : "reject"
+                UI.println(reply === "reject" ? "Not allowed." : "Allowed.")
+                await client.permission.reply({ requestID: permission.id, reply, directory: item.directory })
               } else {
                 UI.println(
                   UI.Style.TEXT_WARNING_BOLD + "!",
@@ -899,6 +932,39 @@ export const RunCommand = effectCmd({
         const agent = await pickAgent(client)
 
         await share(client, sessionID)
+
+        if (reader) {
+          reader.on("close", () => process.exit(0))
+          // Without a listener, Ctrl+C only pauses the input.
+          reader.on("SIGINT", () => reader.close())
+          UI.println("DeV is ready. Type a request and press Enter. Type exit to quit.")
+          const ask = async (text: string): Promise<void> => {
+            if (text) {
+              const events = await client.global.event()
+              const completed = loop(client, events).catch((error) => UI.error(formatRunError(error)))
+              const result = await client.session.prompt({
+                sessionID,
+                agent,
+                model: pick(args.model),
+                variant: args.variant,
+                parts: [...files.splice(0), { type: "text", text }],
+              })
+              if (result.error) {
+                UI.error(formatRunError(result.error))
+                await events.stream.return(undefined)
+              }
+              await completed
+              UI.println("DeV is done. Your turn.")
+            }
+            const next = (await reader.question("> ")).trim()
+            if (/^\/?(exit|quit)$/i.test(next)) {
+              reader.close()
+              return
+            }
+            return ask(next)
+          }
+          return ask(message.trim())
+        }
 
         if (!interactive) {
           const events = await client.global.event()
@@ -1062,13 +1128,14 @@ type MiniCommandInput = {
   replay?: boolean
   replayLimit?: number
   demo?: boolean
+  screenReader?: boolean
 }
 
 export async function runMini(input: MiniCommandInput) {
   if (!RunCommand.handler) throw new Error("Mini command handler is unavailable")
   await RunCommand.handler({
     $0: "devcode",
-    _: ["mini"],
+    _: [input.screenReader ? "run" : "mini"],
     message: input.prompt ? [input.prompt] : [],
     command: undefined,
     continue: input.continue,
@@ -1087,7 +1154,9 @@ export async function runMini(input: MiniCommandInput) {
     port: undefined,
     variant: undefined,
     thinking: undefined,
-    mini: true,
+    mini: !input.screenReader,
+    "screen-reader": input.screenReader ?? false,
+    screenReader: input.screenReader ?? false,
     interactive: false,
     replay: input.replay ?? true,
     "replay-limit": input.replayLimit,

@@ -83,6 +83,10 @@ export const Info = Schema.Struct({
   cursor: Schema.optional(Cursor),
   mouse: Schema.optional(Schema.Boolean).annotate({ description: "Enable or disable mouse capture (default: true)" }),
   status_line: Schema.optional(StatusLine),
+  screen_reader: Schema.optional(Schema.Boolean).annotate({
+    description:
+      "Start in screen reader mode: a plain conversation, one line after another, instead of the full-screen interface",
+  }),
 })
 export type Info = Schema.Schema.Type<typeof Info>
 
