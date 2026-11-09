@@ -1,8 +1,4 @@
 import * as THREE from "three"
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js"
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js"
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js"
 
 const root = document.documentElement
 const motion = !matchMedia("(prefers-reduced-motion: reduce)").matches && window.gsap && window.ScrollTrigger
@@ -71,7 +67,7 @@ words.innerHTML = words.textContent.split(" ").map((w) => `<span class="w">${w}<
 // ---------- Studio ----------
 const canvas = document.getElementById("gl")
 const renderer = makeRenderer()
-const S = { spin: -0.25, el: 0.38, dist: 19, look: 2.5, coreY: 1.05, glow: 0, explode: 0, x: 0, dive: 0, bloom: 0.16, exposure: motion ? 0 : 1 }
+const S = { spin: -0.25, el: 0.38, dist: 19, look: 2.5, coreY: 1.05, glow: 0, explode: 0, x: 0, dive: 0, exposure: motion ? 0 : 1 }
 const SAFFRON = new THREE.Color("#f2a516")
 const W = 3.2
 const CORNER = 0.5
@@ -91,17 +87,24 @@ if (renderer) studio()
 
 function makeRenderer() {
   try {
-    return new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" })
+    const made = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance", stencil: false })
+    const gl = made.getContext()
+    const info = gl.getExtension("WEBGL_debug_renderer_info")
+    // Without a GPU, WebGL runs on the CPU and the scroll film would crawl, so show the still page instead.
+    if (!/swiftshader|llvmpipe|software/i.test(info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : "")) return made
+    made.dispose()
+    throw new Error("software rendering")
   } catch {
+    typeTo(sessionChars)
     root.classList.add("no-gl", "still")
     return undefined
   }
 }
 
 function studio() {
-  renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.shadowMap.enabled = true
-  renderer.shadowMap.type = THREE.PCFShadowMap
+  // Neutral tone mapping keeps saffron, gold and titanium their real colours instead of shifting them.
+  renderer.toneMapping = THREE.NeutralToneMapping
+  renderer.toneMappingExposure = 1
 
   const scene = new THREE.Scene()
   scene.background = new THREE.Color("#000")
@@ -110,19 +113,13 @@ function studio() {
   scene.add(camera)
 
   // A warm studio sweep that follows the camera, so there is always light falloff behind the object.
-  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(90, 60), new THREE.MeshBasicMaterial({ map: radial([[0, "#33271a"], [0.38, "#110c07"], [1, "#000"]]), toneMapped: false, depthWrite: false }))
+  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(90, 60), new THREE.MeshBasicMaterial({ map: radial([[0, "#2c2217"], [0.38, "#0f0b07"], [1, "#000"]]), toneMapped: false, depthWrite: false }))
   backdrop.position.set(0, -3, -45)
   camera.add(backdrop)
 
-  const key = new THREE.DirectionalLight("#fff3e2", 2.2)
+  const key = new THREE.DirectionalLight("#fff6ea", 1.4)
   key.position.set(5, 9, 4)
-  key.castShadow = true
-  key.shadow.mapSize.set(2048, 2048)
-  Object.assign(key.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 1, far: 30 })
-  key.shadow.radius = 7
-  key.shadow.bias = -0.0004
-  key.shadow.normalBias = 0.02
-  const rim = new THREE.DirectionalLight("#d6e4ff", 1.6)
+  const rim = new THREE.DirectionalLight("#dfe8ff", 1.1)
   rim.position.set(-7, 4, -6)
   scene.add(key, rim)
 
@@ -131,30 +128,26 @@ function studio() {
   rig.add(spin)
   scene.add(rig)
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.55 }))
-  floor.rotation.x = -Math.PI / 2
-  floor.receiveShadow = true
-  const contact = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 6.4), new THREE.MeshBasicMaterial({ map: radial([[0, "rgba(0,0,0,.9)"], [0.5, "rgba(0,0,0,.45)"], [1, "rgba(0,0,0,0)"]]), transparent: true, depthWrite: false }))
+  // A soft contact shadow instead of real-time shadow maps: it reads the same and costs almost nothing.
+  const contact = new THREE.Mesh(new THREE.PlaneGeometry(7.5, 7.5), new THREE.MeshBasicMaterial({ map: radial([[0, "rgba(0,0,0,.95)"], [0.45, "rgba(0,0,0,.55)"], [1, "rgba(0,0,0,0)"]]), transparent: true, depthWrite: false }))
   contact.rotation.x = -Math.PI / 2
   contact.position.y = 0.002
-  rig.add(floor, contact)
+  rig.add(contact)
 
   const spun = spunTexture()
   const mats = {
-    titanium: new THREE.MeshPhysicalMaterial({ color: "#d9d4cb", metalness: 1, roughness: 0.5, roughnessMap: spun, clearcoat: 0.2, clearcoatRoughness: 0.25 }),
-    graphite: new THREE.MeshPhysicalMaterial({ color: "#232221", metalness: 0.85, roughness: 0.62, roughnessMap: spun, clearcoat: 0.6, clearcoatRoughness: 0.18 }),
-    saffron: new THREE.MeshPhysicalMaterial({ color: "#e8a013", metalness: 1, roughness: 0.45, roughnessMap: spun, clearcoat: 0.5, clearcoatRoughness: 0.15 }),
+    titanium: new THREE.MeshPhysicalMaterial({ color: "#c9c5bd", metalness: 1, roughness: 0.56, roughnessMap: spun, clearcoat: 0.15, clearcoatRoughness: 0.3 }),
+    graphite: new THREE.MeshPhysicalMaterial({ color: "#2a2928", metalness: 0.85, roughness: 0.6, roughnessMap: spun, clearcoat: 0.55, clearcoatRoughness: 0.2 }),
+    saffron: new THREE.MeshPhysicalMaterial({ color: "#d4900f", metalness: 1, roughness: 0.48, roughnessMap: spun, clearcoat: 0.4, clearcoatRoughness: 0.2 }),
   }
 
   const plates = LAYERS.reduce((list, layer) => {
     const below = list.at(-1)
     const base = below ? below.base + below.height + GAP : 0
     const mesh = new THREE.Mesh(plateGeometry(layer.hole, layer.depth), mats[layer.mat])
-    mesh.castShadow = true
-    mesh.receiveShadow = true
     spin.add(mesh)
     const height = layer.depth + BEVEL * 2
-    const ring = layer.hole ? new THREE.Mesh(new THREE.TorusGeometry(layer.hole - 0.004, 0.009, 12, 160), new THREE.MeshBasicMaterial({ color: "#000", toneMapped: false })) : undefined
+    const ring = layer.hole ? new THREE.Mesh(new THREE.TorusGeometry(layer.hole - 0.004, 0.008, 8, 128), new THREE.MeshBasicMaterial({ color: "#000", toneMapped: false })) : undefined
     if (ring) {
       ring.rotation.x = Math.PI / 2
       ring.position.y = height
@@ -171,24 +164,21 @@ function studio() {
   etch.position.set(0, top.height + 0.001, 1.13)
   top.mesh.add(etch)
 
-  // Your model: a crystal sphere holding a gold lattice around a small light.
+  // Your model: a thin glass shell around a gold lattice. Thin glass barely bends light, so the shell is drawn
+  // as reflections added over what is behind it, which looks the same as real refraction and costs a fraction.
   const core = new THREE.Group()
-  const glass = new THREE.Mesh(new THREE.SphereGeometry(0.6, 128, 96), new THREE.MeshPhysicalMaterial({ color: "#ffffff", metalness: 0, roughness: 0, transmission: 1, thickness: 0.06, ior: 1.5, clearcoat: 1, clearcoatRoughness: 0, specularIntensity: 1, envMapIntensity: 1.6 }))
-  glass.castShadow = true
-  const gold = new THREE.MeshPhysicalMaterial({ color: "#eab45a", metalness: 1, roughness: 0.22, clearcoat: 0.3 })
+  const shell = (side, scale) => {
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.6, 64, 48), new THREE.MeshPhysicalMaterial({ color: "#000000", metalness: 0, roughness: 0.03, clearcoat: 1, clearcoatRoughness: 0, envMapIntensity: 2.4, side, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }))
+    mesh.scale.setScalar(scale)
+    return mesh
+  }
+  const gold = new THREE.MeshPhysicalMaterial({ color: "#d9a54e", metalness: 1, roughness: 0.28 })
   const lattice = latticeOf(new THREE.IcosahedronGeometry(0.36, 0), gold)
-  const heart = new THREE.Mesh(new THREE.SphereGeometry(0.075, 32, 16), new THREE.MeshBasicMaterial({ color: "#000", toneMapped: false }))
+  const heart = new THREE.Mesh(new THREE.SphereGeometry(0.06, 24, 12), new THREE.MeshBasicMaterial({ color: "#000", toneMapped: false }))
   const lamp = new THREE.PointLight("#ffc76a", 0, 2.2, 2)
-  core.add(glass, lattice, heart, lamp)
+  core.add(lattice, heart, lamp, shell(THREE.BackSide, 0.975), shell(THREE.FrontSide, 1))
   spin.add(core)
   const seatY = stackHeight - 0.14
-
-  // A multisampled target, because post-processing otherwise drops the canvas antialiasing.
-  const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }))
-  composer.addPass(new RenderPass(scene, camera))
-  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), S.bloom, 0.5, 1)
-  composer.addPass(bloom)
-  composer.addPass(new OutputPass())
 
   const labels = plates.map((p) => {
     const el = document.createElement("div")
@@ -198,7 +188,7 @@ function studio() {
     return el
   })
 
-  const view = { w: 1, h: 1, narrow: false, fit: 1 }
+  const view = { w: 1, h: 1, narrow: false, fit: 1, ratio: Math.min(devicePixelRatio, 1.5) }
   const resize = () => {
     view.w = innerWidth
     view.h = innerHeight
@@ -206,10 +196,8 @@ function studio() {
     const aspect = view.w / view.h
     // Keep the object (and its labels) inside the frame on tall phone screens.
     view.fit = Math.max(1, 2.9 / (Math.tan((15 * Math.PI) / 180) * aspect) / 13.5)
-    // Render above 1x on ordinary screens too: metal edges and glass need the extra pixels to look sharp.
-    renderer.setPixelRatio(Math.min(2, Math.max(devicePixelRatio, view.narrow ? 1 : 1.5)))
+    renderer.setPixelRatio(view.ratio)
     renderer.setSize(view.w, view.h, false)
-    composer.setSize(view.w, view.h)
     camera.aspect = aspect
     camera.updateProjectionMatrix()
     if (!motion) frame(0)
@@ -239,14 +227,16 @@ function studio() {
       if (!p.ring) return
       // Light runs down the well from the top plate once the model is seated.
       const lit = clamp(S.glow * plates.length - (plates.length - 1 - i))
-      p.ring.material.color.copy(SAFFRON).multiplyScalar(0.05 + lit * 2.6)
+      p.ring.material.color.copy(SAFFRON).multiplyScalar(0.08 + lit * 0.92)
     })
+    contact.scale.setScalar(1 + S.explode * 0.25)
+    contact.material.opacity = 1 - S.explode * 0.35
     const float = clamp(S.coreY)
     core.position.y = seatY + S.coreY + S.explode * ((plates.length - 1) * LIFT + 0.45) + Math.sin(t * 1.4) * 0.05 * float
     core.rotation.y = t * 0.25
     lattice.rotation.set(t * 0.18, t * 0.24, 0)
-    heart.material.color.copy(SAFFRON).multiplyScalar(1.1 + S.glow * 1.3)
-    lamp.intensity = 0.4 + S.glow * 1.4
+    heart.material.color.copy(SAFFRON).multiplyScalar(0.7 + S.glow * 0.3)
+    lamp.intensity = 0.3 + S.glow * 0.9
 
     const dist = S.dist * view.fit
     const lookY = S.look - (view.narrow ? 0.8 : 0)
@@ -267,9 +257,8 @@ function studio() {
       el.style.transform = `translate(${((anchor.x + 1) / 2) * view.w}px, ${((1 - anchor.y) / 2) * view.h - 18}px)`
     })
 
-    bloom.strength = S.bloom
     renderer.toneMappingExposure = S.exposure
-    composer.render()
+    renderer.render(scene, camera)
   }
 
   resize()
@@ -281,9 +270,26 @@ function studio() {
     return
   }
 
+  // If frames keep running long (a slow GPU), render fewer pixels until it keeps up.
+  const pace = { last: 0, slow: 0 }
+  const adapt = (now) => {
+    const dt = now - pace.last
+    pace.last = now
+    if (dt > 250) return
+    pace.slow = dt > 22 ? pace.slow + 1 : Math.max(0, pace.slow - 1)
+    if (pace.slow < 40 || view.ratio <= 0.75) return
+    view.ratio = Math.max(0.75, view.ratio - 0.25)
+    pace.slow = 0
+    resize()
+  }
+
   const active = { on: true }
   const clock = new THREE.Clock()
-  renderer.setAnimationLoop(() => { if (active.on) frame(clock.getElapsedTime()) })
+  renderer.setAnimationLoop((now) => {
+    if (!active.on) return
+    adapt(now)
+    frame(clock.getElapsedTime())
+  })
   scroll(active)
 }
 
@@ -316,9 +322,8 @@ function scroll(active) {
     .to(S, { dist: 12.5, el: 0.62, look: 1.0, spin: "+=1.2", duration: 2.4 }, 0.8)
     .fromTo(chapter("bring"), { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.6 }, 1.5)
     .to(S, { glow: 1, duration: 0.9, ease: "none" }, 2.9)
-    .to(S, { bloom: 0.26, duration: 0.5 }, 2.9)
     .to(chapter("bring"), { autoAlpha: 0, y: -30, duration: 0.5 }, 3.9)
-    .to(S, { explode: 1, x: narrow ? -0.9 : 1.6, dist: 17.5, el: 0.26, look: 2.45, spin: "+=0.7", bloom: 0.22, duration: 2.6 }, 4.0)
+    .to(S, { explode: 1, x: narrow ? -0.9 : 1.6, dist: 18, el: 0.26, look: 2.75, spin: "+=0.7", duration: 2.6 }, 4.0)
     .fromTo(chapter("around"), { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.6 }, 4.8)
     .to(S, { spin: "+=0.3", duration: 1.2, ease: "none" }, 6.6)
     .to(chapter("around"), { autoAlpha: 0, y: -30, duration: 0.5 }, 7.4)
@@ -338,23 +343,38 @@ function scroll(active) {
   gsap.from("#paper", { yPercent: -100, ease: "none", scrollTrigger: { trigger: ".printer", start: "top 85%", end: "top 20%", scrub: 0.6 } })
 }
 
-// Product-photography lighting: soft boxes in a dark room, so metal shows long clean highlights.
+// Product-photography lighting: soft boxes with feathered edges in a dark room, so metal shows long, clean
+// highlights and the glass reflects soft light instead of hard squares.
 function studioLights() {
   const room = new THREE.Scene()
-  room.add(new THREE.Mesh(new THREE.SphereGeometry(30, 32, 16), new THREE.MeshBasicMaterial({ color: "#2e2c29", side: THREE.BackSide })))
+  room.add(new THREE.Mesh(new THREE.SphereGeometry(30, 32, 16), new THREE.MeshBasicMaterial({ color: "#1b1a18", side: THREE.BackSide })))
+  const feather = feathered()
   const softbox = (w, h, at, power, color = "#ffffff") => {
-    const box = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(power), side: THREE.DoubleSide }))
+    const box = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(power), alphaMap: feather, transparent: true, side: THREE.DoubleSide, depthWrite: false }))
     box.position.set(...at)
     box.lookAt(0, 0, 0)
     room.add(box)
   }
-  softbox(14, 6, [0, 10, 0.5], 3.4)
-  softbox(3, 14, [-10, 2, 3], 4)
-  softbox(1.6, 12, [10, 3, -3], 2.4)
-  softbox(10, 1.4, [0, 2, -11], 4, "#ffd9a0")
-  softbox(10, 6, [5, 3, 10], 1.4)
-  softbox(18, 7, [0, 7, -10], 1.5)
-  return new THREE.PMREMGenerator(renderer).fromScene(room, 0.015).texture
+  softbox(16, 7, [0, 10, 0.5], 4.5)
+  softbox(5, 15, [-10, 2, 3], 5)
+  softbox(4, 15, [10, 3, -3], 3.4)
+  softbox(14, 2, [0, 2.5, -11], 1.6, "#ffe6c4")
+  softbox(18, 6, [0, 8, -10], 0.9)
+  softbox(26, 6, [0, 5, 12], 2.6)
+  softbox(24, 10, [0, -6, 9], 1.3, "#f3ece2")
+  softbox(8, 3, [-9, 1.5, -6], 2.2, "#ffe7c4")
+  return new THREE.PMREMGenerator(renderer).fromScene(room, 0.03).texture
+}
+
+function feathered() {
+  const c = Object.assign(document.createElement("canvas"), { width: 256, height: 256 })
+  const g = c.getContext("2d")
+  g.fillStyle = "#000"
+  g.fillRect(0, 0, 256, 256)
+  g.filter = "blur(28px)"
+  g.fillStyle = "#fff"
+  g.fillRect(48, 48, 160, 160)
+  return new THREE.CanvasTexture(c)
 }
 
 // Thin gold rods along every edge of a shape, with a bead at each corner.
@@ -388,7 +408,7 @@ function plateGeometry(hole, depth) {
   shape.absarc(-h + CORNER, h - CORNER, CORNER, Math.PI / 2, Math.PI)
   shape.absarc(-h + CORNER, -h + CORNER, CORNER, Math.PI, Math.PI * 1.5)
   if (hole) shape.holes.push(new THREE.Path().absarc(0, 0, hole, 0, Math.PI * 2, true))
-  const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL, bevelSegments: 8, curveSegments: 96 })
+  const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL, bevelSegments: 5, curveSegments: 64 })
   geometry.rotateX(-Math.PI / 2)
   geometry.translate(0, BEVEL, 0)
   return geometry
@@ -396,16 +416,16 @@ function plateGeometry(hole, depth) {
 
 // Concentric machining marks, used as a roughness map so highlights break up like spun metal.
 function spunTexture() {
-  const c = Object.assign(document.createElement("canvas"), { width: 2048, height: 2048 })
+  const c = Object.assign(document.createElement("canvas"), { width: 1024, height: 1024 })
   const g = c.getContext("2d")
   g.fillStyle = "#808080"
-  g.fillRect(0, 0, 2048, 2048)
-  Array.from({ length: 5200 }).forEach(() => {
+  g.fillRect(0, 0, 1024, 1024)
+  Array.from({ length: 2600 }).forEach(() => {
     const tone = Math.random() < 0.5 ? 255 : 0
     g.strokeStyle = `rgba(${tone},${tone},${tone},${Math.random() * 0.06})`
-    g.lineWidth = 0.5 + Math.random() * 2
+    g.lineWidth = 0.4 + Math.random() * 1.4
     g.beginPath()
-    g.arc(1024, 1024, Math.random() * 1480, 0, Math.PI * 2)
+    g.arc(512, 512, Math.random() * 740, 0, Math.PI * 2)
     g.stroke()
   })
   const t = new THREE.CanvasTexture(c)

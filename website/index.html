@@ -39,8 +39,8 @@ button { font: inherit; color: inherit }
 
 /* Top bar */
 .bar { position: fixed; inset: 0 0 auto; z-index: 20; display: flex; justify-content: space-between; align-items: center; height: 56px; font-size: 14px; color: var(--ink); border-bottom: 1px solid transparent; transition: background .35s, color .35s, border-color .35s }
-.bar.solid { background: rgba(14, 13, 12, .62); border-bottom-color: rgba(255, 255, 255, .07); backdrop-filter: saturate(160%) blur(18px); -webkit-backdrop-filter: saturate(160%) blur(18px) }
-.bar.light { background: rgba(238, 240, 242, .74); color: var(--day-ink); border-bottom-color: rgba(0, 0, 0, .07) }
+.bar.solid { background: rgba(14, 13, 12, .9); border-bottom-color: rgba(255, 255, 255, .07) }
+.bar.light { background: rgba(238, 240, 242, .94); color: var(--day-ink); border-bottom-color: rgba(0, 0, 0, .07) }
 .bar .brand { display: flex; gap: 10px; align-items: center; font-weight: 600; text-decoration: none; letter-spacing: -.01em }
 .bar .brand svg { width: 24px; height: 24px }
 .bar nav { display: flex; gap: 26px }
@@ -51,8 +51,6 @@ button { font: inherit; color: inherit }
 .scene { position: fixed; inset: 0; z-index: 1; pointer-events: none }
 .scene canvas { position: absolute; inset: 0; width: 100%; height: 100% }
 .flash { position: absolute; inset: 0; opacity: 0; background: #000 }
-.grain { position: absolute; inset: -50%; opacity: .07; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"); animation: grain 1s steps(4) infinite }
-@keyframes grain { 25% { transform: translate(-3%, 2%) } 50% { transform: translate(2%, -4%) } 75% { transform: translate(-1%, 3%) } }
 .label { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 12px; opacity: 0; white-space: nowrap; will-change: transform, opacity }
 .label i { display: block; width: 46px; height: 1px; background: linear-gradient(90deg, transparent, rgba(245, 243, 239, .7)) }
 .label b { display: block; font-weight: 500; font-size: 15px; letter-spacing: -.005em }
@@ -67,7 +65,7 @@ button { font: inherit; color: inherit }
 .hero h1 .soft { color: transparent; background: linear-gradient(180deg, #fff 10%, #9b958b 110%); -webkit-background-clip: text; background-clip: text }
 .hero p { margin: 0; max-width: 36ch; color: #bdb8b0; font-size: clamp(16px, 1.4vw, 19px) }
 .hero .actions { pointer-events: auto; margin-top: auto; margin-bottom: clamp(24px, 5vh, 56px); display: flex; align-items: center; gap: 28px; text-align: left }
-.pill { display: inline-flex; align-items: center; gap: 4px; padding: 6px 6px 6px 18px; border-radius: 999px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); font: 400 14px var(--mono); max-width: calc(100vw - 32px) }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 6px 6px 6px 18px; border-radius: 999px; background: rgba(30, 28, 25, .85); border: 1px solid rgba(255, 255, 255, .14); font: 400 14px var(--mono); max-width: calc(100vw - 32px) }
 .pill code { white-space: nowrap; overflow-x: auto; scrollbar-width: none; color: #e9e4da }
 .pill button { flex: none; border: 0; border-radius: 999px; padding: 9px 16px; background: var(--ink); color: #000; font: 500 14px var(--sans); cursor: pointer }
 .pill button:active { transform: scale(.97) }
@@ -175,7 +173,7 @@ footer a { text-decoration: none; color: var(--ink) }
 .still .hero { min-height: 100vh; padding-top: 18vh }
 .still .side { left: auto; max-width: 560px; margin-inline: max(16px, 6vw) }
 .still .scene { position: absolute; height: 100vh }
-.still .label, .still .grain { display: none }
+.still .label { display: none }
 .still .session { height: auto }
 .still .session .pin { position: relative; height: auto; padding-block: 12vh }
 .still .statement .w { opacity: 1 }
@@ -195,7 +193,6 @@ footer a { text-decoration: none; color: var(--ink) }
   <canvas id="gl"></canvas>
   <div id="labels"></div>
   <div class="flash"></div>
-  <div class="grain"></div>
 </div>
 
 <main id="top">
@@ -313,7 +310,8 @@ footer a { text-decoration: none; color: var(--ink) }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
-<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js" crossorigin>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js" } }</script>
 <script type="module" src="app.js"></script>
 </body>
 </html>
