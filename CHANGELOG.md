@@ -2,7 +2,7 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## 1.0.25 (unreleased)
+## 1.0.25 (2026-11-09)
 
 - Linux packages. Every release now has a `.deb` for Debian, Ubuntu, Mint and Pop!_OS and an `.rpm` for Fedora, RHEL, Rocky and AlmaLinux, for x64 and arm64, and an Arch package (`devcode-bin`). They install DeV to `/usr/lib/devcode` with `devcode` on your PATH. The install commands are on trydev.work and in the README.
 - `devcode upgrade` and `/update` recognise these system installs and tell you the apt, dnf or yay command to run, instead of trying to change files only root can change.
