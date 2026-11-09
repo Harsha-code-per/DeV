@@ -200,3 +200,49 @@ test("PermissionRequest answers the prompt; hooks get the project dir in the env
   ])
   expect((await Bun.file(env).text()).trim()).toBe(dir.path)
 })
+
+test("prompt and agent hooks ask a model in a hidden session; ok false blocks, and hooks don't fire inside it", async () => {
+  await using dir = await tmpdir()
+  const calls: { create: unknown[]; prompt: any[]; delete: unknown[] } = { create: [], prompt: [], delete: [] }
+  let next = 0
+  let plugin: Awaited<ReturnType<typeof HooksPlugin>>
+  const answers = ['Sure. ```json\n{"ok": false, "reason": "tests are not run"}\n```', '{"ok": true}']
+  plugin = await HooksPlugin({
+    directory: dir.path,
+    worktree: dir.path,
+    client: {
+      session: {
+        create: async (request: unknown) => (calls.create.push(request), { data: { id: `hook_${++next}` } }),
+        prompt: async (request: any) => {
+          calls.prompt.push(request)
+          // A tool call inside the hook's own session, while it runs, doesn't run hooks again.
+          await plugin["tool.execute.before"]!({ tool: "bash", sessionID: request.path.id, callID: "inner" }, { args: { command: "ls" } })
+          return { data: { parts: [{ type: "text", text: answers.shift() }] } }
+        },
+        delete: async (request: unknown) => void calls.delete.push(request),
+      },
+    },
+  } as unknown as PluginInput)
+  await plugin.config?.({
+    hooks: {
+      PreToolUse: [{ matcher: "Bash", hooks: [{ type: "prompt", prompt: "Allow only if tests ran: $ARGUMENTS", model: "groq/llama-3.3" }] }],
+      Stop: [{ hooks: [{ type: "agent", prompt: "Are all tasks done?" }] }],
+    },
+  } as never)
+  await expect(
+    plugin["tool.execute.before"]!({ tool: "bash", sessionID: "s1", callID: "c1" }, { args: { command: "git push" } }),
+  ).rejects.toThrow("Blocked by a PreToolUse hook: tests are not run")
+  expect(calls.create[0]).toEqual({ body: { parentID: "s1", title: "prompt hook" } })
+  const asked = calls.prompt[0]
+  expect(asked.body.tools).toEqual({ "*": false })
+  expect(asked.body.model).toEqual({ providerID: "groq", modelID: "llama-3.3" })
+  expect(asked.body.parts[0].text).toContain('"command":"git push"')
+  expect(asked.body.parts[0].text.startsWith("Allow only if tests ran: {")).toBe(true)
+
+  const stop = { continue: undefined as string | undefined }
+  await plugin["experimental.session.stop"]!({ sessionID: "s1" } as never, stop as never)
+  expect(stop.continue).toBeUndefined()
+  expect(calls.prompt.at(-1).body.tools).toEqual({ "*": false, read: true, grep: true, glob: true })
+  await Bun.sleep(10)
+  expect(calls.delete).toEqual([{ path: { id: "hook_1" } }, { path: { id: "hook_2" } }])
+})

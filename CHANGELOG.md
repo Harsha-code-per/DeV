@@ -2,6 +2,10 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.21 (unreleased)
+
+- Prompt and agent hooks. A hook can be a question for a model instead of a script: `{ "type": "prompt", "prompt": "Block it if it rewrites git history. $ARGUMENTS" }`. The model answers ok or not ok with a reason, and not ok counts like exit code 2 (a blocked tool call, a blocked prompt, or more work before stopping). An `agent` hook does the same but can read files (Read, Grep, Glob) before deciding. Both run in a hidden session that is deleted afterwards, on your session's model unless the hook sets `"model": "provider/model"`.
+
 ## 1.0.20 (2026-11-09)
 
 - Hooks written for other agents, including the ones inside marketplace plugins, now work unchanged:

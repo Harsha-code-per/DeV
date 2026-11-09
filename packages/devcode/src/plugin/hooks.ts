@@ -17,6 +17,8 @@ import { Process } from "@/util/process"
 // - PostToolUse: additionalContext is added to the result; updatedToolOutput (or updatedMCPToolOutput) replaces it.
 // - UserPromptSubmit and SessionStart: plain stdout or additionalContext is added to the (first) prompt.
 // - PermissionRequest: hookSpecificOutput.decision {behavior: "allow" | "deny"} answers the permission prompt.
+// - A prompt hook asks a model the hook's question about the event; an agent hook does the same with Read, Grep
+//   and Glob to look around. Either answers {"ok": true} or {"ok": false, "reason": …}, and false counts as exit 2.
 // PreCompact stdout is added to the compaction instructions. Notification, SubagentStart, SubagentStop,
 // PostToolUseFailure, PostCompact, SessionEnd and FileChanged only inform. An http hook receives the same JSON as a
 // POST and answers with its 2xx body the same way.
@@ -64,20 +66,53 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
   const session = (id: string) => sessions.get(id) ?? sessions.set(id, { continues: 0 }).get(id)!
   // PreToolUse additionalContext, added to that call's result.
   const pending = new Map<string, string>()
+  // Sessions that prompt and agent hooks run in; hooks don't fire inside them, so a hook can't trigger itself.
+  const own = new Set<string>()
   const run = (event: ConfigHooksV1.Event, payload: Record<string, unknown>, names?: string[]) =>
-    runHooks(
-      state.hooks?.[event] ?? [],
-      { hook_event_name: event, cwd: input.directory, ...payload },
-      input.directory,
-      names,
-    )
+    typeof payload.session_id === "string" && own.has(payload.session_id)
+      ? Promise.resolve([])
+      : runHooks(state.hooks?.[event] ?? [], { hook_event_name: event, cwd: input.directory, ...payload }, input.directory, names, judge)
+
+  // A prompt or agent hook: a hidden one-off session (a child of the one the event came from) with tools off, or
+  // only Read, Grep and Glob, asked the hook's question. It is deleted afterwards.
+  async function judge(hook: Judge, payload: Record<string, unknown>): Promise<Result> {
+    const parentID = typeof payload.session_id === "string" ? payload.session_id : undefined
+    const created = await input.client.session.create({ body: { parentID, title: `${hook.type} hook` } }).catch(() => undefined)
+    const id = created?.data?.id
+    if (!id) return { code: 1, stdout: "", stderr: "could not start the hook's session" }
+    own.add(id)
+    const event = JSON.stringify(payload)
+    const question = hook.prompt.includes("$ARGUMENTS") ? hook.prompt.replaceAll("$ARGUMENTS", event) : `${hook.prompt}\n\n${event}`
+    const [providerID, ...rest] = hook.model?.split("/") ?? []
+    const reply = await Promise.race([
+      input.client.session
+        .prompt({
+          path: { id },
+          body: {
+            system: JUDGE_SYSTEM,
+            tools: hook.type === "agent" ? { "*": false, read: true, grep: true, glob: true } : { "*": false },
+            ...(providerID && rest.length ? { model: { providerID, modelID: rest.join("/") } } : {}),
+            parts: [{ type: "text", text: question }],
+          },
+        })
+        .then((response) => (response.data?.parts ?? []).flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"))
+        .catch(() => undefined),
+      Bun.sleep((hook.timeout ?? (hook.type === "agent" ? 60 : 30)) * 1000).then(() => undefined),
+    ])
+    void input.client.session.delete({ path: { id } }).catch(() => undefined).finally(() => own.delete(id))
+    const verdict = reply === undefined ? undefined : parseVerdict(reply)
+    if (!verdict) return { code: 1, stdout: "", stderr: `${hook.type} hook gave no verdict` }
+    // On Stop, "impossible" means the goal can't be met, so the turn may end instead of being sent back.
+    if (verdict.ok || verdict.impossible) return { code: 0, stdout: "", stderr: "" }
+    return { code: 2, stdout: "", stderr: verdict.reason ?? "" }
+  }
 
   return {
     config: async (cfg) => {
       state.hooks = (cfg as { hooks?: ConfigHooksV1.Info }).hooks
     },
     "tool.execute.before": async (info, output) => {
-      if (!state.hooks?.PreToolUse) return
+      if (!state.hooks?.PreToolUse || own.has(info.sessionID)) return
       const results = await run(
         "PreToolUse",
         { session_id: info.sessionID, tool_name: toolName(info.tool), tool_input: common(output.args), tool_use_id: info.callID },
@@ -98,6 +133,7 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
       if (context.length > 0) pending.set(info.callID, context.join("\n"))
     },
     "tool.execute.after": async (info, output) => {
+      if (own.has(info.sessionID)) return
       const before = pending.get(info.callID)
       pending.delete(info.callID)
       // A failed subtask reports no output.
@@ -128,7 +164,7 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
       if (feedback.length > 0) output.output += `\n\nPostToolUse hook:\n${feedback.join("\n")}`
     },
     "chat.message": async (info, output) => {
-      if (!state.hooks?.UserPromptSubmit && !state.hooks?.SessionStart) return
+      if ((!state.hooks?.UserPromptSubmit && !state.hooks?.SessionStart) || own.has(info.sessionID)) return
       const prompt = output.parts
         .flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : []))
         .join("\n")
@@ -217,12 +253,18 @@ export async function HooksPlugin(input: PluginInput): Promise<Hooks> {
           },
           names(props.part.tool ?? ""),
         )
-      if (event.type === "session.idle" && state.hooks?.SubagentStop && props?.sessionID) {
+      if (event.type === "session.idle" && state.hooks?.SubagentStop && props?.sessionID && !own.has(props.sessionID)) {
         const info = await input.client.session.get({ path: { id: props.sessionID } }).catch(() => undefined)
         if (info?.data?.parentID)
           await run("SubagentStop", { session_id: props.sessionID, parent_session_id: info.data.parentID, agent_id: props.sessionID })
       }
-      if (event.type === "session.created" && props?.info?.id && props.info.parentID && state.hooks?.SubagentStart)
+      if (
+        event.type === "session.created" &&
+        props?.info?.id &&
+        props.info.parentID &&
+        state.hooks?.SubagentStart &&
+        !own.has(props.info.id)
+      )
         await run("SubagentStart", {
           session_id: props.info.parentID,
           agent_id: props.info.id,
@@ -341,12 +383,14 @@ async function runHooks(
   matchers: ConfigHooksV1.Info["PreToolUse"] & {},
   payload: Record<string, unknown>,
   cwd: string,
-  names?: string[],
+  names: string[] | undefined,
+  judge: (hook: Judge, payload: Record<string, unknown>) => Promise<Result>,
 ): Promise<Result[]> {
   const commands = matchers.filter((entry) => matches(entry.matcher, names)).flatMap((entry) => entry.hooks)
   return Promise.all(
     commands.map(async (hook) => {
       if (hook.type === "http") return post(hook, payload)
+      if (hook.type === "prompt" || hook.type === "agent") return judge(hook, payload)
       const shell = process.platform === "win32" ? ["cmd", "/c"] : ["sh", "-c"]
       const result = await Process.run([...shell, hook.command], {
         cwd,
@@ -385,6 +429,24 @@ function parseOutput(text: string): Output | undefined {
   } catch {
     return undefined
   }
+}
+
+type Judge = typeof ConfigHooksV1.Prompt.Type | typeof ConfigHooksV1.Agent.Type
+
+const JUDGE_SYSTEM = [
+  "You check one condition for an automated hook in a coding agent. You get the condition and the event as JSON.",
+  "Decide whether the condition is met. If you have tools, use them only to look; never change anything.",
+  'Reply with one JSON object and nothing else: {"ok": true} when it is met, or {"ok": false, "reason": "what is wrong"} when not.',
+  'Add "impossible": true only when it can never be met.',
+].join("\n")
+
+/** The model's {"ok": …} answer, even when it wraps it in prose or a code fence. */
+function parseVerdict(reply: string) {
+  const found = reply.match(/\{[\s\S]*\}/)?.[0]
+  const value = found ? parseOutput(found) : undefined
+  return value && typeof (value as { ok?: unknown }).ok === "boolean"
+    ? (value as { ok: boolean; reason?: string; impossible?: boolean })
+    : undefined
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
