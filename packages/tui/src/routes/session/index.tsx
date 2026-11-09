@@ -1463,6 +1463,14 @@ function UserMessage(props: {
     return texts.join("\n\n")
   })
   const files = createMemo(() => props.parts.flatMap((x) => (x.type === "file" ? [x] : [])))
+  // Messages from other agents in this conversation (the message tool) are shown as a quiet line.
+  const notes = createMemo(() =>
+    props.parts.flatMap((x) => {
+      if (x.type !== "text" || !x.synthetic) return []
+      const match = x.text.match(/^<message from="([^"]*)">\n([\s\S]*)\n<\/message>$/)
+      return match ? [{ from: match[1], text: match[2] }] : []
+    }),
+  )
   const { theme } = useTheme()
   const [hover, setHover] = createSignal(false)
   const queued = createMemo(() => props.pending !== undefined && props.index > props.pending)
@@ -1476,6 +1484,15 @@ function UserMessage(props: {
 
   return (
     <>
+      <For each={notes()}>
+        {(note) => (
+          <box marginTop={1} paddingLeft={3}>
+            <text fg={theme.textMuted} wrapMode="word">
+              ✉ {note.from}: {note.text}
+            </text>
+          </box>
+        )}
+      </For>
       <Show when={text()}>
         <box
           id={props.message.id}

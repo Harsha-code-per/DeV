@@ -270,6 +270,36 @@ describe("Session", () => {
     }),
   )
 
+  it.instance("forks into an existing session, such as a forked subagent's", () =>
+    Effect.gen(function* () {
+      const session = yield* SessionNs.Service
+      const created = yield* Effect.acquireRelease(session.create({}), (info) =>
+        session.remove(info.id).pipe(Effect.ignore),
+      )
+      const ids = ["msg_a1-first", "msg_a2-second", "msg_a3-calling"]
+      for (const [index, id] of ids.entries()) {
+        yield* session.updateMessage({
+          id: MessageID.make(id),
+          sessionID: created.id,
+          role: "user",
+          time: { created: index + 1 },
+          agent: "user",
+          model: { providerID: "test", modelID: "test" },
+        } as SessionV1.User)
+      }
+      const child = yield* Effect.acquireRelease(session.create({ parentID: created.id, title: "child" }), (info) =>
+        session.remove(info.id).pipe(Effect.ignore),
+      )
+
+      const forked = yield* session.fork({ sessionID: created.id, messageID: MessageID.make(ids[2]!), into: child.id })
+
+      expect(forked.id).toBe(child.id)
+      expect(forked.parentID).toBe(created.id)
+      expect(forked.title).toBe("child")
+      expect((yield* session.messages({ sessionID: child.id })).map((msg) => msg.info.time.created)).toEqual([1, 2])
+    }),
+  )
+
   it.instance("omits metadata when not provided", () =>
     Effect.gen(function* () {
       const session = yield* SessionNs.Service

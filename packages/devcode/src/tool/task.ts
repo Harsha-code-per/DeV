@@ -58,6 +58,13 @@ const BaseParameters = Schema.Struct(BaseParameterFields)
 
 const COMMON_AGENT_NAMES: Record<string, string> = { "general-purpose": "general", Explore: "explore" }
 
+const FORK_BRIEF = [
+  "You are a fork of the conversation above: a copy of the agent, started to do one part of the work while the main conversation carries on.",
+  "Do only the part below, without asking the person anything, and finish with a short report of what you found or did. That report is all the main conversation will see.",
+  "",
+  "Your part:",
+].join("\n")
+
 export const Parameters = Schema.Struct({
   ...BaseParameterFields,
   background: Schema.optional(Schema.Boolean).annotate({
@@ -137,7 +144,10 @@ export const TaskTool = Tool.define(
         })
       }
 
-      const next = yield* agent.get(type)
+      // "fork" (unless the project defines an agent by that name) is a copy of the calling agent that starts with
+      // the whole conversation so far, so it needs no briefing.
+      const forking = type === "fork" && !(yield* agent.get("fork"))
+      const next = yield* agent.get(forking ? ctx.agent : type)
       if (!next) {
         const valid = (yield* agent.list()).filter((item) => item.mode !== "primary").map((item) => item.name)
         return yield* Effect.fail(
@@ -169,7 +179,7 @@ export const TaskTool = Tool.define(
         session ??
         (yield* sessions.create({
           parentID: ctx.sessionID,
-          title: params.description + ` (@${next.name} subagent)`,
+          title: params.description + (forking ? " (fork)" : ` (@${next.name} subagent)`),
           agent: next.name,
           permission: [
             ...childPermission,
@@ -182,6 +192,9 @@ export const TaskTool = Tool.define(
             ),
           ],
         }))
+
+      // Everything before the message making this call: the call itself is still in progress.
+      if (forking && !session) yield* sessions.fork({ sessionID: ctx.sessionID, messageID: ctx.messageID, into: nextSession.id })
 
       const msg = yield* MessageV2.get({ sessionID: ctx.sessionID, messageID: ctx.messageID }).pipe(
         Effect.provideService(Database.Service, database),
@@ -238,7 +251,7 @@ export const TaskTool = Tool.define(
       })
 
       const runHere = Effect.fn("TaskTool.runTask")(function* () {
-        const parts = yield* ops.resolvePromptParts(params.prompt)
+        const parts = yield* ops.resolvePromptParts(forking ? `${FORK_BRIEF}\n${params.prompt}` : params.prompt)
         const result = yield* ops.prompt({
           messageID: MessageID.ascending(),
           sessionID: nextSession.id,

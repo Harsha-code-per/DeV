@@ -20,6 +20,7 @@ import { InvalidTool } from "./invalid"
 import { ShellJobTool } from "./shell-job"
 import { RememberTool } from "./remember"
 import { ArtifactTool } from "./artifact"
+import { MessageTool } from "./message"
 import { SkillTool } from "./skill"
 import { CatalogTool } from "./catalog"
 import * as Tool from "./tool"
@@ -101,6 +102,7 @@ const layer = Layer.effect(
     const shellJob = yield* ShellJobTool
     const remember = yield* RememberTool
     const artifact = yield* ArtifactTool
+    const message = yield* MessageTool
     const task = yield* TaskTool
     const read = yield* ReadTool
     const question = yield* QuestionTool
@@ -219,6 +221,7 @@ const layer = Layer.effect(
           shellJob: Tool.init(shellJob),
           remember: Tool.init(remember),
           artifact: Tool.init(artifact),
+          message: Tool.init(message),
           shell: Tool.init(shell),
           read: Tool.init(read),
           glob: Tool.init(globtool),
@@ -258,6 +261,7 @@ const layer = Layer.effect(
             tool.write,
             tool.notebook,
             tool.task,
+            tool.message,
             tool.fetch,
             tool.todo,
             tool.artifact,
@@ -293,12 +297,20 @@ const layer = Layer.effect(
         (item) => Permission.evaluate("task", item.name, agent.permission).action !== "deny",
       )
       const list = filtered.toSorted((a, b) => a.name.localeCompare(b.name))
-      const description = list
-        .map(
+      const fork =
+        !items.some((item) => item.name === "fork") &&
+        Permission.evaluate("task", "fork", agent.permission).action !== "deny"
+      const description = [
+        ...list.map(
           (item) =>
             `- ${item.name}: ${item.description ?? "This subagent should only be called manually by the user."}`,
-        )
-        .join("\n")
+        ),
+        ...(fork
+          ? [
+              "- fork: A copy of you that starts with this whole conversation, so it needs no briefing. Give it one part of the work to do in parallel; its report comes back to you.",
+            ]
+          : []),
+      ].join("\n")
       return ["Available agent types and the tools they have access to:", description].join("\n")
     })
 

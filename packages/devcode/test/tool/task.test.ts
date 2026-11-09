@@ -17,6 +17,7 @@ import { SessionRunState } from "@/session/run-state"
 import { SessionStatus } from "@/session/status"
 
 import { TaskTool, type TaskPromptOps } from "../../src/tool/task"
+import { MessageTool } from "../../src/tool/message"
 import { Truncate } from "@/tool/truncate"
 import { ToolRegistry } from "@/tool/registry"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -523,6 +524,84 @@ describe("tool.task", () => {
       expect(result.metadata.sessionId).not.toBe("ses_missing")
       expect(result.output).toContain(`<task id="${result.metadata.sessionId}" state="completed">`)
       expect(seen?.sessionID).toBe(result.metadata.sessionId)
+    }),
+  )
+
+  it.instance("a fork starts with the conversation so far and runs as the calling agent", () =>
+    Effect.gen(function* () {
+      const sessions = yield* Session.Service
+      const { chat, assistant } = yield* seed()
+      const tool = yield* TaskTool
+      const def = yield* tool.init()
+      let seen: SessionPrompt.PromptInput | undefined
+      const promptOps = stubOps({ text: "checked the tests", onPrompt: (input) => (seen = input) })
+
+      const result = yield* def.execute(
+        { description: "check the tests", prompt: "run the unit tests", subagent_type: "fork" },
+        {
+          sessionID: chat.id,
+          messageID: assistant.id,
+          agent: "build",
+          abort: new AbortController().signal,
+          extra: { promptOps },
+          messages: [],
+          metadata: () => Effect.void,
+          ask: () => Effect.void,
+        },
+      )
+
+      const child = yield* sessions.get(result.metadata.sessionId)
+      expect(child.parentID).toBe(chat.id)
+      expect(child.title).toBe("check the tests (fork)")
+      // The user message is copied; the assistant message making the call is not.
+      const copied = yield* sessions.messages({ sessionID: child.id })
+      expect(copied.map((msg) => msg.info.role)).toEqual(["user"])
+      expect(seen?.agent).toBe("build")
+      const text = seen?.parts[0]
+      expect(text?.type === "text" && text.text).toContain("You are a fork of the conversation above")
+      expect(text?.type === "text" && text.text).toEndWith("run the unit tests")
+      expect(result.output).toContain("checked the tests")
+    }),
+  )
+
+  it.instance("a subagent's message reaches the lead without waiting, and strangers are refused", () =>
+    Effect.gen(function* () {
+      const sessions = yield* Session.Service
+      const { chat } = yield* seed()
+      const child = yield* sessions.create({ parentID: chat.id, title: "fix the parser (@general subagent)", agent: "general" })
+      const other = yield* sessions.create({ title: "another conversation" })
+      const def = yield* (yield* MessageTool).init()
+      const delivered: SessionPrompt.PromptInput[] = []
+      const promptOps = stubOps({ onPrompt: (input) => delivered.push(input) })
+      const from = (sessionID: SessionID) => ({
+        sessionID,
+        messageID: MessageID.ascending(),
+        agent: "general",
+        abort: new AbortController().signal,
+        extra: { promptOps },
+        messages: [],
+        metadata: () => Effect.void,
+        ask: () => Effect.void,
+      })
+
+      const ok = yield* def.execute({ to: "lead", text: "parse() now returns null on empty input" }, from(child.id))
+      yield* Effect.yieldNow
+      expect(ok.title).toBe("Message to the lead")
+      expect(delivered).toHaveLength(1)
+      expect(delivered[0]?.sessionID).toBe(chat.id)
+      const part = delivered[0]?.parts[0]
+      expect(part?.type === "text" && part.synthetic).toBe(true)
+      expect(part?.type === "text" && part.text).toContain(`from="fix the parser (@general subagent) (task_id ${child.id})"`)
+
+      const back = yield* def.execute({ to: child.id, text: "thanks, also cover tabs" }, from(chat.id))
+      yield* Effect.yieldNow
+      expect(back.title).toBe("Message to fix the parser (@general subagent)")
+      expect(delivered.at(-1)?.sessionID).toBe(child.id)
+
+      expect((yield* def.execute({ to: other.id, text: "hi" }, from(child.id))).title).toBe("Message not sent")
+      expect((yield* def.execute({ to: "ses_nothing", text: "hi" }, from(child.id))).title).toBe("Message not sent")
+      expect((yield* def.execute({ to: child.id, text: "hi" }, from(child.id))).title).toBe("Message not sent")
+      expect(delivered).toHaveLength(2)
     }),
   )
 

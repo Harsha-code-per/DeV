@@ -423,7 +423,8 @@ export interface Interface {
     permission?: PermissionV1.Ruleset
     workspaceID?: WorkspaceV2.ID
   }) => Effect.Effect<Info>
-  readonly fork: (input: { sessionID: SessionID; messageID?: MessageID }) => Effect.Effect<Info, NotFound>
+  /** Copies the conversation (up to messageID) into a new session, or into `into`, such as a forked subagent's session. */
+  readonly fork: (input: { sessionID: SessionID; messageID?: MessageID; into?: SessionID }) => Effect.Effect<Info, NotFound>
   readonly touch: (sessionID: SessionID) => Effect.Effect<void>
   readonly get: (id: SessionID) => Effect.Effect<Info, NotFound>
   readonly setTitle: (input: { sessionID: SessionID; title: string }) => Effect.Effect<void>
@@ -689,17 +690,22 @@ const layer: Layer.Layer<
       })
     })
 
-    const fork = Effect.fn("Session.fork")(function* (input: { sessionID: SessionID; messageID?: MessageID }) {
+    const fork = Effect.fn("Session.fork")(function* (input: {
+      sessionID: SessionID
+      messageID?: MessageID
+      into?: SessionID
+    }) {
       const ctx = yield* InstanceState.context
       const original = yield* get(input.sessionID)
-      const title = getForkedTitle(original.title)
-      const session = yield* createNext({
-        directory: ctx.directory,
-        path: sessionPath(ctx.worktree, ctx.directory),
-        workspaceID: original.workspaceID,
-        title,
-        metadata: structuredClone(original.metadata),
-      })
+      const session = input.into
+        ? yield* get(input.into)
+        : yield* createNext({
+            directory: ctx.directory,
+            path: sessionPath(ctx.worktree, ctx.directory),
+            workspaceID: original.workspaceID,
+            title: getForkedTitle(original.title),
+            metadata: structuredClone(original.metadata),
+          })
       const msgs = yield* messages({ sessionID: input.sessionID })
       const idMap = new Map<string, MessageID>()
       const target = input.messageID ? msgs.findIndex((msg) => msg.info.id === input.messageID) : msgs.length

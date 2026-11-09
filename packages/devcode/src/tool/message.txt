@@ -1,0 +1,5 @@
+Send a message to another agent working in this conversation: "lead" for the main conversation, or a subagent, fork or background task by its task_id.
+
+Use it while work runs in parallel: to tell the lead something it needs before you finish, to ask the lead a question you can't answer yourself, to redirect a background task that is still running, or to tell another task about a change that affects its work (a renamed function, a moved file).
+
+The message reaches that agent at its next step. This tool doesn't wait for an answer; a reply comes to you as a message. Don't use it for your final result, which goes back to whoever started you on its own, and don't use it to talk to the person.
