@@ -1,5 +1,5 @@
 name: DeV Code
-description: Run DeV Code headless on the checked-out repository (dev -p), with any model.
+description: Run DeV Code headless on the checked-out repository (devcode run), with any model.
 branding:
   icon: terminal
   color: purple
@@ -30,9 +30,7 @@ runs:
       shell: bash
       env:
         VERSION: ${{ inputs.version }}
-      run: |
-        curl -fsSL https://raw.githubusercontent.com/Harsha-code-per/DeV/main/install | sh -s -- $VERSION
-        echo "$HOME/.devcode/bin" >> "$GITHUB_PATH"
+      run: npm install -g "@devcodeagent/cli@${VERSION:-latest}"
     - name: Run DeV Code
       id: run
       shell: bash
@@ -41,7 +39,7 @@ runs:
         MODEL: ${{ inputs.model }}
         MODE: ${{ inputs.permission-mode }}
       run: |
-        dev -p "$PROMPT" --model "$MODEL" --permission-mode "$MODE" < /dev/null | tee "$RUNNER_TEMP/devcode.txt"
+        devcode run --model "$MODEL" --permission-mode "$MODE" "$PROMPT" < /dev/null | tee "$RUNNER_TEMP/devcode.txt"
         {
           echo "result<<DEVCODE_EOF"
           cat "$RUNNER_TEMP/devcode.txt"

@@ -2,6 +2,10 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.22 (unreleased)
+
+- `@devcode` on GitHub. Run `devcode github install` in a repository: it adds a workflow, and then commenting `@devcode fix this` on an issue or pull request starts DeV Code in GitHub Actions. On an issue it opens a pull request with the change; on a pull request it pushes to that branch. Either way it replies with what it did. Only people with write access can start it, it runs on the free models by default with any provider key you add as a repository secret, and a `DEVCODE_MODEL` repository variable picks another model.
+
 ## 1.0.21 (2026-11-09)
 
 - Background sessions. `devcode run --bg "task"` starts the task and returns at once; it keeps working after you close the terminal. `devcode session list` shows each background session as working or "needs you" (`--running` lists only those), and `devcode attach --session <id>` joins it, so you can watch it or answer a permission prompt it's waiting on. The background server runs on this machine only, behind a password only you can read, and shuts itself down after 30 minutes with nothing to do (`DEV_BACKGROUND_IDLE_MINUTES` changes that). It reloads a project's settings before starting new work there when nothing else is running.

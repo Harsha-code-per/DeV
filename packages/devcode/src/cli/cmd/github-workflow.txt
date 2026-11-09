@@ -1,0 +1,115 @@
+# DeV Code on GitHub: mention @devcode in an issue, a pull request or a review comment and it does the work.
+# On an issue it opens a pull request with the change; on a pull request it pushes to that branch. Then it replies
+# with what it did. Only people with write access to this repository can start it.
+# Written by `devcode github install`. Add at least one AI provider key as a repository secret (see below).
+name: DeV Code
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  devcode:
+    if: >-
+      contains(github.event.comment.body || github.event.issue.body, '@devcode') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association || github.event.issue.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency: devcode-${{ github.event.issue.number || github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install DeV Code
+        run: npm install -g @devcodeagent/cli@latest
+
+      - name: Read the request
+        id: request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          event="$GITHUB_EVENT_PATH"
+          number=$(jq -r '.issue.number // .pull_request.number' "$event")
+          title=$(jq -r '.issue.title // .pull_request.title' "$event")
+          body=$(jq -r '.issue.body // .pull_request.body // ""' "$event")
+          ask=$(jq -r '.comment.body // .issue.body' "$event")
+          who=$(jq -r '.comment.user.login // .issue.user.login' "$event")
+          pr=$(jq -r 'if .pull_request or .issue.pull_request then "true" else "false" end' "$event")
+          comment=$(jq -r '.comment.id // empty' "$event")
+          # Show it was seen.
+          if [ -n "$comment" ] && [ "${{ github.event_name }}" = "issue_comment" ]; then
+            gh api "repos/$GITHUB_REPOSITORY/issues/comments/$comment/reactions" -f content=eyes > /dev/null || true
+          fi
+          # On a pull request, work on its branch.
+          if [ "$pr" = "true" ]; then gh pr checkout "$number"; fi
+          kind=$([ "$pr" = "true" ] && echo "pull request" || echo "issue")
+          {
+            echo "You are DeV Code, working in GitHub Actions on $GITHUB_REPOSITORY, $kind #$number: $title"
+            echo
+            echo "$body"
+            echo
+            echo "@$who asked:"
+            echo "$ask"
+            echo
+            echo "Make the change in this checkout and run the project's tests if it has them. Don't commit, push or"
+            echo "open pull requests yourself; the workflow does that. End with a short summary for the GitHub comment."
+          } > "$RUNNER_TEMP/prompt.txt"
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+          echo "pr=$pr" >> "$GITHUB_OUTPUT"
+          echo "title=$title" >> "$GITHUB_OUTPUT"
+
+      - name: Run DeV Code
+        env:
+          # A repository variable to use another model, e.g. groq/llama-3.3-70b-versatile; DeV Auto otherwise.
+          DEVCODE_MODEL: ${{ vars.DEVCODE_MODEL }}
+          # Any you've added as repository secrets; DeV Auto picks among the free ones.
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # A secret that isn't set arrives empty; drop it so DeV doesn't try that provider.
+          for key in GROQ_API_KEY OPENROUTER_API_KEY GOOGLE_GENERATIVE_AI_API_KEY NVIDIA_API_KEY CEREBRAS_API_KEY MISTRAL_API_KEY ANTHROPIC_API_KEY OPENAI_API_KEY; do
+            [ -z "$(printenv "$key")" ] && unset "$key"
+          done
+          devcode run --format json --model "${DEVCODE_MODEL:-auto/free}" --permission-mode auto "$(cat "$RUNNER_TEMP/prompt.txt")" < /dev/null > "$RUNNER_TEMP/events.jsonl" || true
+          jq -rs '[.[] | select(.type == "text") | .part.text] | last // "DeV Code finished without a summary."' "$RUNNER_TEMP/events.jsonl" > "$RUNNER_TEMP/answer.md"
+
+      - name: Share the result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ steps.request.outputs.number }}
+          PR: ${{ steps.request.outputs.pr }}
+          TITLE: ${{ steps.request.outputs.title }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          answer="$RUNNER_TEMP/answer.md"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -q -m "DeV Code: $TITLE" -m "Requested in #$NUMBER"
+            if [ "$PR" = "true" ]; then
+              git push || echo "_Couldn't push to this pull request's branch (a fork?), so the change wasn't saved._" >> "$answer"
+            else
+              branch="devcode/issue-$NUMBER-$GITHUB_RUN_ID"
+              git switch -q -c "$branch"
+              git push -q -u origin "$branch"
+              url=$(gh pr create --title "$TITLE" --body "$(cat "$answer"; printf '\n\nCloses #%s' "$NUMBER")" --head "$branch")
+              printf '\n\nPull request: %s' "$url" >> "$answer"
+            fi
+          fi
+          gh issue comment "$NUMBER" --body-file "$answer"

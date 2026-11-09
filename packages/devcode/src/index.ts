@@ -27,6 +27,7 @@ import fs from "fs"
 import path from "path"
 import { WebCommand } from "./cli/cmd/web"
 import { PrCommand } from "./cli/cmd/pr"
+import { GithubCommand } from "./cli/cmd/github"
 import { SessionCommand } from "./cli/cmd/session"
 import { DbCommand } from "./cli/cmd/db"
 import { errorMessage } from "./util/error"
@@ -131,6 +132,7 @@ const cli = yargs(args)
   .command(ExportCommand)
   .command(ImportCommand)
   .command(PrCommand)
+  .command(GithubCommand)
   .command(SessionCommand)
   .command(PluginCommand)
   .command(DbCommand)

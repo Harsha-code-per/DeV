@@ -316,74 +316,20 @@ Options:
 `;
 
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev github --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
+"devcode github <action>
 
-Commands:
-  devcode completion                   generate shell completion script
-  devcode acp                          start ACP (Agent Client Protocol) server
-  devcode mcp                          manage MCP (Model Context Protocol) servers
-  devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
-  devcode plugins <action> [target..]  install plugins (skills, commands, agents, hooks, MCP
-                                       servers) from plugin marketplaces
-  devcode [project]                    start dev tui                                       [default]
-  devcode attach [url]                 attach to a running DeV Code server, or without a url to your
-                                       background sessions (devcode run --bg)
-  devcode run [message..]              run dev with a message
-  devcode debug                        debugging and troubleshooting tools
-  devcode providers                    manage AI providers and credentials           [aliases: auth]
-  devcode agent                        manage agents
-  devcode upgrade [target]             update DeV Code to the latest release
-  devcode uninstall                    show how to remove DeV Code and its data
-  devcode serve                        starts a headless DeV Code server
-  devcode web                          start a DeV Code server and open the web interface
-  devcode models [provider]            list all available models
-  devcode stats                        show token usage and cost statistics
-  devcode export [sessionID]           export session data as JSON
-  devcode import <file>                import session data from JSON file
-  devcode pr <number>                  fetch and checkout a GitHub PR branch, then run dev
-  devcode session                      manage sessions
-  devcode plugin <module>              install plugin and update config              [aliases: plug]
-  devcode db                           database tools
-  devcode native-host [origin]         native messaging host for DeV for Chrome
+set up @devcode in your GitHub repository's issues and pull requests
 
 Positionals:
-  project  path to start dev in                                                             [string]
+  action  install: add the workflow                         [string] [required] [choices: "install"]
 
 Options:
-  -h, --help             show help                                                         [boolean]
-  -v, --version          show version number                                               [boolean]
-      --print-logs       print logs to stderr                                              [boolean]
-      --log-level        log level              [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure             run without external plugins                                      [boolean]
-      --port             port to listen on                                     [number] [default: 0]
-      --hostname         hostname to listen on                       [string] [default: "127.0.0.1"]
-      --mdns             enable mDNS service discovery (defaults hostname to 0.0.0.0)
-                                                                          [boolean] [default: false]
-      --mdns-domain      custom domain name for mDNS service (default: dev-ai.local)
-                                                                  [string] [default: "dev-ai.local"]
-      --cors             additional domains to allow for CORS                  [array] [default: []]
-  -m, --model            model to use in the format of provider/model                       [string]
-  -c, --continue         continue the last session                                         [boolean]
-  -s, --session          session id to continue                                             [string]
-      --fork             fork the session when continuing (use with --continue or --session)
-                                                                                           [boolean]
-      --prompt           prompt to use                                                      [string]
-      --agent            agent to use                                                       [string]
-      --permission-mode  manual (or default) asks, accept-edits approves file edits, plan researches
-                         read-only first, auto never asks, goal is auto that keeps going until your
-                         first message is verified done
-                     [string] [choices: "manual", "default", "accept-edits", "plan", "auto", "goal"]
-      --auto             start in auto mode: DeV never asks, and refuses risky actions itself
-                                                                          [boolean] [default: false]
-      --mini             start the minimal interactive interface          [boolean] [default: false]
-      --no-replay        disable mini session history replay on resume and after resize    [boolean]
-      --replay-limit     cap visible mini replay to the newest N messages                   [number]
-  -w, --worktree         work in a new git worktree under .dev/worktrees, on its own branch
-                         (optional name)                                                    [string]
-"
+  -h, --help        show help                                                              [boolean]
+  -v, --version     show version number                                                    [boolean]
+      --print-logs  print logs to stderr                                                   [boolean]
+      --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+      --pure        run without external plugins                                           [boolean]
+      --force       replace an existing devcode.yml                       [boolean] [default: false]"
 `;
 
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev pr --help 1`] = `
@@ -639,145 +585,37 @@ Options:
 `;
 
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev github install --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
+"devcode github <action>
 
-Commands:
-  devcode completion                   generate shell completion script
-  devcode acp                          start ACP (Agent Client Protocol) server
-  devcode mcp                          manage MCP (Model Context Protocol) servers
-  devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
-  devcode plugins <action> [target..]  install plugins (skills, commands, agents, hooks, MCP
-                                       servers) from plugin marketplaces
-  devcode [project]                    start dev tui                                       [default]
-  devcode attach [url]                 attach to a running DeV Code server, or without a url to your
-                                       background sessions (devcode run --bg)
-  devcode run [message..]              run dev with a message
-  devcode debug                        debugging and troubleshooting tools
-  devcode providers                    manage AI providers and credentials           [aliases: auth]
-  devcode agent                        manage agents
-  devcode upgrade [target]             update DeV Code to the latest release
-  devcode uninstall                    show how to remove DeV Code and its data
-  devcode serve                        starts a headless DeV Code server
-  devcode web                          start a DeV Code server and open the web interface
-  devcode models [provider]            list all available models
-  devcode stats                        show token usage and cost statistics
-  devcode export [sessionID]           export session data as JSON
-  devcode import <file>                import session data from JSON file
-  devcode pr <number>                  fetch and checkout a GitHub PR branch, then run dev
-  devcode session                      manage sessions
-  devcode plugin <module>              install plugin and update config              [aliases: plug]
-  devcode db                           database tools
-  devcode native-host [origin]         native messaging host for DeV for Chrome
+set up @devcode in your GitHub repository's issues and pull requests
 
 Positionals:
-  project  path to start dev in                                                             [string]
+  action  install: add the workflow                         [string] [required] [choices: "install"]
 
 Options:
-  -h, --help             show help                                                         [boolean]
-  -v, --version          show version number                                               [boolean]
-      --print-logs       print logs to stderr                                              [boolean]
-      --log-level        log level              [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure             run without external plugins                                      [boolean]
-      --port             port to listen on                                     [number] [default: 0]
-      --hostname         hostname to listen on                       [string] [default: "127.0.0.1"]
-      --mdns             enable mDNS service discovery (defaults hostname to 0.0.0.0)
-                                                                          [boolean] [default: false]
-      --mdns-domain      custom domain name for mDNS service (default: dev-ai.local)
-                                                                  [string] [default: "dev-ai.local"]
-      --cors             additional domains to allow for CORS                  [array] [default: []]
-  -m, --model            model to use in the format of provider/model                       [string]
-  -c, --continue         continue the last session                                         [boolean]
-  -s, --session          session id to continue                                             [string]
-      --fork             fork the session when continuing (use with --continue or --session)
-                                                                                           [boolean]
-      --prompt           prompt to use                                                      [string]
-      --agent            agent to use                                                       [string]
-      --permission-mode  manual (or default) asks, accept-edits approves file edits, plan researches
-                         read-only first, auto never asks, goal is auto that keeps going until your
-                         first message is verified done
-                     [string] [choices: "manual", "default", "accept-edits", "plan", "auto", "goal"]
-      --auto             start in auto mode: DeV never asks, and refuses risky actions itself
-                                                                          [boolean] [default: false]
-      --mini             start the minimal interactive interface          [boolean] [default: false]
-      --no-replay        disable mini session history replay on resume and after resize    [boolean]
-      --replay-limit     cap visible mini replay to the newest N messages                   [number]
-  -w, --worktree         work in a new git worktree under .dev/worktrees, on its own branch
-                         (optional name)                                                    [string]
-"
+  -h, --help        show help                                                              [boolean]
+  -v, --version     show version number                                                    [boolean]
+      --print-logs  print logs to stderr                                                   [boolean]
+      --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+      --pure        run without external plugins                                           [boolean]
+      --force       replace an existing devcode.yml                       [boolean] [default: false]"
 `;
 
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev github run --help 1`] = `
-"⠀              
-█▀▀▄ █▀▀█ █   █
-█  █ █▀▀▀ ▀▄ ▄▀
-▀▀▀  ▀▀▀▀   ▀
+"devcode github <action>
 
-Commands:
-  devcode completion                   generate shell completion script
-  devcode acp                          start ACP (Agent Client Protocol) server
-  devcode mcp                          manage MCP (Model Context Protocol) servers
-  devcode catalog <action> [target..]  browse and manage built-in skills, plugins and MCP servers
-  devcode plugins <action> [target..]  install plugins (skills, commands, agents, hooks, MCP
-                                       servers) from plugin marketplaces
-  devcode [project]                    start dev tui                                       [default]
-  devcode attach [url]                 attach to a running DeV Code server, or without a url to your
-                                       background sessions (devcode run --bg)
-  devcode run [message..]              run dev with a message
-  devcode debug                        debugging and troubleshooting tools
-  devcode providers                    manage AI providers and credentials           [aliases: auth]
-  devcode agent                        manage agents
-  devcode upgrade [target]             update DeV Code to the latest release
-  devcode uninstall                    show how to remove DeV Code and its data
-  devcode serve                        starts a headless DeV Code server
-  devcode web                          start a DeV Code server and open the web interface
-  devcode models [provider]            list all available models
-  devcode stats                        show token usage and cost statistics
-  devcode export [sessionID]           export session data as JSON
-  devcode import <file>                import session data from JSON file
-  devcode pr <number>                  fetch and checkout a GitHub PR branch, then run dev
-  devcode session                      manage sessions
-  devcode plugin <module>              install plugin and update config              [aliases: plug]
-  devcode db                           database tools
-  devcode native-host [origin]         native messaging host for DeV for Chrome
+set up @devcode in your GitHub repository's issues and pull requests
 
 Positionals:
-  project  path to start dev in                                                             [string]
+  action  install: add the workflow                         [string] [required] [choices: "install"]
 
 Options:
-  -h, --help             show help                                                         [boolean]
-  -v, --version          show version number                                               [boolean]
-      --print-logs       print logs to stderr                                              [boolean]
-      --log-level        log level              [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
-      --pure             run without external plugins                                      [boolean]
-      --port             port to listen on                                     [number] [default: 0]
-      --hostname         hostname to listen on                       [string] [default: "127.0.0.1"]
-      --mdns             enable mDNS service discovery (defaults hostname to 0.0.0.0)
-                                                                          [boolean] [default: false]
-      --mdns-domain      custom domain name for mDNS service (default: dev-ai.local)
-                                                                  [string] [default: "dev-ai.local"]
-      --cors             additional domains to allow for CORS                  [array] [default: []]
-  -m, --model            model to use in the format of provider/model                       [string]
-  -c, --continue         continue the last session                                         [boolean]
-  -s, --session          session id to continue                                             [string]
-      --fork             fork the session when continuing (use with --continue or --session)
-                                                                                           [boolean]
-      --prompt           prompt to use                                                      [string]
-      --agent            agent to use                                                       [string]
-      --permission-mode  manual (or default) asks, accept-edits approves file edits, plan researches
-                         read-only first, auto never asks, goal is auto that keeps going until your
-                         first message is verified done
-                     [string] [choices: "manual", "default", "accept-edits", "plan", "auto", "goal"]
-      --auto             start in auto mode: DeV never asks, and refuses risky actions itself
-                                                                          [boolean] [default: false]
-      --mini             start the minimal interactive interface          [boolean] [default: false]
-      --no-replay        disable mini session history replay on resume and after resize    [boolean]
-      --replay-limit     cap visible mini replay to the newest N messages                   [number]
-  -w, --worktree         work in a new git worktree under .dev/worktrees, on its own branch
-                         (optional name)                                                    [string]
-"
+  -h, --help        show help                                                              [boolean]
+  -v, --version     show version number                                                    [boolean]
+      --print-logs  print logs to stderr                                                   [boolean]
+      --log-level   log level                   [string] [choices: "DEBUG", "INFO", "WARN", "ERROR"]
+      --pure        run without external plugins                                           [boolean]
+      --force       replace an existing devcode.yml                       [boolean] [default: false]"
 `;
 
 exports[`devcode CLI help-text snapshots every documented command emits stable help text: dev db path --help 1`] = `
