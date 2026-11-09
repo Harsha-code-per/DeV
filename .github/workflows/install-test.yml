@@ -92,7 +92,7 @@ jobs:
       - name: Installs and runs on ${{ matrix.image }}
         run: |
           docker run --rm -e BASE="https://github.com/$GH_REPO/releases/download/$TAG" ${{ matrix.image }} sh -c \
-            '${{ matrix.install }} && devcode --version && devcode upgrade' | tee out.txt
+            '${{ matrix.install }} && devcode --version && devcode upgrade' 2>&1 | tee out.txt
           grep -qx "${TAG#v}" out.txt
           grep -q "package manager" out.txt
 
