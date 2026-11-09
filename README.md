@@ -29,8 +29,8 @@ DeV doesn't sell or resell AI. You connect the model, and DeV works with all of 
 | Option | What it costs | How |
 |---|---|---|
 | **Free tiers** | Nothing. The provider sets its own limits. | `/connect` lists providers with a free tier first. **DeV Auto** moves between the free models you've connected, sends images and PDFs to one that can read them, and learns which ones work for you. |
-| **Models on your machine** | Nothing, and nothing leaves your computer | Running local models (Ollama, LM Studio) are found automatically. |
-| **Your own key** | What your provider charges you | Add a key for any major provider, or any OpenAI-compatible endpoint, with `/connect`. |
+| **Models on your machine** | Nothing, and nothing leaves your computer | A model server running on your machine is found automatically. |
+| **Your own key** | What your provider charges you | Add a key for any major provider, or any endpoint that speaks the standard chat completions API, with `/connect`. |
 
 Your keys stay on your machine. DeV has no account, no server in the middle and no telemetry you didn't choose.
 
