@@ -2,7 +2,7 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## 1.0.23 (unreleased)
+## 1.0.23 (2026-11-09)
 
 - The advisor. When DeV is stuck after a couple of failed attempts, or faces a design choice that's costly to undo, it can ask a stronger model for advice and then carry on itself. On DeV Auto it asks a different free model from the one doing the work, preferring one that reasons. Set `"advisor_model": "provider/model"` to choose it, or turn the advisor off with `"permission": { "advisor": "deny" }`. A session asks a few times at most.
 
