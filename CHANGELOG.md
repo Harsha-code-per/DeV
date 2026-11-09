@@ -2,6 +2,11 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.25 (unreleased)
+
+- Linux packages. Every release now has a `.deb` for Debian, Ubuntu, Mint and Pop!_OS and an `.rpm` for Fedora, RHEL, Rocky and AlmaLinux, for x64 and arm64, and an Arch package (`devcode-bin`). They install DeV to `/usr/lib/devcode` with `devcode` on your PATH. The install commands are on trydev.work and in the README.
+- `devcode upgrade` and `/update` recognise these system installs and tell you the apt, dnf or yay command to run, instead of trying to change files only root can change.
+
 ## 1.0.24 (2026-11-09)
 
 - Vim keys in the prompt. Type `/vim` to turn them on or off; DeV remembers the choice. Esc switches to normal mode, and the mode shows under the prompt. Motions (`w b e`, `0 ^ $`, `f t ; ,`, `gg G`, `h j k l`) take counts, and operators (`d c y`) work with motions and text objects such as `iw`, `i"` and `i(`. Also `x`, `r`, `~`, `J`, `p`, `.` to repeat, `u` and `ctrl+r` to undo and redo a whole change, and visual mode with `v` and `V`. Enter sends the prompt from either mode, and Esc in normal mode still interrupts DeV.
