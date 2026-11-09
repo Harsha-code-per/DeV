@@ -2,7 +2,7 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## 1.0.26 (unreleased)
+## 1.0.26 (2026-11-09)
 
 - Pages you can see. Ask for something to look at, such as "show me a chart of the scores in scores.csv", a report or a diagram, and DeV makes a web page and opens it in your browser. Pages stay on your computer, in DeV's data folder with one folder per project, and asking again by the same name updates the page instead of making a new one. In the TUI the step shows the page's name and where it is. Turn it off with `"permission": { "artifact": "deny" }`.
 
