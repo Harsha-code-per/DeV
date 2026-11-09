@@ -2,7 +2,7 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
-## 1.0.20 (unreleased)
+## 1.0.20 (2026-11-09)
 
 - Hooks written for other agents, including the ones inside marketplace plugins, now work unchanged:
   - Hooks see the common tool names (`Bash`, `Edit`, `Write`, `Read`) and field names (`tool_input.file_path`), plus `tool_use_id`. Matchers work as lists (`Edit|Write`) or patterns (`^Notebook`, `mcp__.*`).
