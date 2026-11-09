@@ -1140,6 +1140,8 @@ export function Prompt(props: PromptProps) {
           title: "Previous prompt history",
           category: "Prompt",
           run() {
+            // On an empty subagent screen, ↑ goes back to the main conversation instead.
+            if (!input.plainText && props.sessionID && sync.session.get(props.sessionID)?.parentID) return false
             if (input.cursorOffset !== 0) {
               if (input.scrollY + input.visualCursor.visualRow === 0) input.cursorOffset = 0
               return false
@@ -1226,8 +1228,11 @@ export function Prompt(props: PromptProps) {
     if (workspace.creating() || move.creating()) return false
     if (auto()?.visible) return false
     if (!store.prompt.input) return false
-    const agent = local.agent.current()
-    if (!agent) return false
+    const current = local.agent.current()
+    if (!current) return false
+    // On a subagent's own screen, what you type goes to that agent, as that agent.
+    const child = props.sessionID ? sync.session.get(props.sessionID) : undefined
+    const agent = child?.parentID && child.agent ? { ...current, name: child.agent } : current
     const trimmed = store.prompt.input.trim()
     if (trimmed === "exit" || trimmed === "quit" || trimmed === ":q") {
       void exit()

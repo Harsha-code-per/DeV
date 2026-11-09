@@ -234,15 +234,19 @@ export function Session() {
         )
       : [],
   )
+  // The main screen answers for the whole family; a subagent's own screen answers for that subagent.
   const permissions = createMemo(() => {
-    if (session()?.parentID) return []
+    const own = session()
+    if (own?.parentID) return sync.data.permission[own.id] ?? []
     return children().flatMap((x) => sync.data.permission[x.id] ?? [])
   })
   const questions = createMemo(() => {
-    if (session()?.parentID) return []
+    const own = session()
+    if (own?.parentID) return sync.data.question[own.id] ?? []
     return children().flatMap((x) => sync.data.question[x.id] ?? [])
   })
-  const visible = createMemo(() => !session()?.parentID && permissions().length === 0 && questions().length === 0)
+  // Subagent screens get a prompt too: what you type there goes to that agent, even while it works.
+  const visible = createMemo(() => permissions().length === 0 && questions().length === 0)
   const disabled = createMemo(() => permissions().length > 0 || questions().length > 0)
 
   const pending = createMemo(() => {
@@ -519,9 +523,11 @@ export function Session() {
     if (sessions[next]) enterChild(sessions[next].id)
   }
 
+  // On a subagent's screen the arrows move between agents only while the prompt is empty; once you type, they edit.
   function childSessionHandler(func: () => void) {
     return () => {
       if (!session()?.parentID || dialog.stack.length > 0) return
+      if (prompt?.current.input) return false
       func()
     }
   }

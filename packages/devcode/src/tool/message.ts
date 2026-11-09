@@ -21,6 +21,7 @@ export const Parameters = Schema.Struct({
 // Two agents replying to each other could otherwise go on forever.
 const MAX_PER_SESSION = 20
 const sent = new Map<string, number>()
+const STATUS_CHECK = /\b(status|progress|done yet|finished yet|are you done|is it done|how is it going|still running)\b/i
 
 export const MessageTool = Tool.define(
   "message",
@@ -56,6 +57,10 @@ export const MessageTool = Tool.define(
           if (!target || !sameConversation)
             return notSent(`No agent "${params.to}" in this conversation. Use "lead", or a task_id from a task result.`)
           if (target.id === ctx.sessionID) return notSent("That is you. Send it to the lead or another task.")
+
+          // Free models tend to poll background tasks, which only spends requests: the result arrives on its own.
+          if (target.parentID && STATUS_CHECK.test(params.text))
+            return notSent("No need to ask: you're told automatically when it finishes. Carry on, or end your turn.")
 
           const from = yield* sessions.get(ctx.sessionID)
           const sender = from.parentID ? `${from.title} (task_id ${from.id})` : "the lead"

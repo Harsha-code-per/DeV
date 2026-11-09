@@ -598,6 +598,9 @@ describe("tool.task", () => {
       expect(back.title).toBe("Message to fix the parser (@general subagent)")
       expect(delivered.at(-1)?.sessionID).toBe(child.id)
 
+      expect((yield* def.execute({ to: child.id, text: "Status check: is it done yet?" }, from(chat.id))).output).toContain(
+        "told automatically",
+      )
       expect((yield* def.execute({ to: other.id, text: "hi" }, from(child.id))).title).toBe("Message not sent")
       expect((yield* def.execute({ to: "ses_nothing", text: "hi" }, from(child.id))).title).toBe("Message not sent")
       expect((yield* def.execute({ to: child.id, text: "hi" }, from(child.id))).title).toBe("Message not sent")
