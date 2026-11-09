@@ -24,7 +24,7 @@ jobs:
     runs-on: macos-latest
     permissions:
       contents: write
-      actions: write # starts install-test on the new release
+      actions: write # starts the packages workflow on the new release
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -53,9 +53,10 @@ jobs:
           gh release create "$GITHUB_REF_NAME" dist/release/* --repo "$GITHUB_REPOSITORY" \
             --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag $prerelease
 
-      # A release made with the workflow token starts no other workflow by itself.
-      - name: Test the install on clean machines
-        run: gh workflow run install-test.yml --repo "$GITHUB_REPOSITORY" -f tag="$GITHUB_REF_NAME"
+      # A release made with the workflow token starts no other workflow by itself. The packages
+      # workflow builds the Linux packages and then starts install-test on clean machines.
+      - name: Linux packages, then the install test
+        run: gh workflow run packages.yml --repo "$GITHUB_REPOSITORY" -f tag="$GITHUB_REF_NAME"
 
   # npm: the SDK and plugin SDK for plugin authors, then one small launcher package that downloads
   # the GitHub release. npm signs in through trusted publishing (no stored token), which with its

@@ -1,6 +1,6 @@
 class Devcode < Formula
-  desc "Free-first, any-model AI coding assistant for the terminal"
-  homepage "https://github.com/Harsha-code-per/DeV"
+  desc "Open-source coding agent for your terminal. Bring any model."
+  homepage "https://trydev.work"
   version "@VERSION@"
   license "MIT"
 

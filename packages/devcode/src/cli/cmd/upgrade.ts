@@ -6,6 +6,7 @@ import { errorMessage } from "@/util/error"
 import { SourceInstall } from "../source-install"
 import { UI } from "../ui"
 import { cmd } from "./cmd"
+import { Installation } from "@/installation"
 
 declare const DEV_LIBC: string | undefined
 
@@ -85,6 +86,7 @@ async function download(url: string, file?: string) {
 }
 
 function packageManager(binary: string, version: string) {
+  if (binary.startsWith("/usr/lib/devcode/")) return Installation.systemUpdate()
   const parts = binary.split(path.sep)
   if (parts.includes("node_modules") || parts.includes("npm")) return `npm install -g @devcodeagent/cli@${version}`
   if (parts.includes("Cellar")) return "brew upgrade devcode"

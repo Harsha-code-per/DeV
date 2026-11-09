@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // Release assets from packages/devcode/dist (script/build.ts): one archive per target, SHA256SUMS,
-// and the Homebrew formula and Scoop manifest filled in from packaging/. Output: dist/release.
+// and the Homebrew formula, Scoop manifest and AUR PKGBUILD filled in from packaging/. Output: dist/release.
 // Usage: bun script/packaging.ts <version>
 import { $ } from "bun"
 import { readdir } from "fs/promises"
@@ -37,7 +37,7 @@ const sums = new Map(
 )
 await Bun.write(path.join(out, "SHA256SUMS"), [...sums].map(([file, hash]) => `${hash}  ${file}\n`).join(""))
 
-for (const template of ["homebrew/devcode.rb", "scoop/devcode.json"]) {
+for (const template of ["homebrew/devcode.rb", "scoop/devcode.json", "aur/PKGBUILD"]) {
   const text = (await Bun.file(path.join(root, "packaging", template)).text())
     .replaceAll("@VERSION@", version)
     .replace(/@SHA256:([^@]+)@/g, (_, file: string) => {

@@ -1,0 +1,19 @@
+# .deb and .rpm packages, built from a release's Linux archive by .github/workflows/packages.yml.
+# The program and the files beside it go in /usr/lib/devcode, with devcode on PATH through /usr/bin.
+name: devcode
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+maintainer: Harshavardhan K <Harsha-code-per@users.noreply.github.com>
+description: Open-source coding agent for your terminal. Every pro feature, any model, free.
+vendor: DeV
+homepage: https://trydev.work
+license: MIT
+section: devel
+contents:
+  - src: ${SRC}/
+    dst: /usr/lib/devcode/
+    type: tree
+  - src: /usr/lib/devcode/devcode
+    dst: /usr/bin/devcode
+    type: symlink

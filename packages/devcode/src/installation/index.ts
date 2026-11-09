@@ -14,7 +14,7 @@ import { Process } from "@/util/process"
 // DeV Code updates come only from DeV's own GitHub releases, through `devcode upgrade` or the package
 // manager it was installed with. Nothing here ever installs another product.
 
-export type Method = "curl" | "npm" | "brew" | "scoop" | "unknown"
+export type Method = "curl" | "npm" | "brew" | "scoop" | "system" | "unknown"
 
 export const Event = InstallationEvent
 
@@ -64,6 +64,10 @@ const layer = Layer.succeed(
       return yield* latestRelease()
     }),
     upgrade: Effect.fn("Installation.upgrade")(function* (method: Method, target: string) {
+      if (method === "system")
+        return yield* new UpgradeFailedError({
+          stderr: `DeV Code was installed with your system's package manager. Update it with:\n  ${systemUpdate()}`,
+        })
       const command = upgradeCommand(method, target)
       if (!command)
         return yield* new UpgradeFailedError({ stderr: "DeV Code is running from source; update it with git pull." })
@@ -82,7 +86,10 @@ const layer = Layer.succeed(
 
 function installMethod(): Method {
   if (InstallationLocal || SourceInstall.checkout()) return "unknown"
-  const parts = fs.realpathSync(process.execPath).split(path.sep)
+  const binary = fs.realpathSync(process.execPath)
+  // The .deb, .rpm and AUR packages all install to /usr/lib/devcode, which only root can change.
+  if (binary.startsWith("/usr/lib/devcode/")) return "system"
+  const parts = binary.split(path.sep)
   // The npm launcher keeps the program in ~/.devcode/npm/<version>.
   if (parts.includes("node_modules") || parts.includes("npm")) return "npm"
   if (parts.includes("Cellar")) return "brew"
@@ -95,6 +102,16 @@ function upgradeCommand(method: Method, target: string) {
   if (method === "npm") return ["npm", "install", "-g", `@devcodeagent/cli@${target}`]
   if (method === "brew") return ["brew", "upgrade", "devcode"]
   if (method === "scoop") return ["scoop", "install", `devcode@${target}`]
+}
+
+/** How to update a .deb, .rpm or AUR install, which only the system's package manager may change. */
+export function systemUpdate() {
+  const latest = "https://github.com/Harsha-code-per/DeV/releases/latest/download"
+  const arch = process.arch === "arm64" ? "arm64" : "x64"
+  if (fs.existsSync("/usr/bin/pacman")) return "yay -Syu devcode-bin"
+  if (fs.existsSync("/usr/bin/dpkg"))
+    return `curl -fsSLo /tmp/devcode.deb ${latest}/devcode-linux-${arch}.deb && sudo apt install /tmp/devcode.deb`
+  return `sudo dnf install ${latest}/devcode-linux-${arch}.rpm`
 }
 
 // github.com's own "latest release" link redirects to the newest tag. Unlike the API, which allows 60

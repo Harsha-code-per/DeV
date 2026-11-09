@@ -1,0 +1,23 @@
+# Maintainer: Harshavardhan K <Harsha-code-per@users.noreply.github.com>
+# Filled in by script/packaging.ts for each release and published to the AUR as devcode-bin.
+pkgname=devcode-bin
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc="Open-source coding agent for your terminal. Every pro feature, any model, free."
+arch=('x86_64' 'aarch64')
+url="https://trydev.work"
+license=('MIT')
+provides=('devcode')
+conflicts=('devcode')
+# The program is a single compiled executable with its code appended; stripping it breaks it.
+options=('!strip' '!debug')
+source_x86_64=("devcode-@VERSION@-x86_64.tar.gz::https://github.com/Harsha-code-per/DeV/releases/download/v@VERSION@/devcode-linux-x64.tar.gz")
+source_aarch64=("devcode-@VERSION@-aarch64.tar.gz::https://github.com/Harsha-code-per/DeV/releases/download/v@VERSION@/devcode-linux-arm64.tar.gz")
+sha256sums_x86_64=('@SHA256:devcode-linux-x64.tar.gz@')
+sha256sums_aarch64=('@SHA256:devcode-linux-arm64.tar.gz@')
+
+package() {
+  install -d "$pkgdir/usr/lib/devcode" "$pkgdir/usr/bin"
+  cp -a --no-preserve=ownership "$srcdir/devcode" "$srcdir/vendor" "$pkgdir/usr/lib/devcode/"
+  ln -s /usr/lib/devcode/devcode "$pkgdir/usr/bin/devcode"
+}

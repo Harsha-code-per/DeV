@@ -76,6 +76,44 @@ jobs:
             'apk add -q curl && sh /install "$TAG" && sh -lc "devcode --version"' | tee out.txt
           test "$(tail -1 out.txt)" = "${TAG#v}"
 
+  # The .deb and .rpm from the packages workflow, installed the way the website says.
+  linux-packages:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { image: "ubuntu:24.04", install: "apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/null && curl -fsSLo /tmp/devcode.deb $BASE/devcode-linux-x64.deb && apt-get install -y -qq /tmp/devcode.deb >/dev/null" }
+          - { image: "debian:12", install: "apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/null && curl -fsSLo /tmp/devcode.deb $BASE/devcode-linux-x64.deb && apt-get install -y -qq /tmp/devcode.deb >/dev/null" }
+          - { image: "fedora:latest", install: "dnf install -y -q $BASE/devcode-linux-x64.rpm" }
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release to test
+        run: echo "TAG=${TAG:-$(gh release view --json tagName -q .tagName)}" >> "$GITHUB_ENV"
+      - name: Installs and runs on ${{ matrix.image }}
+        run: |
+          docker run --rm -e BASE="https://github.com/$GH_REPO/releases/download/$TAG" ${{ matrix.image }} sh -c \
+            '${{ matrix.install }} && devcode --version && devcode upgrade' | tee out.txt
+          grep -qx "${TAG#v}" out.txt
+          grep -q "package manager" out.txt
+
+  scoop:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Release to test
+        run: |
+          $tag = if ($env:TAG) { $env:TAG } else { gh release view --json tagName -q .tagName }
+          "TAG=$tag" >> $env:GITHUB_ENV
+      - name: Installs with Scoop
+        run: |
+          iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
+          $env:Path = "$HOME\scoop\shims;$env:Path"
+          scoop install "https://github.com/$env:GH_REPO/releases/download/$env:TAG/devcode.json"
+          $version = (devcode --version).Trim()
+          if ($version -ne $env:TAG.TrimStart('v')) { throw "got $version" }
+
   windows:
     runs-on: windows-latest
     defaults:

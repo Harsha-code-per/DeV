@@ -1,0 +1,111 @@
+name: packages
+
+# Linux packages for a release, built from its own archives: .deb and .rpm attached to the release,
+# the AUR package devcode-bin, and the Homebrew tap. The release workflow starts this; it can also be
+# run by hand for an existing tag. Then it starts install-test, which installs each package.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, such as v1.0.25
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: packages-${{ inputs.tag }}
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  GH_REPO: ${{ github.repository }}
+  TAG: ${{ inputs.tag }}
+
+jobs:
+  deb-rpm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: nfpm
+        run: |
+          curl -fsSLo nfpm.tar.gz https://github.com/goreleaser/nfpm/releases/download/v2.47.0/nfpm_2.47.0_Linux_x86_64.tar.gz
+          echo "0660ca602b2d2d2ae4781a06c692b3eeb9d437ffea05b831d76e41f4a3188783  nfpm.tar.gz" | sha256sum -c -
+          tar -xzf nfpm.tar.gz nfpm
+      # Names without the version, so releases/latest/download/<name> always points at the newest.
+      - name: Build
+        run: |
+          mkdir -p out
+          for pair in x64:amd64 arm64:arm64; do
+            name="${pair%%:*}"
+            gh release download "$TAG" -p "devcode-linux-$name.tar.gz"
+            mkdir "stage-$name" && tar -xzf "devcode-linux-$name.tar.gz" -C "stage-$name"
+            for format in deb rpm; do
+              ARCH="${pair##*:}" VERSION="${TAG#v}" SRC="stage-$name" \
+                ./nfpm package -f packaging/nfpm.yaml -p "$format" -t "out/devcode-linux-$name.$format"
+            done
+          done
+          ls -l out
+      - name: Attach to the release
+        run: gh release upload "$TAG" out/* --clobber
+
+  aur:
+    needs: deb-rpm
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Build and install the package, as an Arch user would
+        run: |
+          pacman -Syu --noconfirm --needed base-devel github-cli git openssh >/dev/null
+          useradd -m builder
+          cd /home/builder
+          gh release download "$TAG" -p PKGBUILD
+          chown builder PKGBUILD
+          su builder -c "makepkg --noconfirm && makepkg --printsrcinfo > .SRCINFO"
+          pacman -U --noconfirm devcode-bin-*.pkg.tar.zst
+          devcode --version
+      # Publishes once the AUR account's SSH key is saved as the AUR_SSH_KEY secret.
+      - name: Publish to the AUR
+        env:
+          AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
+        if: ${{ env.AUR_SSH_KEY != '' && !contains(inputs.tag, '-') }}
+        run: |
+          cd /home/builder
+          mkdir -p ~/.ssh && printf '%s\n' "$AUR_SSH_KEY" > ~/.ssh/aur && chmod 600 ~/.ssh/aur
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/aur"
+          git clone ssh://aur@aur.archlinux.org/devcode-bin.git aur
+          cp PKGBUILD .SRCINFO aur/
+          cd aur
+          git -c user.name="Harshavardhan K" -c user.email="Harsha-code-per@users.noreply.github.com" commit -qam "devcode-bin ${TAG#v}" || exit 0
+          git push -q origin HEAD:master
+
+  # Publishes once the Harsha-code-per/homebrew-tap repository and a token that can push to it
+  # (the HOMEBREW_TAP_TOKEN secret) exist.
+  homebrew:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(inputs.tag, '-') }}
+    steps:
+      - name: Update the tap
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        if: ${{ env.TAP_TOKEN != '' }}
+        run: |
+          git clone -q "https://x-access-token:$TAP_TOKEN@github.com/Harsha-code-per/homebrew-tap.git" tap
+          mkdir -p tap/Formula
+          gh release download "$TAG" -p devcode.rb -O tap/Formula/devcode.rb --clobber
+          cd tap
+          git add Formula/devcode.rb
+          git -c user.name="Harshavardhan K" -c user.email="Harsha-code-per@users.noreply.github.com" commit -qm "devcode ${TAG#v}" || exit 0
+          git push -q
+
+  install-test:
+    needs: deb-rpm
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - run: gh workflow run install-test.yml -f tag="$TAG"
