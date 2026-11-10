@@ -64,7 +64,7 @@ const withHome = <A, E, R>(home: string, self: Effect.Effect<A, E, R>) =>
   )
 
 describe("skill", () => {
-  it.effect("formats verbose locations as XML-safe filesystem paths", () =>
+  it.effect("the verbose list names skills without their file paths", () =>
     Effect.sync(() => {
       const output = Skill.fmt(
         [
@@ -84,10 +84,10 @@ describe("skill", () => {
         { verbose: true },
       )
 
-      expect(output).toContain("<location>/tmp/plugin.git#v1.3.0/SKILL.md</location>")
-      expect(output).toContain("<location>&lt;built-in&gt;</location>")
-      expect(output).not.toContain("file://")
-      expect(output).not.toContain("%23")
+      expect(output).toContain("<name>tagged-skill</name>")
+      expect(output).toContain("<description>A built-in skill.</description>")
+      expect(output).not.toContain("SKILL.md")
+      expect(output).not.toContain("<location>")
     }),
   )
 

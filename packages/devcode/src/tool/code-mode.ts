@@ -62,6 +62,9 @@ export function describeCatalog(mcpTools: Record<string, MCP.McpTool>, servers: 
       [...groupByServer(mcpTools, servers).values()].flat(),
       () => () => Effect.fail(toolError("Tool preview is not executable.")),
     ),
+    // Sent with every turn, used in few: a small server is listed whole, a large one in part plus search.
+    // At the default 2,000 the browser server alone cost about 2,000 tokens a turn.
+    discovery: { catalogBudget: 400 },
   }).instructions()
 }
 

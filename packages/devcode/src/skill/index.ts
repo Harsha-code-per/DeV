@@ -15,8 +15,8 @@ import { ConfigMarkdown } from "@/config/markdown"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Glob } from "@dev-ai/core/util/glob"
 import { Discovery } from "./discovery"
+import RESEARCH from "./research.txt"
 import { isRecord } from "@/util/record"
-import { escapeHtml } from "@/util/html"
 import { Marketplace } from "@/marketplace"
 import { McpCatalog } from "@/mcp/catalog"
 import type { PermissionV1 } from "@dev-ai/core/v1/permission"
@@ -34,8 +34,12 @@ const SKILL_PATTERN = "**/SKILL.md"
 // actual schemas instead of guesses.
 const CUSTOMIZE_DEV_SKILL_NAME = "customize-devcode"
 const CUSTOMIZE_DEV_SKILL_DESCRIPTION =
-  "Use ONLY when the user is editing or creating devcode's own configuration: dev.json, dev.jsonc, files under .dev/, or files under ~/.config/devcode/. Also use when creating or fixing devcode agents, subagents, skills, plugins, MCP servers, or permission rules. Do not use for the user's own application code, or for any project that is not configuring devcode itself."
+  "Only for devcode's own configuration: dev.json(c), .dev/, ~/.config/devcode/, and devcode agents, skills, plugins, MCP servers or permission rules. Not for the user's own code."
 const CUSTOMIZE_DEV_SKILL_BODY = SkillPlugin.CustomizeDevcodeContent
+// Kept out of the system prompt, which every coding turn pays for; loaded when a question is about the world.
+const RESEARCH_SKILL_NAME = "research"
+const RESEARCH_SKILL_DESCRIPTION =
+  "Use before answering a question about the world (events, prices, products, jobs, news, people, places) with web search."
 
 export const Info = Schema.Struct({
   name: Schema.String,
@@ -435,6 +439,12 @@ const layer = Layer.effect(
           location: "<built-in>",
           content: CUSTOMIZE_DEV_SKILL_BODY,
         }
+        s.skills[RESEARCH_SKILL_NAME] = {
+          name: RESEARCH_SKILL_NAME,
+          description: RESEARCH_SKILL_DESCRIPTION,
+          location: "<built-in>",
+          content: RESEARCH,
+        }
         yield* loadSkills(s, yield* InstanceState.get(discovered), events)
         return s
       }),
@@ -526,7 +536,7 @@ export function fmt(list: Info[], opts: { verbose: boolean }) {
           "  <skill>",
           `    <name>${skill.name}</name>`,
           `    <description>${skill.description}</description>`,
-          `    <location>${escapeHtml(skill.location)}</location>`,
+          // No location: the skill tool loads by name and tells the model the skill's folder then.
           "  </skill>",
         ]),
       "</available_skills>",
