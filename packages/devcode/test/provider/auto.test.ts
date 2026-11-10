@@ -102,6 +102,69 @@ describe("AutoProvider", () => {
     expect(Date.now() - started).toBeLessThan(2000)
   })
 
+  test("each model is asked for as much output as it allows, never less than the request", async () => {
+    const asked = async (output: number | undefined, requested: number | undefined) => {
+      const seen: (number | undefined)[] = []
+      const lm = AutoProvider.language([
+        {
+          model: { ...model("cerebras", `out-${output}`), limit: { context: 100_000, output } } as Provider.Model,
+          language: {
+            doGenerate: async (options: { maxOutputTokens?: number }) => (seen.push(options.maxOutputTokens), {}),
+          } as unknown as LanguageModelV3,
+        },
+      ])
+      await lm.doGenerate({ prompt: [], maxOutputTokens: requested } as never)
+      return seen[0]
+    }
+    expect(await asked(40_960, 8_192)).toBe(32_000)
+    expect(await asked(4_096, 8_192)).toBe(8_192)
+    expect(await asked(undefined, 8_192)).toBe(8_192)
+    expect(await asked(40_960, undefined)).toBeUndefined()
+  })
+
+  test("a model cut off at its allowance gets twice as much next time, unless the provider refuses", async () => {
+    const seen: (number | undefined)[] = []
+    const reply = { fail: false }
+    const cut = { ...model("nvidia", "thinks-long"), limit: { context: 100_000, output: 8_192 } } as Provider.Model
+    const lm = AutoProvider.language([
+      {
+        model: cut,
+        language: {
+          doStream: async (options: { maxOutputTokens?: number }) => {
+            seen.push(options.maxOutputTokens)
+            if (reply.fail)
+              throw new APICallError({ message: "max_tokens", url: "https://example.com", requestBodyValues: {}, statusCode: 400 })
+            return {
+              stream: new ReadableStream({
+                start(controller) {
+                  controller.enqueue({ type: "reasoning-delta", id: "r", delta: "still thinking" })
+                  controller.enqueue({ type: "finish", finishReason: { unified: "length", raw: "length" }, usage: {} })
+                  controller.close()
+                },
+              }),
+            }
+          },
+        } as unknown as LanguageModelV3,
+      },
+    ])
+    const ask = async () => {
+      const result = await Promise.resolve(lm.doStream({ prompt: [], maxOutputTokens: 8_192 } as never)).catch(
+        () => undefined,
+      )
+      await result?.stream.pipeTo(new WritableStream())
+    }
+    await ask()
+    await ask()
+    await ask()
+    // Doubles up to a quarter of the context window.
+    expect(seen).toEqual([8_192, 16_384, 25_000])
+    reply.fail = true
+    await ask()
+    reply.fail = false
+    await ask()
+    expect(seen.slice(3)).toEqual([25_000, 8_192])
+  })
+
   test("surfaces a context overflow over later unrelated failures", async () => {
     const tooLarge = new APICallError({
       message: "request entity too large",

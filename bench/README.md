@@ -80,6 +80,7 @@ One run of each task before 2026-11-10.
 
 - **Failures:** sh-log-errors twice (sorting names that contain a space), and once each py-spec-ini, ts-router-match, ts-emitter-once and ts-markdown-toc.
 - **Thinking until the reply ran out:** py-spec-ini and ts-router-match failed without one line of code written. The model spent its whole reply allowance (8,192 tokens) thinking, three times in a row, about 70 seconds each. Eight of the 90 runs were cut off this way at least once; six recovered.
+  Fixed after 1.0.27: the router now doubles a model's allowance when a reply stops at it, and remembers that for the model. On these two tasks, three runs each: 4 of 6 before, 6 of 6 after.
 - **Tokens:** a median of 235,000 per solved task, in about ten turns. A turn starts at about 20,400 tokens before the task is read: 12,500 for the descriptions of 25 tools and 6,900 for the system prompt.
 - **Tools:** 1,082 calls, 8 failed (0.7%). 137 edits, 1 failed. Editing is not what these tasks fail on.
 - **Models:** one free model answered 739 of 908 turns; the router changed model inside a task in a few runs.

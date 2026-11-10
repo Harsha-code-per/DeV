@@ -50,7 +50,9 @@ const cooldown = new Map<string, number>()
 // router learns which free models actually work for this user. Unknown models start neutral.
 // ponytail: one score per model; per task type (edit vs chat vs long context) would rank finer.
 const STATS_FILE = path.join(Global.Path.state, "auto-free-stats.json")
-const stats: Record<string, { ok: number; fail: number; until?: number; budget?: number }> = await fs
+// `output` is a reply allowance learnt for the model: larger than the catalogue lists once a reply was
+// cut off at it, or REFUSED once the provider turned the larger one down.
+const stats: Record<string, { ok: number; fail: number; until?: number; budget?: number; output?: number }> = await fs
   .readFile(STATS_FILE, "utf8")
   .then((text) => JSON.parse(text))
   .catch(() => ({}))
@@ -72,6 +74,23 @@ export function record(model: Provider.Model, ok: boolean, until?: number) {
     entry.ok = Math.round(entry.ok / 2)
     entry.fail = Math.round(entry.fail / 2)
   }
+  save()
+}
+
+const REFUSED = -1
+
+/**
+ * A reply that stopped at the allowance gets twice as much next time. Thinking counts against the
+ * allowance, and some catalogue limits are far below what the provider accepts, so a model can spend
+ * all of it before writing a word, on every retry.
+ */
+function grow(model: Provider.Model, asked: number | undefined) {
+  const entry = (stats[key(model)] ??= { ok: 0, fail: 0 })
+  if (!asked || entry.output === REFUSED) return
+  // A quarter of the context at most, so the allowance alone can't push a request over the window.
+  const most = Math.min(ProviderTransform.OUTPUT_TOKEN_MAX, Math.floor(model.limit.context / 4))
+  if (asked >= most) return
+  entry.output = Math.min(asked * 2, most)
   save()
 }
 
@@ -311,16 +330,31 @@ export function language(
         // short window to start responding (headers or full result), then move on to the next.
         const deadline = new AbortController()
         const timer = setTimeout(() => deadline.abort(new Error(`${key(item.model)} did not respond`)), windowMs)
+        const learned = stats[key(item.model)]?.output ?? 0
         try {
           const result = await run(item, {
             ...options,
             prompt: reads(item.model) ? options.prompt : unreadable(options.prompt, item.model),
+            // The router's own limit is a guess that fits every model. A model that thinks first spends
+            // its thinking from the same allowance, so each one gets as much as it really allows.
+            maxOutputTokens:
+              options.maxOutputTokens &&
+              Math.max(
+                options.maxOutputTokens,
+                Math.min(item.model.limit.output || 0, ProviderTransform.OUTPUT_TOKEN_MAX),
+                learned,
+              ),
             abortSignal: signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal,
           })
           report(undefined, item.model)
           return result
         } catch (e) {
           if (signal?.aborted) throw e
+          // The learnt allowance was more than the catalogue lists; a provider that rejects the request keeps the listed one.
+          if (learned > 0 && APICallError.isInstance(e) && e.statusCode === 400) {
+            stats[key(item.model)]!.output = REFUSED
+            save()
+          }
           cool(item.model, e)
           errors.push(e)
           const next = tries[index + 1]
@@ -380,6 +414,8 @@ export function language(
                   seen.error = true
                   cool(item.model, part.error)
                 }
+                if (part.type === "finish" && part.finishReason.unified === "length")
+                  grow(item.model, next.maxOutputTokens)
                 controller.enqueue(part)
               },
               flush() {

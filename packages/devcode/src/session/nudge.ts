@@ -16,9 +16,16 @@ const PLAN_READY = /plan_exit|plan (?:is |has been )?(?:written|ready|complete|f
 
 const nudges = new Map<string, number>()
 
-/** The instruction to keep going, or undefined when the reply is a real ending. */
-export function next(userMessageID: string, reply: string, agent?: string) {
+/**
+ * The instruction to keep going, or undefined when the reply is a real ending. `cutOff` is a reply that
+ * stopped at the model's output limit, which is never a real ending, whatever its last sentence says.
+ */
+export function next(userMessageID: string, reply: string, agent?: string, cutOff = false) {
   const count = nudges.get(userMessageID) ?? 0
+  if (cutOff && count < MAX_NUDGES) {
+    nudges.set(userMessageID, count + 1)
+    return "Your last reply hit the length limit before it was finished. Continue from where it stopped; if you were about to change files, do it now with your tools."
+  }
   if (agent === "plan" && PLAN_READY.test(reply) && count < MAX_NUDGES) {
     nudges.set(userMessageID, count + 1)
     return "If the plan is finished, call the plan_exit tool now; writing its name does nothing. If you need something from the user, use the question tool."

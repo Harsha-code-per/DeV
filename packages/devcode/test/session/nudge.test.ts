@@ -24,3 +24,9 @@ test("a plan that only names plan_exit gets told to call it; other plan replies 
   expect(SessionNudge.next("plan1", "Plan written.plan_exit", "plan")).toContain("call the plan_exit tool")
   expect(SessionNudge.next("plan2", "This module parses the config.", "plan")).toBeUndefined()
 })
+
+test("a reply cut off at the output limit is never a real ending", () => {
+  expect(SessionNudge.next("cut1", "", undefined, true)).toContain("length limit")
+  expect(SessionNudge.next("cut1", "Done. The tests pass.", undefined, true)).toContain("length limit")
+  expect(SessionNudge.next("cut1", "", undefined, true)).toBeUndefined()
+})

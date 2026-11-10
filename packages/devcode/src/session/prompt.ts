@@ -1169,7 +1169,12 @@ const layer = Layer.effect(
             const goal =
               step > 0
                 ? ((yield* goalStep(sessionID, reply, lastUser)) ??
-                  SessionNudge.next(prompted?.info.id ?? lastUser.id, reply, lastUser.agent))
+                  SessionNudge.next(
+                    prompted?.info.id ?? lastUser.id,
+                    reply,
+                    lastUser.agent,
+                    lastAssistant.finish === "length",
+                  ))
                 : undefined
             const stop = goal
               ? { continue: goal }

@@ -39,7 +39,7 @@ New features wait until these are done.
 - [ ] The benchmark runs every night, and a release is refused when the score drops
 - [ ] DeV Code builds DeV Code: each change is first given to DeV, and the result is logged
 - [x] `/feedback` opens a ready-to-send report with the version, session and last error
-- [ ] The first start can't hang on a slow download
+- [x] The first start can't hang on a slow download
 
 ## Next: a harness that learns
 
