@@ -137,7 +137,7 @@ export const WebFetchTool = Tool.define(
               : params.format === "text"
                 ? extractTextFromHTML(content)
                 : content
-          // Sites built as JavaScript apps (Unstop, Hack2skill, many listings) send a shell with almost
+          // Sites built as JavaScript apps (many event and job listings) send a shell with almost
           // no text; a reader that loads the page in a browser gets what a person would see.
           const rendered =
             contentType.includes("text/html") && params.format !== "html" && needsBrowser(params.url, content)
