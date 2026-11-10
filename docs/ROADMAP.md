@@ -35,7 +35,7 @@ New features wait until these are done.
 
 - [x] Benchmark rerun on the current release, three runs of each task
 - [ ] Harder benchmark tasks from real repositories, with a prepared git history
-- [ ] A learning benchmark: the same project twice, and the second run must be better
+- [x] A learning benchmark: the same project twice, and the second run must be better
 - [ ] The benchmark runs every night, and a release is refused when the score drops
 - [ ] DeV Code builds DeV Code: each change is first given to DeV, and the result is logged
 - [x] `/feedback` opens a ready-to-send report with the version, session and last error
@@ -43,6 +43,7 @@ New features wait until these are done.
 
 ## Next: a harness that learns
 
+- [x] A rule you state once ("from now on…") is kept in later sessions of the project
 - [ ] A small briefing that is the same for everyone, at 12K tokens or less for small models
 - [ ] Checks in code, not in the prompt: DeV finds the project's tests and typecheck once and runs them before it says a change is done
 - [ ] Reflection: after a session, DeV turns corrections, rewinds and failed checks into lessons

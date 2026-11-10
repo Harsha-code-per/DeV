@@ -85,7 +85,21 @@ One run of each task before 2026-11-10.
 - **Tools:** 1,082 calls, 8 failed (0.7%). 137 edits, 1 failed. Editing is not what these tasks fail on.
 - **Models:** one free model answered 739 of 908 turns; the router changed model inside a task in a few runs.
 
+### 2026-11-10, learning tasks
+
+Three runs of each, `auto/free`. Builds from `main`, each changing one thing:
+
+| Build | learn-rule warm | learn-rule cold | learn-commands warm | learn-commands cold |
+|---|---|---|---|---|
+| Saved notes in the system prompt (as in 1.0.27) | 0/3 | 0/3 | 1/1 | 1/1 |
+| Saved notes shown next to the newest message | 3/3 | 0/3 | | |
+| Plus: the model asked to save one note per stated rule | 2/3 | 0/3 | 3/3 | 3/3 |
+| Plus: the harness saves the person's rule sentence itself | 3/3 | 0/3 | 3/3 | 3/3 |
+
+- **learn-rule** measures learning: a fresh folder never passes, and the follow-up passes only when the rule was saved and is shown where the model reads it. Free models ignored a saved rule in the system prompt, and when asked to save it they saved the task, a line of their own instructions, or nothing. In the last build the saved note was the person's sentence in all three runs, and nothing else.
+- **learn-commands** passes cold as well, so it does not yet measure learning; a project whose checks are harder to find would.
+
 ## Not yet
 
 - Harder tasks taken from real repositories; all 30 are small enough that a free model passes most of them.
-- More than two learning tasks.
+- More than two learning tasks, and a learn-commands that a fresh folder fails.
