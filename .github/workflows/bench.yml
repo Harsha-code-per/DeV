@@ -1,0 +1,71 @@
+name: bench
+
+# Every night: the released DeV Code works through bench/tasks on free models, the way a new user
+# would run it. bench/baseline.json holds the expected score and how far below it one run may fall;
+# a run below that goes red, and release.yml refuses to release while the last run here is red.
+on:
+  schedule:
+    - cron: "30 21 * * *" # 03:00 in India
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bench
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      # Free-tier keys, kept apart from any key the project uses elsewhere. One is enough.
+      NVIDIA_API_KEY: ${{ secrets.BENCH_NVIDIA_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.BENCH_GROQ_API_KEY }}
+      CEREBRAS_API_KEY: ${{ secrets.BENCH_CEREBRAS_API_KEY }}
+      GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.BENCH_GOOGLE_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.BENCH_OPENROUTER_API_KEY }}
+      # Runners have no systemd user session for scripts/capped, and enough memory not to need it.
+      BENCH_NO_CAP: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+
+      - name: Is there a free model key?
+        id: keys
+        run: |
+          if [ -n "$NVIDIA_API_KEY$GROQ_API_KEY$CEREBRAS_API_KEY$GOOGLE_GENERATIVE_AI_API_KEY$OPENROUTER_API_KEY" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No BENCH_* secret is set, so there is nothing to run." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Install the released DeV Code
+        if: steps.keys.outputs.run == 'true'
+        run: |
+          curl -fsSL https://trydev.work/install | sh
+          echo "$HOME/.devcode/bin" >> "$GITHUB_PATH"
+
+      - name: Benchmark
+        if: steps.keys.outputs.run == 'true'
+        run: |
+          devcode --version
+          bun bench/run.ts 2>&1 | tee bench.log
+
+      - name: Compare with the baseline
+        if: steps.keys.outputs.run == 'true'
+        run: |
+          passed=$(sed -n 's|^devcode: \([0-9]*\)/[0-9]* passed$|\1|p' bench.log)
+          baseline=$(node -p "require('./bench/baseline.json').passed")
+          allow=$(node -p "require('./bench/baseline.json').allow")
+          {
+            echo "### DeV Code $(devcode --version) on free models"
+            echo '```'
+            grep -E '^devcode' bench.log
+            echo '```'
+            echo "Baseline: $baseline passed."
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ -n "$passed" ] || { echo "The benchmark printed no score."; exit 1; }
+          [ "$passed" -ge "$((baseline - allow))" ] || { echo "Score dropped: $passed passed, baseline $baseline."; exit 1; }

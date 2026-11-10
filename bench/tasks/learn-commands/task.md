@@ -1,0 +1,1 @@
+A shop reported that `Stock.remove` let them take 3 teas out when only 2 were in stock, leaving the level at -1. Find and fix it, add a check that covers it next to the existing ones, and make sure the project's checks pass.
