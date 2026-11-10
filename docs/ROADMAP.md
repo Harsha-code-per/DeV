@@ -17,6 +17,39 @@ DeV gives everyone the premium features of an AI agent, free, with any model the
 - **Secure by default.** Shell commands run in an OS sandbox, and risky actions ask first.
 - **Light on your machine.** Heavy pieces load on demand and stop when idle.
 - **Measured, not claimed.** Benchmarks and clean-machine tests decide what we say.
+- **Built for everyone, learnt for you.** Nothing personal is built in. What DeV knows about you, your project and your model, it learns on your machine, in files you can read, edit and switch off.
+
+## How we measure progress
+
+A feature list doesn't show whether an agent finishes your work, so these five numbers decide what we build and when we release:
+
+1. Benchmark tasks passed, for each kind of model: free, local and paid.
+2. How much better DeV does the second time it works on the same project.
+3. Real tasks finished without a correction from the person.
+4. How often an edit fails to apply, for each model.
+5. Tokens used per solved task, and minutes from install to a first useful answer.
+
+## Now: proof
+
+New features wait until these are done.
+
+- [x] Benchmark rerun on the current release, three runs of each task
+- [ ] Harder benchmark tasks from real repositories, with a prepared git history
+- [ ] A learning benchmark: the same project twice, and the second run must be better
+- [ ] The benchmark runs every night, and a release is refused when the score drops
+- [ ] DeV Code builds DeV Code: each change is first given to DeV, and the result is logged
+- [x] `/feedback` opens a ready-to-send report with the version, session and last error
+- [ ] The first start can't hang on a slow download
+
+## Next: a harness that learns
+
+- [ ] A small briefing that is the same for everyone, at 12K tokens or less for small models
+- [ ] Checks in code, not in the prompt: DeV finds the project's tests and typecheck once and runs them before it says a change is done
+- [ ] Reflection: after a session, DeV turns corrections, rewinds and failed checks into lessons
+- [ ] Memory in three scopes: the project, you across projects, and each model; all shown in `/memory`
+- [ ] Model profiles learnt from results, so a model is judged by finished work, not by answering without an error
+- [ ] The edit format that works best for each model
+- [ ] Skills DeV writes from experience, used after you approve them
 
 ## DeV Code 1.0
 
@@ -49,15 +82,16 @@ DeV gives everyone the premium features of an AI agent, free, with any model the
 
 - [ ] Use a paid AI plan you already have, where its provider allows open-source tools
 - [ ] Windows sandbox, and sandboxing for local MCP servers
-- [ ] Memory across projects, with privacy controls
-- [ ] Benchmark regressions blocking merges in CI
 
 ### DeV
+
+One DeV runs in the background, and the terminal, your editor, your browser and the desktop app all attach to it, sharing sessions, permissions and what it has learnt. We build one of these at a time.
 
 - [ ] Chat and coding in one window, sharing sessions with the terminal
 - [ ] Background mode, tray and start at login, with an idle budget of 150 MB
 - [ ] Voice, local and free: wake word, speech recognition and dictation
-- [ ] Computer use on Windows, macOS and Linux
+- [ ] Computer use on Windows, macOS and Linux, reading the screen as text so models that can't see images still work
+- [ ] Routines: work DeV does for you on a schedule, suggested first and done alone only once you allow that kind of task
 - [ ] Installers for every platform
 
 ### DeV for Chrome
