@@ -40,9 +40,9 @@ await Bun.write(
   }),
 )
 
-// A new user's environment: nothing inherited from the session that runs this script.
+// A new user's environment: only what a fresh shell has, nothing from the session that runs this script.
 const env = Object.fromEntries(
-  Object.entries(process.env).filter(([key]) => !/^(CLAUDE|ANTHROPIC|OPENAI|DEV_|OPENCODE|GROQ|GOOGLE|GEMINI)/.test(key)),
+  ["PATH", "TERM", "LANG", "USER", "SHELL"].flatMap((key) => (process.env[key] ? [[key, process.env[key]]] : [])),
 )
 const proc = Bun.spawn([bin, "run", "--model", "probe/m", "hi"], {
   cwd: work,
