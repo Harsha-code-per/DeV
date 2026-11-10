@@ -58,6 +58,31 @@ describe("Npm.add", () => {
     expect(entry.entrypoint).toBeDefined()
   })
 
+  test("gives up on a registry that never answers", async () => {
+    await using tmp = await tmpdir()
+    // Accepts the connection and stays silent, like a download that stalled.
+    const server = Bun.listen({ hostname: "127.0.0.1", port: 0, socket: { data() {} } })
+    const before = { registry: process.env["npm_config_registry"], timeout: process.env["DEV_INSTALL_TIMEOUT_MS"] }
+    process.env["npm_config_registry"] = `http://127.0.0.1:${server.port}/`
+    process.env["DEV_INSTALL_TIMEOUT_MS"] = "300"
+    const start = Date.now()
+
+    const error = await Effect.gen(function* () {
+      const npm = yield* Npm.Service
+      return yield* npm.add("never-answers@1.0.0")
+    }).pipe(Effect.scoped, Effect.flip, Effect.provide(npmLayer(path.join(tmp.path, "cache"))), Effect.runPromise)
+
+    if (before.registry === undefined) delete process.env["npm_config_registry"]
+    if (before.registry !== undefined) process.env["npm_config_registry"] = before.registry
+    if (before.timeout === undefined) delete process.env["DEV_INSTALL_TIMEOUT_MS"]
+    if (before.timeout !== undefined) process.env["DEV_INSTALL_TIMEOUT_MS"] = before.timeout
+    server.stop(true)
+
+    expect(error._tag).toBe("NpmInstallFailedError")
+    expect(String(error._tag === "NpmInstallFailedError" && error.cause)).toContain("timed out")
+    expect(Date.now() - start).toBeLessThan(10_000)
+  }, 20_000)
+
   // The Desktop sidecar runs the server under Node, where import.meta.resolve cannot take a
   // parent URL. Exercise the real Node branch instead of the Bun one the test runner uses.
   test("resolves an importable file URL under Node", async () => {

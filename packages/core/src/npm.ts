@@ -4,7 +4,7 @@ import path from "path"
 import { createRequire } from "module"
 import { pathToFileURL } from "url"
 import npa from "npm-package-arg"
-import { Effect, Schema, Context, Layer, Option, FileSystem } from "effect"
+import { Duration, Effect, Schema, Context, Layer, Option, FileSystem } from "effect"
 import { NodeFileSystem } from "@effect/platform-node"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
@@ -113,7 +113,22 @@ const layer = Layer.effect(
               add,
               dir: input.dir,
             }),
-        }) as Effect.Effect<ArboristTree, InstallFailedError>
+        }).pipe(
+          // npm allows a stalled connection three five-minute tries and git has no limit at all, so a
+          // first start that installs a plugin could sit silent for over ten minutes. The install is
+          // not cancelled: it may still finish in the background and be found on the next start.
+          Effect.timeoutOrElse({
+            duration: Duration.millis(Number(process.env["DEV_INSTALL_TIMEOUT_MS"]) || 120_000),
+            orElse: () =>
+              Effect.fail(
+                new InstallFailedError({
+                  cause: new Error(`Installing ${add.join(", ") || input.dir} timed out. Check your connection.`),
+                  add,
+                  dir: input.dir,
+                }),
+              ),
+          }),
+        ) as Effect.Effect<ArboristTree, InstallFailedError>
       }).pipe(
         Effect.withSpan("Npm.reify", {
           attributes: input,
