@@ -68,6 +68,7 @@ import { ArgsProvider, useArgs, type Args } from "./context/args"
 import { openUrl } from "@dev-ai/core/open"
 import type { AssistantMessage } from "@dev-ai/sdk/v2"
 import { Locale } from "./util/locale"
+import { describeOS, describeTerminal } from "./util/system"
 import { DialogPrompt } from "./ui/dialog-prompt"
 import { DialogSelect } from "./ui/dialog-select"
 import { DialogAlert } from "./ui/dialog-alert"
@@ -1200,8 +1201,45 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         slashName: "bug",
         slashAliases: ["feedback"],
         run: () => {
-          openUrl("https://github.com/Harsha-code-per/DeV/issues/new?template=bug_report.yml").catch(() => {})
+          // Field names are the ids in .github/ISSUE_TEMPLATE/bug_report.yml, so the form opens filled in.
+          const url = new URL("https://github.com/Harsha-code-per/DeV/issues/new?template=bug_report.yml")
+          url.searchParams.set("version", InstallationVersion)
+          url.searchParams.set("os", `${describeOS()}, ${describeTerminal()}`)
+          if (route.data.type === "session") {
+            const sessionID = route.data.sessionID
+            const replies = (sync.data.message[sessionID] ?? []).filter(
+              (item): item is AssistantMessage => item.role === "assistant",
+            )
+            const last = replies.at(-1)
+            if (last)
+              url.searchParams.set(
+                "model",
+                [
+                  `${last.providerID}/${last.modelID}`,
+                  last.served && `(answered by ${last.served.providerID}/${last.served.modelID})`,
+                ]
+                  .filter(Boolean)
+                  .join(" "),
+              )
+            const error = replies.findLast((item) => item.error)?.error
+            url.searchParams.set(
+              "logs",
+              [
+                `Session ${sessionID}. To attach it, if you are happy to share it: devcode export ${sessionID} > session.json`,
+                // Error text can hold paths or addresses, so only its start is offered, and the person sees it before sending.
+                error && `Last error: ${error.name}: ${JSON.stringify(error.data).slice(0, 500)}`,
+              ]
+                .filter(Boolean)
+                .join("\n\n"),
+            )
+          }
+          openUrl(url.toString()).catch(() => {})
           dialog.clear()
+          toast.show({
+            variant: "info",
+            message: "A bug report opened in your browser. Nothing is sent until you submit it.",
+            duration: 6000,
+          })
         },
       },
       {

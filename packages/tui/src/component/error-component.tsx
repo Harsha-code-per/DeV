@@ -201,16 +201,14 @@ export function ErrorComponent(props: { error: Error; reset: () => void; mode?: 
 }
 
 function buildIssueURL(message: string, stack: string) {
-  // Field keys match the ids in .github/ISSUE_TEMPLATE/bug-report.yml so the issue
-  // form opens pre-filled. Populating os/terminal/reproduce keeps the report past
-  // the contributing-guidelines compliance check, which pushes for system info.
-  const url = new URL("https://github.com/Harsha-code-per/DeV/issues/new?template=bug-report.yml")
+  // Field keys match the ids in .github/ISSUE_TEMPLATE/bug_report.yml so the issue
+  // form opens pre-filled.
+  const url = new URL("https://github.com/Harsha-code-per/DeV/issues/new?template=bug_report.yml")
   url.searchParams.set("title", `TUI crash: ${message}`)
-  url.searchParams.set("devcode-version", InstallationVersion)
-  url.searchParams.set("os", describeOS())
-  url.searchParams.set("terminal", describeTerminal())
+  url.searchParams.set("version", InstallationVersion)
+  url.searchParams.set("os", `${describeOS()}, ${describeTerminal()}`)
   url.searchParams.set(
-    "reproduce",
+    "steps",
     "Reported automatically from the devcode crash screen. If you can, describe what you were doing when it crashed.",
   )
 
@@ -221,7 +219,7 @@ function buildIssueURL(message: string, stack: string) {
   const MAX_URL_LENGTH = 6000
   const marker = "\n… (truncated)"
   const head = `The dev TUI crashed with an unexpected error.\n\n**Error:** ${message}\n\n**Stack trace:**\n`
-  const setBody = (body: string) => url.searchParams.set("description", head + "```\n" + body + "\n```")
+  const setBody = (body: string) => url.searchParams.set("what", head + "```\n" + body + "\n```")
 
   setBody(stack)
   if (url.toString().length <= MAX_URL_LENGTH) return url
