@@ -170,13 +170,8 @@ const layer: Layer.Layer<
       const ctx = yield* InstanceState.context
       const project = ctx.worktree === "/" ? ctx.directory : ctx.worktree
       const always = MemoryFiles.rules(project).filter((rule) => !rule.paths)
-      const auto = MemoryFiles.autoMemory(MemoryFiles.autoFile(global.data, project))
+      // Notes saved with the remember tool are not here: they ride on the newest message (SessionReminders).
       return [
-        ...(auto
-          ? [
-              `Auto memory: notes you saved in earlier sessions of this project with the remember tool. Follow them, and remove any that turn out wrong.\n${auto}`,
-            ]
-          : []),
         ...Array.from(paths).flatMap((item, i) => (files[i] ? [`Instructions from: ${item}\n${files[i]}`] : [])),
         ...always.map((rule) => `Rules from: ${rule.file}\n${MemoryFiles.expandImports(rule.body, rule.file, global.home)}`),
         ...urls.flatMap((item, i) => (remote[i] ? [`Instructions from: ${item}\n${remote[i]}`] : [])),

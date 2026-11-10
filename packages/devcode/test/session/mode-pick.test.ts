@@ -70,7 +70,17 @@ test("lasting instructions and preferences are saved first", () => {
     "I prefer tabs over spaces",
     "never commit directly to main",
   ])
-    expect(ModePick.remembers(text)).toBe(true)
+    expect(ModePick.rule(text)).toBe(text)
   for (const text of ["fix the failing test", "what does this function do?", "add a login page"])
-    expect(ModePick.remembers(text)).toBe(false)
+    expect(ModePick.rule(text)).toBeUndefined()
+})
+
+test("the sentence that states a lasting rule is the one saved", () => {
+  expect(
+    ModePick.rule(
+      "`top()` returns the lowest scorers. Fix it.\n\nOne rule for this project from now on: every error message must start with `tally: `. Old messages can stay.",
+    ),
+  ).toBe("One rule for this project from now on: every error message must start with `tally: `.")
+  expect(ModePick.rule("Fix the failing test.")).toBeUndefined()
+  expect(ModePick.rule(`Remember that the staging key is ${"x".repeat(30)}`)).toBeUndefined()
 })

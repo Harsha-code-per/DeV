@@ -47,14 +47,21 @@ export function open(text: string) {
   )
 }
 
-// A lasting instruction or preference ("from now on use pnpm", "remember that…"): the first step must
-// either save it with the remember tool or say there is nothing new to save. Models otherwise reply
-// "Noted" and forget it with the session.
+// A lasting instruction or preference ("from now on use pnpm", "remember that…"). DeV saves the sentence
+// that states it to the project's memory; models otherwise reply "Noted" and forget it with the session.
 const REMEMBER =
   /\b(remember (that|this|to)|please remember|from now on|going forward|in (the )?future|next time|always (use|run|write|prefer|ask|keep)|never (use|run|write|commit|push)|i (always )?prefer|my preference)\b/i
+// ponytail: a long unbroken run of letters and digits is taken for a key or password and never saved.
+const SECRET = /[A-Za-z0-9_+/=-]{24,}/
 
-export function remembers(text: string) {
-  return REMEMBER.test(text.trim())
+/** The sentence of a message that states a lasting rule, or undefined. */
+export function rule(text: string) {
+  const sentence = text
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((part) => part.trim())
+    .find((part) => REMEMBER.test(part))
+  if (!sentence || sentence.length > 300 || SECRET.test(sentence)) return undefined
+  return sentence
 }
 
 export * as ModePick from "./mode-pick"

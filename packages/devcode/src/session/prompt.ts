@@ -48,6 +48,8 @@ import { decodeDataUrl } from "@/util/data-url"
 import { Process } from "@/util/process"
 import { Cause, Effect, Exit, Latch, Layer, Option, Scope, Context, Schema, Types } from "effect"
 import { InstanceState } from "@/effect/instance-state"
+import { Global } from "@dev-ai/core/global"
+import { MemoryFiles } from "./memory-files"
 import { TaskTool, type TaskPromptOps } from "@/tool/task"
 import { SessionRunState } from "./run-state"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -1335,9 +1337,18 @@ const layer = Layer.effect(
             // DeV: an open-ended request about the person starts with a choice between asking and saying
             // there is enough to go on (ModePick.open). Free models skip asking otherwise.
             const firstText = firstStepText(msgs, agent.name)
-            const save = !wanted && !!tools["remember"] && agent.mode !== "subagent" && ModePick.remembers(firstText)
-            const decide =
-              !wanted && !save && !!tools["question"] && agent.mode !== "subagent" && ModePick.open(firstText)
+            // A lasting rule the person states ("from now on…") is saved here, in code. Asked to save it, free
+            // models skipped it, or saved the task or lines of their own instructions instead.
+            // Denying the remember tool turns this off too.
+            const rule = !wanted && !!tools["remember"] && agent.mode !== "subagent" ? ModePick.rule(firstText) : undefined
+            if (rule) {
+              const ctx = yield* InstanceState.context
+              MemoryFiles.remember(
+                MemoryFiles.autoFile(Global.Path.data, ctx.worktree === "/" ? ctx.directory : ctx.worktree),
+                { note: rule },
+              )
+            }
+            const decide = !wanted && !!tools["question"] && agent.mode !== "subagent" && ModePick.open(firstText)
 
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
@@ -1376,13 +1387,11 @@ const layer = Layer.effect(
               // to it is the only choice. It is absent where it isn't allowed, such as `dev run` and plan_enter.
               tools: picked
                 ? { [picked]: tools[picked] }
-                : save && format.type !== "json_schema"
-                  ? { remember: tools["remember"], proceed: PROCEED_TOOL }
-                  : decide && format.type !== "json_schema"
-                    ? { question: tools["question"], proceed: PROCEED_TOOL }
-                    : tools,
+                : decide && format.type !== "json_schema"
+                  ? { question: tools["question"], proceed: PROCEED_TOOL }
+                  : tools,
               model,
-              toolChoice: picked || save || decide || format.type === "json_schema" ? "required" : undefined,
+              toolChoice: picked || decide || format.type === "json_schema" ? "required" : undefined,
             })
 
             if (structured !== undefined) {
@@ -1739,11 +1748,11 @@ function firstStepText(messages: SessionV1.WithParts[], agent: string) {
   return last.parts.flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : [])).join("\n")
 }
 
-// The other choice on a forced first step (ask, or save to memory): there is nothing to ask or save,
-// so the model starts on the request.
+// The other choice on a first step that offers a question: there is nothing to ask, so the model
+// starts on the request.
 const PROCEED_TOOL = tool({
   description:
-    "Call this when the other tool offered here is not needed: nothing about the request needs asking, or nothing new needs saving to memory, so you can start on the request. Otherwise call the other tool.",
+    "Call this when the other tool offered here is not needed: nothing about the request needs asking, so you can start on the request. Otherwise call the other tool.",
   inputSchema: jsonSchema({ type: "object", properties: {}, additionalProperties: false }),
   async execute() {
     return { output: "Go ahead with the request.", title: "Enough to start", metadata: {} }

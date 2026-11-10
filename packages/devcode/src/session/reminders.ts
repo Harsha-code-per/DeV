@@ -4,6 +4,8 @@ import { Effect } from "effect"
 import { Agent } from "@/agent/agent"
 import { FSUtil } from "@dev-ai/core/fs-util"
 import { InstanceState } from "@/effect/instance-state"
+import { Global } from "@dev-ai/core/global"
+import { MemoryFiles } from "./memory-files"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { PartID } from "./schema"
 import { MessageV2 } from "./message-v2"
@@ -22,6 +24,22 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
   const sessions = yield* Session.Service
   const userMessage = input.messages.findLast((msg) => msg.info.role === "user")
   if (!userMessage) return input.messages
+
+  // Notes saved in earlier sessions ride on the newest message, next to the request. In the system
+  // prompt, thousands of tokens before it, a free model followed a saved rule in 2 of 5 runs.
+  const instance = yield* InstanceState.context
+  const notes = MemoryFiles.autoMemory(
+    MemoryFiles.autoFile(Global.Path.data, instance.worktree === "/" ? instance.directory : instance.worktree),
+  )
+  if (notes)
+    userMessage.parts.push({
+      id: PartID.ascending(),
+      messageID: userMessage.info.id,
+      sessionID: userMessage.info.sessionID,
+      type: "text",
+      text: `<system-reminder>\nNotes you saved in earlier sessions of this project with the remember tool. They are rules for this request too: follow them, and remove any that turn out wrong.\n${notes}\n</system-reminder>`,
+      synthetic: true,
+    })
 
   if (!flags.experimentalPlanMode) {
     if (input.agent.name === "plan") {
