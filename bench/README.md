@@ -67,6 +67,7 @@ Runs `devcode run "hi"` in an empty profile against a local stand-in for a model
 
 | Date | Agent | Build | Models | Passed | Cost | Median time |
 |---|---|---|---|---|---|---|
+| 2026-11-12 | DeV Code | 1.0.28 build (main, 4de38f502) | `auto/free` with five free providers, three runs | 26/30, 27/30, 28/30 | $0 | 58s |
 | 2026-11-10 | DeV Code | v1.0.27 | `auto/free` with five free providers, three runs | 25/30, 30/30, 29/30 | $0 | 58s |
 | 2026-11-01 | DeV Code | v0.9.0-rc.5 | `auto/free` with three free providers | 27/30 | $0 | 58s |
 | 2026-11-01 | DeV Code | v0.9.0-rc.3 | `auto/free` with one free provider | 24/30 | $0 | 113s |
@@ -98,6 +99,14 @@ Three runs of each, `auto/free`. Builds from `main`, each changing one thing:
 
 - **learn-rule** measures learning: a fresh folder never passes, and the follow-up passes only when the rule was saved and is shown where the model reads it. Free models ignored a saved rule in the system prompt, and when asked to save it they saved the task, a line of their own instructions, or nothing. In the last build the saved note was the person's sentence in all three runs, and nothing else.
 - **learn-commands** passes cold as well, so it does not yet measure learning; a project whose checks are harder to find would.
+
+### 2026-11-12, the 1.0.28 build, in detail
+
+81/90 passed. All three runs of py-access-stats failed on one line: the task said "blank lines are ignored" and the model counted a line of only spaces as malformed, a fair reading of an unclear sentence. The task now says what it meant; without that line the score is 84/90, the same as 1.0.27. The other failures are the tasks that failed in 1.0.27 (sh-log-errors twice, ts-emitter-once, ts-markdown-toc, ts-router-match) and ts-deep-merge once.
+
+- **Tokens:** a median of 215,000 per solved task, down from 235,000, after each turn started 4,300 tokens lighter.
+- **Learning:** warm 6/6, cold 3/6; learn-rule warm 3/3, cold 0/3.
+- **Model:** one free model answered 1,092 of 1,098 turns.
 
 ## Not yet
 

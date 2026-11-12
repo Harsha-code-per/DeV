@@ -2,6 +2,24 @@
 
 DeV Code's notable changes. DeV started as a fork of OpenCode v1.19.4 (MIT); this file covers what DeV added or changed since then.
 
+## 1.0.28 (2026-11-12)
+
+DeV Code is now in public beta: it works today, it is still being proven, and bug reports are welcome (`/bug`).
+
+- Directions to pick from. Ask DeV to make something people judge by taste, such as a landing page, a logo or a UI, and it first builds 2 to 3 clearly different directions and opens them in one page in your browser, as tabs or side by side, then asks which one to build. Each direction also has its own page. Turn pages off with `"permission": { "artifact": "deny" }`.
+- Checks before it says done. A turn that changed your code doesn't end until the project's tests, type check or build have run, and a changed page is opened in the browser and looked at when a browser tool is connected. Turn it off with `"checks": false`.
+- Rules you state are kept. Say "from now on, every error message starts with `app: `" once, and DeV saves that sentence to the project's memory itself and follows it in later sessions. A sentence holding a key or password is never saved. Saved notes now sit next to your newest message, where models follow them, instead of deep in the instructions.
+- `/reload-plugins` (also `/reload` and `/reload-skills`) reloads plugins, skills and MCP servers without a restart, and shows what is live: how many plugins, how many skills, and which servers are connected. `/status` shows the same.
+- Plugins load all their skills. A plugin that keeps its skills in a folder its manifest names now loads them; before, they were skipped and the install said the plugin had none. A reload no longer drops the skills plugins add, and the catalog counts plugins installed from a marketplace.
+- A server that fails to start says why, and a download cut off by closing DeV during the first start is repaired automatically instead of failing every time after.
+- New commands: `/recap` (one-line summary of the session), `/verify` (run the latest change to confirm it works), `/run` (start the app and drive it), `/batch` (split a large change into parallel parts in worktrees), `/deep-research` (a cited report from many sources), `/update-config` (change settings by describing them) and `/sandbox` (turn the sandbox on or off). `/skills` shows what each skill adds to every request. New names for existing commands: `/reset`, `/settings`, `/share`, `/usage`, `/stats`, `/checkup`, `/proactive`, `/effort`, `/restart` and `/code-review`.
+- Slides and documents. Built-in skills make presentations as PowerPoint, PDF or a page to present from, and documents as Word, PDF or a page. Figma and Notion are in the catalog for people who use them.
+- Lighter on every request. Each turn starts with about 4,300 fewer tokens (20,400 down to 16,100): shorter tool descriptions, a smaller list of skills, and research guidance moved into a `research` skill that loads only when needed.
+- Free models that think until their reply runs out now get more room the next time, so they finish instead of stopping before writing any code.
+- `devcode storage` shows what DeV keeps on your disk, folder by folder, and how each is cleaned. Pages DeV makes are removed 30 days after they were last written.
+- `/feedback` and `/bug` open a filled-in bug report with your version, system and model, ready to send.
+- Installing a plugin or server no longer waits forever on a package registry that never answers; it gives up after two minutes.
+
 ## 1.0.27 (2026-11-09)
 
 - Talk to an agent directly. A subagent's or background task's own screen (ctrl+x ↓ from the main conversation) now has a prompt: what you type goes to that agent, even while it works, and it picks it up at its next step. Its permission requests now show on its own screen too. While the prompt is empty, ↑ ← → still move between the main conversation and its agents; once you start typing, they edit your text.

@@ -2,7 +2,7 @@ Write a command-line script `stats.py` (Python 3 standard library only) that sum
 
 Usage: `python3 stats.py [--since TIMESTAMP] [--top N] [FILE ...]`
 
-Each log line is `<timestamp> <method> <path> <status> <duration>`, separated by single spaces, for example `2026-10-01T12:00:00Z GET /api/users?page=2 200 80ms`. The timestamp is ISO 8601 with a UTC offset (`Z` or `+hh:mm`), the status is a number from 100 to 599, and the duration is a whole number of milliseconds followed by `ms`. Read every file given, in order; `-` or no files at all means standard input. Blank lines are ignored. Any other line that doesn't match this format exactly is malformed.
+Each log line is `<timestamp> <method> <path> <status> <duration>`, separated by single spaces, for example `2026-10-01T12:00:00Z GET /api/users?page=2 200 80ms`. The timestamp is ISO 8601 with a UTC offset (`Z` or `+hh:mm`), the status is a number from 100 to 599, and the duration is a whole number of milliseconds followed by `ms`. Read every file given, in order; `-` or no files at all means standard input. Blank lines, including lines of only spaces, are ignored. Any other line that doesn't match this format exactly is malformed.
 
 Print one JSON object to stdout:
 
