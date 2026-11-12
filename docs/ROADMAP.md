@@ -45,7 +45,10 @@ New features wait until these are done.
 
 - [x] A rule you state once ("from now on…") is kept in later sessions of the project
 - [ ] A small briefing that is the same for everyone, at 12K tokens or less for small models
-- [ ] Checks in code, not in the prompt: DeV finds the project's tests and typecheck once and runs them before it says a change is done
+- [x] Checks in code, not in the prompt: a turn that changed files doesn't end before the project's checks ran, and a changed page is looked at in the browser when one is connected (`"checks": false` turns it off)
+- [x] For something judged by taste (a landing page, a logo, a UI), DeV shows 2 to 3 directions side by side in one page and asks which to build
+- [x] `/reload-plugins` reloads plugins, skills and MCP servers and shows what is live; `/status` counts marketplace plugins and skills
+- [x] Plugins that keep their skills in a folder their manifest names load them
 - [ ] Reflection: after a session, DeV turns corrections, rewinds and failed checks into lessons
 - [ ] Memory in three scopes: the project, you across projects, and each model; all shown in `/memory`
 - [ ] Model profiles learnt from results, so a model is judged by finished work, not by answering without an error

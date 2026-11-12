@@ -4,9 +4,11 @@
 
 # DeV
 
-**Every pro feature. Any model. Free.**
+**One assistant for your computer, your browser and your code. Every pro feature. Any model. Free.**
 
-DeV Code is an open-source coding agent for your terminal. You bring the model: a free tier DeV sets up for you, a model running on your own machine, or your own key. DeV gives you everything around it that usually sits behind a paid plan, and DeV itself costs nothing.
+DeV is an AI assistant that works for you. You ask, by voice or text, and it does the work: on your computer, in your browser and in your code. It asks before anything private or risky, and hands you the one step it can't do. You bring the model: a free tier DeV sets up for you, a model running on your own machine, or your own key.
+
+**DeV Code**, the developer tool, is available now. The DeV desktop assistant and DeV for Chrome are in development, and all of them will share your sessions, permissions and memory.
 
 [Website](https://trydev.work) · [Docs](https://trydev.work/docs.html) · [Roadmap](docs/ROADMAP.md) · [Report a bug](https://github.com/Harsha-code-per/DeV/issues/new/choose) · [Sponsor](#support-dev)
 
@@ -38,9 +40,9 @@ Your keys stay on your machine. DeV has no account, no server in the middle and 
 
 | Product | What it is | Get it | Status |
 |---|---|---|---|
-| **DeV Code** | A coding agent for your terminal. Create projects and build software. | `curl`, npm, pnpm, bun, apt, dnf or Scoop | Available now |
-| **DeV** | An assistant for Windows, macOS and Linux that runs in the background, wakes to your voice and works across your computer. | Installers: `.exe`, `.dmg` and Linux packages | In development |
-| **DeV for Chrome** | A browser extension that helps you debug and get things done on any page. | Browser extension | In development |
+| **DeV** | The assistant. Runs in the background on Windows, macOS and Linux, wakes to your voice and carries out tasks across your apps and accounts, asking before anything private. | Installers: `.exe`, `.dmg` and Linux packages | In development |
+| **DeV Code** | The developer tool. Plans, builds, tests and proves software work in your terminal and editor. | `curl`, npm, pnpm, bun, apt, dnf or Scoop | Available now |
+| **DeV for Chrome** | DeV in your browser: reads the page, fills forms and gets things done on any site, with your permission per site. | Browser extension | In development |
 | **DeV for Web** | A chat site for the models you bring, with nothing to install. | Your browser | Planned |
 
 ## Install DeV Code
