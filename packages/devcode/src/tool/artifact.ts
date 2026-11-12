@@ -42,6 +42,7 @@ export const ArtifactTool = Tool.define(
         const ctx = yield* InstanceState.context
         const project = ctx.worktree === "/" ? ctx.directory : ctx.worktree
         const root = path.join(Global.Path.data, "artifacts")
+        prune(root)
         const directions = params.directions ?? []
         if (directions.length === 0 && !params.html) throw new Error("Give either html or 2 to 4 directions.")
         const pages = directions.map((item) => ({
@@ -128,4 +129,17 @@ document.querySelectorAll("header button[data-i]").forEach(b=>b.onclick=()=>set(
 document.getElementById("all").onclick=()=>document.body.classList.toggle("all")
 </script></body></html>
 `
+}
+
+// Pages are made to look at, not to keep: older than 30 days, they are removed when the next one is saved.
+// ponytail: one walk of the artifacts folder per save; a cap by size if people keep thousands of pages.
+const KEEP = 30 * 24 * 60 * 60 * 1000
+export function prune(root: string, now = Date.now()) {
+  if (!fs.existsSync(root)) return
+  for (const project of fs.readdirSync(root, { withFileTypes: true }).filter((item) => item.isDirectory())) {
+    const dir = path.join(root, project.name)
+    for (const file of fs.readdirSync(dir))
+      if (now - fs.statSync(path.join(dir, file)).mtimeMs > KEEP) fs.rmSync(path.join(dir, file), { force: true })
+    if (fs.readdirSync(dir).length === 0) fs.rmdirSync(dir)
+  }
 }
