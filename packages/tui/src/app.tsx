@@ -698,7 +698,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         suggested: route.data.type === "session",
         category: "Session",
         slashName: "new",
-        slashAliases: ["clear"],
+        slashAliases: ["clear", "reset"],
         run: () => {
           route.navigate({
             type: "home",
@@ -830,6 +830,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         category: "Agent",
         hidden: local.model.variant.list().length === 0,
         slashName: "variants",
+        slashAliases: ["effort"],
         run: () => {
           if (local.model.variant.list().length === 0) {
             return toast.show({
@@ -877,6 +878,46 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
           ]
         : []),
       {
+        name: "devcode.reload",
+        title: "Reload plugins, skills and MCP servers",
+        slashName: "reload-plugins",
+        slashAliases: ["reload", "reload-skills"],
+        run: async () => {
+          // Reloading cuts off a running task, so it waits for an idle moment, as installs do.
+          if (Object.values(sync.data.session_status).some((status) => status.type !== "idle"))
+            return toast.show({ message: "A task is running. Reload when it has finished.", variant: "warning" })
+          await sdk.client.instance.dispose()
+          dialog.replace(() => <DialogStatus title="Reloaded" />)
+        },
+        category: "System",
+      },
+      {
+        name: "devcode.sandbox",
+        title: sync.data.config.sandbox?.enabled ? "Turn the sandbox off" : "Turn the sandbox on",
+        desc: "Shell commands run confined: they write only to the project and temp folders and cannot read credentials",
+        slashName: "sandbox",
+        run: async () => {
+          dialog.clear()
+          if (process.platform === "win32")
+            return toast.show({ variant: "warning", message: "The sandbox runs on Linux and macOS only" })
+          const enabled = !sync.data.config.sandbox?.enabled
+          await sdk.client.global.config.update({ config: { sandbox: { enabled } } }, { throwOnError: true }).then(
+            () =>
+              toast.show({
+                variant: "success",
+                message:
+                  (enabled ? "Sandbox on: shell commands run confined" : "Sandbox off") +
+                  (Object.values(sync.data.session_status).some((status) => status.type === "busy")
+                    ? ". This applies once the current work finishes."
+                    : ""),
+                duration: 5000,
+              }),
+            (error: unknown) => toast.error(error),
+          )
+        },
+        category: "System",
+      },
+      {
         name: "devcode.status",
         title: "View status",
         slashName: "status",
@@ -891,7 +932,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
               name: "devcode.update",
               title: "Update DeV",
               slashName: "update",
-              slashAliases: ["upgrade"],
+              slashAliases: ["upgrade", "restart"],
               run: () => update.open?.(),
               category: "System",
             },
@@ -901,7 +942,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         name: "devcode.debug",
         title: "View debug info",
         slashName: "debug",
-        slashAliases: ["doctor"],
+        slashAliases: ["doctor", "checkup"],
         run: () => {
           dialog.replace(() => <DialogDebug />)
         },
@@ -1150,6 +1191,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         title: "Show session cost and tokens",
         category: "Session",
         slashName: "cost",
+        slashAliases: ["usage", "stats"],
         enabled: () => route.data.type === "session",
         run: () => {
           dialog.clear()
@@ -1177,6 +1219,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         title: "Edit DeV settings (dev.json)",
         category: "System",
         slashName: "config",
+        slashAliases: ["settings"],
         run: async () => {
           dialog.clear()
           if (!process.env.VISUAL && !process.env.EDITOR) {
@@ -1199,7 +1242,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         title: "Report a bug",
         category: "System",
         slashName: "bug",
-        slashAliases: ["feedback"],
+        slashAliases: ["feedback", "share"],
         run: () => {
           // Field names are the ids in .github/ISSUE_TEMPLATE/bug_report.yml, so the form opens filled in.
           const url = new URL("https://github.com/Harsha-code-per/DeV/issues/new?template=bug_report.yml")

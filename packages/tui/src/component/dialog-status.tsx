@@ -4,12 +4,21 @@ import path from "path"
 import { useTheme } from "../context/theme"
 import { useDialog } from "../ui/dialog"
 import { useSync } from "../context/sync"
-import { For, Match, Switch, Show, createMemo } from "solid-js"
+import { useSDK } from "../context/sdk"
+import { For, Match, Switch, Show, createMemo, createResource } from "solid-js"
 
-export type DialogStatusProps = {}
+export type DialogStatusProps = { title?: string }
 
-export function DialogStatus() {
+export function DialogStatus(props: DialogStatusProps) {
   const sync = useSync()
+  const sdk = useSDK()
+  // Asked from the server, not read from the config file: marketplace plugins and every skill source count too.
+  const [skills] = createResource(() =>
+    sdk.client.app.skills({}).then((result) => result.data ?? []).catch(() => undefined),
+  )
+  const [installed] = createResource(() =>
+    sdk.client.plugins.installed({}).then((result) => result.data ?? []).catch(() => []),
+  )
   const { theme } = useTheme()
   const dialog = useDialog()
 
@@ -38,19 +47,34 @@ export function DialogStatus() {
       const version = value.substring(index + 1)
       return { name, version }
     })
-    return result.toSorted((a, b) => a.name.localeCompare(b.name))
+    const fromMarket = (installed() ?? [])
+      .filter((item) => item.enabled)
+      .map((item) => ({ name: item.id.split("@")[0]!, version: item.version as string | undefined }))
+    // "@scope/name" from the config file and "name" from the server are one plugin.
+    const short = (name: string) => name.split("/").at(-1)!
+    const names = new Set(result.map((item) => short(item.name)))
+    return [...result, ...fromMarket.filter((item) => !names.has(short(item.name)))].toSorted((a, b) =>
+      a.name.localeCompare(b.name),
+    )
   })
 
   return (
     <box paddingLeft={2} paddingRight={2} gap={1} paddingBottom={1}>
       <box flexDirection="row" justifyContent="space-between">
         <text fg={theme.text} attributes={TextAttributes.BOLD}>
-          Status
+          {props.title ?? "Status"}
         </text>
         <text fg={theme.textMuted} onMouseUp={() => dialog.clear()}>
           esc
         </text>
       </box>
+      <text fg={theme.text}>
+        {(() => {
+          const mcp = Object.values(sync.data.mcp)
+          const live = mcp.filter((item) => item.status === "connected").length
+          return `${plugins().length} plugins · ${skills()?.length ?? "…"} skills · ${live} of ${mcp.length} MCP servers connected`
+        })()}
+      </text>
       <Show when={Object.keys(sync.data.mcp).length > 0} fallback={<text fg={theme.text}>No MCP Servers</text>}>
         <box>
           <text fg={theme.text}>{Object.keys(sync.data.mcp).length} MCP Servers</text>
@@ -163,6 +187,19 @@ export function DialogStatus() {
             )}
           </For>
         </box>
+      </Show>
+      <Show when={skills()} fallback={<text fg={theme.textMuted}>Skills: loading…</text>}>
+        {(list) => (
+          <box>
+            <text fg={theme.text}>{list().length} Skills</text>
+            <text fg={theme.textMuted} wrapMode="word">
+              {list()
+                .map((skill) => skill.name)
+                .toSorted()
+                .join(", ")}
+            </text>
+          </box>
+        )}
       </Show>
     </box>
   )

@@ -38,7 +38,7 @@ export function DialogSkill(props: DialogSkillProps) {
     const maxWidth = Math.max(0, ...list.map((s) => s.name.length))
     return list.map((skill) => ({
       title: skill.name.padEnd(maxWidth),
-      description: skill.description?.replace(/\s+/g, " ").trim(),
+      description: `~${cost(skill)} tok · ${skill.description?.replace(/\s+/g, " ").trim() ?? ""}`,
       value: skill.name,
       category: "Skills",
       onSelect: () => {
@@ -48,9 +48,12 @@ export function DialogSkill(props: DialogSkillProps) {
     }))
   })
 
+  // What the skills list adds to every turn: each skill's name and description, about 4 characters a token.
+  const total = createMemo(() => (skills() ?? []).reduce((sum, skill) => sum + cost(skill), 0))
+
   return (
     <DialogSelect
-      title="Skills"
+      title={skills()?.length ? `Skills · about ${total()} tokens each turn` : "Skills"}
       placeholder="Search skills…"
       options={options()}
       renderFilter={!showError()}
@@ -67,4 +70,9 @@ export function DialogSkill(props: DialogSkillProps) {
       }
     />
   )
+}
+
+function cost(skill: { name: string; description?: string }) {
+  // The name and description plus the tags around them in the system prompt.
+  return Math.round((skill.name.length + (skill.description?.length ?? 0) + 60) / 4)
 }

@@ -683,7 +683,7 @@ export function Session() {
       desc: "Send a prompt every few minutes, e.g. 5m check the deploy",
       value: "session.loop",
       category: "Session",
-      slash: { name: "loop" },
+      slash: { name: "loop", aliases: ["proactive"] },
       run: async () => {
         if (looping()) return stopLoop()
         const answer = await DialogPrompt.show(dialog, "Repeat a prompt", {

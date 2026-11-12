@@ -721,6 +721,7 @@ export function Prompt(props: PromptProps) {
         name: "prompt.skills",
         category: "Prompt",
         slashName: "skills",
+        slashAliases: ["skill-doctor"],
         run: () => {
           dialog.replace(() => (
             <DialogSkill
