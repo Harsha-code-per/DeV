@@ -16,8 +16,11 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Glob } from "@dev-ai/core/util/glob"
 import { Discovery } from "./discovery"
 import RESEARCH from "./research.txt"
+import SLIDES from "./slides.txt"
+import DOCUMENTS from "./documents.txt"
 import { isRecord } from "@/util/record"
 import { Marketplace } from "@/marketplace"
+import { Plugin } from "@/plugin"
 import { McpCatalog } from "@/mcp/catalog"
 import type { PermissionV1 } from "@dev-ai/core/v1/permission"
 
@@ -36,10 +39,17 @@ const CUSTOMIZE_DEV_SKILL_NAME = "customize-devcode"
 const CUSTOMIZE_DEV_SKILL_DESCRIPTION =
   "Only for devcode's own configuration: dev.json(c), .dev/, ~/.config/devcode/, and devcode agents, skills, plugins, MCP servers or permission rules. Not for the user's own code."
 const CUSTOMIZE_DEV_SKILL_BODY = SkillPlugin.CustomizeDevcodeContent
-// Kept out of the system prompt, which every coding turn pays for; loaded when a question is about the world.
-const RESEARCH_SKILL_NAME = "research"
-const RESEARCH_SKILL_DESCRIPTION =
-  "Use before answering a question about the world (events, prices, products, jobs, news, people, places) with web search."
+// Built in, loaded only when a task needs them, so turns that don't pay nothing beyond one line each.
+// A skill of the same name on disk replaces one of these.
+const BUILT_IN: [string, string, string][] = [
+  [
+    "research",
+    "Use before answering a question about the world (events, prices, products, jobs, news, people, places) with web search.",
+    RESEARCH,
+  ],
+  ["slides", "Use to make a presentation or slide deck: PowerPoint, PDF or a page to present from.", SLIDES],
+  ["documents", "Use to write a document to send or keep: a report, proposal, letter, resume or spec, as Word, PDF or a page.", DOCUMENTS],
+]
 
 export const Info = Schema.Struct({
   name: Schema.String,
@@ -305,7 +315,10 @@ const discoverSkills = Effect.fnUntraced(function* (
       for (const plugin of yield* Effect.promise(() => claudePlugins(root, directory))) {
         if (plugins.some((item) => item.root === plugin.root)) continue
         plugins.push(plugin)
-        yield* scan(state, plugin.root, "{SKILL.md,skills/*/SKILL.md}", { dot: true, scope: "plugin" })
+        const patterns = yield* Effect.promise(() =>
+      Marketplace.skillPatterns(plugin.root).catch(() => ["SKILL.md", "skills/*/SKILL.md"]),
+    )
+    for (const pattern of patterns) yield* scan(state, plugin.root, pattern, { dot: true, scope: "plugin" })
       }
     }
 
@@ -323,7 +336,10 @@ const discoverSkills = Effect.fnUntraced(function* (
   for (const plugin of yield* Effect.promise(() => Marketplace.enabled(cfg))) {
     if (plugins.some((item) => item.root === plugin.root)) continue
     plugins.push({ name: plugin.name, root: plugin.root, data: plugin.data })
-    yield* scan(state, plugin.root, "{SKILL.md,skills/*/SKILL.md}", { dot: true, scope: "plugin" })
+    const patterns = yield* Effect.promise(() =>
+      Marketplace.skillPatterns(plugin.root).catch(() => ["SKILL.md", "skills/*/SKILL.md"]),
+    )
+    for (const pattern of patterns) yield* scan(state, plugin.root, pattern, { dot: true, scope: "plugin" })
   }
 
   const configDirs = yield* config.directories()
@@ -414,8 +430,11 @@ const layer = Layer.effect(
     const fsys = yield* FSUtil.Service
     const global = yield* Global.Service
     const flags = yield* RuntimeFlags.Service
+    const plugin = yield* Plugin.Service
     const discovered = yield* InstanceState.make(
       Effect.fn("Skill.discovery")(function* (ctx) {
+        // Plugins add skill folders from their config hook; without waiting, a reload listed none of them.
+        yield* plugin.init()
         return yield* discoverSkills(
           config,
           discovery,
@@ -439,12 +458,8 @@ const layer = Layer.effect(
           location: "<built-in>",
           content: CUSTOMIZE_DEV_SKILL_BODY,
         }
-        s.skills[RESEARCH_SKILL_NAME] = {
-          name: RESEARCH_SKILL_NAME,
-          description: RESEARCH_SKILL_DESCRIPTION,
-          location: "<built-in>",
-          content: RESEARCH,
-        }
+        for (const [name, description, content] of BUILT_IN)
+          s.skills[name] = { name, description, location: "<built-in>", content }
         yield* loadSkills(s, yield* InstanceState.get(discovered), events)
         return s
       }),
@@ -554,7 +569,7 @@ export function fmt(list: Info[], opts: { verbose: boolean }) {
 export const node = LayerNode.make({
   service: Service,
   layer: layer,
-  deps: [Discovery.node, Config.node, EventV2Bridge.node, FSUtil.node, Global.node, RuntimeFlags.node],
+  deps: [Discovery.node, Config.node, EventV2Bridge.node, FSUtil.node, Global.node, RuntimeFlags.node, Plugin.node],
 })
 
 export * as Skill from "."

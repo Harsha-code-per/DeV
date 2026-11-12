@@ -1,0 +1,9 @@
+Write a document the person can read, edit and send: a report, a proposal, a letter, a resume, a spec, notes.
+
+1. Ask who it is for and what it must achieve, unless they already said. Agree the outline in a few lines before writing a long document.
+2. Write it as Markdown in the project (or the current folder), with a clear title, short sections and tables where they help.
+3. Give them the format they need:
+   - Word: `pandoc doc.md -o doc.docx` if pandoc is installed; otherwise make an HTML version and run `soffice --headless --convert-to docx doc.html` if LibreOffice is installed.
+   - PDF: `pandoc doc.md -o doc.pdf` when a PDF engine is installed; otherwise `soffice --headless --convert-to pdf doc.html`; otherwise open the HTML version with the artifact tool and tell them to print it to PDF from the browser.
+   - To read or share in a browser: the artifact tool, as a clean page that prints well.
+4. Check the output opens and looks right (convert a PDF page to text or open it), then give the file paths. Never put keys or passwords into a document.

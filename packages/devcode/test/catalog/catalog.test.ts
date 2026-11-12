@@ -50,6 +50,18 @@ describe("Catalog", () => {
     expect(await Catalog.status(entry, "project", root)).toBe("available")
   })
 
+  test("an entry installed from a marketplace counts as installed", async () => {
+    const root = await tmp()
+    const where = await Catalog.paths("project", root)
+    const entry = Catalog.get("ui-ux-pro-max")!
+    expect(await Catalog.status(entry, "project", root)).toBe("available")
+    await fs.mkdir(path.dirname(where.config), { recursive: true })
+    await Bun.write(where.config, JSON.stringify({ enabled_plugins: { "ui-ux-pro-max@dev": true } }))
+    expect(await Catalog.status(entry, "project", root)).toBe("installed")
+    await Bun.write(where.config, JSON.stringify({ enabled_plugins: { "ui-ux-pro-max@dev": false } }))
+    expect(await Catalog.status(entry, "project", root)).toBe("disabled")
+  })
+
   test("bundled mcp can be disabled per scope without a full entry", async () => {
     const root = await tmp()
     const entry = Catalog.get("rea")!

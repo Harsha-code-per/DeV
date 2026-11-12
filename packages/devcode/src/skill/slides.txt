@@ -1,0 +1,10 @@
+Make a presentation the person can open, present and share.
+
+1. Ask what it is for, who will watch it and roughly how many slides, unless they already said. Offer 2 to 3 visual directions with the artifact tool's `directions` when the look matters to them.
+2. Write the deck as one Markdown file in the project (or the current folder) using Marp: start with front matter (`marp: true`, `theme: default`, `paginate: true`, and a `style:` block for colours and fonts), then one slide per `---`. Keep each slide to a headline and a few short points or one visual; put the detail in speaker notes as `<!-- notes -->` comments.
+3. Build what they asked for, with the pinned version:
+   - preview: `npx -y @marp-team/marp-cli@4.5.1 deck.md -o deck.html`, then open it with the artifact tool or the browser
+   - PowerPoint: `npx -y @marp-team/marp-cli@4.5.1 deck.md --pptx -o deck.pptx` (add `--pptx-editable` for editable text when LibreOffice is installed)
+   - PDF: `npx -y @marp-team/marp-cli@4.5.1 deck.md --pdf -o deck.pdf`
+   Exports need a Chrome, Edge or Firefox on the machine; say so if none is found.
+4. Look at the result (open the HTML or PDF), fix what looks wrong, and give the person the file paths.

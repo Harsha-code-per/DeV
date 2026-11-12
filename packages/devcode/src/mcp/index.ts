@@ -21,6 +21,7 @@ import { NamedError } from "@dev-ai/core/util/error"
 import { InstallationVersion } from "@dev-ai/core/installation/version"
 import { withTimeout } from "@/util/timeout"
 import { FSUtil } from "@dev-ai/core/fs-util"
+import fs from "fs/promises"
 import { McpOAuthPendingProvider, McpOAuthProvider, OAUTH_CALLBACK_PATH } from "./oauth-provider"
 import { McpOAuthCallback } from "./oauth-callback"
 import { McpAuth } from "./auth"
@@ -343,7 +344,8 @@ const layer = Layer.effect(
     const connectLocal = Effect.fn("MCP.connectLocal")(function* (
       key: string,
       mcp: ConfigMCPV1.Info & { type: "local" },
-    ) {
+      retried = false,
+    ): Effect.fn.Return<{ client: MCPClient | undefined; status: Status }> {
       const [cmd, ...args] = mcp.command
       const baseDir = yield* InstanceState.directory
       const cwd = mcp.cwd ? path.resolve(baseDir, mcp.cwd) : baseDir
@@ -359,17 +361,32 @@ const layer = Layer.effect(
         },
       })
 
+      // What the server printed, so a failure says why instead of only "Connection closed".
+      const output: string[] = []
+      transport.stderr?.on("data", (chunk: Buffer) => void output.push(chunk.toString()))
+
       const connectTimeout = mcp.timeout ?? DEFAULT_TIMEOUT
-      return yield* connectTransport(transport, connectTimeout).pipe(
+      const result = yield* connectTransport(transport, connectTimeout).pipe(
         Effect.map((client): { client: MCPClient | undefined; status: Status } => ({
           client,
           status: { status: "connected" },
         })),
         Effect.catch((error): Effect.Effect<{ client: MCPClient | undefined; status: Status }> => {
           const msg = error instanceof Error ? error.message : String(error)
-          return Effect.succeed({ client: undefined, status: { status: "failed", error: msg } })
+          const said = output.join("").trim().split("\n").filter((line) => line.trim()).at(-1)
+          return Effect.succeed({
+            client: undefined,
+            status: { status: "failed", error: said ? `${msg}: ${said.slice(0, 300)}` : msg },
+          })
         }),
       )
+      // A download stopped halfway (DeV closed during the first start) leaves npx a cache folder without its
+      // package.json, and every later start fails the same way. Remove that one folder and try once more.
+      const broken = output.join("").match(/(\S*[\/\\]_npx[\/\\][0-9a-f]+)[\/\\]package\.json/)?.[1]
+      if (result.client || retried || !broken) return result
+      yield* Effect.logWarning("removing a broken npx cache folder", { key, folder: broken })
+      yield* Effect.promise(() => fs.rm(broken, { recursive: true, force: true }))
+      return yield* connectLocal(key, mcp, true)
     })
 
     const create = Effect.fn("MCP.create")(

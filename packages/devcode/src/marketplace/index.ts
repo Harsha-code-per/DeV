@@ -402,14 +402,33 @@ export async function components(plugin: Plugin) {
   return { commands, agents, hooks, mcp }
 }
 
+/**
+ * Where a plugin's skills are, as globs from its folder: SKILL.md, skills/, and every folder its
+ * manifest names under "skills" (a skill's own folder or a folder of skills).
+ */
+export async function skillPatterns(root: string) {
+  const manifest = (await readPluginManifest(root)) ?? {}
+  const named = listOf(manifest.skills)
+    .filter((item): item is string => typeof item === "string")
+    .flatMap((item) => {
+      const dir = path.relative(root, inside(root, item))
+      return dir ? [`${dir}/SKILL.md`, `${dir}/*/SKILL.md`] : []
+    })
+  return ["SKILL.md", "skills/*/SKILL.md", ...named]
+}
+
 /** What a plugin folder contains, shown before it's turned on. */
 export async function contents(dir: string) {
-  const count = async (pattern: string) =>
-    (await Array.fromAsync(new Bun.Glob(pattern).scan({ cwd: dir, dot: true }))).length
   const plugin: Plugin = { id: "x@x", name: "x", marketplace: "x", root: dir, data: "" }
   const parts = await components(plugin)
   return {
-    skills: (await count("skills/*/SKILL.md")) + (await count("SKILL.md")),
+    skills: (
+      await Promise.all(
+        (await skillPatterns(dir)).map(
+          async (pattern) => (await Array.fromAsync(new Bun.Glob(pattern).scan({ cwd: dir, dot: true }))).length,
+        ),
+      )
+    ).reduce((a, b) => a + b, 0),
     commands: Object.keys(parts.commands).length,
     agents: Object.keys(parts.agents).length,
     hooks: Object.values(parts.hooks).reduce((sum, list) => sum + list.length, 0),

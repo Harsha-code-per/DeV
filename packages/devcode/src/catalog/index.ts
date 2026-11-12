@@ -52,12 +52,15 @@ export function search(query: string) {
 
 export async function status(entry: Entry, scope: Scope, root: string): Promise<Status> {
   const where = await paths(scope, root)
+  const cfg = await readConfig(where.config)
+  // The same thing can also come from a marketplace, which records it as "<name>@<marketplace>".
+  const market = Object.entries(cfg.enabled_plugins ?? {}).find(([id]) => id.split("@")[0] === entry.id && id.includes("@"))
+  if (market) return market[1] ? "installed" : "disabled"
   if (entry.kind === "skill") {
     if (await exists(path.join(where.skills, entry.id))) return "installed"
     if (await exists(path.join(where.skills, `.${entry.id}`))) return "disabled"
     return "available"
   }
-  const cfg = await readConfig(where.config)
   if (entry.kind === "mcp") {
     const item = cfg.mcp?.[entry.id]
     if (item?.enabled === false) return "disabled"
@@ -80,7 +83,7 @@ export async function install(entry: Entry, scope: Scope, root: string) {
     const current = plugins(await readConfig(where.config))
     if (!current.some((spec) => samePlugin(spec, entry.plugin!)))
       await edit(where.config, ["plugin"], [...current, entry.plugin])
-    return `Added plugin ${entry.plugin} to ${where.config}. It loads in the next session.`
+    return `Added plugin ${entry.plugin} to ${where.config}. Run /reload-plugins or start a new session to load it.`
   }
   const source = path.join(await fetchSkill(entry.skill!), entry.skill!.path)
   const target = path.join(where.skills, entry.id)
@@ -89,7 +92,7 @@ export async function install(entry: Entry, scope: Scope, root: string) {
   await fs.mkdir(where.skills, { recursive: true })
   await fs.cp(source, target, { recursive: true })
   const found = await Array.fromAsync(new Bun.Glob("**/SKILL.md").scan({ cwd: target, dot: true }))
-  return `Installed ${found.length} skill(s) to ${target}. They load in the next session; read a SKILL.md directly to use one now:\n${found
+  return `Installed ${found.length} skill(s) to ${target}. They load after /reload-plugins or in a new session; read a SKILL.md directly to use one now:\n${found
     .slice(0, 20)
     .map((file) => path.join(target, file))
     .join("\n")}`

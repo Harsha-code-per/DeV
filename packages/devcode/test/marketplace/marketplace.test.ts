@@ -128,6 +128,14 @@ describe("plugin marketplaces", () => {
     expect(await Bun.file(path.join(result.installPath, "commands", "hello.md")).exists()).toBe(false)
   })
 
+  test("skills in a folder the plugin's manifest names are found", async () => {
+    const root = path.join(dir, "named-skills")
+    await write(path.join(root, ".claude-plugin", "plugin.json"), JSON.stringify({ name: "p", skills: "./.claude/skills/" }))
+    await write(path.join(root, ".claude", "skills", "brand", "SKILL.md"), "---\nname: brand\ndescription: d\n---\n")
+    await write(path.join(root, ".claude", "skills", "slides", "SKILL.md"), "---\nname: slides\ndescription: d\n---\n")
+    expect((await Marketplace.contents(root)).skills).toBe(2)
+  })
+
   test("a plugin from its own git repo is pinned to that commit", async () => {
     const project = path.join(dir, "project2")
     await fs.mkdir(project, { recursive: true })

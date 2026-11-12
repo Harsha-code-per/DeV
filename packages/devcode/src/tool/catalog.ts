@@ -5,6 +5,7 @@ import DESCRIPTION from "./catalog.txt"
 import { Catalog } from "@/catalog"
 import { MCP } from "@/mcp"
 import { InstanceState } from "@/effect/instance-state"
+import { Marketplace } from "@/marketplace"
 
 export const Parameters = Schema.Struct({
   action: Schema.Literals(["search", "list", "install", "uninstall", "enable", "disable"]).annotate({
@@ -50,9 +51,19 @@ export const CatalogTool = Tool.define(
                 }),
               ),
             )
+            // Plugins installed from a marketplace that are not catalog entries are live too: list them, or the
+            // answer to "what is installed" leaves them out.
+            const extra =
+              params.action === "list"
+                ? (yield* Effect.promise(() => Marketplace.installed(root)))
+                    .filter((item) => !Catalog.get(item.id.split("@")[0]!))
+                    .map((item) => `- ${item.id} [marketplace plugin] ${item.scope ?? "user"}:${item.enabled ? "installed" : "disabled"} version ${item.version}`)
+                : []
             return {
               title: `${found.length} catalog entries`,
-              output: rows.length ? rows.join("\n") : `No catalog entries match "${params.query}".`,
+              output: rows.length
+                ? [...rows, ...(extra.length ? ["", "Installed from a marketplace:", ...extra] : [])].join("\n")
+                : `No catalog entries match "${params.query}".`,
               metadata: {},
             }
           }
