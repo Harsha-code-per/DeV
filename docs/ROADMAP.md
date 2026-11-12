@@ -49,6 +49,7 @@ New features wait until these are done.
 - [x] For something judged by taste (a landing page, a logo, a UI), DeV shows 2 to 3 directions side by side in one page and asks which to build
 - [x] `/reload-plugins` reloads plugins, skills and MCP servers and shows what is live; `/status` counts marketplace plugins and skills
 - [x] Plugins that keep their skills in a folder their manifest names load them
+- [x] `devcode storage` shows what DeV keeps on disk; pages expire after 30 days, snapshots and tool output after 7
 - [ ] Reflection: after a session, DeV turns corrections, rewinds and failed checks into lessons
 - [ ] Memory in three scopes: the project, you across projects, and each model; all shown in `/memory`
 - [ ] Model profiles learnt from results, so a model is judged by finished work, not by answering without an error
