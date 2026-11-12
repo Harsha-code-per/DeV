@@ -70,3 +70,12 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           [ -n "$passed" ] || { echo "The benchmark printed no score."; exit 1; }
           [ "$passed" -ge "$((baseline - allow))" ] || { echo "Score dropped: $passed passed, baseline $baseline."; exit 1; }
+
+      # The full results (each run's last message and test output), so a failure can be read afterwards.
+      - name: Keep the results
+        if: always() && steps.keys.outputs.run == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: bench-results
+          path: bench/results/
+          retention-days: 30
