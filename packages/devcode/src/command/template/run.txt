@@ -1,0 +1,12 @@
+Start this project's app and drive it, so the person sees it working.
+
+---
+
+Input: $ARGUMENTS
+
+---
+
+1. Work out what kind of project this is and how it starts: README, package.json scripts, Makefile, docker-compose, pyproject or similar. Install dependencies if they are missing.
+2. Start it. A server or watcher runs in the background (the bash tool's `background` option); wait for its ready line.
+3. Use it: open the page with a browser tool if one is connected, call its endpoints, or run the CLI with sample input. With an argument, do that.
+4. Report the address or command to use it, what you checked and what you saw. Leave it running and say how to stop it.

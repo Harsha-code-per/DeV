@@ -16,7 +16,20 @@ export const Parameters = Schema.Struct({
   name: Schema.String.annotate({
     description: "A short name for the page, such as 'test coverage report'. Using the same name again replaces it",
   }),
-  html: Schema.String.annotate({ description: "The complete HTML document, with its CSS and JavaScript inline" }),
+  html: Schema.optional(Schema.String).annotate({
+    description: "The complete HTML document, with its CSS and JavaScript inline. Leave out when giving directions",
+  }),
+  directions: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        name: Schema.String.annotate({ description: "A short name for this direction, such as 'Bold editorial'" }),
+        html: Schema.String.annotate({ description: "The complete HTML document for this direction" }),
+      }),
+    ),
+  ).annotate({
+    description:
+      "2 to 4 distinct directions for something people judge by taste. They open together in one page, side by side, so the person can pick",
+  }),
 })
 
 export const ArtifactTool = Tool.define(
@@ -28,13 +41,33 @@ export const ArtifactTool = Tool.define(
       Effect.gen(function* () {
         const ctx = yield* InstanceState.context
         const project = ctx.worktree === "/" ? ctx.directory : ctx.worktree
-        const file = save(path.join(Global.Path.data, "artifacts"), project, params)
+        const root = path.join(Global.Path.data, "artifacts")
+        const directions = params.directions ?? []
+        if (directions.length === 0 && !params.html) throw new Error("Give either html or 2 to 4 directions.")
+        const pages = directions.map((item) => ({
+          // The tabs letter the directions, so a model's own "1." is dropped.
+          name: item.name.replace(/^\s*(?:\d+|[A-Da-d])[.)]\s*/, ""),
+          file: save(root, project, { name: `${params.name} - ${item.name}`, html: item.html }),
+        }))
+        const file = save(root, project, {
+          name: params.name,
+          html: pages.length ? compare(params.name, pages) : params.html!,
+        })
         // Opening is best effort: on a server or over SSH there is no browser, and the path is enough.
         const opened = yield* Effect.promise(() => openFile(file).then(() => true, () => false))
         const link = pathToFileURL(file).href
         return {
           title: `Artifact: ${params.name}`,
-          output: `Saved the page to ${link}${opened ? " and opened it in the browser" : ""}.`,
+          output: [
+            `Saved the page to ${link}${opened ? " and opened it in the browser" : ""}.`,
+            ...(pages.length
+              ? [
+                  "It shows these directions side by side, each also on its own page:",
+                  ...pages.map((page) => `- ${page.name}: ${pathToFileURL(page.file).href}`),
+                  "Now ask the person which direction to continue with, using the question tool with one option per direction, and offer changes too.",
+                ]
+              : []),
+          ].join("\n"),
           metadata: { file },
         }
       }),
@@ -62,4 +95,37 @@ function slug(text: string) {
 function wrap(name: string, body: string) {
   const title = name.replace(/[<&>]/g, (c) => `&#${c.charCodeAt(0)};`)
   return `<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>${title}</title>\n<style>:root{color-scheme:light dark}body{font:16px/1.5 system-ui,sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem}</style>\n</head>\n<body>\n${body}\n</body>\n</html>\n`
+}
+
+/** One page that shows each direction in a tab, or all of them side by side, with links to each. */
+function compare(name: string, pages: { name: string; file: string }[]) {
+  const esc = (text: string) => text.replace(/[<&>"]/g, (c) => `&#${c.charCodeAt(0)};`)
+  const tabs = pages
+    .map((page, i) => `<button data-i="${i}"${i ? "" : ' class="on"'}>${String.fromCharCode(65 + i)}. ${esc(page.name)}</button>`)
+    .join("")
+  const frames = pages
+    .map(
+      (page, i) =>
+        `<figure data-i="${i}"${i ? "" : ' class="on"'}><figcaption>${String.fromCharCode(65 + i)}. ${esc(page.name)} <a href="${esc(pathToFileURL(page.file).href)}" target="_blank">open alone</a></figcaption><iframe src="${esc(path.basename(page.file))}" loading="lazy"></iframe></figure>`,
+    )
+    .join("")
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(name)}</title>
+<style>
+:root{color-scheme:light dark;--line:#8884}*{box-sizing:border-box}body{margin:0;font:14px/1.4 system-ui,sans-serif;height:100vh;display:flex;flex-direction:column}
+header{display:flex;gap:6px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:15px;margin:0 12px 0 0}button{font:inherit;padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:none;color:inherit;cursor:pointer}
+button.on{background:#F2A516;color:#000;border-color:#F2A516}main{flex:1;display:flex;gap:8px;padding:8px;min-height:0}
+figure{margin:0;flex:1;display:none;flex-direction:column;min-width:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+figure.on,body.all figure{display:flex}figcaption{padding:6px 10px;border-bottom:1px solid var(--line)}figcaption a{float:right;color:inherit}
+iframe{flex:1;border:0;width:100%}@media (max-width:700px){main{flex-direction:column}}
+</style></head>
+<body><header><h1>${esc(name)}</h1>${tabs}<button id="all">Side by side</button></header><main>${frames}</main>
+<script>
+const set=(i)=>{document.body.classList.remove("all");document.querySelectorAll("[data-i]").forEach(e=>e.classList.toggle("on",e.dataset.i===i))}
+document.querySelectorAll("header button[data-i]").forEach(b=>b.onclick=()=>set(b.dataset.i))
+document.getElementById("all").onclick=()=>document.body.classList.toggle("all")
+</script></body></html>
+`
 }

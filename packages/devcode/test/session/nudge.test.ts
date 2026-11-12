@@ -30,3 +30,20 @@ test("a reply cut off at the output limit is never a real ending", () => {
   expect(SessionNudge.next("cut1", "Done. The tests pass.", undefined, true)).toContain("length limit")
   expect(SessionNudge.next("cut1", "", undefined, true)).toBeUndefined()
 })
+
+test("a turn that changed code runs its checks, and a changed page is looked at in the browser", () => {
+  const edit = (filePath: string) => ({ tool: "edit", input: { filePath } })
+  const bash = (command: string) => ({ tool: "bash", input: { command } })
+  expect(SessionNudge.checks("c1", [edit("src/a.ts")], false)).toContain("run the project's checks")
+  expect(SessionNudge.checks("c1", [edit("src/a.ts")], false)).toBeUndefined()
+  expect(SessionNudge.checks("c2", [edit("src/a.ts"), bash("bun test")], false)).toBeUndefined()
+  expect(SessionNudge.checks("c3", [edit("README.md")], false)).toBeUndefined()
+  expect(SessionNudge.checks("c4", [{ tool: "read", input: { filePath: "a.ts" } }], true)).toBeUndefined()
+  const page = SessionNudge.checks("c5", [edit("site/index.html"), bash("npm run build")], true)
+  expect(page).toContain("browser")
+  expect(page).not.toContain("run the project's checks")
+  expect(
+    SessionNudge.checks("c6", [edit("site/index.html"), bash("npm run build"), { tool: "chrome-devtools_navigate_page", input: {} }], true),
+  ).toBeUndefined()
+  expect(SessionNudge.checks("c7", [edit("site/index.html"), bash("npm test")], false)).toBeUndefined()
+})

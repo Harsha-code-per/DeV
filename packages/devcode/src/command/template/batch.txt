@@ -1,0 +1,13 @@
+Make a large change by splitting it into independent units done in parallel.
+
+---
+
+Change: $ARGUMENTS
+
+---
+
+1. Study the change and the code it touches, then split it into 5 to 30 units that can each be done and checked on their own (by file, module or feature). If it does not split cleanly, say so and do it in one piece instead.
+2. Show the plan as a numbered list and ask the person to confirm it with the question tool.
+3. Start one subagent per unit with the task tool, several in one message, each with `isolation: "worktree"` when the project is a git repository, so units cannot collide. Give each the full brief: the overall change, its unit, the project's conventions and the check to run.
+4. When they finish, review each result, bring the changes together, run the project's checks, and fix conflicts or failures.
+5. Report what each unit changed and what is left.

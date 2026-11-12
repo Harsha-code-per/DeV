@@ -1,0 +1,12 @@
+Confirm that the latest change actually works by running it, not by reading it.
+
+---
+
+Input: $ARGUMENTS
+
+---
+
+1. Find what changed (`git diff`, `git status --short`, or the work in this session) and what it should do. With an argument, verify that instead.
+2. Find how this project builds and runs: its README, scripts in package.json, Makefile, pyproject or similar. Build it if it needs building.
+3. Exercise the change the way a person would: run the command, call the endpoint, open the page (with a browser tool if one is connected), or run the script with real input. Run the project's tests and type checks too.
+4. Report what you ran and what you saw, with the key output. Say plainly whether it works. If it does not, say what failed and fix it only if the person asked you to.

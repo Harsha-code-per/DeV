@@ -46,4 +46,34 @@ export function next(userMessageID: string, reply: string, agent?: string, cutOf
   return "Go ahead and do that now with your tools; don't stop until the task is done. If you are actually finished, say so plainly."
 }
 
+const EDITS = new Set(["edit", "write", "apply_patch", "notebook_edit"])
+// A command that checks the work: tests, type checks, linters, builds.
+const CHECK =
+  /\b(?:test|tests|pytest|jest|vitest|mocha|tsc|typecheck|type-check|lint|eslint|ruff|mypy|pyright|clippy|build|cargo|go (?:test|vet|build)|mvn|gradle|make|check)\b/i
+const PAGE = /\.(?:html?|css|scss|sass|less|jsx|tsx|vue|svelte|astro)\b/i
+const BROWSER = /chrome|playwright|browser|puppeteer/i
+const checked = new Set<string>()
+
+/**
+ * Before a turn that changed files ends: the instruction to run the project's checks, or to look at a changed
+ * page in the browser, or undefined. Once per user message, so it can't loop. `calls` are the tool calls made
+ * since that message; `browser` says whether a browser tool is connected.
+ */
+export function checks(userMessageID: string, calls: { tool: string; input: Record<string, unknown> }[], browser: boolean) {
+  if (checked.has(userMessageID)) return undefined
+  const edited = calls.filter((call) => EDITS.has(call.tool)).map((call) => JSON.stringify(call.input))
+  // Notes and docs alone have nothing to run.
+  if (edited.every((input) => /\.(?:md|mdx|txt|rst)"/i.test(input) && !PAGE.test(input))) return undefined
+  const ran = calls.filter((call) => call.tool === "bash").map((call) => String(call.input["command"] ?? ""))
+  const looked = calls.some((call) => BROWSER.test(call.tool) || (call.tool === "execute" && BROWSER.test(JSON.stringify(call.input))))
+  const pages = edited.some((input) => PAGE.test(input))
+  const missing = [
+    ...(ran.some((command) => CHECK.test(command)) ? [] : ["run the project's checks (its tests, type check or build, whichever it has) and fix what fails"]),
+    ...(pages && browser && !looked ? ["open the changed page in the browser with the browser tool and check that it renders and works"] : []),
+  ]
+  if (missing.length === 0) return undefined
+  checked.add(userMessageID)
+  return `You changed files in this turn. Before you finish, ${missing.join(", then ")}. If the project has no such check, say so plainly.`
+}
+
 export * as SessionNudge from "./nudge"

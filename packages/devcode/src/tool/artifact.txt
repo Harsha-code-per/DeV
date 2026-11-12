@@ -4,4 +4,6 @@ Use it when they ask for something to look at, or when the result reads far bett
 
 Write one complete, self-contained HTML document: CSS and JavaScript inline, no build step. Load a library only if it is really needed, from a CDN with an exact version. Make the page readable in light and dark mode and on a narrow window.
 
+For something people judge by taste (a landing page, a logo, a UI), give 2 to 4 `directions` instead of `html`: they open in one page side by side, so the person can pick one.
+
 Calling again with the same name replaces that page, so update a page instead of making a new one. The page stays on this computer; tell the person where it is.

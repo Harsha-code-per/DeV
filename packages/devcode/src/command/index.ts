@@ -13,6 +13,12 @@ import PROMPT_REVIEW from "./template/review.txt"
 import PROMPT_SECURITY_REVIEW from "./template/security-review.txt"
 import PROMPT_SIMPLIFY from "./template/simplify.txt"
 import PROMPT_PR_COMMENTS from "./template/pr-comments.txt"
+import PROMPT_RECAP from "./template/recap.txt"
+import PROMPT_VERIFY from "./template/verify.txt"
+import PROMPT_RUN from "./template/run.txt"
+import PROMPT_BATCH from "./template/batch.txt"
+import PROMPT_DEEP_RESEARCH from "./template/deep-research.txt"
+import PROMPT_UPDATE_CONFIG from "./template/update-config.txt"
 import { LegacyEvent } from "@dev-ai/schema/legacy-event"
 
 type State = {
@@ -105,6 +111,7 @@ const layer = Layer.effect(
         subtask: true,
         hints: hints(PROMPT_REVIEW),
       }
+      commands["code-review"] = { ...commands[Default.REVIEW], name: "code-review" }
       commands[Default.SECURITY_REVIEW] = {
         name: Default.SECURITY_REVIEW,
         description: "find exploitable vulnerabilities in changes [commit|branch|pr]",
@@ -127,6 +134,17 @@ const layer = Layer.effect(
         template: PROMPT_PR_COMMENTS,
         hints: hints(PROMPT_PR_COMMENTS),
       }
+
+      const builtin: [string, string, string][] = [
+        ["recap", "one-line summary of this session so far", PROMPT_RECAP],
+        ["verify", "confirm the latest change works by running it [what]", PROMPT_VERIFY],
+        ["run", "start the project's app and drive it [what to try]", PROMPT_RUN],
+        ["batch", "split a large change into parallel units in worktrees <change>", PROMPT_BATCH],
+        ["deep-research", "research a question across many sources, with a cited report <question>", PROMPT_DEEP_RESEARCH],
+        ["update-config", "change DeV's settings from a description <change>", PROMPT_UPDATE_CONFIG],
+      ]
+      for (const [name, description, template] of builtin)
+        commands[name] = { name, description, source: "command", template, hints: hints(template) }
 
       for (const [name, command] of Object.entries(cfg.command ?? {})) {
         commands[name] = {

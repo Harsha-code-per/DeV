@@ -1,3 +1,5 @@
+import { ModePick } from "./mode-pick"
+import { Permission } from "@/permission"
 import path from "path"
 import { SessionV1 } from "@dev-ai/core/v1/session"
 import { Effect } from "effect"
@@ -38,6 +40,31 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
       sessionID: userMessage.info.sessionID,
       type: "text",
       text: `<system-reminder>\nNotes you saved in earlier sessions of this project with the remember tool. They are rules for this request too: follow them, and remove any that turn out wrong.\n${notes}\n</system-reminder>`,
+      synthetic: true,
+    })
+
+  // Something judged by taste (a landing page, a logo, a UI) starts with directions to pick from, decided here
+  // in code and the same for everyone. It stays until DeV has shown them; denying the artifact tool turns it off.
+  const asked = input.messages.findLast(
+    (msg) => msg.info.role === "user" && msg.parts.some((part) => part.type === "text" && !part.synthetic),
+  )
+  const request = asked?.parts.flatMap((part) => (part.type === "text" && !part.synthetic ? [part.text] : [])).join("\n")
+  const shown = input.messages
+    .slice(asked ? input.messages.indexOf(asked) : 0)
+    .some((msg) => msg.parts.some((part) => part.type === "tool" && part.tool === "artifact"))
+  if (
+    request &&
+    !shown &&
+    input.agent.mode !== "subagent" &&
+    !Permission.disabled(["artifact"], input.agent.permission).has("artifact") &&
+    ModePick.taste(request)
+  )
+    userMessage.parts.push({
+      id: PartID.ascending(),
+      messageID: userMessage.info.id,
+      sessionID: userMessage.info.sessionID,
+      type: "text",
+      text: "<system-reminder>\nThis request is judged by taste. Before building it into the project, look at what exists if anything, then show 2 to 3 clearly different directions with the artifact tool's `directions` (each a complete, polished HTML page), and ask the person which to continue with. Then build the chosen one.\n</system-reminder>",
       synthetic: true,
     })
 

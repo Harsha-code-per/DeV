@@ -51,6 +51,18 @@ export function open(text: string) {
 // that states it to the project's memory; models otherwise reply "Noted" and forget it with the session.
 const REMEMBER =
   /\b(remember (that|this|to)|please remember|from now on|going forward|in (the )?future|next time|always (use|run|write|prefer|ask|keep)|never (use|run|write|commit|push)|i (always )?prefer|my preference)\b/i
+// Work people judge by how it looks or sounds: making one, not fixing or explaining one.
+// ponytail: wording rules; an unusual phrasing gets no directions, which is the old behaviour.
+const TASTE_THING =
+  /\b(?:landing page|home ?page|hero(?: section)?|website|web site|site design|logo|brand(?:ing)?|colou?r (?:scheme|palette)|theme|ui|ux|interface|mockup|mock-up|wireframe|design|redesign|poster|banner|slides?|deck|portfolio|dashboard look)\b/i
+const MAKING = /\b(?:make|create|build|design|redesign|craft|generate|give me|i want|i need|come up with|propose|draft)\b/i
+const NOT_TASTE = /\b(?:fix|bug|error|crash|broken|test|why|explain|how does|refactor|deploy|install)\b/i
+
+/** A request to make something people judge by taste, where seeing directions beats describing them. */
+export function taste(text: string) {
+  return TASTE_THING.test(text) && MAKING.test(text) && !NOT_TASTE.test(text)
+}
+
 // ponytail: a long unbroken run of letters and digits is taken for a key or password and never saved.
 const SECRET = /[A-Za-z0-9_+/=-]{24,}/
 

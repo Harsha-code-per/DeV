@@ -1,0 +1,12 @@
+Research this question in depth and answer with a cited report.
+
+---
+
+Question: $ARGUMENTS
+
+---
+
+1. Load the research skill and follow it.
+2. Split the question into 3 to 6 parts or source groups, and start one subagent per part with the task tool, all in one message. Each searches several sources, opens the pages, and returns findings with their links.
+3. Combine what they found. Check facts that matter in a second source, and mark anything you could not confirm.
+4. Answer with a short summary first, then the details, and a link for every claim.

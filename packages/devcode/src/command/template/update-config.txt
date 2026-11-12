@@ -1,0 +1,12 @@
+Change DeV's own settings as the person describes.
+
+---
+
+Change: $ARGUMENTS
+
+---
+
+1. Load the customize-devcode skill for the settings format.
+2. Decide where it belongs: the user's settings (~/.config/dev/dev.json or dev.jsonc) for everywhere, or the project's .dev/dev.json for this repository only. Ask if it is unclear.
+3. Edit that file, keeping its comments and other settings. Never write keys or passwords into a project file.
+4. Say what you changed and in which file. Settings apply after /reload-plugins or in a new session.

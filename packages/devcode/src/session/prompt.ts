@@ -1176,7 +1176,8 @@ const layer = Layer.effect(
                     reply,
                     lastUser.agent,
                     lastAssistant.finish === "length",
-                  ))
+                  ) ??
+                  (yield* workChecks(prompted?.info.id ?? lastUser.id, lastUser.agent, prompted ? msgs.slice(msgs.indexOf(prompted) + 1) : [])))
                 : undefined
             const stop = goal
               ? { continue: goal }
@@ -1448,6 +1449,24 @@ const layer = Layer.effect(
         return yield* lastAssistant(sessionID)
       },
     )
+
+    // Checks in code, the same for everyone: a turn that changed files doesn't end before its checks ran.
+    const workChecks = Effect.fn("SessionPrompt.workChecks")(function* (
+      userMessageID: string,
+      agent: string,
+      after: SessionV1.WithParts[],
+    ) {
+      if (agent === "plan" || (yield* config.get()).checks === false) return undefined
+      const calls = after.flatMap((msg) =>
+        msg.info.role === "assistant"
+          ? msg.parts.flatMap((part) =>
+              part.type === "tool" && part.state.status === "completed" ? [{ tool: part.tool, input: part.state.input }] : [],
+            )
+          : [],
+      )
+      const browser = Object.keys(yield* mcp.tools()).some((name) => /chrome|playwright|browser|puppeteer/i.test(name))
+      return SessionNudge.checks(userMessageID, calls, browser)
+    })
 
     const loop: (input: LoopInput) => Effect.Effect<SessionV1.WithParts> = Effect.fn("SessionPrompt.loop")(function* (
       input: LoopInput,

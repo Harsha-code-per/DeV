@@ -148,6 +148,10 @@ export const Info = Schema.Struct({
     description: "Additional instruction files or patterns to include",
   }),
   sandbox: Schema.optional(ConfigSandboxV1.Info),
+  checks: Schema.optional(Schema.Boolean).annotate({
+    description:
+      "Before a turn that changed files ends, DeV makes sure the project's checks ran and that changed pages were looked at in a browser when one is connected (default true)",
+  }),
   schedules: Schema.optional(
     Schema.mutable(
       Schema.Array(

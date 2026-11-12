@@ -84,3 +84,20 @@ test("the sentence that states a lasting rule is the one saved", () => {
   expect(ModePick.rule("Fix the failing test.")).toBeUndefined()
   expect(ModePick.rule(`Remember that the staging key is ${"x".repeat(30)}`)).toBeUndefined()
 })
+
+test("making something judged by taste is told apart from coding work", () => {
+  for (const text of [
+    "I want a 3D cinematic landing page for my startup",
+    "design a logo for my bakery",
+    "Create a portfolio website for me",
+    "can you redesign the hero section of our site",
+  ])
+    expect(ModePick.taste(text)).toBe(true)
+  for (const text of [
+    "fix the bug in the landing page form",
+    "why does the logo not load",
+    "add a test for the theme toggle",
+    "rename getUser to fetchUser",
+  ])
+    expect(ModePick.taste(text)).toBe(false)
+})

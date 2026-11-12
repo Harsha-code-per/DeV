@@ -265,6 +265,44 @@
         "ref": "0874a27b17a22e2b7c2e2bcd725768e0803cad06",
         "path": "plugins"
       }
+    },
+    {
+      "id": "figma",
+      "kind": "mcp",
+      "name": "Figma",
+      "description": "Read and create designs in Figma: turn a frame into code, or code and ideas into frames. Signs in with your Figma account.",
+      "tags": [
+        "design",
+        "ui",
+        "figma",
+        "mockup",
+        "prototype"
+      ],
+      "license": "Figma terms",
+      "source": "https://help.figma.com/hc/en-us/articles/32132100833559",
+      "mcp": {
+        "type": "remote",
+        "url": "https://mcp.figma.com/mcp"
+      }
+    },
+    {
+      "id": "notion",
+      "kind": "mcp",
+      "name": "Notion",
+      "description": "Search, read and write pages and databases in your Notion workspace: documents, notes and plans. Signs in with your Notion account.",
+      "tags": [
+        "docs",
+        "documents",
+        "notes",
+        "wiki",
+        "notion"
+      ],
+      "license": "Notion terms",
+      "source": "https://developers.notion.com/docs/mcp",
+      "mcp": {
+        "type": "remote",
+        "url": "https://mcp.notion.com/mcp"
+      }
     }
   ]
 }
