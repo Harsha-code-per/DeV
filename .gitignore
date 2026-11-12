@@ -40,3 +40,6 @@ __pycache__/
 
 # Benchmark results (bench/README.md)
 bench/results/*.json
+
+# Benchmark task projects ship their sample logs.
+!bench/tasks/*/repo/logs/

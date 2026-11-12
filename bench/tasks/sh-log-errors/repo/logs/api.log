@@ -1,0 +1,4 @@
+2026-03-01T10:00:00 INFO api started
+2026-03-01T10:00:01 ERROR upstream timeout
+2026-03-01T10:00:02 WARN slow request
+2026-03-01T10:00:03 ERROR upstream timeout
