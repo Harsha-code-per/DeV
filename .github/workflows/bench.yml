@@ -1,11 +1,12 @@
 name: bench
 
-# Every night: the released DeV Code works through bench/tasks on free models, the way a new user
+# Every week: the released DeV Code works through bench/tasks on free models, the way a new user
 # would run it. bench/baseline.json holds the expected score and how far below it one run may fall;
 # a run below that goes red, and release.yml refuses to release while the last run here is red.
 on:
   schedule:
-    - cron: "30 21 * * *" # 03:00 in India
+    # Weekly, not nightly: a full run uses about 7 million tokens of the free quota. Run it by hand before a release.
+    - cron: "30 21 * * 0" # Monday 03:00 in India
   workflow_dispatch:
 
 permissions:

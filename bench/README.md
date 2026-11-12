@@ -45,9 +45,9 @@ Each agent run is memory-capped with `scripts/capped 3G` and killed at the timeo
 
 DeV Code uses whatever `devcode` has stored from `/connect`; set `XDG_DATA_HOME` to run the benchmark from a separate login.
 
-## Every night
+## Every week
 
-`.github/workflows/bench.yml` installs the released DeV Code and runs every task on free models. `baseline.json` holds the expected score (`passed`) and how far below it one run may fall (`allow`); a run below that goes red, and the release workflow refuses to release while the last run is red. One run varies by several tasks (see the results), which is why `allow` is 3. The workflow needs at least one free provider key as a repository secret: `BENCH_NVIDIA_API_KEY`, `BENCH_GROQ_API_KEY`, `BENCH_CEREBRAS_API_KEY`, `BENCH_GOOGLE_API_KEY` or `BENCH_OPENROUTER_API_KEY`.
+`.github/workflows/bench.yml` installs the released DeV Code and runs every task on free models, every Monday and whenever it is started by hand before a release. A full run uses about 7 million tokens of free quota, so it is not nightly. `baseline.json` holds the expected score (`passed`) and how far below it one run may fall (`allow`); a run below that goes red, and the release workflow refuses to release while the last run is red. One run varies by several tasks (see the results), which is why `allow` is 3. The workflow needs at least one free provider key as a repository secret: `BENCH_NVIDIA_API_KEY`, `BENCH_GROQ_API_KEY`, `BENCH_CEREBRAS_API_KEY`, `BENCH_GOOGLE_API_KEY` or `BENCH_OPENROUTER_API_KEY`.
 
 ## What DeV sends before the task
 
